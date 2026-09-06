@@ -1,0 +1,25 @@
+MapInfo
+TO-DO — This section is not finished yet
+
+Commands
+Include
+Map
+GameDefaults
+DefaultMap
+AddDefaultMap
+Cluster
+ClusterDef
+Episode
+ClearEpisodes
+Skill
+ClearSkills
+GameInfo
+Intermission
+DoomEdNums
+DamageType
+SpawnNums
+ConversationIds
+AutoMap
+AutoMap_Overlay
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

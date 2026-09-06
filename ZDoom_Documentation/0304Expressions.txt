@@ -1,0 +1,249 @@
+Expressions
+Expressions contain literals or other such expressions of objects, including arithmetic and various conditions.
+
+Expression
+PrimaryExpression
+PostfixExpression
+UnaryExpression
+BinaryExpression
+TernaryExpression
+Constant Expressions
+Primary Expressions
+Vector Literal Expressions
+Color Literal Expressions
+Postfix Expressions
+Argument Lists
+Unary Expressions
+Binary Expressions
+Arithmetic Expressions
+Vector Expressions
+Concatenation Expressions
+Comparison Expressions
+Lazy Boolean Expressions
+Type Comparison Expressions
+Signed Difference Expressions
+Logical Expressions
+Scope Expressions
+Assignment Expressions
+Ternary Expressions
+Constant Expressions
+Constant expressions are expressions that do not contain mutation of state or function calls. We define them simply as expressions.
+
+ConstantExpression
+Expression
+
+Primary Expressions
+Primary expressions can be one of:
+
+An identifier for a constant or variable.
+The super keyword, which references the parent type.
+Any literal.
+A vector literal.
+An expression in parentheses.
+PrimaryExpression
+Identifier
+super
+Literal
+VectorLiteralExpression
+ColorLiteralExpression
+( Expression )
+Vector Literal Expressions
+Vector literals are not under object literals as they are not constants in the same manner as other literals, since they contain expressions within them. As such, they are expressions, not proper value-based literals.
+
+Literals of vector3 may be made by either grammar. In the former grammar, the first expression (X1) must be a vector2 and the second (X2) must be a double. It will be equivalent to (X1.X, X1.Y, X2). In any other case, all expressions must be double.
+
+VectorLiteralExpression
+( Expression , Expression )
+( Expression , Expression , Expression )
+Color Literal Expressions
+Much like vector literals, color literals are not "real" literals, since they contain expressions. Color literals may be either RGB (where alpha is implied to be maximum) or RGBA. The three (or four) expressions must be int.
+
+ColorLiteralExpression
+color ( Expression , Expression , Expression (, Expression)? )
+
+Postfix Expressions
+Postfix expressions are affixed at the end of an expression, and are used for a large variety of things, although the actual amount of postfix expressions is small.
+
+The postfix expressions are:
+
+Function call.
+Type cast.
+Class type reference cast.
+Array access.
+Member access.
+Post-increment, which increments the object after the expression is evaluated.
+Post-decrement, which decrements the object after the expression is evaluated.
+PostfixExpression
+Expression ( ArgumentList? )
+Type ( Expression )
+( class < Type > ) ( Expression )
+Expression [ Expression ]
+Expression . Identifier
+Expression ++
+Expression --
+Argument Lists
+Function calls may name arguments which have defaults, possibly skipping over other defaulted arguments. After the first named defaultable argument, all other arguments must be named as well.
+
+ArgumentList
+Expression (, Expression)* (, Identifier : Expression)*
+
+Unary Expressions
+Unary expressions are affixed at the beginning of an expression. The simplest example of a unary expression is the negation operator, -, as in -500.
+
+The unary expressions are:
+
+Negation.
+Logical negation.
+Pre-increment, which increments the object before the expression is evaluated.
+Pre-decrement, which decrements the object before the expression is evaluated.
+Bit-wise negation. Flips all bits in an integer.
+Affirmation. Doesn't actually do anything.
+Alignment of a type of an expression.
+Size of a type of an expression.
+UnaryExpression
+- Expression
+! Expression
+++ Expression
+-- Expression
+~ Expression
++ Expression
+alignOf Expression
+sizeOf Expression
+Binary Expressions
+Binary expressions operate on two expressions, and are the most common kind of expression. They are used inline like regular math syntax, i.e. 1 + 1.
+
+BinaryExpression
+ArithmeticExpression
+VectorExpression
+ConcatenationExpression
+ComparisonExpression
+LazyBooleanExpression
+TypeComparisonExpression
+SignedDifferenceExpression
+LogicalExpression
+ScopeExpression
+AssignmentExpression
+Arithmetic Expressions
+The arithmetic expressions are:
+
+Addition.
+Subtraction.
+Multiplication.
+Division quotient.
+Division remainder, also known as "modulus." Unlike C, this works on floats, too.
+Exponentation.
+Left bit-wise shift.
+Right bit-wise shift.
+Right unsigned bit-wise shift.
+ArithmeticExpression
+Expression + Expression
+Expression - Expression
+Expression * Expression
+Expression / Expression
+Expression % Expression
+Expression ** Expression
+Expression << Expression
+Expression >> Expression
+Expression >>> Expression
+Vector Expressions
+The vector expressions are:
+
+Vector cross-product.
+Vector dot-product.
+VectorExpression
+Expression cross Expression
+Expression dot Expression
+Concatenation Expressions
+Concatenation creates a string from two expressions.
+
+The following basic types may be cast to strings through concatenation:
+
+Only int and uint of IntegerType
+FloatingPointType
+VectorType
+NameType
+StringLikeReferenceType except stateLabel
+ColorType
+IntegerLikeReferenceType
+NativePointerType
+ConcatenationExpression
+Expression .. Expression
+Comparison Expressions
+The comparison expressions are:
+
+Less than.
+Greater than.
+Less than or equal.
+Greater than or equal.
+Equality.
+Inequality.
+Approximate equality. For strings, this is a case-insensitive comparison. For floats and vectors, this checks if the difference between the two expressions is smaller than ε.
+ComparisonExpression
+Expression < Expression
+Expression > Expression
+Expression <= Expression
+Expression >= Expression
+Expression == Expression
+Expression != Expression
+Expression ~== Expression
+Lazy Boolean Expressions
+Lazy boolean expressions evaluate the left and right hand side expressions separately.
+
+The first, logical and, will only evaluate the right hand side if the left hand side is true, and will evaluate to true if both expressions are true.
+
+The second, logical or, will only evaluate the right hand side if the left hand side is false, and will evaluate to true if either expression is true.
+
+LazyBooleanExpression
+Expression && Expression
+Expression || Expression
+Type Comparison Expressions
+Logical type equality. Will check if the type of the left hand side is equal to or a descendant of the right hand side.
+
+TypeComparisonExpression
+Expression is Expression
+Signed Difference Expressions
+Signed difference. Will return -1 if the left hand side is lesser than the right hand side, 0 if they are equal, and 1 if the left hand side is greater than the right hand side.
+
+SignedDifferenceExpression
+Expression <>= Expression
+Logical Expressions
+The logical expressions are:
+
+Bit-wise and.
+Bit-wise exclusive or.
+Bit-wise or.
+LogicalExpression
+Expression & Expression
+Expression ^ Expression
+Expression | Expression
+Scope Expressions
+Not implemented. Will simply cause a compiler error.
+
+ScopeExpression
+Expression :: Expression
+Assignment Expressions
+Assignment expressions are a subset of binary expressions which are never constant expressions. They assign a value to another value.
+
+Besides the normal assignment operation, there are assignment operations for assigning the result of arithmetic expressions and logical expressions.
+
+AssignmentExpression
+Expression = Expression
+Expression += Expression
+Expression -= Expression
+Expression *= Expression
+Expression /= Expression
+Expression %= Expression
+Expression <<= Expression
+Expression >>= Expression
+Expression >>>= Expression
+Expression |= Expression
+Expression &= Expression
+Expression ^= Expression
+Ternary Expressions
+The ternary expression will evaluate to the left hand side if the expression is true, or the right hand side if it is false.
+
+TernaryExpression
+Expression ? Expression : Expression
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

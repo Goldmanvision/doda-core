@@ -1,0 +1,17 @@
+EmptyTokenType
+
+enum EmptyTokenType;
+Describes the function of empty strings when using string.Split.
+
+Variants
+TOK_SKIPEMPTY
+Doesn't store empty strings into the resultant array.
+
+TOK_KEEPEMPTY
+Stores empty strings into the resultant array.
+
+Overview of variants
+TOK_KEEPEMPTY, TOK_SKIPEMPTY
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

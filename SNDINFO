@@ -1,0 +1,44 @@
+// ============================================================
+// DoDA custom weapon sound definitions.
+// Sound resources are extensionless Doom Sound lumps in /sounds.
+// ============================================================
+
+
+// Shotgun.
+
+doda/shotgun/fire         SGFIRE
+doda/shotgun/rack         SGRACK
+doda/shotgun/dryfire      SGDRY
+doda/shotgun/shell_load1  SGLOAD1
+doda/shotgun/shell_load2  SGLOAD2
+
+// Randomized shotgun shell-ejection sounds.
+
+doda/shotgun/shell_eject1 SGEJCT1
+doda/shotgun/shell_eject2 SGEJCT2
+doda/shotgun/shell_eject3 SGEJCT3
+doda/shotgun/shell_eject4 SGEJCT4
+doda/shotgun/shell_eject5 SGEJCT5
+doda/shotgun/shell_eject6 SGEJCT6
+doda/shotgun/shell_eject7 SGEJCT7
+
+// B92 pistol.
+
+doda/pistol/fire1        B92FIR1
+doda/pistol/fire2        B92FIR2
+doda/pistol/fire3        B92FIR3
+doda/pistol/dryfire      B92DRY
+doda/pistol/mag_eject    B92EJCT
+doda/pistol/mag_load     B92LOAD
+doda/pistol/slide        B92SLIDE
+
+doda/mapstart            LSAX1
+$pitchshift				 LSAX1	0
+
+doda/mp5/fire            MP5FIRE
+doda/mp5/dryfire         MP5CLIC
+doda/mp5/mag_open        MP5OPEN
+doda/mp5/mag_close       MP5CLOS
+doda/mp5/cock            MP5COCK
+doda/mp5/slap            MP5SLAP
+

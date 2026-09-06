@@ -1,0 +1,32 @@
+Input Event
+
+struct InputEvent play version("2.4");
+The information for a StaticEventHandler.InputProcess event.
+
+EDoomInputKeys
+EGenericEvent
+Instance Members
+readOnly EGenericEvent Type
+The kind of input event this is.
+
+readOnly EDoomInputKeys KeyScan
+The key-code for InputEvent.Type_KeyDown, InputEvent.Type_KeyUp, and InputEvent.Type_Mouse events.
+
+readOnly string KeyString
+The character code for KeyScan as a string, if it is used and can be represented as one.
+
+readOnly int KeyChar
+The character code for KeyScan as an integer, if it is used and can be represented as one.
+
+readOnly int MouseX
+The horizontal mouse position differential1 for InputEvent.Type_Mouse.
+
+readOnly int MouseY
+The vertical mouse position differential1 for InputEvent.Type_Mouse.
+
+Overview of instance members
+KeyChar, KeyScan, KeyString, MouseX, MouseY, Type
+
+1 The difference between the last known position and the current position.
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

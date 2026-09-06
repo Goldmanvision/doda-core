@@ -1,0 +1,21 @@
+SectorEffect
+
+class SectorEffect : Thinker play;
+A thinker which is attached to a sector and effects it in some way.
+
+Instance Methods
+Sector GetSector()
+Returns the sector this effect is attached to.
+
+Overview of instance methods
+GetSector
+
+Instance Members
+protected Sector m_Sector
+The sector this effect is attached to.
+
+Overview of instance members
+m_Sector
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

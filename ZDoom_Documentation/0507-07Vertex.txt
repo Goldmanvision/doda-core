@@ -1,0 +1,21 @@
+Vertex
+
+struct Vertex play;
+A point in world space.
+
+Instance Methods
+int Index()
+The index of this vertex in the global vertices array.
+
+Overview of instance methods
+Index
+
+Instance Members
+readOnly vector2 P
+The point this object represents.
+
+Overview of instance members
+P
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

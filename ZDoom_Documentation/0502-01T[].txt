@@ -1,0 +1,12 @@
+T[]
+The built-in fixed-size array type.
+
+Instance Methods
+uint Size() const
+Returns the size of the array. This is a compile-time constant.
+
+Overview of instance methods
+Size
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

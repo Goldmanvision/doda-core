@@ -1,0 +1,23 @@
+InterBackground
+
+class InterBackground play version("2.5");
+A class containing an animated intermission background.
+
+Class Methods
+static InterBackground Create(WbStartStruct wbs)
+TO-DO — This section is not finished yet
+
+Overview of class methods
+Create
+
+Instance Methods
+virtual void DrawBackground(int curState, bool drawSplat, bool pointerOn)
+virtual bool LoadBackground(bool isEnterPic)
+virtual void UpdateAnimatedBack()
+TO-DO — This section is not finished yet
+
+Overview of instance methods
+DrawBackground, LoadBackground, UpdateAnimatedBack
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

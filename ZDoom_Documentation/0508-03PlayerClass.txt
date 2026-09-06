@@ -1,0 +1,31 @@
+PlayerClass
+
+struct PlayerClass clearScope;
+A player class as defined in either MAPINFO GameInfo or KEYCONF.
+
+Instance Methods
+bool CheckSkin(int skin)
+Checks if skin is in Skins.
+
+void EnumColorsets(out array<int> data)
+name GetColorsetName(int setnum)
+TO-DO — This section is not finished yet
+
+Overview of instance methods
+CheckSkin, EnumColorsets, GetColorsetName
+
+Instance Members
+uint Flags
+Not currently implemented correctly, PCF_NOMENU does not exist in ZScript, but its value is 1 if you need to check for that.
+
+array<int> Skins
+Skin indices available to this player class.
+
+class<Actor> Type
+The class type reference for this player class.
+
+Overview of instance members
+Flags, Skins, Type
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

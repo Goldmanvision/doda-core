@@ -1,0 +1,17 @@
+GiFont
+
+struct GiFont clearScope;
+A font as defined in MAPINFO GameInfo.
+
+Instance Members
+name Color
+The color of the font.
+
+name FontName
+The name of the font.
+
+Overview of instance members
+Color, FontName
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

@@ -1,0 +1,17 @@
+FindLumpNamespace
+
+enum Wads.FindLumpNamespace;
+An enumeration used for specifying where to fuzzy search files.
+
+Variants
+Wads.GLOBALNAMESPACE
+Searches only in the global namespace.
+
+Wads.ANYNAMESPACE
+Searches in any namespace.
+
+Overview of variants
+ANYNAMESPACE, GLOBALNAMESPACE
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

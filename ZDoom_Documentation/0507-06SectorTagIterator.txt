@@ -1,0 +1,26 @@
+SectorTagIterator
+
+class SectorTagIterator : Object clearScope;
+Iterates over sector indices with a specified tag.
+
+Class Methods
+deprecated("3.8") static SectorTagIterator Create(int tag, Line defLine = null)
+Legacy — Do not use Use LevelLocals.CreateSectorTagIterator instead.
+
+Creates a new iterator over sectors with the tag tag, starting at the back-sector of defLine, if it's not null and tag is 0.
+
+Overview of class methods
+Create
+
+Instance Methods
+int Next()
+Returns the index of the current sector and advances the iterator. Returns -1 when the list is exhausted.
+
+int NextCompat(bool compat, int secnum)
+If compat is false, acts exactly as Next. Otherwise, returns the index of the current sector and advances the iterator in a manner compatible with Doom's stair builders.
+
+Overview of instance methods
+Next, NextCompat
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

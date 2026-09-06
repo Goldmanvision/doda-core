@@ -1,0 +1,27 @@
+PatchInfo
+
+struct PatchInfo play version("2.5");
+Either a patch or string depending on external configurations.
+
+Instance Methods
+void Init(GiFont giFont)
+Initializes self from the information in giFont.
+
+Overview of instance methods
+Init
+
+Instance Members
+int MColor
+The color of the font, if this is a string.
+
+Font MFont
+The font, if this is a string, or a null font.
+
+deprecated("3.8") textureId MPatch
+Legacy — Do not use The patch, if this is a patch, or an invalid texture. Ignored after 3.8.0.
+
+Overview of instance members
+MColor, MFont, MPatch
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

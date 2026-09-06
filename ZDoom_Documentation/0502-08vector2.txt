@@ -1,0 +1,23 @@
+vector2
+The vector2 built-in type.
+
+Instance Methods
+double Length() const
+Returns the length (magnitude) of the vector.
+
+vector2 Unit() const
+Returns a normalized vector. Equivalent to vec / vec.Length().
+
+Overview of instance methods
+Length, Unit
+
+Instance Members
+double X
+double Y
+The X and Y components of this vector.
+
+Overview of instance members
+X, Y
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

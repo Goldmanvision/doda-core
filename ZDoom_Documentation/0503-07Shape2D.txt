@@ -1,0 +1,27 @@
+Shape2D
+
+class Shape2D : Object clearScope;
+Represents an arbitrary polygonal 2D shape.
+
+EClearWhich
+Instance Methods
+void SetTransform(Shape2DTransform transform)
+TO-DO — This section is not finished yet
+
+void Clear(Shape2D.EClearWhich which = Shape2D.C_VERTS | Shape2D.C_COORDS | Shape2D.C_INDICES)
+Removes all of a certain type (or types of) data out of a shape.
+
+void PushCoord(vector2 c)
+Pushes a texture coordinate into the shape buffer.
+
+void PushTriangle(int a, int b, int c)
+Pushes the indices of a triangle into the shape buffer.
+
+void PushVertex(vector2 v)
+Pushes a vertex into the shape buffer.
+
+Overview of instance methods
+Clear, PushCoord, PushTriangle, PushVertex, SetTransform
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

@@ -1,0 +1,23 @@
+EStateUseFlags
+
+enum EStateUseFlags;
+The action scopes that can be used by an Actor's states block.
+
+Variants
+SUF_ACTOR
+Actor scope.
+
+SUF_OVERLAY
+Overlay scope.
+
+SUF_WEAPON
+Weapon scope.
+
+SUF_ITEM
+Item scope.
+
+Overview of variants
+SUF_ACTOR, SUF_ITEM, SUF_OVERLAY, SUF_WEAPON
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

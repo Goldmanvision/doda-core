@@ -1,0 +1,23 @@
+EPlayerGender
+
+enum EPlayerGender;
+The available player genders. This is represented as uint8, so there are 251 unused genders.
+
+Variants
+GENDER_FEMALE
+Feminine human gender.
+
+GENDER_MALE
+Male human gender.
+
+GENDER_NEUTRAL
+Non-binary human gender.
+
+GENDER_OTHER
+Other unspecified human gender or non-human gender.
+
+Overview of variants
+GENDER_FEMALE, GENDER_MALE, GENDER_NEUTRAL, GENDER_OTHER
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

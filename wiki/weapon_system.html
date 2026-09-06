@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DoDA Wiki - Weapon System</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="introduction.html">Introduction</a></li>
+            <li class="dropdown">
+                <a href="#">Architecture</a>
+                <div class="dropdown-content">
+                    <a href="architecture.html">Architecture Overview</a>
+                    <a href="structure.html">Project Structure</a>
+                    <a href="../doda-architecture.md">FOIMS-X Visual Reference (Markdown reference)</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="#">Systems</a>
+                <div class="dropdown-content">
+                    <a href="weapon_system.html">Weapon System Overview</a>
+                    <a href="weapon_base.html">Weapon Base</a>
+                    <a href="b92_pistols.html">B92 Pistols</a>
+                    <a href="shotgun.html">Shotgun</a>
+                    <a href="hud_weapon.html">HUD Weapon Readout</a>
+                    <a href="deadzone_aim.html">Deadzone Aim</a>
+                    <a href="lean_system.html">Lean System</a>
+                    <a href="aim_abilities.html">Aim & Abilities</a>
+                    <a href="character_classes.html">Character Classes</a>
+                    <a href="ui.html">UI & HUD Bridge</a>
+                    <a href="mission_system.html">Mission System</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="#">Testing & Diagnostics</a>
+                <div class="dropdown-content">
+                    <a href="testing.html">Testing Guide</a>
+                    <a href="debugging_playbook.html">Debugging Playbook</a>
+                    <a href="zscript_scope_rules.html">ZScript Scope Rules</a>
+                </div>
+            </li>
+            <li class="dropdown">
+                <a href="#">Current Markdown Records</a>
+                <div class="dropdown-content">
+                    <a href="content/ActiveLoadGraph.md">Active Load Graph</a>
+                    <a href="content/PersonnelSnapshotV1.md">Personnel Snapshot V1</a>
+                    <a href="content/NativeZScriptBridge.md">Native-to-ZScript Bridge</a>
+                    <a href="content/KnownIssues.md">Known Issues</a>
+                    <a href="content/WIP.md">Work in Progress</a>
+                </div>
+            </li>
+        </ul>
+    </nav>
+    <div id="content">
+        <div class="legacy-banner">
+            <strong>Historical reference:</strong>
+            This page is retained for historical context and may not reflect current
+            implementation. See <code>wiki/content/</code> for current source-confirmed
+            technical records and <code>doda-architecture.md</code> for the FOIMS-X
+            visual-language reference.
+        </div>
+        <h2>Weapon System</h2>
+        <p>The weapon system handles weapon logic, animation, and implementation for all weapons, including the B92 pistols and the DoDA shotgun.</p>
+
+        <h3>Active Files</h3>
+        <ul>
+            <li><code>DoDA/WeaponSystem/HandSwapController.zs</code></li>
+            <li><code>DoDA/WeaponSystem/SpriteAnimator.zs</code></li>
+            <li><code>DoDA/WeaponSystem/WeaponBase.zs</code></li>
+            <li><code>DoDA/WeaponSystem/Weapons/Pistols/PistolBase.zs</code></li>
+            <li><code>DoDA/WeaponSystem/Weapons/Pistols/B92Left.zs</code></li>
+            <li><code>DoDA/WeaponSystem/Weapons/Pistols/B92Right.zs</code></li>
+            <li><code>DoDA/WeaponSystem/Weapons/Shotguns/Shotgun.zs</code></li>
+            <li><code>DoDA/WeaponSystem/Ammo/AmmoDispenser.zs</code></li>
+        </ul>
+
+        <h3>DoDAWeapon (WeaponBase.zs)</h3>
+        <p>The base class for all DoDA weapons. Handles lean, deadzone, and sprite animation pipelines.</p>
+        <ul>
+            <li><code>yawGap</code>, <code>pitchGap</code>: Deadzone aim offsets.</li>
+            <li><code>leanInput</code>, <code>leanController</code>: Lean ability components.</li>
+            <li><code>handSwapController</code>: Manages weapon hand swapping.</li>
+        </ul>
+    </div>
+</body>
+</html>

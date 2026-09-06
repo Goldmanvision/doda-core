@@ -1,0 +1,134 @@
+Log started: 2026-08-21 13:42:29
+W_Init: Init WADfiles.
+adding C:/Dev/uzdoom_src/uzdoom-official/cmake-build-debug/uzdoom.pk3, 734 lumps
+adding C:/Dev/uzdoom_src/uzdoom-official/cmake-build-debug/game_support.pk3, 3310 lumps
+adding C:/Dev/uzdoom_src/freedoom2.wad, 3610 lumps
+adding C:/Dev/uzdoom_src/uzdoom-official/cmake-build-debug/game_widescreen_gfx.pk3, 214 lumps
+adding C:/Dev/uzdoom_src/doda-core, 2201 lumps
+S_Init: Setting up sound.
+I_Init: Setting up machine state.
+CPU speed: 3850 MHz
+CPU Vendor ID: AuthenticAMD
+  Name: AMD Ryzen 9 3950X 16-Core Processor 
+  Family 23 (23), Model 113, Stepping 0
+  Features: SSE2 SSE3 SSSE3 SSE4.1 SSE4.2 AVX AVX2 F16C FMA3 BMI1 BMI2 HyperThreading
+Selecting Vulkan backend...
+ST_Init: Init startup screen.
+Checking cmd-line parameters...
+S_InitData: Load sound definitions.
+G_ParseMapInfo: Load map definitions.
+Texman.Init: Init texture manager.
+ParseTeamInfo: Load team definitions.
+LoadActors: Load actor definitions.
+Script warning, "C:/Dev/uzdoom_src/doda-core/:doda/weaponsystem/weapons/shotguns/shotgun.zs" line 540:
+Truncation of floating point constant 1.500000
+Script warning, "C:/Dev/uzdoom_src/doda-core/:doda/weaponsystem/weapons/shotguns/shotgun.zs" line 540:
+Truncation of floating point constant 2.500000
+2 warnings while parsing scripts
+script parsing took 5208.85 ms
+Key already bound to "+use"
+Key already bound to "+user1"
+Key already bound to "+user2"
+Key already bound to "+reload"
+Key already bound to "+altattack"
+Key already bound to "+doda_swapberetta"
+Command already bound to "46"
+Key already bound to "+doda_weaponsecondary"
+Key already bound to "+doda_weaponsecondary"
+Key already bound to "doda_select_b92"
+Key already bound to "doda_select_shotgun"
+Key already bound to "doda_select_mp5"
+Key already bound to "DoDA_Holster"
+R_Init: Init Doom refresh subsystem.
+DecalLibrary: Load decals.
+Adding dehacked patch freedoom2.wad:DEHACKED
+Patch installed
+M_Init: Init menus.
+P_Init: Init Playloop state.
+ParseSBarInfo: Loading custom status bar definition.
+===========================================================================
+This is Freedoom, the free content first person shooter.
+
+Freedoom is freely redistributable under the terms of the modified BSD
+license. Check out the Freedoom website for more information:
+
+    https://freedoom.github.io/
+============================================================================
+D_CheckNetGame: Checking network game status.
+I_InitInput
+I_StartupMouse
+I_StartupKeyboard
+I_StartupXInput
+I_StartupRawPS2
+I_StartupDirectInputJoystick
+Vulkan device: GeForce RTX 2060 SUPER
+Vulkan device type: discrete gpu
+Vulkan version: 1.2.142 (api) 457.204.0 (driver)
+Vulkan extensions: VK_KHR_16bit_storage VK_KHR_8bit_storage VK_KHR_bind_memory2 VK_KHR_buffer_device_address VK_KHR_create_renderpass2 VK_KHR_dedicated_allocation VK_KHR_depth_stencil_resolve VK_KHR_descriptor_update_template VK_KHR_device_group VK_KHR_draw_indirect_count VK_KHR_driver_properties VK_KHR_external_fence VK_KHR_external_fence_win32 VK_KHR_external_memory VK_KHR_external_memory_win32 VK_KHR_external_semaphore VK_KHR_external_semaphore_win32 VK_KHR_get_memory_requirements2 VK_KHR_image_format_list VK_KHR_imageless_framebuffer VK_KHR_maintenance1 VK_KHR_maintenance2 VK_KHR_maintenance3 VK_KHR_multiview VK_KHR_pipeline_executable_properties VK_KHR_push_descriptor VK_KHR_relaxed_block_layout VK_KHR_sampler_mirror_clamp_to_edge VK_KHR_sampler_ycbcr_conversion VK_KHR_separate_depth_stencil_layouts VK_KHR_shader_atomic_int64 VK_KHR_shader_clock VK_KHR_shader_draw_parameters VK_KHR_shader_float16_int8 VK_KHR_shader_float_controls VK_KHR_shader_non_semantic_info VK_KHR_shader_subgroup_extended_types VK_KHR_spirv_1_4 VK_KHR_storage_buffer_storage_class VK_KHR_swapchain VK_KHR_swapchain_mutable_format VK_KHR_timeline_semaphore VK_KHR_uniform_buffer_standard_layout VK_KHR_variable_pointers VK_KHR_vulkan_memory_model VK_KHR_win32_keyed_mutex VK_EXT_blend_operation_advanced VK_EXT_buffer_device_address VK_EXT_calibrated_timestamps VK_EXT_conditional_rendering VK_EXT_conservative_rasterization VK_EXT_custom_border_color VK_EXT_depth_clip_enable VK_EXT_depth_range_unrestricted VK_EXT_descriptor_indexing VK_EXT_discard_rectangles VK_EXT_external_memory_host VK_EXT_fragment_shader_interlock VK_EXT_full_screen_exclusive VK_EXT_hdr_metadata VK_EXT_host_query_reset VK_EXT_index_type_uint8 VK_EXT_inline_uniform_block VK_EXT_line_rasterization VK_EXT_memory_budget VK_EXT_memory_priority VK_EXT_pci_bus_info VK_EXT_pipeline_creation_cache_control VK_EXT_pipeline_creation_feedback VK_EXT_post_depth_coverage VK_EXT_private_data VK_EXT_robustness2 VK_EXT_sample_locations VK_EXT_sampler_filter_minmax VK_EXT_scalar_block_layout VK_EXT_separate_stencil_usage VK_EXT_shader_demote_to_helper_invocation VK_EXT_shader_subgroup_ballot VK_EXT_shader_subgroup_vote VK_EXT_shader_viewport_index_layer VK_EXT_subgroup_size_control VK_EXT_texel_buffer_alignment VK_EXT_tooling_info VK_EXT_transform_feedback VK_EXT_vertex_attribute_divisor VK_EXT_ycbcr_image_arrays VK_NV_clip_space_w_scaling VK_NV_compute_shader_derivatives VK_NV_cooperative_matrix VK_NV_corner_sampled_image VK_NV_coverage_reduction_mode VK_NV_dedicated_allocation VK_NV_dedicated_allocation_image_aliasing VK_NV_device_diagnostic_checkpoints VK_NV_device_diagnostics_config VK_NV_device_generated_commands VK_NV_external_memory VK_NV_external_memory_win32 VK_NV_fill_rectangle VK_NV_fragment_coverage_to_color VK_NV_fragment_shader_barycentric VK_NV_framebuffer_mixed_samples VK_NV_geometry_shader_passthrough VK_NV_mesh_shader VK_NV_ray_tracing VK_NV_representative_fragment_test VK_NV_sample_mask_override_coverage VK_NV_scissor_exclusive VK_NV_shader_image_footprint VK_NV_shader_sm_builtins VK_NV_shader_subgroup_partitioned VK_NV_shading_rate_image VK_NV_viewport_array2 VK_NV_viewport_swizzle VK_NV_win32_keyed_mutex VK_NVX_binary_import VK_NVX_image_view_handle VK_NVX_multiview_per_view_attributes
+Max. texture size: 32768
+Max. uniform buffer range: 65536
+Min. uniform buffer offset alignment: 64
+Resolution: 1520 x 825
+V_Init: allocate screen.
+Init complete.
+[DoDA] New campaign: strategic state initialized with 5 personnel, 1 location(s), 1 task(s), 2 assignment(s).
+
+----------------------------------------
+
+MAP01 - MISSION AREA TEST
+
+DoDA map-start sound played: Map=MAP01
+DoDA Director WorldLoaded: Map=MAP01 Save=0 Reopen=0
+DoDA Director [before initialization gate] Map=MAP01 Save=0 Reopen=0 Result=0 Index=0 Progress=0 Phase=0 Name= Description=
+DoDA CampaignState initialized: Map=MAP01 NextMissionIndex=0 ObjectiveCount=0 ObjectiveRequired=1
+DoDA Mission initialized as PENDING.
+DoDA Director [after initialization gate] Map=MAP01 Save=0 Reopen=0 Result=1 Index=0 Progress=0 Phase=1 Name=Mission 01 Description=talk to INFORMANT.
+DoDA HUD Snapshot [after WorldLoaded] Source=Director Map=MAP01 Mission=Mission 01 Status=1 Progress=0 Phase=1 Objective=talk to INFORMANT.
+[DoDA-POC] Real-Time Background Simulation POC active on MAP01.
+[DoDA-POC] Idle stepping auto-started: 60 strategic minute(s) every 5 seconds.
+[DoDA-POC] Native API version: 1, personnel snapshot API version: 1.
+[DoDA-POC] Controls (temporary): Up = start idle stepping, Down = pause,
+[DoDA-POC]   Right / Keypad + = step 60 min, Left / Keypad - = step 15 min,
+[DoDA-POC]   Keypad 0 = reset fixture, Keypad 1 = status, Keypad 2 = personnel, Keypad 3 = controls.
+[DoDA-POC] Strategic minutes: 0 (revision 1).
+[DoDA-POC] Location 1: Morrow Point Waterworks.
+[DoDA-POC] Task 1 'Survey anomalous emissions': progress 0%, status 1.
+WEAPONPIPE ready=DoDAB92Left pending=WP_NOCHANGE state=other-state readyIsSelf=0 attack=0 attackPressed=0 actualHand=0 requestedHand=0 requestGate=0 fireLock=0 swapLock=0
+WEAPONPIPE ready=DoDAB92Left pending=WP_NOCHANGE state=other-state readyIsSelf=1 attack=0 attackPressed=0 actualHand=0 requestedHand=0 requestGate=0 fireLock=0 swapLock=0
+DoDA CampaignState observed: Map=MAP01 NextMissionIndex=0 OwnerClass=FieldAgent ObjectiveCount=0 ObjectiveRequired=1 ObjectiveMarkers=0 MissionMarkers=0
+DoDA HUD Snapshot [Draw source change] Source=MissionDirector Map=MAP01 MISSION: Mission 01 | STATUS: PENDING | PROGRESS: 0% | PHASE: OBJECTIVE | OBJECTIVE: talk to INFORMANT.
+WEAPONPIPE ready=DoDAB92Left pending=WP_NOCHANGE state=other-state readyIsSelf=0 attack=0 attackPressed=0 actualHand=0 requestedHand=0 requestGate=0 fireLock=0 swapLock=0
+WEAPONPIPE ready=DoDAB92Left pending=WP_NOCHANGE state=Ready readyIsSelf=1 attack=0 attackPressed=0 actualHand=0 requestedHand=0 requestGate=0 fireLock=0 swapLock=0
+[DoDA] AdvanceStrategicMinutes: Advanced by 60 minute(s), total 60 minute(s).
+[DoDA-POC] Strategic minutes: 60 (revision 2).
+[DoDA-POC] Location 1: Morrow Point Waterworks.
+[DoDA-POC] Task 1 'Survey anomalous emissions': progress 25%, status 1.
+[DoDA] AdvanceStrategicMinutes: Advanced by 60 minute(s), total 120 minute(s).
+[DoDA-POC] Strategic minutes: 120 (revision 3).
+[DoDA-POC] Location 1: Morrow Point Waterworks.
+[DoDA-POC] Task 1 'Survey anomalous emissions': progress 50%, status 1.
+[DoDA] AdvanceStrategicMinutes: Advanced by 60 minute(s), total 180 minute(s).
+[DoDA-POC] Strategic minutes: 180 (revision 4).
+[DoDA-POC] Location 1: Morrow Point Waterworks.
+[DoDA-POC] Task 1 'Survey anomalous emissions': progress 75%, status 1.
+[DoDA] Task 1 ('Survey anomalous emissions') reached 100% progress -> Completed. 2 personnel returned to Available.
+[DoDA] AdvanceStrategicMinutes: Advanced by 60 minute(s), total 240 minute(s).
+[DoDA-POC] Strategic minutes: 240 (revision 5).
+[DoDA-POC] Location 1: Morrow Point Waterworks.
+[DoDA-POC] Task 1 'Survey anomalous emissions': progress 100%, status 2.
+[DoDA-POC] Task complete; idle stepping stopped.
+[DoDA-POC] Strategic minutes: 240 (revision 5).
+[DoDA-POC] Location 1: Morrow Point Waterworks.
+[DoDA-POC] Task 1 'Survey anomalous emissions': progress 100%, status 2.
+[DoDA-POC] Michelle C. Thomas (id 2): status 0, workload 0, task ''.
+[DoDA-POC] Brian C. Gordon (id 3): status 0, workload 0, task ''.
+[DoDA] ResetDebugFixture: Initialized fixture with 5 personnel, 1 location(s), 1 task(s), 2 assignment(s).
+[DoDA-POC] Fixture reset; idle stepping stopped.
+[DoDA-POC] Strategic minutes: 0 (revision 6).
+[DoDA-POC] Location 1: Morrow Point Waterworks.
+[DoDA-POC] Task 1 'Survey anomalous emissions': progress 0%, status 1.
+[DoDA-POC] Michelle C. Thomas (id 2): status 1, workload 1, task 'Survey anomalous emissions'.
+[DoDA-POC] Brian C. Gordon (id 3): status 1, workload 1, task 'Survey anomalous emissions'.
+[DoDA-POC] Strategic minutes: 0 (revision 6).
+[DoDA-POC] Location 1: Morrow Point Waterworks.
+[DoDA-POC] Task 1 'Survey anomalous emissions': progress 0%, status 1.

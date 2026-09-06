@@ -1,0 +1,242 @@
+Class Definitions
+A class defines an object type within ZScript, and is most of what you'll be creating within the language.
+
+All classes inherit from other classes. The base class can be set within the class header, but if it is not the class will automatically inherit from Object.
+
+Classes are subject to object scoping. They are also implicitly reference values, and therefore can be null.
+
+new is used to instantiate a new instance of a class.
+
+Classes that inherit from Actor can replace other actors when spawned in maps, and can also be used freely in DECORATE.
+
+The rest of the translation unit can be used as class content. Note that with this syntax you cannot use include directives afterward.
+
+If the class is defined within the same archive as the current file, then one can continue a class definition by using extend.
+
+ClassDefinition
+ClassHeader { ClassContent* }
+ClassHeader ; ClassContent*
+ClassHeader
+class Identifier (: Identifier) ClassDefinitionFlag*
+extend class Identifier
+Class Definition Flags
+Class Contents
+Property Definitions
+Flag Definitions
+Default Blocks
+Default Special Properties
+State Blocks
+State Functions
+Examples
+Class Headers
+Class Definitions
+Property Definitions
+Flag Definitions
+Class Definition Flags
+Keyword	Description
+abstract	Cannot be instantiated with new.
+native	Class is from the engine. Only usable internally.
+play	Class has Play scope.
+replaces	Replaces another class with this class. Only works with descendants of Actor.
+ui	Class has UI scope.
+version	Restricted to ZScript version ver or higher.
+ClassDefinitionFlags
+abstract
+native
+play
+replaces Identifier
+ui
+version ( StringLiteral )
+Class Contents
+ClassContent
+ConstantDefinition
+DefaultBlock
+EnumerationDefinition
+FlagDefinition
+MemberDeclaration
+MethodDefinition
+PropertyDefinition
+StateBlock
+StructureDefinition
+Property Definitions
+Property definitions are used within classes to define defaultable attributes on Actors. They are not valid on classes not derived from Actor.
+
+When registered, a property will be available in the default block as ClassName.PropertyName. Properties can be given multiple members to initialize.
+
+Properties defined in ZScript are usable from DECORATE.
+
+PropertyDefinition
+property Identifier : Identifier (, Identifier)* ;
+
+Flag Definitions
+3.7.0+
+
+Flag definitions are used within classes to define defaultable boolean flags on actors. They are not valid on classes not derived from Actor.
+
+When registered, a flag will be available in the default block as ClassName.FlagName, as well as a member as bFlagName.
+
+Each flag operates on a singular bit of any integer member of the class. The integer must be exactly 32 bits, though if it is signed or not does not matter. This means each backing integer can hold exactly 32 flags each (assuming no duplicated flags,) and more will require another one to be added. (Internally, the Actor flags are currently up to over 8 backing integers.)
+
+A flag's backing integer may not be meta, although it may be readOnly, private, or any other access modifier. The generated flag member will be publicly visible regardless of the backing integer's visibility.
+
+Flags defined in ZScript are usable from DECORATE.
+
+FlagDefinition
+flagDef Identifier : Identifier , IntegerLiteral ;
+
+Default Blocks
+Default blocks are used on classes derived from Actor to create an overridable list of defaults to properties, allowing for swift creation of flexible actor types.
+
+In DECORATE, this is everything that isn't in the states block, but in ZScript, for syntax flexibility purposes, it must be enclosed in a block with default at the beginning.
+
+DefaultBlock
+default { DefaultDefinition* }
+
+DefaultDefinition
+DefaultFlag
+DefaultProperty
+DefaultFlag
++ Identifier ;?
+- Identifier ;?
+DefaultProperty
+Identifier (. Identifier)? ConstantExpression ;
+DefaultSpecialProperty ;
+DamageFunction Expression ;
+Default Special Properties
+There are several special properties which add pre-defined flag sets onto the actor:
+
+Keyword	Description
+ClearFlags	Clears all flags except ARGSDEFINED.
+Monster	Adds the flags SHOOTABLE COUNTKILL SOLID PUSHWALL MCROSS PASSMOBJ ISMONSTER CANUSEWALLS.
+Projectile	Adds the flags NOBLOCKMAP NOGRAVITY DROPOFF MISSILE IMPACT PCROSS NOTELEPORT, and if the game is Heretic or Hexen, BLOODSPLATTER.
+DefaultSpecialProperty
+ClearFlags
+Monster
+Projectile
+State Blocks
+These are the same as DECORATE, but states that do not have function blocks require terminating semicolons. Double quotes around # and - are no longer required. State blocks can be subject to action scoping if explicitly specified.
+
+StateBlock
+states (( ActionScope (, ActionScope)* ))? { StateDefinition }
+
+StateDefinition
+Identifier :
+Character{4} Character+ StateTime StateOption* StateFunction
+StateTime
+IntegerLiteral
+random ( IntegerLiteral , IntegerLiteral )
+StateOption
+bright
+fast
+slow
+noDelay
+canRaise
+offset ( IntegerLiteral , IntegerLiteral )
+light ( StringLiteral (, StringLiteral)* )
+State Functions
+You may attach no action function to the state. You can also attach a function with the specified arguments, or create an anonymous action function and attach it.
+
+StateFunction
+;
+Identifier ( ArgumentList? ) ;
+{ Statement* }
+Examples
+Class Headers
+// Automatically inherits Object, similar to the "actor" keyword in DECORATE.
+class MyCoolObject
+{
+}
+// Equivalent to the above.
+class MyCoolObjectExplicit : Object
+{
+}
+// Has "Play" scope.
+class MyCoolScopedObject play
+{
+}
+// Inherits Thinker and can override functions on it.
+class MyCoolThinker : Thinker
+{
+}
+// Some actor.
+class OtherActor : Actor
+{
+}
+// Replaces "OtherActor."
+class MyCoolActor : Actor replaces OtherActor
+{
+}
+// Can only be inherited.
+class MyCoolInterface abstract
+{
+}
+Class Definitions
+// Basic class definition with a member variable and member function.
+class BasicClass
+{
+	// "m_Thing" is attached to any "instance" of BasicClass.
+	int m_Thing;
+
+	// Changes "m_Thing" to 500 on an instance of BasicClass.
+	void ChangeThing()
+	{
+		m_Thing = 500;
+	}
+}
+// Alternate syntax usage.
+// This class spans from this point to the end of the file.
+class TheWholeFileIsAClassOhNo;
+
+int m_MyMember;
+
+// End of file, end of class.
+Property Definitions
+// A class with some properties.
+class MyCoolActor : Actor
+{
+	// You can set defined properties in a "default" block like in DECORATE.
+	// This will also be available in DECORATE code that inherits your class!
+	default
+	{
+		MyCoolActor.MyCoolMember 5000;
+		MyCoolActor.MyCoolMemberList 501, 502;
+	}
+
+	// Declare some members.
+	int m_MyCoolMember;
+	int m_CoolMember1, m_CoolMember2;
+
+	// Declare some properties attached to our members.
+	property MyCoolMember: m_MyCoolMember;
+	property MyCoolMemberList: m_CoolMember1, m_CoolMember2;
+}
+Flag Definitions
+// A class with some flags.
+class MyCoolActorWithFlags : Actor
+{
+	// You can set defined flag in a "default" block like in DECORATE.
+	// This will also be available in DECORATE code that inherits your class!
+	// Hey, those sentences sounded familiar...
+	default
+	{
+		+MyCoolActorWithFlags.ThisOneIsOn
+		-MyCoolActorWithFlags.ThisOneIsOff
+	}
+
+	// Declare a flag field for all of the flags. This can hold up to 32 flags.
+	int m_Flags;
+
+	// Declare the flags, one at a time...
+	flagDef ThisOneIsOn: m_Flags, 0;
+	flagDef ThisOneIsOff: m_Flags, 1;
+	flagDef ThisOneAliasesOn: m_Flags, 0;
+
+	// Unnecessary, since you can just access it directly, but this demonstrates
+	// how declared flags can be used in methods.
+	bool CheckIfOnIsOn()
+	{
+		return bThisOneIsOn;
+	}
+}
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

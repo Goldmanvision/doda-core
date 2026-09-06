@@ -1,0 +1,188 @@
+LevelLocals
+
+struct LevelLocals clearScope;
+A structure of all the relevant data for a single level.
+
+Class Methods
+Instance Methods
+Instance Members
+Map Data
+Sequencing
+Meta-data
+Music
+Visuals
+Gameplay
+Physics
+Statistics
+Time
+Transitions
+Constants
+ 
+[EUdmf]
+Class Methods
+static void MakeScreenShot()
+static void MakeAutoSave()
+deprecated("3.8") static void RemoveAllBots(bool fromList)
+deprecated("3.8") static bool IsPointInMap(vector3 p)
+TO-DO — This section is not finished yet
+
+Overview of class methods
+IsPointInMap, MakeAutoSave, MakeScreenShot, RemoveAllBots
+
+Instance Methods
+string GetUdmfString([EUdmf] type, int index, name key)
+int GetUdmfInt([EUdmf] type, int index, name key)
+double GetUdmfFloat([EUdmf] type, int index, name key)
+play int ExecuteSpecial(int special, [Actor] activator, [Line] lineDef, bool lineSide, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0, int arg5 = 0)
+void GiveSecret([Actor] activator, bool printMsg = true, bool playSound = true)
+void StartSlideshow(name whichOne = 'none')
+void WorldDone()
+ui vector2 GetAutoMapPosition()
+void SetInterMusic(string nextMap)
+string FormatMapName(int mapNameColor)
+bool IsJumpingAllowed() const
+bool IsCrouchingAllowed() const
+bool IsFreeLookAllowed() const
+void StartIntermission(name type, int state) const
+play [SpotState] GetSpotState(bool create = true)
+int FindUniqueTId(int start = 0, int limit = 0)
+uint GetSkyBoxPortal([Actor] actor)
+void ReplaceTextures(string from, string to, int flags)
+[HealthGroup] FindHealthGroup(int id)
+vector3, int PickDeathmatchStart()
+vector3, int PickPlayerStart(int pNum, int flags = 0)
+int IsFrozen() const
+void SetFrozen(bool on)
+[Sector] PointInSector(vector2 p) const
+bool IsPointInLevel(vector3 p) const
+vector2 Vec2Diff(vector2 v1, vector2 v2) const
+vector3 Vec3Diff(vector3 v1, vector3 v2) const
+vector3 SphericalCoords(vector3 viewPoint, vector3 targetPos, vector2 viewAngles = (0.0, 0.0), bool absolute = false) const
+vector2 Vec2Offset(vector2 pos, vector2 dir, bool absolute = false) const
+vector3 Vec2OffsetZ(vector2 pos, vector2 dir, double atZ, bool absolute = false) const
+vector3 Vec3Offset(vector3 pos, vector3 dir, bool absolute = false) const
+string GetChecksum() const
+void ChangeSky(textureId sky1, textureId sky2)
+[SectorTagIterator] CreateSectorTagIterator(int tag, [Line] defLine = null)
+[LineIdIterator] CreateLineIdIterator(int tag)
+[ActorIterator] CreateActorIterator(int tid, class<[Actor]> type = "Actor")
+string TimeFormatted(bool totals = false)
+play bool CreateCeiling([Sector] sec, [Ceiling].[ECeiling] type, [Line] ln, double speed, double speed2, double height = 0.0, int crush = -1, int silent = 0, int change = 0, [Ceiling].[ECrushMode] crushMode = [Ceiling].[CRUSHDOOM])
+play bool CreateFloor([Sector] sec, [Floor].[EFloor] type, [Line] ln, double speed, double height = 0.0, int crush = -1, int change = 0, bool crushMode = false, bool hereticLower = false)
+void ExitLevel(int position, bool keepFacing)
+void SecretExitLevel(int position)
+void ChangeLevel(string levelName, int position = 0, int flags = 0, int skill = -1)
+TO-DO — This section is not finished yet
+
+Overview of instance methods
+Instance Members
+Map Data
+array<[Sector]> Sectors
+array<[Line]> Lines
+array<[Side]> Sides
+readOnly array<[Vertex]> Vertexes
+TO-DO — This section is not finished yet
+
+Sequencing
+readOnly int LevelNum
+readOnly string MapName
+readOnly int Cluster
+readOnly int MapType
+TO-DO — This section is not finished yet
+
+readOnly int ClusterFlags
+Flags for this cluster. May contain the following flags:
+
+CLUSTER_HUB: This cluster is a hub.
+Meta-data
+readOnly string LevelName
+readOnly string AuthorName
+TO-DO — This section is not finished yet
+
+Music
+readOnly string Music
+readOnly int MusicOrder
+readOnly float MusicVolume
+TO-DO — This section is not finished yet
+
+Visuals
+readOnly string F1Pic
+readOnly textureId SkyTexture1
+readOnly textureId SkyTexture2
+float SkySpeed1
+float SkySpeed2
+readOnly int FogDensity
+readOnly int OutsideFogDensity
+readOnly int SkyFog
+readOnly float PixelStretch
+TO-DO — This section is not finished yet
+
+Gameplay
+readOnly bool ActOwnSpecial
+readOnly bool AllowRespawn
+readOnly bool CheckSwitchRange
+readOnly bool Infinite_Flight
+readOnly bool KeepFullInventory
+readOnly bool MissilesActivateImpact
+readOnly bool MonsterFallingDamage
+readOnly bool MonstersTeleFrag
+readOnly bool NoInventoryBar
+readOnly bool NoMonsters
+readOnly bool No_Dlg_Freeze
+readOnly bool PolyGrind
+readOnly bool RemoveItems
+readOnly double TeamDamage
+play int AirSupply
+bool AllMap
+TO-DO — This section is not finished yet
+
+readOnly bool SndSeqTotalCtrl
+Sets all sectors' SeqType to -1. Set by the NoAutoSequences flag in MapInfo.
+
+deprecated("3.8") bool Frozen
+Legacy — Do not use Use IsFrozen instead.
+
+Physics
+play double Gravity
+play double AirControl
+play double AirFriction
+readOnly int CompatFlags
+readOnly int CompatFlags2
+TO-DO — This section is not finished yet
+
+Statistics
+int Total_Secrets
+int Found_Secrets
+int Total_Items
+int Found_Items
+int Total_Monsters
+int Killed_Monsters
+TO-DO — This section is not finished yet
+
+Time
+readOnly int Time
+readOnly int MapTime
+readOnly int TotalTime
+readOnly int StartTime
+readOnly int ParTime
+readOnly int SuckTime
+TO-DO — This section is not finished yet
+
+Transitions
+string NextMap
+string NextSecretMap
+name DeathSequence
+TO-DO — This section is not finished yet
+
+Overview of instance members
+ActOwnSpecial, AirControl, AirFriction, AirSupply, AllMap, AllowRespawn, AuthorName, CheckSwitchRange, Cluster, ClusterFlags, CompatFlags, CompatFlags2, DeathSequence, F1Pic, FogDensity, Found_Items, Found_Secrets, Frozen, Gravity, Infinite_Flight, KeepFullInventory, Killed_Monsters, LevelName, LevelNum, Lines, MapName, MapTime, MapType, MissilesActivateImpact, MonsterFallingDamage, MonstersTeleFrag, Music, MusicOrder, MusicVolume, NextMap, NextSecretMap, NoInventoryBar, NoMonsters, No_Dlg_Freeze, OutsideFogDensity, ParTime, PixelStretch, PolyGrind, RemoveItems, Sectors, Sides, SkyFog, SkySpeed1, SkySpeed2, SkyTexture1, SkyTexture2, SndSeqTotalCtrl, StartTime, SuckTime, TeamDamage, Time, TotalTime, Total_Items, Total_Monsters, Total_Secrets, Vertexes
+
+Constants
+const int CLUSTER_HUB
+TO-DO — This section is not finished yet
+
+Overview of constants
+CLUSTER_HUB
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

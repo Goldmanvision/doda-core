@@ -1,0 +1,23 @@
+EState
+
+enum StatusScreen.EState;
+Each of the possible states for StatusScreens.
+
+Variants
+StatusScreen.STATCOUNT
+The state where statistics are counted and displayed.
+
+StatusScreen.SHOWNEXTLOC
+The state where the next map is shown as ENTERING (map name), and in episodic maps, the world map.
+
+StatusScreen.NOSTATE
+The state at the very end of this process, where the last frame is drawn and the intermission is exited.
+
+StatusScreen.LEAVINGINTERMISSION
+The state which is used only to signify that all stages are done and the status screen has been exited.
+
+Overview of variants
+LEAVINGINTERMISSION, NOSTATE, SHOWNEXTLOC, STATCOUNT
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

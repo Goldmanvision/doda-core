@@ -1,0 +1,194 @@
+Music
+There are many music formats supported by GZDoom. Currently, all of the music code is in its own submodule, ZMusic. The music system supports many types of MIDI, tracker, emulated chip, OPL, and PCM audio formats.
+
+Until 4.4.0 Additionally, ZMusic also supports playing redbook audio via a CD drive, or through a CDDA dump of one.
+
+This page links to sources for the specifications of each format, and pages for general information on them. You probably only need the latter.
+
+All music formats can be put in a GZip container, saving space in some situations.
+
+Ordering
+Formats
+PCM Audio Formats
+OPL Formats
+Emulated Formats
+Tracker Formats
+MIDI Formats
+Ordering
+ZMusic has a concept of song order for multi-track files. The way this works depends on the format, so we will go over each format's handling individually.
+
+CD Audio is divided into tracks.
+Most tracker formats have a concept of sub-songs. This will depend on the tracker format.
+The AY, GBS, HES, KSS, NSF, NSFe, and SAP formats all support multiple data tracks.
+Standard MIDI and XMI have a concept of sub-songs.
+Formats
+PCM Audio Formats
+Supported PCM audio formats include:
+
+AIFF, AIFC12
+CDDA34 Until 4.4.0
+FLAC56
+MPEG 1.0, 2.0, 2.5 Layer I, II, III Audio (MP2, MP3)78
+Microsoft WAVE910
+Ogg Vorbis1112
+More obscure, but supported, PCM formats include:
+
+8SVX1314
+AU, SND1516
+CAF1718
+Creative VOC1920
+Ensoniq PARIS Audio2122
+FastTrackerII XI2324
+GNU Octave MAT4 and MAT52526
+HTK2728
+Headerless WAVE
+IRCAM Soundfile2930
+NIST SPHERE WAV3132
+PlayStation XA3334
+Portable Voice Format3536
+SD23738
+Sony Wave643940
+OPL Formats
+Supported OPL formats include:
+
+DRO4142
+IMF4344
+RAW4546
+Emulated Formats
+Supported emulated formats include:
+
+AY4748
+GBS4950
+GYM5152
+HES5354
+KSS5556
+NSF5758
+NSFe5960
+SAP6162
+SPC6364
+VGM, VGZ6566
+Tracker Formats
+Supported tracker formats include:
+
+6696768
+AMF6970
+DSM7172
+IT7374
+MOD7576
+MTM7778
+OKT7980
+PSM, PSM168182
+PTM8384
+RIFF AMFF, RIFF AM8586
+S3M8788
+STM8990
+XM9192
+MIDI Formats
+Supported MIDI formats include:
+
+HMI, HMP9394
+MUS9596
+Standard MIDI9798
+XMI99100
+68 https://battleofthebits.org/lyceum/View/Composer+669/
+67 http://www.textfiles.com/programming/FORMATS/669-form.pro
+14 https://en.wikipedia.org/wiki/8SVX
+13 https://web.archive.org/web/20091121223006/http://amigan.1emu.net/reg/8SVX.txt
+2 https://en.wikipedia.org/wiki/Audio_Interchange_File_Format
+1 https://web.archive.org/web/20071219035740/http://www.cnpbagwell.com/aiff-c.txt
+70 http://www.vgmpf.com/Wiki/index.php?title=AMF
+69 http://www.usecode.org/pentagram/doxygen/amf2mod_8c-source.html
+86 http://www.shikadi.net/moddingwiki/Jazz_2_Music_Format
+85 https://github.com/kode54/dumb/blob/master/src/it/readam.c
+16 https://en.wikipedia.org/wiki/Au_file_format
+15 https://pubs.opengroup.org/external/auformat.html
+48 http://www.vgmpf.com/Wiki/index.php?title=AY
+47 https://vgmrips.net/wiki/AY_File_Format
+18 https://en.wikipedia.org/wiki/Core_Audio_Format
+17 https://developer.apple.com/library/archive/documentation/MusicAudio/Reference/CAFSpec/CAF_intro/CAF_intro.html
+4 https://en.wikipedia.org/wiki/Compact_Disc_Digital_Audio
+3 https://webstore.iec.ch/preview/info_iec60908%7Bed2.0%7Db.pdf
+42 http://www.vgmpf.com/Wiki/index.php?title=DRO
+41 http://www.shikadi.net/moddingwiki/DRO_Format
+72 http://www.shikadi.net/moddingwiki/DSIK_Module_Format
+71 http://www.shikadi.net/moddingwiki/DSIK_Module_Format#File_format
+6 https://xiph.org/flac/
+5 https://xiph.org/flac/format.html
+50 http://www.vgmpf.com/Wiki/index.php?title=GBS
+49 http://mab.greyserv.net/f/gbs.txt
+52 http://www.vgmpf.com/Wiki/index.php?title=GYM
+51 http://fileformats.archiveteam.org/wiki/GYM#Information
+54 http://www.vgmpf.com/Wiki/index.php?title=HES
+53 http://www.purose.net/befis/download/nezplug/hesspec.txt
+94 http://www.vgmpf.com/Wiki/index.php?title=HMI
+93 http://mab.greyserv.net/f/hmi.txt
+28 http://htk.eng.cam.ac.uk/
+27 https://github.com/erikd/libsndfile/blob/7ea3f9d8746000cc82c016d0b5d48452bb80e9fe/src/htk.c#L143
+44 http://www.vgmpf.com/Wiki/index.php?title=IMF
+43 http://www.shikadi.net/moddingwiki/IMF_Format
+30 http://fileformats.archiveteam.org/wiki/Berkeley/IRCAM/Carl_Sound_Format
+29 http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/IRCAM/IRCAM.html
+74 https://en.wikipedia.org/wiki/Impulse_Tracker#IT_file_format
+73 https://wiki.openmpt.org/Development:_Formats/IT
+56 http://www.vgmpf.com/Wiki/index.php?title=KSS
+55 http://www.purose.net/befis/download/nezplug/kssspec.txt
+26 https://www.gnu.org/software/octave/
+25 https://www.mathworks.com/help/pdf_doc/matlab/matfile_format.pdf
+98 http://www.vgmpf.com/Wiki/index.php?title=MIDI
+97 https://web.archive.org/web/20070104033706/http://www.cybermuff.cz/music/MIDIspec.htm
+76 https://en.wikipedia.org/wiki/MOD_(file_format)
+75 https://www.aes.id.au/modformat.html
+8 https://en.wikipedia.org/wiki/MP3
+7 https://webstore.iec.ch/preview/info_isoiec11172-3%7Bed1.0%7Den.pdf
+10 https://en.wikipedia.org/wiki/WAV
+9 https://web.archive.org/web/20080113195252/http://www.borg.com/~jglatt/tech/wave.htm
+78 https://www.pouet.net/prod.php?which=13362
+77 http://swag.outpostbbs.net/SOUND/0069.PAS.html
+96 http://www.vgmpf.com/Wiki/index.php?title=MUS
+95 http://www.shikadi.net/moddingwiki/MUS_Format
+32 https://www.isip.piconepress.com/projects/speech/software/tutorials/production/fundamentals/v1.0/section_02/s02_01_p04.html
+31 https://www.isip.piconepress.com/projects/speech/software/tutorials/production/fundamentals/v1.0/section_02/text/nist_sphere.text
+58 http://www.vgmpf.com/Wiki/index.php?title=NSF
+57 http://wiki.nesdev.com/w/index.php/NSF
+60 http://www.vgmpf.com/Wiki/index.php?title=NSFE
+59 http://wiki.nesdev.com/w/index.php/NSFe
+12 https://xiph.org/vorbis/
+11 https://xiph.org/vorbis/doc/Vorbis_I_spec.html
+80 http://www.vgmpf.com/Wiki/index.php?title=Oktalyzer
+79 http://www.textfiles.com/programming/FORMATS/okt-form.txt
+22 https://en.wikipedia.org/wiki/Ensoniq_PARIS
+21 https://raw.githubusercontent.com/erikd/libsndfile/7ea3f9d8746000cc82c016d0b5d48452bb80e9fe/src/paf.c
+82 http://www.shikadi.net/moddingwiki/ProTracker_Studio_Module
+81 http://www.shikadi.net/moddingwiki/ProTracker_Studio_Module
+84 http://fileformats.archiveteam.org/wiki/PTM
+83 https://web.archive.org/web/20151027135201/http://hackipedia.org/File%20formats/Music/Sample%20based/text/Poly%20Tracker%20module%20format.cp437.txt.utf-8.txt
+36 https://raw.githubusercontent.com/msekletar/mgetty/master/voice/doc/Readme.pvftools
+35 https://raw.githubusercontent.com/msekletar/mgetty/93f1ef77ed562644d630fccdfd59d95d1f08373f/voice/include/pvf.h
+46 http://www.vgmpf.com/Wiki/index.php?title=RAW_(Rdos)
+45 http://www.shikadi.net/moddingwiki/RAW_Format_(Adlib)
+88 https://en.wikipedia.org/wiki/S3M_(file_format)
+87 http://www.textfiles.com/programming/FORMATS/s3m-form.txt
+62 http://www.vgmpf.com/Wiki/index.php?title=SAP
+61 http://asap.sourceforge.net/sap-format.html
+38 https://en.wikipedia.org/wiki/Avid_Audio#Sound_Designer_file_formats
+37 https://raw.githubusercontent.com/erikd/libsndfile/7ea3f9d8746000cc82c016d0b5d48452bb80e9fe/src/sd2.c
+64 http://www.vgmpf.com/Wiki/index.php?title=SPC
+63 https://wiki.superfamicom.org/spc-and-rsn-file-format
+90 https://en.wikipedia.org/wiki/Scream_Tracker
+89 http://mab.greyserv.net/f/stm.txt
+66 http://www.vgmpf.com/Wiki/index.php?title=VGM
+65 https://www.smspower.org/Music/VGMFileFormat
+20 https://en.wikipedia.org/wiki/Creative_Voice_file
+19 http://sox.sourceforge.net/AudioFormats-11.html#ss11.5
+40 http://blog.bjornroche.com/2009/11/wave64-vs-rf64-vs-caf.html
+39 http://mab.greyserv.net/f/sony_wave64.pdf
+34 https://wiki.vg-resource.com/PlayStation#XA
+33 http://problemkaputt.de/psx-spx.htm#cdromxaaudioadpcmcompression
+24 https://en.wikipedia.org/wiki/FastTracker_2#Files
+23 http://mab.greyserv.net/f/xm.txt
+92 https://en.wikipedia.org/wiki/XM_%28file_format%29
+91 http://zzo38computer.org/textfile/music/xm-form.txt
+100 http://www.vgmpf.com/Wiki/index.php?title=XMI
+99 http://www.shikadi.net/moddingwiki/XMI_Format
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

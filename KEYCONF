@@ -1,0 +1,74 @@
+// DoDA input bindings.
+
+addkeysection "DoDA Controls" DoDAControls
+
+
+// Core interactions.
+
+addmenukey "Use" +use
+defaultbind f +use
+
+addmenukey "Left Lean" +user1
+defaultbind q +user1
+
+addmenukey "Right Lean" +user2
+defaultbind e +user2
+
+addmenukey "Reload Weapon" +reload
+defaultbind r +reload
+
+
+// Deadzone Aim Mode.
+
+addmenukey "DoDA Aim Mode" +doda_aimmode
+alias +doda_aimmode "DoDA_SetDeadzone 1"
+alias -doda_aimmode "DoDA_SetDeadzone 0"
+defaultbind mouse2 +doda_aimmode
+
+
+// Manual B92 hand swap / shotgun rack.
+
+addmenukey "Swap Beretta" +doda_swapberetta
+alias +doda_swapberetta "doda_swap_beretta 1"
+alias -doda_swapberetta "doda_swap_beretta 0"
+defaultbind v +doda_swapberetta
+
+
+// Secondary weapon action.
+// For DoDAShotgun, C toggles the normal-ready and low-ready poses.
+
+addmenukey "Weapon Secondary Action" +doda_weaponsecondary
+alias +doda_weaponsecondary "doda_weapon_secondary 1"
+alias -doda_weaponsecondary "doda_weapon_secondary 0"
+defaultbind v +doda_weaponsecondary
+
+// Pistol swap lock.
+addmenukey "Toggle Pistol Swap Lock" +doda_toggle_pistol_swap_lock
+alias +doda_toggle_pistol_swap_lock "doda_toggle_pistol_swap_lock 1"
+alias -doda_toggle_pistol_swap_lock "doda_toggle_pistol_swap_lock 0"
+defaultbind c +doda_toggle_pistol_swap_lock
+
+// MP5 Fire Mode.
+addmenukey "Cycle MP5 Fire Mode" +doda_firemode
+alias +doda_firemode "+user3"
+alias -doda_firemode "-user3"
+defaultbind c +doda_firemode
+
+
+// Weapon-slot defaults.
+
+addmenukey "Select B92 Pistols" doda_select_b92
+alias doda_select_b92 "slot 2"
+defaultbind 2 doda_select_b92
+
+addmenukey "Select Shotgun" doda_select_shotgun
+alias doda_select_shotgun "slot 3"
+defaultbind 3 doda_select_shotgun
+
+addmenukey "Select MP5KSD" doda_select_mp5
+alias doda_select_mp5 "slot 4"
+defaultbind 4 doda_select_mp5
+
+addmenukey "Holster" DoDA_Holster
+alias DoDA_Holster "use DoDAHolster"
+defaultbind 1 DoDA_Holster

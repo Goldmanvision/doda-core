@@ -1,0 +1,26 @@
+SeqNode
+
+class SeqNode : Object clearScope;
+A SNDSEQ node.
+
+ESeqType
+Class Methods
+void AddChoice(int seqnum, SeqNode.ESeqType type)
+bool AreModesSame(name n, int mode1)
+bool AreModesSameID(int sequence, SeqNode.ESeqType type, int mode1)
+name GetSequenceName()
+TO-DO — This section is not finished yet
+
+Overview of class methods
+AddChoice, AreModesSame, AreModesSameID, GetSequenceName
+
+Instance Methods
+static name GetSequenceSlot(int sequence, SeqNode.ESeqType type)
+static void MarkPrecacheSounds(int sequence, SeqNode.ESeqType type)
+TO-DO — This section is not finished yet
+
+Overview of instance methods
+GetSequenceSlot, MarkPrecacheSounds
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

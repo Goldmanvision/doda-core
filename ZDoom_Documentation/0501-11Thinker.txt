@@ -1,0 +1,35 @@
+Thinker
+
+class Thinker : Object play;
+A class representing any object in the game that runs logic every game tic, i.e., "thinks." Most classes derive from Thinker, directly or indirectly. The order of which thinkers run is defined by stat numbers.
+
+EStatNums
+Class Methods
+static clearScope int Tics2Seconds(int tics)
+Roughly converts a number of tics to an integral amount of seconds. Equivalent to dividing tics by Object.TICRATE.
+
+Overview of class methods
+Tics2Seconds
+
+Instance Methods
+void ChangeStatNum(Thinker.EStatNums stat)
+Changes the statnum of this thinker.
+
+virtual void PostBeginPlay()
+Called at the very end of this Thinker's initialization.
+
+virtual void Tick()
+Called every game tic. The order between this thinker's Tick and every other thinker in the same statnum is unspecified. It is not nondeterministic.
+
+Overview of instance methods
+ChangeStatNum, PostBeginPlay, Tick
+
+Instance Members
+LevelLocals Level
+The local variables for the level this thinker is in.
+
+Overview of instance members
+Level
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

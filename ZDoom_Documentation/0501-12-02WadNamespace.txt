@@ -1,0 +1,81 @@
+WadNamespace
+
+enum Wads.WadNamespace;
+This enumeration describes all of the archive namespaces used by the engine. Here is a table of their paths and markers:
+
+Name	Resource path	Wad file marker
+NS_ACSLIBRARY	/acs	A
+NS_COLORMAPS	/colormaps	C
+NS_FLATS	/flats	FF
+NS_GLOBAL	/	None
+NS_GRAPHICS	/graphics	None
+NS_HIRES	/hires	HI
+NS_MUSIC	/music	None
+NS_NEWTEXTURES	/textures	TX
+NS_PATCHES	/patches	None
+NS_SOUNDS	/sounds	None
+NS_SPRITES	/sprites	S/SS
+NS_STRIFEVOICES	/voices	V
+NS_VOXELS	/voxels	VX
+Variants
+Wads.NS_ACSLIBRARY
+ACS libraries.
+
+Wads.NS_BLOODMISC
+Legacy — Do not use Unused.
+
+Wads.NS_BLOODRAW
+Legacy — Do not use Blood RAW format sounds. Found only in RFF files.
+
+Wads.NS_BLOODSFX
+Legacy — Do not use Blood SFX format sounds. Found only in RFF files.
+
+Wads.NS_COLORMAPS
+BOOM color maps.
+
+Wads.NS_FLATS
+Flat textures.
+
+Wads.NS_GLOBAL
+The global namespace, which is the root of any archive.
+
+Wads.NS_GRAPHICS
+Miscellaneous graphics.
+
+Wads.NS_HIDDEN
+Used for filtered files that did not match this game.
+
+Wads.NS_HIRES
+Legacy — Do not use Deprecated high-resolution textures.
+
+Wads.NS_MUSIC
+Music files.
+
+Wads.NS_NEWTEXTURES
+Generic texture files, usable as patches or flats.
+
+Wads.NS_PATCHES
+Texture patches.
+
+Wads.NS_SOUNDS
+Sound files.
+
+Wads.NS_SPRITES
+Sprite files.
+
+Wads.NS_STRIFEVOICES
+Strife [voice] files.
+
+Wads.NS_VOXELS
+Volumetric pixel ([voxel]) models.
+
+Wads.NS_SPECIALZIPDIRECTORY
+Denotes the start of the specialized resource archive folder namespaces, which are normally under NS_GLOBAL.
+
+Wads.NS_FIRSTSKIN
+Internal — Do not use Used as part of the skin hack.
+
+Overview of variants
+NS_ACSLIBRARY, NS_BLOODMISC, NS_BLOODRAW, NS_BLOODSFX, NS_COLORMAPS, NS_FIRSTSKIN, NS_FLATS, NS_GLOBAL, NS_GRAPHICS, NS_HIDDEN, NS_HIRES, NS_MUSIC, NS_NEWTEXTURES, NS_PATCHES, NS_SOUNDS, NS_SPECIALZIPDIRECTORY, NS_SPRITES, NS_STRIFEVOICES, NS_VOXELS
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)

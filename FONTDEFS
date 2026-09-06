@@ -1,0 +1,85 @@
+/*//////////////////////////|
+// root/FONTDEFS
+*///////////////////////////|
+
+DoDAPalmFont
+{
+    A STCFN065
+    B STCFN066
+    C STCFN067
+    D STCFN068
+    E STCFN069
+    F STCFN070
+    G STCFN071
+    H STCFN072
+    I STCFN073
+    J STCFN074
+    K STCFN075
+    L STCFN076
+    M STCFN077
+    N STCFN078
+    O STCFN079
+    P STCFN080
+    Q STCFN081
+    R STCFN082
+    S STCFN083
+    T STCFN084
+    U STCFN085
+    V STCFN086
+    W STCFN087
+    X STCFN088
+    Y STCFN089
+    Z STCFN090
+
+    a STCFN097
+    b STCFN098
+    c STCFN099
+    d STCFN100
+    e STCFN101
+    f STCFN102
+    g STCFN103
+    h STCFN104
+    i STCFN105
+    j STCFN106
+    k STCFN107
+    l STCFN108
+    m STCFN109
+    n STCFN110
+    o STCFN111
+    p STCFN112
+    q STCFN113
+    r STCFN114
+    s STCFN115
+    t STCFN116
+    u STCFN117
+    v STCFN118
+    w STCFN119
+    x STCFN120
+    y STCFN121
+    z STCFN122
+
+    0 STCFN048
+    1 STCFN049
+    2 STCFN050
+    3 STCFN051
+    4 STCFN052
+    5 STCFN053
+    6 STCFN054
+    7 STCFN055
+    8 STCFN056
+    9 STCFN057
+
+    ! STCFN033
+    ( STCFN040
+    ) STCFN041
+    , STCFN044
+    - STCFN045
+    . STCFN046
+    / STCFN047
+    : STCFN058
+    ? STCFN063
+	
+	
+
+    SpaceWidth 8
+}

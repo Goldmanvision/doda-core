@@ -1,0 +1,48 @@
+WorldEvent
+
+struct WorldEvent play version("2.4");
+The information for a StaticEventHandler.WorldLightning, StaticEventHandler.WorldLineActivated, StaticEventHandler.WorldLineDamaged, StaticEventHandler.WorldLinePreActivated, StaticEventHandler.WorldLoaded, StaticEventHandler.WorldSectorDamaged, StaticEventHandler.WorldThingDamaged, StaticEventHandler.WorldThingDestroyed, StaticEventHandler.WorldThingDied, StaticEventHandler.WorldThingRevived, StaticEventHandler.WorldThingSpawned, or StaticEventHandler.WorldUnloaded event.
+
+Instance Members
+WorldLoaded, WorldUnloaded
+readOnly bool IsSaveGame
+readOnly bool IsReopen
+TO-DO — This section is not finished yet
+
+WorldThingDamaged, WorldThingDestroyed, WorldThingDied, WorldThingRevived, WorldThingSpawned
+readOnly Actor Thing
+TO-DO — This section is not finished yet
+
+WorldThingDied
+readOnly Actor Inflictor
+TO-DO — This section is not finished yet
+
+WorldThingDamaged
+readOnly int Damage
+readOnly Actor DamageSource
+readOnly Name DamageType
+readOnly EDmgFlags DamageFlags
+readOnly double DamageAngle
+TO-DO — This section is not finished yet
+
+WorldLineActivated, WorldLinePreActivated
+readOnly Line ActivatedLine
+readOnly int ActivationType
+bool ShouldActivate
+TO-DO — This section is not finished yet
+
+WorldLineDamaged, WorldSectorDamaged
+readOnly SectorPart DamageSectorPart
+readOnly Line DamageLine
+readOnly Sector DamageSector
+readOnly int DamageLineSide
+readOnly vector3 DamagePosition
+readOnly bool DamageIsRadius
+int NewDamage
+TO-DO — This section is not finished yet
+
+Overview of instance members
+ActivatedLine, ActivationType, Damage, DamageAngle, DamageFlags, DamageIsRadius, DamageLine, DamageLineSide, DamagePosition, DamageSector, DamageSectorPart, DamageSource, DamageType, Inflictor, IsReopen, IsSaveGame, NewDamage, ShouldActivate, Thing
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

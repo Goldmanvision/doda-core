@@ -1,0 +1,27 @@
+Constant Definitions
+Constants are simple named values. Constants are not assignable. Their type is inferred from their value, so if you wish for them to have a specific type, you must cast the value to that type.
+
+ConstantDefinition
+const Identifier = ConstantExpression ;
+StaticArrayDefinition
+Static Array Definitions
+Examples
+Constant Definitions
+Static Array Definitions
+Static Array Definitions
+Similar to constants, static arrays are named values, but for an array. Static arrays cannot be multi-dimensional, unlike normal fixed arrays.
+
+StaticArrayDefinition
+static const Type VariableName = { ConstantExpression (, ConstantExpression)* } ;
+
+Examples
+Constant Definitions
+// Making a regular integer constant.
+const MY_COOL_NUMBER = 777;
+// Making an integer constant from a double.
+const MY_COOL_NUMBER_FROM_BEYOND = int(777.7777);
+Static Array Definitions
+// Making an array of integers.
+static const int MY_COOL_INTEGERS[] = { 0, 1, 2, 3 };
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

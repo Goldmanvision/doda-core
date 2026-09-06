@@ -1,0 +1,215 @@
+ZDoom Docs Table of Contents
+03.00 - ZScript Language
+03.01 - Class Definitions
+03.02 - Constant Definitions
+03.03 - Enumeration Definitions
+03.04 - Expressions
+03.05 - Fundamentals
+03.06 - Member Declarations
+03.07 - Method Definitions
+03.08 - Statements
+03.09 - Structure Definitions
+03.10 - Top-Level
+03.11 - Types
+04.00 - ACS
+05.00 - ZScript API
+05.01 - Base
+05.01.01 - Actor
+05.01.02 - CVar
+05.01.02.01 - ECVarType
+05.01.03 - EFSkillProperty
+05.01.04 - ESkillProperty
+05.01.05 - ESoundFlags
+05.01.06 - EStateUseFlags
+05.01.07 - EmptyTokenType
+05.01.08 - Object
+05.01.09 - State
+05.01.10 - StringTable
+05.01.11 - Thinker
+05.01.11.01 - EStatNums
+05.01.12 - Wads
+05.01.12.01 - FindLumpNamespace
+05.01.12.02 - WadNamespace
+05.02 - Basic Types
+05.02.01 - T[]
+05.02.02 - array
+05.02.03 - color
+05.02.04 - float types
+05.02.05 - int types
+05.02.06 - string
+05.02.07 - textureId
+05.02.08 - vector2
+05.02.09 - vector3
+05.03 - Drawing
+05.03.01 - BrokenLines
+05.03.02 - Console
+05.03.03 - DrawTextureTags
+05.03.04 - Font
+05.03.05 - GiFont
+05.03.06 - Screen
+05.03.07 - Shape2D
+05.03.08 - TexMan
+05.04 - Event Handling
+05.04.01 - ConsoleEvent
+05.04.02 - EventHandler
+05.04.03 - InputEvent
+05.04.04 - PlayerEvent
+05.04.05 - RenderEvent
+05.04.06 - ReplaceEvent
+05.04.07 - ReplacedEvent
+05.04.08 - StaticEventHandler
+05.04.09 - UiEvent
+05.04.10 - WorldEvent
+05.05 - Globals
+05.05.01 - DeHInfo
+05.06 - Intermissions
+05.06.01 - InterBackground
+05.06.02 - PatchInfo
+05.06.03 - StatusScreen
+05.06.03.01 - ESpState
+05.06.03.02 - EState
+05.06.04 - WbPlayerStruct
+05.06.05 - WbStartStruct
+05.07 - Level Data
+05.07.01 - F3DFloor
+05.07.02 - FColorMap
+05.07.03 - LevelLocals
+05.07.04 - LineIdIterator
+05.07.05 - SectorEffect
+05.07.06 - SectorTagIterator
+05.07.07 - Vertex
+05.08 - Players
+05.08.01 - EPlayerGender
+05.08.02 - EPlayerState
+05.08.03 - PlayerClass
+05.08.04 - PlayerPawn
+05.08.05 - PlayerSkin
+05.08.06 - Team
+05.08.07 - UserCmd
+05.09 - Sound
+05.09.01 - MusPlayingInfo
+05.09.02 - SeqNode
+06.00 - Concepts
+06.01 - Action Scoping
+06.02 - Angles
+06.03 - CVars
+06.04 - Caching
+06.05 - Decals
+06.06 - Filters
+06.07 - Format Strings
+06.08 - Localization
+06.09 - Object Scoping
+06.10 - Render Styles
+06.11 - Skins
+06.12 - Text Colors
+06.13 - Translations
+06.14 - Virtual File-System
+07.00 - Data Formats
+07.01 - BOOM Color Maps
+07.02 - CVarInfo
+07.03 - DeHackEd
+07.04 - Deprecated HiResTex
+07.05 - Graphics
+07.06 - KeyConf
+07.07 - Language
+07.08 - MapInfo
+07.09 - Music
+07.10 - Skins
+07.11 - SndInfo
+07.12 - SndSeq
+07.13 - Sounds
+07.14 - TeamInfo
+07.15 - Voices
+07.16 - Voxels
+
+
+ZDoom Documentation .txt Files:
+    Directory: C:\Users\nicka\OneDrive\Desktop\ZDoom_Documentation
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a----         7/22/2026   4:47 AM           2255 0300ZScript_Language.txt
+-a----         7/22/2026   4:48 AM           7918 0301Class_Definitions.txt
+-a----         7/22/2026   4:48 AM           1153 0302Constant_Definitions.txt
+-a----         7/22/2026   4:49 AM           1074 0303Enumeration_Definitions.txt
+-a----         7/22/2026   4:49 AM           8147 0304Expressions.txt
+-a----         7/22/2026   4:50 AM           6809 0305Fundamentals.txt
+-a----         7/22/2026   4:50 AM           2163 0306Member_Declarations.txt
+-a----         7/22/2026   4:51 AM           5449 0307Method_Definitions.txt
+-a----         7/22/2026   4:52 AM           6330 0308Statements.txt
+-a----         7/22/2026   4:52 AM           1550 0309Structure_Definitions.txt
+-a----         7/22/2026   4:52 AM           2358 0310Top-Level.txt
+-a----         7/22/2026   4:53 AM           7887 0311Types.txt
+-a----         7/22/2026   5:07 AM           2887 0501-01-11-01EStatNums.txt
+-a----         7/22/2026   4:57 AM          71149 0501-01actor.txt
+-a----         7/22/2026   4:55 AM            592 0501-02-01ECVarType.txt
+-a----         7/22/2026   4:58 AM           1443 0501-02Cvar.txt
+-a----         7/22/2026   4:55 AM           1103 0501-03EFSkillProperty.txt
+-a----         7/22/2026   4:59 AM           1552 0501-04ESkillProperty.txt
+-a----         7/22/2026   5:00 AM            474 0501-06EStateUseFlags.txt
+-a----         7/22/2026   5:00 AM            485 0501-07EmptyTokenType.txt
+-a----         7/22/2026   5:05 AM           4155 0501-08Object.txt
+-a----         7/22/2026   5:06 AM           3304 0501-09State.txt
+-a----         7/22/2026   5:06 AM            745 0501-10StringTable.txt
+-a----         7/22/2026   5:07 AM           1229 0501-11Thinker.txt
+-a----         7/22/2026   5:08 AM            472 0501-12-01FindLumpNamespace.txt
+-a----         7/22/2026   5:09 AM           2115 0501-12-02WadNamespace.txt
+-a----         7/22/2026   5:08 AM           2674 0501-12Wads.txt
+-a----         7/22/2026   5:09 AM            362 0502-01T[].txt
+-a----         7/22/2026   5:10 AM           1849 0502-02array-T.txt
+-a----         7/22/2026   5:10 AM            407 0502-03color.txt
+-a----         7/22/2026   5:11 AM           1364 0502-04float_types.txt
+-a----         7/22/2026   5:11 AM            383 0502-05int_types.txt
+-a----         7/22/2026   5:12 AM           5221 0502-06string.txt
+-a----         7/22/2026   5:12 AM            930 0502-07textureId.txt
+-a----         7/22/2026   5:12 AM            557 0502-08vector2.txt
+-a----         7/22/2026   5:13 AM            645 0502-09vector3.txt
+-a----         7/22/2026   5:13 AM            625 0503-01BrokenLines.txt
+-a----         7/22/2026   5:13 AM            926 0503-02Console.txt
+-a----         7/22/2026   5:14 AM           5109 0503-03DrawTextureTags.txt
+-a----         7/22/2026   5:14 AM           3673 0503-04Font.txt
+-a----         7/22/2026   5:15 AM            400 0503-05GiFont.txt
+-a----         7/22/2026   5:15 AM           4362 0503-06Screen.txt
+-a----         7/22/2026   5:16 AM            898 0503-07Shape2D.txt
+-a----         7/22/2026   5:16 AM           1880 0503-08TexMan.txt
+-a----         7/22/2026   5:16 AM           1103 0504-01ConsoleEvent.txt
+-a----         7/22/2026   5:17 AM           1161 0504-02EventHandler.txt
+-a----         7/22/2026   5:18 AM           1126 0504-03InputEvent.txt
+-a----         7/22/2026   5:18 AM            664 0504-04PlayerEvent.txt
+-a----         7/22/2026   5:18 AM           1081 0504-05RenderEvent.txt
+-a----         7/22/2026   5:19 AM            949 0504-06ReplaceEvent.txt
+-a----         7/22/2026   5:19 AM            942 0504-07ReplacedEvent.txt
+-a----         7/22/2026   5:20 AM           8897 0504-08StaticEventHandler.txt
+-a----         7/22/2026   5:20 AM           1273 0504-09UiEvent.txt
+-a----         7/22/2026   5:21 AM           2040 0504-10WorldEvent.txt
+-a----         7/22/2026   5:22 AM           1146 0505-01DeHInfo.txt
+-a----         7/22/2026   5:22 AM          10461 0505Globals.txt
+-a----         7/22/2026   5:23 AM            750 0506-01InterBackground.txt
+-a----         7/22/2026   5:23 AM            758 0506-02PatchInfo.txt
+-a----         7/22/2026   5:24 AM            526 0506-03-01ESpState.txt
+-a----         7/22/2026   6:03 AM            831 0506-03-02EState.txt
+-a----         7/22/2026   5:24 AM           8644 0506-03StatusScreen.txt
+-a----         7/22/2026   5:25 AM            857 0506-04WbPlayerStruct.txt
+-a----         7/22/2026   5:25 AM           1765 0506-05WbStartStruct.txt
+-a----         7/22/2026   5:26 AM            887 0507-01F3DFloor.txt
+-a----         7/22/2026   5:26 AM            657 0507-02FColorMap.txt
+-a----         7/22/2026   5:27 AM           6655 0507-03LevelLocals.txt
+-a----         7/22/2026   5:27 AM            685 0507-04LineIdIterator.txt
+-a----         7/22/2026   5:28 AM            559 0507-05SectorEffect.txt
+-a----         7/22/2026   5:28 AM           1035 0507-06SectorTagIterator.txt
+-a----         7/22/2026   5:28 AM            472 0507-07Vertex.txt
+-a----         7/22/2026   5:29 AM            591 0508-01EPlayerGender.txt
+-a----         7/22/2026   5:29 AM            783 0508-02EPlayerState.txt
+-a----         7/22/2026   5:30 AM            908 0508-03PlayerClass.txt
+-a----         7/22/2026   5:30 AM           1157 0508-04PlayerSkin.txt
+-a----         7/22/2026   5:30 AM            502 0508-06Team.txt
+-a----         7/22/2026   5:31 AM            949 0508-07UserCmd.txt
+-a----         7/22/2026   5:31 AM            849 0509-02SeqNode.txt
+-a----         7/22/2026   5:32 AM            845 0601Action_Scoping.txt
+-a----         7/22/2026   5:32 AM            268 0602Angles.txt
+-a----         7/22/2026   5:35 AM            934 0603CVars.txt
+-a----         7/22/2026   5:32 AM           1850 0614VirtualFileSystem.txt
+-a----         7/22/2026   5:33 AM            267 0705Graphics.txt
+-a----         7/22/2026   5:33 AM            463 0708MapInfo.txt
+-a----         7/22/2026   5:33 AM           8306 0709Music.txt
+-a----         7/22/2026   5:31 AM            509 0809-01MusPlayingInfo.txt
+-a----         7/22/2026   6:13 AM           2680 __ZDoom_Docs_TOC.txt

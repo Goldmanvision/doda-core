@@ -1,0 +1,24 @@
+Team
+
+struct Team clearScope;
+A team as defined in TEAMINFO.
+
+Instance Members
+string MName
+The name of the team for menus.
+
+Overview of instance members
+MName
+
+Constants
+const MAX
+The maximum number of teams.
+
+const NOTEAM
+A constant index for a player with no team.
+
+Overview of constants
+MAX, NOTEAM
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

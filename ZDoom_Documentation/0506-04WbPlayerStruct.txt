@@ -1,0 +1,29 @@
+WbPlayerStruct
+
+struct WbPlayerStruct clearScope version("2.4");
+Information for each individual player for a StatusScreen.
+
+Instance Members
+int SItems
+The number of items this player acquired.
+
+int SKills
+The number of monsters this player killed.
+
+int SSecret
+The number of secrets this player found.
+
+int STime
+The time this player finished the level at, in tics. (This is the same for all players.)
+
+int FragCount
+The total amount of frags this player scored against all players.
+
+int[MAXPLAYERS] Frags
+The number of frags this player scored against each other player.
+
+Overview of instance members
+FragCount, Frags, SItems, SKills, SSecret, STime
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

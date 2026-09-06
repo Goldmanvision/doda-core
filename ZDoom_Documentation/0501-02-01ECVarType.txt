@@ -1,0 +1,26 @@
+ECVarType
+
+enum CVar.ECVarType;
+Each of the possible types for CVars.
+
+Variants
+CVar.CVAR_BOOL
+Boolean CVars.
+
+CVar.CVAR_INT
+Integer CVars.
+
+CVar.CVAR_FLOAT
+Floating-point CVars.
+
+CVar.CVAR_STRING
+String CVars.
+
+CVar.CVAR_COLOR
+Color CVars. These do not have accessor functions, and must be cast to other types.
+
+Overview of variants
+CVAR_BOOL, CVAR_COLOR, CVAR_FLOAT, CVAR_INT, CVAR_STRING
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

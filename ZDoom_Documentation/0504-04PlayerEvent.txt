@@ -1,0 +1,17 @@
+PlayerEvent
+
+struct PlayerEvent play version("2.4");
+The information for a StaticEventHandler.PlayerEntered, StaticEventHandler.PlayerRespawned, StaticEventHandler.PlayerDied, or StaticEventHandler.PlayerDisconnected event.
+
+Instance Members
+readOnly int PlayerNumber
+The player who created this event.
+
+readOnly bool IsReturn
+true if this is a StaticEventHandler.PlayerEntered event caused by re-entering a hub level.
+
+Overview of instance members
+IsReturn, PlayerNumber
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

@@ -1,0 +1,12 @@
+Action Scoping
+On classes derived from Actor, states and methods can be scoped to a certain subset of uses. This is mainly to differentiate actions which take place in inventory items and weapons, and actions which take place in the actual game map, for disambiguating the self pointer usage. The available scopes are:
+
+Name	Description
+actor	Actions are called from an actual map object.
+item	Actions are called from an inventory item.
+overlay	Actions are called from a weapon overlay.
+weapon	Actions are called from a weapon.
+These can be defined either in the states block header as-is, Internal — Do not use or with Actor's DefaultStateUsage property.
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

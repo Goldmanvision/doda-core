@@ -1,0 +1,22 @@
+Console
+
+struct Console clearScope;
+Basic access to console functionality.
+
+Class Methods
+static void HideConsole()
+Hides the console if it is open and GameState is not GS_FULLCONSOLE.
+
+static void MidPrint(Font font, string text, bool bold = false)
+Prints text (possibly a LANGUAGE string if prefixed with $) in font to the middle of the screen for 1½ seconds. Will print even if the player is a spectator if bold is true. Uses the msgmidcolor CVar for non-bold messages and msgmidcolor2 for bold messages.
+
+This is the function used internally by ACS' Print and PrintBold functions.
+
+static varArg void PrintF(string fmt, ...)
+Prints a formatted string to the console.
+
+Overview of class methods
+HideConsole, MidPrint, PrintF
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

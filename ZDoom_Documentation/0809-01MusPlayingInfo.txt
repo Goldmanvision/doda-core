@@ -1,0 +1,20 @@
+MusPlayingInfo
+
+struct MusPlayingInfo clearScope;
+Information about music that is playing.
+
+Instance Members
+string Name
+The file or lump name of the music playing.
+
+int BaseOrder
+The selected music ordering of the song.
+
+bool Loop
+If the song will loop or not.
+
+Overview of instance members
+BaseOrder, Loop, Name
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

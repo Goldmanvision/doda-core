@@ -1,0 +1,20 @@
+BrokenLines
+
+class BrokenLines : Object clearScope;
+A container representing an array of lines of text that have been broken up to fit the screen and clipping region.
+
+Instance Methods
+int Count()
+Returns the amount of lines in this container.
+
+string StringAt(int line)
+Returns the text of line line.
+
+int StringWidth(int line)
+Returns the width in pixels of line line.
+
+Overview of instance methods
+Count, StringAt, StringWidth
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

@@ -1,0 +1,21 @@
+LineIdIterator
+
+class LineIdIterator : Object clearScope;
+Iterates over line indices with a specified tag.
+
+Class Methods
+deprecated("3.8") static LineIdIterator Create(int tag)
+Legacy — Do not use Use LevelLocals.CreateLineIdIterator instead.
+
+Creates a new iterator over lines with tag tag.
+
+Overview of class methods
+Instance Methods
+int Next()
+Returns the index of the current line and advances the iterator. Returns -1 when the list is exhausted.
+
+Overview of instance methods
+Next
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

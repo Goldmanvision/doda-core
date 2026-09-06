@@ -1,0 +1,27 @@
+/*//////////////////////////|
+// root/LANGUAGE
+*///////////////////////////|
+
+[default]
+
+DODA_HELLO = "DoDA online.";
+DODA_TITLE = "Department of Diplomagic Affairs";
+DODA_AGENT = "DoDA Agent";
+DODA_MISSION = "Mission";
+DODA_COMPLETE = "Mission Complete";
+
+DODA_MISSION_COMPLETE = "Mission complete - exfiltrate now.";
+DODA_EXTRACTION_LOCKED = "Extraction LOCKED - complete your objective first.";
+DODA_EXTRACTION_AUTHORIZED = "Extraction is now AUTHORIZED.";
+
+DODA_DEBRIEF_CONFIRMED = "DEBRIEF - mission recorded.";
+DODA_RETURNING_TO_FIELD = "Returning to field...";
+
+DODA_MISSION_01_NAME = "Mission 01";
+DODA_MISSION_01_OBJECTIVE = "talk to INFORMANT.";
+
+DODA_MISSION_02_NAME = "Mission 02";
+DODA_MISSION_02_OBJECTIVE = "collect evidence from TERMINAL.";
+
+DODA_MISSION_03_NAME = "Mission 03";
+DODA_MISSION_03_OBJECTIVE = "secure the SECONDARY FILE.";

@@ -1,0 +1,27 @@
+/*//////////////////////////|
+// root/CVARINFO
+*///////////////////////////|
+
+// Active deadzone aim input.
+user float doda_aim_sensitivity = 0.20;
+user float doda_raw_mouse_x = 0.0;
+user float doda_raw_mouse_y = 0.0;
+
+// DoDA weapon-input state.
+
+user bool doda_swap_beretta = false;
+user bool doda_weapon_secondary = false;
+
+// Deadzone development controls.
+user bool doda_debug_force_deadzone = false;
+
+// Weapon presentation development controls.
+user float doda_debug_sprite_x = 0.0;
+user float doda_debug_sprite_y = 0.0;
+user float doda_debug_sprite_rot = 0.0;
+user float doda_debug_sprite_scale = 1.0;
+user bool doda_debug_print_now = false;
+
+// Pistol hand-swap lock.
+user bool doda_toggle_pistol_swap_lock = false;
+

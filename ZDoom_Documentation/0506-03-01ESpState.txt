@@ -1,0 +1,18 @@
+ESpState
+
+enum StatusScreen.ESpState;
+Each of the possible single-player states for StatusScreens.
+
+Variants
+StatusScreen.SP_KILLS
+StatusScreen.SP_ITEMS
+StatusScreen.SP_SECRET
+StatusScreen.SP_FRAGS
+StatusScreen.SP_TIME
+TO-DO — This section is not finished yet
+
+Overview of variants
+SP_FRAGS, SP_ITEMS, SP_KILLS, SP_SECRET, SP_TIME
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+

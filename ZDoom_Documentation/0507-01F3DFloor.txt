@@ -1,0 +1,38 @@
+F3DFloor
+
+struct F3DFloor play;
+Describes a 3D floor.
+
+EF3DFloorFlags
+Instance Methods
+textureId GetTexture(int position)
+Overview of instance methods
+GetTexture
+
+Instance Members
+readOnly SecPlane Bottom
+The bottom plane of this floor.
+
+readOnly SecPlane Top
+The top plane of this floor.
+
+readOnly EF3DFloorFlags Flags
+The flags for this floor.
+
+readOnly Line Master
+The control line used for this floor.
+
+readOnly Sector Model
+The control sector used for this floor.
+
+readOnly Sector Target
+The actual sector used for this floor.
+
+readOnly int Alpha
+The transparency of the floor, out of 255.
+
+Overview of instance members
+Alpha, Bottom, Flags, Master, Model, Target, Top
+
+This documentation is public domain under the CC0 license. Please contribute to the project! Originally authored by Alison G. Watson (they/them) and fira watson (she/they.)
+
