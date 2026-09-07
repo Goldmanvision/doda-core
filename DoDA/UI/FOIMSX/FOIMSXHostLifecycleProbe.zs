@@ -19,12 +19,16 @@ class DoDAFOIMSXHostLifecycleProbe : StaticEventHandler
 
     private ui int mObservedWorldLoadGeneration;
     private ui bool mActive;
+    private ui bool mLastAssignmentActiveState;
+
+    private ui DoDAAssignmentSnapshotV1ViewState mAssignmentViewState;
 
     private ui void ReconcileObservedGeneration()
     {
         if (mObservedWorldLoadGeneration != mWorldLoadGeneration)
         {
             mActive = false;
+            mLastAssignmentActiveState = false;
             mObservedWorldLoadGeneration = mWorldLoadGeneration;
         }
     }
@@ -67,6 +71,34 @@ class DoDAFOIMSXHostLifecycleProbe : StaticEventHandler
     override void WorldUnloaded(WorldEvent e)
     {
         ReleaseFOIMSXFreeze(consoleplayer);
+    }
+
+    override void RenderOverlay(RenderEvent e)
+    {
+        if (Level == null ||
+            Level.MapName != "MAP01" ||
+            !mActive)
+        {
+            mLastAssignmentActiveState = false;
+            return;
+        }
+
+        if (!mLastAssignmentActiveState)
+        {
+            if (mAssignmentViewState == null)
+            {
+                mAssignmentViewState = DoDAAssignmentSnapshotV1ViewState.Create();
+            }
+
+            let snapshot = DoDAAssignmentSnapshotV1Adapter.AcquireSnapshot();
+            mAssignmentViewState.UpdateFromSnapshot(snapshot);
+            mLastAssignmentActiveState = true;
+        }
+
+        if (mAssignmentViewState != null)
+        {
+            DoDAAssignmentSnapshotV1Renderer.Render(mAssignmentViewState);
+        }
     }
 
     override void NetworkProcess(ConsoleEvent e)

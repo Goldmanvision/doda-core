@@ -229,8 +229,8 @@ class DoDAAssignmentSnapshotV1Adapter : Object
         if (revAfter != revBefore)
         {
             snapshot.IsValid = false;
-            snapshot.AcquisitionState = ACQUISITION_REVISION_CHANGED;
-            snapshot.ValidationReason = VALIDATION_REVISION_CHANGED_DURING_ACQUISITION;
+            snapshot.AcquisitionState = ASSIGNMENT_ACQUISITION_REVISION_CHANGED;
+            snapshot.ValidationReason = ASSIGNMENT_VALIDATION_REVISION_CHANGED_DURING_ACQUISITION;
             return snapshot;
         }
 
@@ -244,14 +244,14 @@ class DoDAAssignmentSnapshotV1Adapter : Object
         }
 
         snapshot.IsValid = true;
-        snapshot.ValidationReason = VALIDATION_NONE;
+        snapshot.ValidationReason = ASSIGNMENT_VALIDATION_NONE;
         if (count == 0)
         {
-            snapshot.AcquisitionState = ACQUISITION_EMPTY;
+            snapshot.AcquisitionState = ASSIGNMENT_ACQUISITION_EMPTY;
         }
         else
         {
-            snapshot.AcquisitionState = ACQUISITION_POPULATED;
+            snapshot.AcquisitionState = ASSIGNMENT_ACQUISITION_POPULATED;
         }
 
         // 15. Return candidate snapshot.

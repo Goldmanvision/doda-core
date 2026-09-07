@@ -5,10 +5,10 @@
 // Explicit FOIMS-X Assignment V1 presentation states.
 enum EDoDAAssignmentViewState
 {
-    VIEWSTATE_UNAVAILABLE,
+    ASSIGNMENT_VIEWSTATE_UNAVAILABLE,
     VIEWSTATE_INCOMPATIBLE_VERSION,
-    VIEWSTATE_EMPTY,
-    VIEWSTATE_STALE,
+    ASSIGNMENT_VIEWSTATE_EMPTY,
+    ASSIGNMENT_VIEWSTATE_STALE,
     VIEWSTATE_VALID
 };
 
@@ -37,7 +37,7 @@ class DoDAAssignmentSnapshotV1ViewState : Object
     // Resets view state to default initial state.
     void Reset()
     {
-        CurrentViewState = VIEWSTATE_UNAVAILABLE;
+        CurrentViewState = ASSIGNMENT_VIEWSTATE_UNAVAILABLE;
         TotalCount = 0;
         ActiveRevisionText = "";
         ActiveStrategicMinutesText = "";
@@ -54,7 +54,7 @@ class DoDAAssignmentSnapshotV1ViewState : Object
             // If a valid snapshot was previously accepted, retain display data and mark STALE
             if (LastAcceptedSnapshot != null && LastAcceptedSnapshot.IsValid)
             {
-                CurrentViewState = VIEWSTATE_STALE;
+                CurrentViewState = ASSIGNMENT_VIEWSTATE_STALE;
                 return;
             }
 
@@ -66,7 +66,7 @@ class DoDAAssignmentSnapshotV1ViewState : Object
             }
             else
             {
-                CurrentViewState = VIEWSTATE_UNAVAILABLE;
+                CurrentViewState = ASSIGNMENT_VIEWSTATE_UNAVAILABLE;
             }
 
             TotalCount = 0;
@@ -84,7 +84,7 @@ class DoDAAssignmentSnapshotV1ViewState : Object
 
         if (newSnapshot.Count == 0)
         {
-            CurrentViewState = VIEWSTATE_EMPTY;
+            CurrentViewState = ASSIGNMENT_VIEWSTATE_EMPTY;
         }
         else
         {

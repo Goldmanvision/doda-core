@@ -5,20 +5,20 @@
 // Structured outcome of an assignment snapshot acquisition transaction.
 enum EDoDAAssignmentAcquisitionState
 {
-    ACQUISITION_UNAVAILABLE,
+    ASSIGNMENT_ACQUISITION_UNAVAILABLE,
     ACQUISITION_SUCCEEDED,
     ACQUISITION_UNSUPPORTED_VERSION,
     ACQUISITION_INVALID_COUNT,
     ACQUISITION_INVALID_ROW,
-    ACQUISITION_REVISION_CHANGED,
-    ACQUISITION_EMPTY,
-    ACQUISITION_POPULATED
+    ASSIGNMENT_ACQUISITION_REVISION_CHANGED,
+    ASSIGNMENT_ACQUISITION_EMPTY,
+    ASSIGNMENT_ACQUISITION_POPULATED
 };
 
 // Structured reason code for assignment candidate validation rejection.
 enum EDoDAAssignmentValidationReason
 {
-    VALIDATION_NONE,
+    ASSIGNMENT_VALIDATION_NONE,
     VALIDATION_UNSUPPORTED_API_VERSION,
     VALIDATION_INVALID_REVISION_TOKEN,
     VALIDATION_INVALID_COUNT,
@@ -33,7 +33,7 @@ enum EDoDAAssignmentValidationReason
     VALIDATION_INVALID_TASK_PROGRESS,
     VALIDATION_INVALID_COST,
     VALIDATION_DUPLICATE_ASSIGNMENT_ID,
-    VALIDATION_REVISION_CHANGED_DURING_ACQUISITION
+    ASSIGNMENT_VALIDATION_REVISION_CHANGED_DURING_ACQUISITION
 };
 
 // Pure data model for a single Assignment V1 record.
@@ -103,7 +103,7 @@ class DoDAAssignmentSnapshotV1 : Object
         Count = 0;
         Records.Clear();
         IsValid = false;
-        AcquisitionState = ACQUISITION_UNAVAILABLE;
-        ValidationReason = VALIDATION_NONE;
+        AcquisitionState = ASSIGNMENT_ACQUISITION_UNAVAILABLE;
+        ValidationReason = ASSIGNMENT_VALIDATION_NONE;
     }
 }

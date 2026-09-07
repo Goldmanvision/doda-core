@@ -62,7 +62,7 @@ class DoDAAssignmentSnapshotV1Renderer : Object
 
         int state = viewState.CurrentViewState;
 
-        if (state == EDoDAAssignmentViewState.VIEWSTATE_UNAVAILABLE)
+        if (state == ASSIGNMENT_VIEWSTATE_UNAVAILABLE)
         {
             Screen.DrawText(NewSmallFont, Font.CR_RED, PANEL_X + 8, PANEL_Y + 30, "ASSIGNMENT DATA UNAVAILABLE",
                 DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
@@ -80,7 +80,7 @@ class DoDAAssignmentSnapshotV1Renderer : Object
             return;
         }
 
-        if (state == EDoDAAssignmentViewState.VIEWSTATE_INCOMPATIBLE_VERSION)
+        if (state == VIEWSTATE_INCOMPATIBLE_VERSION)
         {
             Screen.DrawText(NewSmallFont, Font.CR_RED, PANEL_X + 8, PANEL_Y + 30, "ASSIGNMENT DATA VERSION INCOMPATIBLE",
                 DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
@@ -98,7 +98,7 @@ class DoDAAssignmentSnapshotV1Renderer : Object
             return;
         }
 
-        if (state == EDoDAAssignmentViewState.VIEWSTATE_STALE)
+        if (state == ASSIGNMENT_VIEWSTATE_STALE)
         {
             Screen.DrawText(NewSmallFont, Font.CR_YELLOW, PANEL_X + 8, PANEL_Y + 24, "ASSIGNMENT DATA STALE",
                 DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
