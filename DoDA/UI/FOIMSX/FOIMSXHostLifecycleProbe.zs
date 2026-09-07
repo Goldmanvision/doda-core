@@ -9,7 +9,6 @@
 //
 // Scope:
 //   - MAP01-only FOIMS-X activation, close, freeze ownership, and input capture.
-//   - Session-scoped Assignment Snapshot V1 view state, adapter acquisition, and presentation rendering.
 //   - Zero native or persistence mutation.
 *///////////////////////////|
 
@@ -20,16 +19,12 @@ class DoDAFOIMSXHostLifecycleProbe : StaticEventHandler
 
     private ui int mObservedWorldLoadGeneration;
     private ui bool mActive;
-    private ui bool mLastAssignmentActiveState;
-
-    private ui DoDAAssignmentSnapshotV1ViewState mAssignmentViewState;
 
     private ui void ReconcileObservedGeneration()
     {
         if (mObservedWorldLoadGeneration != mWorldLoadGeneration)
         {
             mActive = false;
-            mLastAssignmentActiveState = false;
             mObservedWorldLoadGeneration = mWorldLoadGeneration;
         }
     }
@@ -53,7 +48,6 @@ class DoDAFOIMSXHostLifecycleProbe : StaticEventHandler
     {
         Console.Printf(
             "[DoDA-FOIMSX-Host-Lifecycle] event=register scope=static "
-            .. "acquisition=assignment-v1 viewstate=assignment-v1 draw=assignment-v1 "
             .. "input=host-session-control"
         );
     }
@@ -65,8 +59,7 @@ class DoDAFOIMSXHostLifecycleProbe : StaticEventHandler
 
         Console.Printf(
             "[DoDA-FOIMSX-Host-Lifecycle] event=worldloaded scope=static "
-            .. "map=%s hqEligible=no acquisition=assignment-v1 viewstate=assignment-v1 "
-            .. "draw=assignment-v1 input=host-session-control",
+            .. "map=%s hqEligible=no input=host-session-control",
             Level.MapName
         );
     }
@@ -74,34 +67,6 @@ class DoDAFOIMSXHostLifecycleProbe : StaticEventHandler
     override void WorldUnloaded(WorldEvent e)
     {
         ReleaseFOIMSXFreeze(consoleplayer);
-    }
-
-    override void RenderOverlay(RenderEvent e)
-    {
-        if (Level == null ||
-            Level.MapName != "MAP01" ||
-            !mActive)
-        {
-            mLastAssignmentActiveState = false;
-            return;
-        }
-
-        if (!mLastAssignmentActiveState)
-        {
-            if (mAssignmentViewState == null)
-            {
-                mAssignmentViewState = DoDAAssignmentSnapshotV1ViewState.Create();
-            }
-
-            let snapshot = DoDAAssignmentSnapshotV1Adapter.AcquireSnapshot();
-            mAssignmentViewState.UpdateFromSnapshot(snapshot);
-            mLastAssignmentActiveState = true;
-        }
-
-        if (mAssignmentViewState != null)
-        {
-            DoDAAssignmentSnapshotV1Renderer.Render(mAssignmentViewState);
-        }
     }
 
     override void NetworkProcess(ConsoleEvent e)

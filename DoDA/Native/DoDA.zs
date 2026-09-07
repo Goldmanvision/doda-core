@@ -31,20 +31,4 @@ struct DoDA native
     native static int GetTaskStatus(int index);
     native static int GetTaskProgress(int index);
     native static String GetTaskLocationIdText(int index);
-
-    // Assignment Snapshot V1 Query API
-    native static int GetAssignmentSnapshotApiVersion();
-    native static String GetAssignmentSnapshotRevisionText();
-    native static String GetAssignmentSnapshotStrategicMinutesText();
-    native static int GetAssignmentSnapshotCount();
-    native static String GetAssignmentIdText(int index);
-    native static String GetAssignmentPersonIdText(int index);
-    native static String GetAssignmentPersonDisplayName(int index);
-    native static String GetAssignmentTaskIdText(int index);
-    native static String GetAssignmentTaskTitle(int index);
-    native static String GetAssignmentLocationIdText(int index);
-    native static String GetAssignmentLocationDisplayName(int index);
-    native static int GetAssignmentTaskStatus(int index);
-    native static int GetAssignmentTaskProgress(int index);
-    native static int GetAssignmentCost(int index);
 }

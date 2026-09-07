@@ -39,12 +39,6 @@ version "2.4"
 #include "DoDA/UI/FOIMSX/PersonnelV1/PersonnelSnapshotV1ViewState.zs"
 #endregion
 
-#region FOIMSXAssignmentV1
-#include "DoDA/UI/FOIMSX/AssignmentV1/AssignmentSnapshotV1Model.zs"
-#include "DoDA/UI/FOIMSX/AssignmentV1/AssignmentSnapshotV1Adapter.zs"
-#include "DoDA/UI/FOIMSX/AssignmentV1/AssignmentSnapshotV1ViewState.zs"
-#endregion
-
 
 #region FOIMSXHostLifecycleProbe
 #include "DoDA/UI/FOIMSX/FOIMSXHostLifecycleProbe.zs"
@@ -59,7 +53,6 @@ version "2.4"
 
 #region FOIMSXRenderer
 #include "DoDA/UI/FOIMSX/PersonnelV1/PersonnelSnapshotV1Renderer.zs"
-#include "DoDA/UI/FOIMSX/AssignmentV1/AssignmentSnapshotV1Renderer.zs"
 #endregion
 
 
