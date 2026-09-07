@@ -1,0 +1,2 @@
+﻿task_id,display_name,location_id,state,required_work,current_progress,assigned_person_count
+TASK_MORROW_SURVEY_001,Survey Anomalous Emissions,LOC_MORROW_WATERWORKS,ACTIVE,100,25,2
