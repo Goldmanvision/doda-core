@@ -332,7 +332,13 @@ class DoDAPistol : DoDAWeapon
             return ResolveState("ReadyEmpty");
         }
 
-        A_WeaponReady(WRF_ALLOWZOOM | WRF_NOSECONDARY);
+        int readyFlags = WRF_ALLOWZOOM | WRF_NOSECONDARY;
+        if (DoDA.IsAkimboActive())
+        {
+            readyFlags |= WRF_NOBOB | WRF_NOPRIMARY;
+        }
+
+        A_WeaponReady(readyFlags);
         return null;
     }
 
@@ -359,6 +365,10 @@ class DoDAPistol : DoDAWeapon
 
         pistol.CommitReload();
         pistol.reloadInProgress = false;
+        if (DoDA.IsAkimboActive())
+        {
+            DoDA.SetReloadLock(false);
+        }
     }
 
     override int GetWeaponHand()

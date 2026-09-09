@@ -18,7 +18,13 @@ class DoDAB92Right : DoDAPistol
             return ResolveState("ReadyEmpty");
         }
 
-        A_WeaponReady(WRF_ALLOWZOOM | WRF_NOSECONDARY);
+        int readyFlags = WRF_ALLOWZOOM | WRF_NOSECONDARY;
+        if (DoDA.IsAkimboActive())
+        {
+            readyFlags |= WRF_NOBOB | WRF_NOPRIMARY;
+        }
+
+        A_WeaponReady(readyFlags);
         return null;
     }
 
@@ -32,6 +38,7 @@ class DoDAB92Right : DoDAPistol
             pistol == null
             || pistol.owner == null
             || pistol.owner.FindInventory('DoDAB92Left') == null
+            || DoDA.IsAkimboActive()
         )
         {
             return ResolveState("ReloadSolo");

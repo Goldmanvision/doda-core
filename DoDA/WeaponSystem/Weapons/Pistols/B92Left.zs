@@ -22,6 +22,47 @@ class DoDAB92Left : DoDAPistol
         return null;
     }
 
+    action State A_DoDA_SecondaryReady()
+    {
+        let pistol = DoDAPistol(invoker);
+        if (pistol && !pistol.chamberLoaded)
+        {
+            return ResolveState("SecondaryReadyEmpty");
+        }
+        return null;
+    }
+
+    action State A_DoDA_SecondaryFire()
+    {
+        let pistol = DoDAPistol(invoker);
+        if (pistol && !pistol.chamberLoaded)
+        {
+            return ResolveState("SecondaryDryFire");
+        }
+        return null;
+    }
+
+    action void DoDA_BeginSecondaryReload()
+    {
+        let pistol = DoDAPistol(invoker);
+        if (pistol != null)
+        {
+            pistol.reloadInProgress = true;
+            DoDA.SetReloadLock(true);
+        }
+    }
+
+    action void DoDA_CommitSecondaryReload()
+    {
+        let pistol = DoDAPistol(invoker);
+        if (pistol != null)
+        {
+            pistol.CommitReload();
+            pistol.reloadInProgress = false;
+            DoDA.SetReloadLock(false);
+        }
+    }
+
     States
     {
     Spawn:
@@ -41,6 +82,51 @@ class DoDAB92Left : DoDAPistol
 
     AltFire:
         Goto Ready;
+
+    // Secondary Lane States (PSP_DODA_SECONDARY)
+    SecondaryReady:
+        B92L G 1 A_DoDA_SecondaryReady;
+        Loop;
+
+    SecondaryReadyEmpty:
+        B92L D 1;
+        Loop;
+
+    SecondaryFire:
+        B92L G 1 A_DoDA_SecondaryFire;
+        B92L B 1 Bright DoDA_FireTrace;
+        B92L B 0 Bright DoDA_SpawnPistolCasing();
+        B92L A 1 Bright;
+        B92L C 1;
+        B92L D 1;
+        B92L E 1;
+        B92L F 1;
+        Goto SecondaryReady;
+
+    SecondaryDryFire:
+        TNT1 A 0 DoDA_PlayDryFireSound;
+        B92L D 2;
+        Goto SecondaryReadyEmpty;
+
+    SecondaryReload:
+        R92L A 2 DoDA_BeginSecondaryReload;
+        R92L B 2;
+        R92L C 2 DoDA_PlayMagazineEjectSound;
+        R92L D 2;
+        R92L E 2;
+        R92L F 2;
+        R92L G 2;
+        R92L H 2;
+        R92L I 2;
+        R92L J 2;
+        R92L K 2;
+        R92L L 2;
+        B92L D 2;
+        B92L E 2 DoDA_PlayMagazineLoadSound;
+        B92L E 0 DoDA_CommitSecondaryReload;
+        B92L F 2;
+        B92L G 2 DoDA_PlaySlideSound;
+        Goto SecondaryReady;
 
     // Magazine eject sound occurs at the start of the reload motion.
     // Magazine load sound and ammo transfer occur at B92LE0.

@@ -55,6 +55,16 @@ alias -doda_firemode "-user3"
 defaultbind c +doda_firemode
 
 
+// Akimbo and Dual Wield controls.
+
+addmenukey "Toggle Akimbo" doda_toggle_akimbo
+alias doda_toggle_akimbo "netevent DoDA_ToggleAkimbo"
+defaultbind n doda_toggle_akimbo
+
+addmenukey "Toggle Dual Wield" doda_toggle_dual_wield
+alias doda_toggle_dual_wield "netevent DoDA_ToggleDualWield"
+
+
 // Weapon-slot defaults.
 
 addmenukey "Select B92 Pistols" doda_select_b92

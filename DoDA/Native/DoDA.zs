@@ -47,4 +47,15 @@ struct DoDA native
     native static int GetAssignmentTaskStatus(int index);
     native static int GetAssignmentTaskProgress(int index);
     native static int GetAssignmentCost(int index);
+
+    // Akimbo Native API
+    native static bool IsAkimboActive();
+    native static bool EnterAkimbo();
+    native static bool ExitAkimbo();
+    native static bool IsValidSecondaryPSprite(int layerId);
+    native static bool IsReloadLocked();
+    native static bool SetReloadLock(bool locked);
+    native static bool RequestLeftHandFire();
+    native static bool RequestRightHandFire();
+    native static bool RequestAkimboReload();
 }

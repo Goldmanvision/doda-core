@@ -11,6 +11,7 @@ version "2.4"
 #region BackgroundSimPOC
 #include "DoDA/POC/BackgroundSimPOC.zs"
 #include "DoDA/POC/LocationMaterializationProof.zs"
+#include "DoDA/POC/AkimboProofTest.zs"
 #endregion
 
 #region Aim
@@ -73,6 +74,7 @@ version "2.4"
 #include "DoDA/WeaponSystem/HandSwapController.zs"
 #include "DoDA/WeaponSystem/SpriteAnimator.zs"
 #include "DoDA/WeaponSystem/WeaponBase.zs"
+#include "DoDA/WeaponSystem/AkimboInputHandler.zs"
 #include "DoDA/WeaponSystem/Casing.zs"
 #include "DoDA/WeaponSystem/Tracer.zs"
 #include "DoDA/WeaponSystem/Weapons/Holster.zs"

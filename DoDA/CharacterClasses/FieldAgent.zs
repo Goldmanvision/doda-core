@@ -78,7 +78,12 @@ class FieldAgent : DoomPlayer
             return;
         }
 
-        bool realAltFire = (player.cmd.buttons & BT_ALTATTACK) != 0;
+        bool isAkimbo = DoDA.IsAkimboActive();
+        bool leaningLeft = (player.cmd.buttons & BT_USER1) != 0;
+        bool leaningRight = (player.cmd.buttons & BT_USER2) != 0;
+        bool isLeaning = (leaningLeft || leaningRight) && !(leaningLeft && leaningRight);
+
+        bool realAltFire = (!isAkimbo || isLeaning) && ((player.cmd.buttons & BT_ALTATTACK) != 0);
 
         CVar debugForceCVar = CVar.GetCVar(
             'doda_debug_force_deadzone',
@@ -88,10 +93,6 @@ class FieldAgent : DoomPlayer
         bool forceDeadzone = debugForceCVar
             ? debugForceCVar.GetBool()
             : false;
-
-        bool leaningLeft = (player.cmd.buttons & BT_USER1) != 0;
-        bool leaningRight = (player.cmd.buttons & BT_USER2) != 0;
-        bool isLeaning = (leaningLeft || leaningRight) && !(leaningLeft && leaningRight);
 
         bool deadzoneActive = realAltFire || forceDeadzone || isLeaning;
         bool justActivated = deadzoneActive && !DeadzoneAimActive;

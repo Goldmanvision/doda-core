@@ -16,10 +16,17 @@ class DoDAWeapon : Weapon
     double offhandSpreadMult;
 
     int fireLockTics;
+    int leftFireLockTics;
+    int rightFireLockTics;
+    double currentRightLowerY;
+    double currentLeftLowerY;
+    bool wasAkimboActive;
     bool wasSwapBerettaHeld;
+    bool wasAkimboToggleHeld;
     bool wasWeaponSecondaryHeld;
     bool wasDeadzoneAimActive;
     bool wasHoldingFire;
+    bool wasHoldingAlt;
     bool wasReloadHeld;
     bool wasPistolSwapLockHeld;
     bool initialized;
@@ -359,6 +366,14 @@ class DoDAWeapon : Weapon
         {
             fireLockTics--;
         }
+        if (leftFireLockTics > 0)
+        {
+            leftFireLockTics--;
+        }
+        if (rightFireLockTics > 0)
+        {
+            rightFireLockTics--;
+        }
 
         bool attackDown = (owner.player.cmd.buttons & BT_ATTACK) != 0;
         bool attackPressed = attackDown && !wasHoldingFire;
@@ -432,6 +447,158 @@ class DoDAWeapon : Weapon
             handSwapController.TogglePistolSwapLock();
         }
 
+        bool isAkimbo = DoDA.IsAkimboActive();
+        if (isAkimbo && !wasAkimboActive)
+        {
+            currentLeftLowerY = 120.0; // B92Left initializes below screen on Akimbo entry and raises smoothly!
+            currentRightLowerY = 0.0;
+        }
+        else if (!isAkimbo && wasAkimboActive)
+        {
+            currentLeftLowerY = 0.0;
+            currentRightLowerY = 0.0;
+        }
+        wasAkimboActive = isAkimbo;
+
+        bool altDown = (owner.player.cmd.buttons & BT_ALTATTACK) != 0;
+        bool altPressed = altDown && !wasHoldingAlt;
+        wasHoldingAlt = altDown;
+
+        if (isAkimbo && readyWasSelf && pistol != null)
+        {
+            let leftPistol = DoDAPistol(owner.FindInventory('DoDAB92Left'));
+            let rightPistol = pistol;
+
+            bool isLeaningLeft = (leanController != null && leanController.GetLeanAmount() < -0.1);
+            bool isLeaningRight = (leanController != null && leanController.GetLeanAmount() > 0.1);
+            bool isLeaning = isLeaningLeft || isLeaningRight;
+
+            // Priority 3: Akimbo leaning left (focus Left B92 only; Right mouse = Deadzone Aim)
+            if (isLeaningLeft && !DoDA.IsReloadLocked())
+            {
+                if (attackPressed && leftFireLockTics <= 0)
+                {
+                    if (DoDA.RequestLeftHandFire())
+                    {
+                        leftFireLockTics = 2;
+                        if (leftPistol != null)
+                        {
+                            if (leftPistol.chamberLoaded)
+                            {
+                                owner.player.SetPSprite(2, leftPistol.ResolveState("SecondaryFire"));
+                            }
+                            else
+                            {
+                                owner.player.SetPSprite(2, leftPistol.ResolveState("SecondaryDryFire"));
+                            }
+                        }
+                    }
+                }
+            }
+            // Priority 4: Akimbo leaning right (focus Right B92 only; Right mouse = Deadzone Aim)
+            else if (isLeaningRight && !DoDA.IsReloadLocked())
+            {
+                if (attackPressed && rightFireLockTics <= 0)
+                {
+                    if (DoDA.RequestRightHandFire())
+                    {
+                        rightFireLockTics = 2;
+                        if (rightPistol.chamberLoaded)
+                        {
+                            owner.player.SetPSprite(PSP_WEAPON, rightPistol.ResolveState("Fire"));
+                        }
+                        else
+                        {
+                            owner.player.SetPSprite(PSP_WEAPON, rightPistol.ResolveState("DryFire"));
+                        }
+                    }
+                }
+            }
+            // Priority 5: Akimbo neutral (Left click = Left B92; Right click = Right B92)
+            else if (!isLeaning && !DoDA.IsReloadLocked())
+            {
+                // Left Mouse requests Left Hand
+                if (attackPressed && leftFireLockTics <= 0)
+                {
+                    if (DoDA.RequestLeftHandFire())
+                    {
+                        leftFireLockTics = 2;
+                        if (leftPistol != null)
+                        {
+                            if (leftPistol.chamberLoaded)
+                            {
+                                owner.player.SetPSprite(2, leftPistol.ResolveState("SecondaryFire"));
+                            }
+                            else
+                            {
+                                owner.player.SetPSprite(2, leftPistol.ResolveState("SecondaryDryFire"));
+                            }
+                        }
+                    }
+                }
+
+                // Right Mouse requests Right Hand
+                if (altPressed && rightFireLockTics <= 0)
+                {
+                    if (DoDA.RequestRightHandFire())
+                    {
+                        rightFireLockTics = 2;
+                        if (rightPistol.chamberLoaded)
+                        {
+                            owner.player.SetPSprite(PSP_WEAPON, rightPistol.ResolveState("Fire"));
+                        }
+                        else
+                        {
+                            owner.player.SetPSprite(PSP_WEAPON, rightPistol.ResolveState("DryFire"));
+                        }
+                    }
+                }
+            }
+
+            // In Akimbo mode: Sequential Reload (lowest-loaded pistol first; if tied, right first)
+            if (reloadPressed && leftFireLockTics <= 0 && rightFireLockTics <= 0 && !DoDA.IsReloadLocked())
+            {
+                int leftTotal = leftPistol ? (leftPistol.chamberLoaded + leftPistol.magazineRounds) : 16;
+                int rightTotal = rightPistol ? (rightPistol.chamberLoaded + rightPistol.magazineRounds) : 16;
+
+                bool leftEligible = (leftPistol != null && leftTotal < 16);
+                bool rightEligible = (rightPistol != null && rightTotal < 16);
+
+                if (leftEligible || rightEligible)
+                {
+                    bool pickRight = false;
+                    if (rightEligible && leftEligible)
+                    {
+                        pickRight = (rightTotal <= leftTotal); // If tied, select right B92 first!
+                    }
+                    else if (rightEligible)
+                    {
+                        pickRight = true;
+                    }
+                    else
+                    {
+                        pickRight = false;
+                    }
+
+                    if (DoDA.RequestAkimboReload())
+                    {
+                        if (pickRight)
+                        {
+                            rightPistol.reloadQueued = false;
+                            rightPistol.reloadInProgress = true;
+                            owner.player.SetPSprite(PSP_WEAPON, rightPistol.ResolveState("Reload"));
+                        }
+                        else
+                        {
+                            leftPistol.reloadQueued = false;
+                            leftPistol.reloadInProgress = true;
+                            owner.player.SetPSprite(2, leftPistol.ResolveState("SecondaryReload"));
+                        }
+                    }
+                }
+            }
+        }
+
         CVar secondaryActionCVar = CVar.GetCVar(
             'doda_weapon_secondary',
             owner.player
@@ -446,7 +613,7 @@ class DoDAWeapon : Weapon
 
         wasWeaponSecondaryHeld = secondaryActionDown;
 
-        if (swapBerettaPressed)
+        if (!isAkimbo && swapBerettaPressed)
         {
             requestedHand = handSwapController.ResolveDesiredHand(
                 deadzoneActive,
@@ -461,7 +628,7 @@ class DoDAWeapon : Weapon
             );
         }
 
-        if (leanLocked && swapBerettaPressed)
+        if (!isAkimbo && leanLocked && swapBerettaPressed)
         {
             leanController.SetLockedHand(requestedHand);
         }
@@ -473,7 +640,8 @@ class DoDAWeapon : Weapon
         }
 
         if (
-            secondaryActionPressed
+            !isAkimbo
+            && secondaryActionPressed
             && readyWasSelf
         )
         {
@@ -482,7 +650,8 @@ class DoDAWeapon : Weapon
         }
 
         if (
-            swapBerettaPressed
+            !isAkimbo
+            && swapBerettaPressed
             && readyWasSelf
         )
         {
@@ -491,7 +660,8 @@ class DoDAWeapon : Weapon
         }
 
         if (
-            readyWasSelf
+            !isAkimbo
+            && readyWasSelf
             && pistol != null
             && pistol.IsReloadQueued()
             && pendingWeapon == WP_NOCHANGE
@@ -511,7 +681,8 @@ class DoDAWeapon : Weapon
         }
 
         if (
-            readyWasSelf
+            !isAkimbo
+            && readyWasSelf
             && ShouldStartFire(attackDown, attackPressed)
             && fireLockTics <= 0
             && UsesManualFireDispatch()
@@ -533,7 +704,8 @@ class DoDAWeapon : Weapon
             );
 
         if (
-            readyWasSelf
+            !isAkimbo
+            && readyWasSelf
             && pistol != null
             && reloadPressed
             && pendingWeapon == WP_NOCHANGE
@@ -547,7 +719,8 @@ class DoDAWeapon : Weapon
         }
 
         bool requestGate =
-            pistol != null
+            !isAkimbo
+            && pistol != null
             && readyWasSelf
             && pendingWeapon == WP_NOCHANGE
             && requestedHand != actualHand
@@ -663,6 +836,86 @@ class DoDAWeapon : Weapon
             || weaponSprite.CurState == null
         )
         {
+            return;
+        }
+
+        if (isAkimbo)
+        {
+            let leftPistol = DoDAPistol(owner.FindInventory('DoDAB92Left'));
+            let rightPistol = pistol;
+
+            bool rightReloading = (rightPistol != null && rightPistol.reloadInProgress);
+            bool leftReloading = (leftPistol != null && leftPistol.reloadInProgress);
+
+            double targetRightLowerY = 0.0;
+            double targetLeftLowerY = 0.0;
+
+            // Priority 1: Active sequential reload
+            if (rightReloading)
+            {
+                targetRightLowerY = 0.0;
+                targetLeftLowerY = 120.0; // Left lowers offscreen
+            }
+            else if (leftReloading)
+            {
+                targetLeftLowerY = 0.0;
+                targetRightLowerY = 120.0; // Right lowers offscreen
+            }
+            // Priority 2: Lean
+            else if (leanController.GetLeanAmount() < -0.1) // Leaning Left
+            {
+                targetLeftLowerY = 0.0; // Left stays visible
+                targetRightLowerY = 120.0; // Right lowers offscreen
+            }
+            else if (leanController.GetLeanAmount() > 0.1) // Leaning Right
+            {
+                targetRightLowerY = 0.0; // Right stays visible
+                targetLeftLowerY = 120.0; // Left lowers offscreen
+            }
+            // Priority 3: Neutral
+            else
+            {
+                targetRightLowerY = 0.0;
+                targetLeftLowerY = 0.0;
+            }
+
+            // Smooth interpolation toward target lowering offset
+            double lowerSpeed = 0.25;
+            currentRightLowerY += (targetRightLowerY - currentRightLowerY) * lowerSpeed;
+            currentLeftLowerY += (targetLeftLowerY - currentLeftLowerY) * lowerSpeed;
+
+            // Right Hand (PSP_WEAPON / DoDAB92Right) - Base Right Profile (Rest Y = 32.0)
+            double rightRestX = 48.0;
+            double rightRestY = 32.0;
+            double finalRightX = rightRestX - yawGap * 3.0 + leanController.GetLeanAmount() * 8.0;
+            double finalRightY = rightRestY + pitchGap * 0.6 + currentRightLowerY;
+            weaponSprite.x = finalRightX + debugSpriteX;
+            weaponSprite.y = finalRightY + debugSpriteY;
+            weaponSprite.rotation = spriteAnimator.GetFinalRotation() + debugSpriteRot;
+            weaponSprite.HAlign = PSPA_CENTER;
+            weaponSprite.VAlign = PSPA_CENTER;
+            weaponSprite.bPivotPercent = true;
+            weaponSprite.pivot = (0.5, 0.5);
+            weaponSprite.bFlip = false;
+
+            // Left Hand (PSP_DODA_SECONDARY / DoDAB92Left) - Base Left Profile (Calibrated Rest Y = 8.0 for level alignment with Right B92 at 32.0)
+            let secSprite = owner.player.GetPSprite(2);
+            if (secSprite != null)
+            {
+                double leftRestX = -48.0;
+                double leftRestY = 8.0;
+                double finalLeftX = leftRestX - yawGap * 3.0 + leanController.GetLeanAmount() * 8.0;
+                double finalLeftY = leftRestY + pitchGap * 0.6 + currentLeftLowerY;
+                secSprite.x = finalLeftX + debugSpriteX;
+                secSprite.y = finalLeftY + debugSpriteY;
+                secSprite.rotation = spriteAnimator.GetFinalRotation() + debugSpriteRot;
+                secSprite.HAlign = PSPA_CENTER;
+                secSprite.VAlign = PSPA_CENTER;
+                secSprite.bPivotPercent = true;
+                secSprite.pivot = (0.5, 0.5);
+                secSprite.bFlip = false;
+            }
+
             return;
         }
 
@@ -850,9 +1103,9 @@ class DoDAWeapon : Weapon
             return;
         }
 
-        let pistol = DoDAPistol(
-            invoker.owner.player.ReadyWeapon
-        );
+        let pistol = (invoker is "DoDAPistol")
+            ? DoDAPistol(invoker)
+            : DoDAPistol(invoker.owner.player.ReadyWeapon);
 
         if (pistol == null || !pistol.ConsumeFiredRound())
         {
@@ -874,6 +1127,18 @@ class DoDAWeapon : Weapon
         if (deadzoneActive)
         {
             spread = 0.0;
+        }
+        else if (DoDA.IsAkimboActive())
+        {
+            bool isLeaning = (invoker.leanController != null && abs(invoker.leanController.GetLeanAmount()) > 0.1) || (agent != null && abs(agent.LeanOffset) > 0.1);
+            if (isLeaning)
+            {
+                spread = 2.0; // Focused B92 Akimbo lean hipfire spread: 2.0 degrees
+            }
+            else
+            {
+                spread = 2.5; // Neutral B92 Akimbo symmetric hipfire spread: 2.5 degrees (identical for Left and Right)
+            }
         }
         else if (isLeftHand)
         {
