@@ -9,25 +9,6 @@ class DoDAB92Right : DoDAPistol
         return DoDAHandSwapController.Hand_Right;
     }
 
-    action State A_DoDA_Ready()
-    {
-        let pistol = DoDAPistol(invoker);
-
-        if (pistol && !pistol.chamberLoaded)
-        {
-            return ResolveState("ReadyEmpty");
-        }
-
-        int readyFlags = WRF_ALLOWZOOM | WRF_NOSECONDARY;
-        if (DoDA.IsAkimboActive())
-        {
-            readyFlags |= WRF_NOBOB | WRF_NOPRIMARY;
-        }
-
-        A_WeaponReady(readyFlags);
-        return null;
-    }
-
     // The standard Reload state starts here. If no left-hand B92 exists in
     // the player's inventory, redirect immediately to the solo sequence.
     action state DoDA_SelectRightReloadAnimation()

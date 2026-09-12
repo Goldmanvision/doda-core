@@ -9,60 +9,6 @@ class DoDAB92Left : DoDAPistol
         return DoDAHandSwapController.Hand_Left;
     }
 
-    action State A_DoDA_Ready()
-    {
-        let pistol = DoDAPistol(invoker);
-
-        if (pistol && !pistol.chamberLoaded)
-        {
-            return ResolveState("ReadyEmpty");
-        }
-
-        A_WeaponReady(WRF_ALLOWZOOM | WRF_NOSECONDARY);
-        return null;
-    }
-
-    action State A_DoDA_SecondaryReady()
-    {
-        let pistol = DoDAPistol(invoker);
-        if (pistol && !pistol.chamberLoaded)
-        {
-            return ResolveState("SecondaryReadyEmpty");
-        }
-        return null;
-    }
-
-    action State A_DoDA_SecondaryFire()
-    {
-        let pistol = DoDAPistol(invoker);
-        if (pistol && !pistol.chamberLoaded)
-        {
-            return ResolveState("SecondaryDryFire");
-        }
-        return null;
-    }
-
-    action void DoDA_BeginSecondaryReload()
-    {
-        let pistol = DoDAPistol(invoker);
-        if (pistol != null)
-        {
-            pistol.reloadInProgress = true;
-            DoDA.SetReloadLock(true);
-        }
-    }
-
-    action void DoDA_CommitSecondaryReload()
-    {
-        let pistol = DoDAPistol(invoker);
-        if (pistol != null)
-        {
-            pistol.CommitReload();
-            pistol.reloadInProgress = false;
-            DoDA.SetReloadLock(false);
-        }
-    }
-
     States
     {
     Spawn:

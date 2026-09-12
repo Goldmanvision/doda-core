@@ -371,6 +371,47 @@ class DoDAPistol : DoDAWeapon
         }
     }
 
+    action State A_DoDA_SecondaryReady()
+    {
+        let pistol = DoDAPistol(invoker);
+        if (pistol && !pistol.chamberLoaded)
+        {
+            return ResolveState("SecondaryReadyEmpty");
+        }
+        return null;
+    }
+
+    action State A_DoDA_SecondaryFire()
+    {
+        let pistol = DoDAPistol(invoker);
+        if (pistol && !pistol.chamberLoaded)
+        {
+            return ResolveState("SecondaryDryFire");
+        }
+        return null;
+    }
+
+    action void DoDA_BeginSecondaryReload()
+    {
+        let pistol = DoDAPistol(invoker);
+        if (pistol != null)
+        {
+            pistol.reloadInProgress = true;
+            DoDA.SetReloadLock(true);
+        }
+    }
+
+    action void DoDA_CommitSecondaryReload()
+    {
+        let pistol = DoDAPistol(invoker);
+        if (pistol != null)
+        {
+            pistol.CommitReload();
+            pistol.reloadInProgress = false;
+            DoDA.SetReloadLock(false);
+        }
+    }
+
     override int GetWeaponHand()
     {
         return DoDAHandSwapController.Hand_Right;
