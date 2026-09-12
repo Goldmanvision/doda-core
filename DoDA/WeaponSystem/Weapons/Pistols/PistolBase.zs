@@ -9,8 +9,6 @@ class DoDAPistol : DoDAWeapon
     bool adsActive;
 
     DoDADetachableMagState magState;
-    int magazineRounds;
-    bool chamberLoaded;
 
     bool reloadQueued;
     bool reloadInProgress;
@@ -25,16 +23,9 @@ class DoDAPistol : DoDAWeapon
         Inventory.PickupMessage "Picked up the DoDA Pistol";
     }
 
-    private void SyncFields()
-    {
-        magazineRounds = magState.magazineRounds;
-        chamberLoaded = magState.chamberLoaded;
-    }
-
     void EnsureFirearmState()
     {
         magState.Initialize(MagazineCapacity, true);
-        SyncFields();
     }
 
     Ammo GetReserveAmmo()
@@ -143,9 +134,7 @@ class DoDAPistol : DoDAWeapon
     bool ConsumeFiredRound()
     {
         EnsureFirearmState();
-        bool ok = magState.ConsumeFiredRound();
-        SyncFields();
-        return ok;
+        return magState.ConsumeFiredRound();
     }
 
     void QueueReload()
@@ -183,9 +172,7 @@ class DoDAPistol : DoDAWeapon
             return false;
         }
 
-        bool ok = magState.CommitReplacementReload(MagazineCapacity, reserveAmmo.Amount);
-        SyncFields();
-        return ok;
+        return magState.CommitReplacementReload(MagazineCapacity, reserveAmmo.Amount);
     }
 
     action void DoDA_PlayFireSound()
@@ -294,7 +281,7 @@ class DoDAPistol : DoDAWeapon
     {
         let pistol = DoDAPistol(invoker);
 
-        if (pistol && !pistol.chamberLoaded)
+        if (pistol && !pistol.IsChamberLoaded())
         {
             return ResolveState("ReadyEmpty");
         }
@@ -313,7 +300,7 @@ class DoDAPistol : DoDAWeapon
     {
         let pistol = DoDAPistol(invoker);
 
-        if (pistol && !pistol.chamberLoaded)
+        if (pistol && !pistol.IsChamberLoaded())
         {
             return ResolveState("DryFire");
         }
@@ -341,7 +328,7 @@ class DoDAPistol : DoDAWeapon
     action State A_DoDA_SecondaryReady()
     {
         let pistol = DoDAPistol(invoker);
-        if (pistol && !pistol.chamberLoaded)
+        if (pistol && !pistol.IsChamberLoaded())
         {
             return ResolveState("SecondaryReadyEmpty");
         }
@@ -351,7 +338,7 @@ class DoDAPistol : DoDAWeapon
     action State A_DoDA_SecondaryFire()
     {
         let pistol = DoDAPistol(invoker);
-        if (pistol && !pistol.chamberLoaded)
+        if (pistol && !pistol.IsChamberLoaded())
         {
             return ResolveState("SecondaryDryFire");
         }

@@ -483,7 +483,7 @@ class DoDAWeapon : Weapon
                         leftFireLockTics = 2;
                         if (leftPistol != null)
                         {
-                            if (leftPistol.chamberLoaded)
+                            if (leftPistol.IsChamberLoaded())
                             {
                                 owner.player.SetPSprite(2, leftPistol.ResolveState("SecondaryFire"));
                             }
@@ -503,7 +503,7 @@ class DoDAWeapon : Weapon
                     if (DoDA.RequestRightHandFire())
                     {
                         rightFireLockTics = 2;
-                        if (rightPistol.chamberLoaded)
+                        if (rightPistol.IsChamberLoaded())
                         {
                             owner.player.SetPSprite(PSP_WEAPON, rightPistol.ResolveState("Fire"));
                         }
@@ -525,7 +525,7 @@ class DoDAWeapon : Weapon
                         leftFireLockTics = 2;
                         if (leftPistol != null)
                         {
-                            if (leftPistol.chamberLoaded)
+                            if (leftPistol.IsChamberLoaded())
                             {
                                 owner.player.SetPSprite(2, leftPistol.ResolveState("SecondaryFire"));
                             }
@@ -543,7 +543,7 @@ class DoDAWeapon : Weapon
                     if (DoDA.RequestRightHandFire())
                     {
                         rightFireLockTics = 2;
-                        if (rightPistol.chamberLoaded)
+                        if (rightPistol.IsChamberLoaded())
                         {
                             owner.player.SetPSprite(PSP_WEAPON, rightPistol.ResolveState("Fire"));
                         }
@@ -558,8 +558,8 @@ class DoDAWeapon : Weapon
             // In Akimbo mode: Sequential Reload (lowest-loaded pistol first; if tied, right first)
             if (reloadPressed && leftFireLockTics <= 0 && rightFireLockTics <= 0 && !DoDA.IsReloadLocked())
             {
-                int leftTotal = leftPistol ? (leftPistol.chamberLoaded + leftPistol.magazineRounds) : 16;
-                int rightTotal = rightPistol ? (rightPistol.chamberLoaded + rightPistol.magazineRounds) : 16;
+                int leftTotal = leftPistol ? leftPistol.GetLoadedRoundCount() : 16;
+                int rightTotal = rightPistol ? rightPistol.GetLoadedRoundCount() : 16;
 
                 bool leftEligible = (leftPistol != null && leftTotal < 16);
                 bool rightEligible = (rightPistol != null && rightTotal < 16);

@@ -8,8 +8,6 @@ class DoDAMP5KSD : DoDAWeapon
     const Fire_Auto = 2;
 
     DoDADetachableMagState magState;
-    int magazineRounds;
-    bool chamberLoaded;
 
     int fireMode;
     int burstShotsRemaining;
@@ -34,12 +32,6 @@ class DoDAMP5KSD : DoDAWeapon
         +WEAPON.NOAUTOFIRE;
         +WEAPON.NOAUTOAIM;
         +WEAPON.NOALERT;
-    }
-
-    private void SyncFields()
-    {
-        magazineRounds = magState.magazineRounds;
-        chamberLoaded = magState.chamberLoaded;
     }
 
     override bool ShouldStartFire(bool holdingFire, bool firePressed)
@@ -131,7 +123,6 @@ class DoDAMP5KSD : DoDAWeapon
     void EnsureFirearmState()
     {
         magState.Initialize(MagazineCapacity, true);
-        SyncFields();
     }
 
     clearscope int GetMagazineRoundCount()
@@ -232,20 +223,16 @@ class DoDAMP5KSD : DoDAWeapon
         );
 
         reserveAmmo.Amount -= transferred;
-        SyncFields();
     }
 
     bool ConsumeFiredRound()
     {
-        bool ok = magState.ConsumeFiredRound();
-        SyncFields();
-        return ok;
+        return magState.ConsumeFiredRound();
     }
 
     void LoadChamberFromMagazine()
     {
         magState.ChamberFromMagazine();
-        SyncFields();
     }
 
     bool CanCock()

@@ -71,9 +71,9 @@ class DoDAWeaponHUDBridge : Object
                 mp5Data.IsShotgun = false;
                 mp5Data.IsMP5 = true;
                 mp5Data.Label = "MP5KSD";
-                mp5Data.MagazineRounds = mp5.magazineRounds;
+                mp5Data.MagazineRounds = mp5.GetMagazineRoundCount();
                 mp5Data.MagazineCapacity = mp5.MagazineCapacity;
-                mp5Data.ChamberLoaded = mp5.chamberLoaded;
+                mp5Data.ChamberLoaded = mp5.IsChamberLoaded();
                 mp5Data.FireMode = mp5.GetFireMode();
                 return mp5Data;
             }
