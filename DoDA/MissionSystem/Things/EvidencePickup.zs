@@ -7,43 +7,41 @@ enum EdodaEvidenceTypes
     DODAInvalid = -1,
     DODAPaperFinancial,
     DODAPaperOccult,
-	DODAPaperCorrupt,
+    DODAPaperCorrupt,
     DODAPaperClue,
-	DODAfloppyFinancial,
-	DODAfloppyCorrupt,
-	DODAfloppyOccult,
-	DODAcdFinancial,
-	DODAcdOccult,
-	DODAfilmFinancial
-	DODAfilmOccult,
-	DODAfilmCorrupt,
-	DODAfilmAssault,
-	DODAphotoFinancial,
-	DODAphotoAssault,
-	DODAphotoClue
-}
-
+    DODAfloppyFinancial,
+    DODAfloppyCorrupt,
+    DODAfloppyOccult,
+    DODAcdFinancial,
+    DODAcdOccult,
+    DODAfilmFinancial,
+    DODAfilmOccult,
+    DODAfilmCorrupt,
+    DODAfilmAssault,
+    DODAphotoFinancial,
+    DODAphotoAssault,
+    DODAphotoClue
+};
 
 class EvidencePickup : CustomInventory
 {
+    bool randomizeEvidence;
+    int evidenceType;
+
     Default
     {
-		bool randomizeEvidence = false;
-		
         Radius 20;
         Height 16;
-		Scale 0.08;
+        Scale 0.08;
+
+        Inventory.Amount 1;
+        Inventory.MaxAmount 20;
+        Inventory.Icon "EVI1A0";
 
         +COUNTITEM;
         +INVENTORY.INVBAR;
     }
 
-	if (evidenceType=DODApaperFinancial)
-	{
-		Inventory.Icon "EVI1A0";
-		Inventory.Max = 20;
-	}
-	
     States
     {
     Spawn:

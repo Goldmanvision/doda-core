@@ -108,6 +108,7 @@ version "2.4"
 
 #region MissionSystem-Things
 #include "DoDA/MissionSystem/Things/MissionPickupMarkers.zs"
+#include "DoDA/MissionSystem/Things/MissionPickupBase.zs"
 #include "DoDA/MissionSystem/Things/ObjectivePickup.zs"
 #include "DoDA/MissionSystem/Things/MissionPickup.zs"
 #include "DoDA/MissionSystem/Things/MissionInteractable.zs"
