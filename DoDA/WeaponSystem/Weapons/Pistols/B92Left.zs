@@ -176,7 +176,7 @@ class DoDAB92Left : DoDAPistol
 
     DryFire:
         TNT1 A 0 DoDA_PlayDryFireSound;
-        B92L D -1;
+        B92L D 2;
         Goto ReadyEmpty;
 
     }
