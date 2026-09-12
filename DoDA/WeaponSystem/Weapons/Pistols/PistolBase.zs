@@ -53,6 +53,11 @@ class DoDAPistol : DoDAWeapon
         return true;
     }
 
+    override int GetWeaponArchetype()
+    {
+        return ARCHETYPE_Pistol;
+    }
+
     clearscope String GetHUDWeaponLabel()
     {
         return "B92";

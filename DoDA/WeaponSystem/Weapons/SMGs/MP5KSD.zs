@@ -49,9 +49,9 @@ class DoDAMP5KSD : DoDAWeapon
         return true;
     }
 
-    override bool IsMP5Weapon()
+    override int GetWeaponArchetype()
     {
-        return true;
+        return ARCHETYPE_SMG;
     }
 
     override State GetFireState(bool holdingFire, bool firePressed)

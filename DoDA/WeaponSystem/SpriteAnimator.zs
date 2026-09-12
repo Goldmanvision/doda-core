@@ -12,7 +12,7 @@ class DoDASpriteAnimator : Object
         double handDipAmount,
         bool isLeaning,
         bool leaningLeft,
-        bool isMP5 = false
+        int archetype = ARCHETYPE_Default
     )
     {
         // B92L and B92R are distinct authored sprite sets. Do not apply a
@@ -47,13 +47,13 @@ class DoDASpriteAnimator : Object
             : leftYawSpriteScale;
 
         // Expand MP5kSD opposite horizontal travel limit when crosshair is at left deadzone boundary
-        if (isMP5 && yawGap > 0.0)
+        if (archetype == ARCHETYPE_SMG && yawGap > 0.0)
         {
             yawSpriteScale = leftYawSpriteScale;
         }
 
         // Expand MP5kSD lower vertical travel limit when crosshair is at bottom deadzone boundary
-        if (isMP5 && pitchGap > 0.0)
+        if (archetype == ARCHETYPE_SMG && pitchGap > 0.0)
         {
             pitchSpriteScale = mp5BottomPitchSpriteScale;
         }

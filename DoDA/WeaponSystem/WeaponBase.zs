@@ -2,6 +2,14 @@
 // DoDA/WeaponSystem/WeaponBase.zs
 ///////////////////////////
 
+enum EDoDAWeaponArchetype
+{
+    ARCHETYPE_Default,
+    ARCHETYPE_Pistol,
+    ARCHETYPE_SMG,
+    ARCHETYPE_Shotgun
+};
+
 class DoDAWeapon : Weapon
 {
     double yawGap;
@@ -777,7 +785,7 @@ class DoDAWeapon : Weapon
             0.0,
             isLeaning,
             leaningLeft,
-            IsMP5Weapon()
+            GetWeaponArchetype()
         );
 
         CVar debugXCVar = CVar.GetCVar(
@@ -1003,9 +1011,9 @@ class DoDAWeapon : Weapon
         return Hand_Right;
     }
 
-    virtual bool IsMP5Weapon()
+    virtual int GetWeaponArchetype()
     {
-        return false;
+        return ARCHETYPE_Default;
     }
 
     action void DoDA_SpawnPistolCasing()
