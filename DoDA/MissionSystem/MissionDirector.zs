@@ -154,6 +154,11 @@ void ConfigureMissionForIndex(int index)
         }
     }
 
+    clearscope static DoDAMissionDirector GetInstance()
+    {
+        return DoDAMissionDirector(EventHandler.Find("DoDAMissionDirector"));
+    }
+
     clearscope DoDAMissionResult GetMissionResult()
     {
         return MissionResult;

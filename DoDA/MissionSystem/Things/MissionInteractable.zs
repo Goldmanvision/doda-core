@@ -69,9 +69,7 @@ class DoDAMissionInteractable : Actor
             return false;
         }
 
-        DoDAMissionDirector director = DoDAMissionDirector(
-            EventHandler.Find("DoDAMissionDirector")
-        );
+        DoDAMissionDirector director = DoDAMissionDirector.GetInstance();
 
         if (director == null)
         {
