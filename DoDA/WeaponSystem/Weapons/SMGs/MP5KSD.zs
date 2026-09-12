@@ -380,7 +380,7 @@ class DoDAMP5KSD : DoDAWeapon
 
     void SpawnDeadzoneAwareTracer()
     {
-        if (owner == null)
+        if (owner == null || owner.player == null || owner.player.mo == null)
         {
             return;
         }
@@ -399,13 +399,25 @@ class DoDAMP5KSD : DoDAWeapon
             ? agent.GetDeadzonePitchGap()
             : 0.0;
 
+        double attackZ =
+            owner.height * 0.5
+            - owner.floorclip
+            + owner.player.mo.AttackZOffset
+                * owner.player.crouchFactor;
+
+        double leanOffset = leanController != null
+            ? leanController.GetAppliedOffset()
+            : 0.0;
+
+        double firePitch = owner.pitch + pitchOffset;
+
         A_SpawnProjectile(
             "DoDATracer",
-            0,
-            0,
+            attackZ,
+            leanOffset,
             yawOffset,
-            pitchOffset,
-            0
+            CMF_AIMDIRECTION | CMF_SAVEPITCH,
+            firePitch
         );
     }
 

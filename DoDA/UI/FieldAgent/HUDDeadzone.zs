@@ -45,34 +45,26 @@ class DoDAHUDDeadzone : Object
         double cx = viewX + halfViewWidth;
         double cy = viewY + halfViewHeight;
 
-        double aspect = viewWidth / double(viewHeight);
+        // In UZDoom/DOOM, player FOV is defined for a 4:3 reference display (Hor+ projection).
+        // The vertical half-FOV tangent is constant for a given base FOV:
         double refAspect = 4.0 / 3.0;
-
         double halfFovBase = fov * 0.5;
-        double halfFovYaw = ATan(
-            Tan(halfFovBase) * (aspect / refAspect)
-        );
+        double tanHalfFovY = Tan(halfFovBase) / refAspect;
 
-        double halfFovPitch = ATan(
-            Tan(halfFovYaw) / aspect
-        );
+        // Viewport focal length in physical pixels:
+        double focalLength = halfViewHeight / tanHalfFovY;
 
         // Signed FieldAgent/fire-trace contract:
         // negative yaw = right on screen;
         // positive pitch = down on screen.
-        double dotX = cx
-            - (Tan(yawGap) / Tan(halfFovYaw)) * halfViewWidth;
+        double cosYaw = Cos(yawGap);
+        double safeCosYaw = (Abs(cosYaw) > 0.0001) ? cosYaw : 0.0001;
 
-        double dotY = cy
-            + (Tan(pitchGap) / Tan(halfFovPitch)) * halfViewHeight;
+        double dotX = cx - Tan(yawGap) * focalLength;
+        double dotY = cy + (Tan(pitchGap) / safeCosYaw) * focalLength;
 
-        double boxHalfX = (
-            Tan(yawLimit) / Tan(halfFovYaw)
-        ) * halfViewWidth;
-
-        double boxHalfY = (
-            Tan(pitchLimit) / Tan(halfFovPitch)
-        ) * halfViewHeight;
+        double boxHalfX = Tan(yawLimit) * focalLength;
+        double boxHalfY = Tan(pitchLimit) * focalLength;
 
         int left = int(cx - boxHalfX);
         int top = int(cy - boxHalfY);
