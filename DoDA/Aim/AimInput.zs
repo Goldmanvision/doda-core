@@ -29,29 +29,13 @@ class DoDAAimInput : EventHandler
             return false;
         }
 
-        CVar mouseXCVar = CVar.GetCVar(
-            'doda_raw_mouse_x',
-            players[consoleplayer]
-        );
+        PlayerInfo pi = players[consoleplayer];
 
-        CVar mouseYCVar = CVar.GetCVar(
-            'doda_raw_mouse_y',
-            players[consoleplayer]
-        );
+        double curX = DoDAInputUtility.ReadFloatSetting(pi, 'doda_raw_mouse_x', 0.0);
+        double curY = DoDAInputUtility.ReadFloatSetting(pi, 'doda_raw_mouse_y', 0.0);
 
-        if (mouseXCVar)
-        {
-            mouseXCVar.SetFloat(
-                mouseXCVar.GetFloat() + e.MouseX
-            );
-        }
-
-        if (mouseYCVar)
-        {
-            mouseYCVar.SetFloat(
-                mouseYCVar.GetFloat() + e.MouseY
-            );
-        }
+        DoDAInputUtility.SafeWriteFloat(pi, 'doda_raw_mouse_x', curX + e.MouseX);
+        DoDAInputUtility.SafeWriteFloat(pi, 'doda_raw_mouse_y', curY + e.MouseY);
 
         // FieldAgent consumes these values and applies deadzone/overflow motion.
         return true;

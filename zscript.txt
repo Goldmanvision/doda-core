@@ -15,10 +15,12 @@ version "2.4"
 #endregion
 
 #region Aim
+#include "DoDA/Aim/InputUtility.zs"
 #include "DoDA/Aim/AimInput.zs"
 #endregion
 
 #region CharacterClasses
+#include "DoDA/CharacterClasses/DoDAPlayerBase.zs"
 #include "DoDA/CharacterClasses/FieldAgent.zs"
 #include "DoDA/CharacterClasses/Analyst.zs"
 #include "DoDA/CharacterClasses/SAC.zs"
