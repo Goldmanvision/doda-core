@@ -2,7 +2,7 @@
 // DoDA/MissionSystem/Things/MissionPickupMarkers.zs
 *///////////////////////////|*/
 
-class DoDAObjectivePickupMarker : Inventory
+class DoDAMissionPickupMarkerBase : Inventory
 {
     Default
     {
@@ -14,14 +14,10 @@ class DoDAObjectivePickupMarker : Inventory
     }
 }
 
-class DoDAMissionPickupMarker : Inventory
+class DoDAObjectivePickupMarker : DoDAMissionPickupMarkerBase
 {
-    Default
-    {
-        Inventory.Amount 1;
-        Inventory.MaxAmount 255;
+}
 
-        +INVENTORY.UNDROPPABLE;
-        +INVENTORY.UNCLEARABLE;
-    }
+class DoDAMissionPickupMarker : DoDAMissionPickupMarkerBase
+{
 }
