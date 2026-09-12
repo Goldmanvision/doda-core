@@ -87,10 +87,7 @@ version "2.4"
 #include "DoDA/WeaponSystem/Weapons/SMGs/MP5KSD.zs"
 #include "DoDA/WeaponSystem/Weapons/SMGs/MP5ModeHandler.zs"
 #include "DoDA/WeaponSystem/Ammo/AmmoDispenser.zs"
-#endregion
-
-#region Range
-#include "DoDA/Range/Map03RangeStartHandler.zs"
+#include "DoDA/Debug/WeaponTestHarness.zs"
 #endregion
 
 #region MissionSystem
