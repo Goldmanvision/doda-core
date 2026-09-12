@@ -8,7 +8,7 @@ version "2.4"
 #include "DoDA/Native/DoDA.zs"
 #endregion
 
-#region BackgroundSimPOC
+#region ProofsAndPOC // Temporary runtime proofs (BackgroundSimPOC, LocationMaterializationProof) & archived experiment (AkimboProofTest)
 #include "DoDA/POC/BackgroundSimPOC.zs"
 #include "DoDA/POC/LocationMaterializationProof.zs"
 #include "DoDA/POC/AkimboProofTest.zs"
@@ -55,8 +55,8 @@ version "2.4"
 #endregion
 
 
-#region GlobalInputCapture
- #include "DoDA/Debug/DoDAGlobalInputCapture.zs"
+#region GlobalInputCapture // Developer diagnostic (quarantined / disabled by default)
+#include "DoDA/Debug/DoDAGlobalInputCapture.zs"
 #endregion
 
 

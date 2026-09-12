@@ -14,15 +14,29 @@
 
 class DoDAGlobalInputCapture : StaticEventHandler
 {
+    // Explicit development gate: 0 = disabled for ordinary play, 1 = enabled for developer diagnostic capture.
+    const DEV_GATE_ENABLED = 0;
+
     override void OnRegister()
     {
+        if (!DEV_GATE_ENABLED)
+        {
+            return;
+        }
+
         Console.Printf(
-            "[DoDA-INPUT-CAPTURE] event=register mode=keydown-only consume=0"
+            "[DoDA-INPUT-CAPTURE] event=register status=dev-gate-active run=%u mode=keydown-only consume=0",
+            uint(MSTime())
         );
     }
 
     override bool InputProcess(InputEvent e)
     {
+        if (!DEV_GATE_ENABLED)
+        {
+            return false;
+        }
+
         if (e.Type == InputEvent.Type_KeyDown)
         {
             Console.Printf(
