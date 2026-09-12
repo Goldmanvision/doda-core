@@ -14,6 +14,51 @@ class DoDAShotgun : DoDAWeapon
 
     int lowReadyIdleTics;
 
+    // Basic low-ready family membership: lowering, resting low, or raising.
+    // Excludes RaiseFromLowReadyToRack to allow distinct rack transition routing.
+    bool IsInBasicLowReadyStateFamily(PSprite weaponSprite)
+    {
+        if (weaponSprite == null || weaponSprite.CurState == null)
+        {
+            return false;
+        }
+
+        State curState = weaponSprite.CurState;
+        return curState.InStateSequence(ResolveState("LowerToLowReady"))
+            || curState.InStateSequence(ResolveState("LowReady"))
+            || curState.InStateSequence(ResolveState("RaiseFromLowReady"));
+    }
+
+    // Extended low-ready family membership: includes all basic low-ready states
+    // plus the RaiseFromLowReadyToRack transition sequence.
+    bool IsInExtendedLowReadyStateFamily(PSprite weaponSprite)
+    {
+        if (IsInBasicLowReadyStateFamily(weaponSprite))
+        {
+            return true;
+        }
+
+        return weaponSprite.CurState.InStateSequence(
+            ResolveState("RaiseFromLowReadyToRack")
+        );
+    }
+
+    // Active rack animation sequence check.
+    bool IsInActiveRackAnimation(PSprite weaponSprite)
+    {
+        if (weaponSprite == null || weaponSprite.CurState == null)
+        {
+            return false;
+        }
+
+        State curState = weaponSprite.CurState;
+        return curState.InStateSequence(ResolveState("HipRackApproach"))
+            || curState.InStateSequence(ResolveState("RaiseFromLowReadyToRack"))
+            || curState.InStateSequence(ResolveState("RackFromPreRack"))
+            || curState.InStateSequence(ResolveState("RackFromReady"))
+            || curState.InStateSequence(ResolveState("RackReturn"));
+    }
+
     Default
     {
         Weapon.SelectionOrder 1300;
@@ -87,31 +132,8 @@ class DoDAShotgun : DoDAWeapon
         bool deadzoneActive = agent != null
             && agent.IsDeadzoneAimActive();
 
-        bool inLowerToLowReady =
-            weaponSprite.CurState.InStateSequence(
-                ResolveState("LowerToLowReady")
-            );
-
-        bool inLowReady =
-            weaponSprite.CurState.InStateSequence(
-                ResolveState("LowReady")
-            ); 
-
-        bool inRaiseFromLowReady =
-            weaponSprite.CurState.InStateSequence(
-                ResolveState("RaiseFromLowReady")
-            );
-
-        bool inRaiseFromLowReadyToRack =
-            weaponSprite.CurState.InStateSequence(
-                ResolveState("RaiseFromLowReadyToRack")
-            );
-
         bool isInLowReadyFamily =
-            inLowerToLowReady
-            || inLowReady
-            || inRaiseFromLowReady
-            || inRaiseFromLowReadyToRack;
+            IsInExtendedLowReadyStateFamily(weaponSprite);
 
         if (deadzoneActive && isInLowReadyFamily)
         {
@@ -224,49 +246,14 @@ class DoDAShotgun : DoDAWeapon
             return;
         }
 
-        if (
-            weaponSprite.CurState.InStateSequence(
-                ResolveState("HipRackApproach")
-            )
-            || weaponSprite.CurState.InStateSequence(
-                ResolveState("RaiseFromLowReadyToRack")
-            )
-            || weaponSprite.CurState.InStateSequence(
-                ResolveState("RackFromPreRack")
-            )
-            || weaponSprite.CurState.InStateSequence(
-                ResolveState("RackFromReady")
-            )
-            || weaponSprite.CurState.InStateSequence(
-                ResolveState("RackReturn")
-            )
-        )
+        if (IsInActiveRackAnimation(weaponSprite))
         {
             return;
         }
 
         lowReadyIdleTics = 0;
 
-        bool inLowerToLowReady =
-            weaponSprite.CurState.InStateSequence(
-                ResolveState("LowerToLowReady")
-            );
-
-        bool inLowReady =
-            weaponSprite.CurState.InStateSequence(
-                ResolveState("LowReady")
-            );
-
-        bool inRaiseFromLowReady =
-            weaponSprite.CurState.InStateSequence(
-                ResolveState("RaiseFromLowReady")
-            );
-
-        if (
-            inLowerToLowReady
-            || inLowReady
-            || inRaiseFromLowReady
-        )
+        if (IsInBasicLowReadyStateFamily(weaponSprite))
         {
             pendingRack = true;
 
@@ -331,26 +318,6 @@ class DoDAShotgun : DoDAWeapon
                 ResolveState("RackWait")
             );
 
-        bool inLowerToLowReady =
-            weaponSprite.CurState.InStateSequence(
-                ResolveState("LowerToLowReady")
-            );
-
-        bool inLowReady =
-            weaponSprite.CurState.InStateSequence(
-                ResolveState("LowReady")
-            );
-
-        bool inRaiseFromLowReady =
-            weaponSprite.CurState.InStateSequence(
-                ResolveState("RaiseFromLowReady")
-            );
-
-        bool inRaiseFromLowReadyToRack =
-            weaponSprite.CurState.InStateSequence(
-                ResolveState("RaiseFromLowReadyToRack")
-            );
-
         if (pendingRack && isRackWait)
         {
             owner.player.SetPSprite(
@@ -363,12 +330,7 @@ class DoDAShotgun : DoDAWeapon
 
         if (
             pendingRack
-            && (
-                inLowerToLowReady
-                || inLowReady
-                || inRaiseFromLowReady
-                || inRaiseFromLowReadyToRack
-            )
+            && IsInExtendedLowReadyStateFamily(weaponSprite)
         )
         {
             owner.player.SetPSprite(
@@ -399,35 +361,9 @@ class DoDAShotgun : DoDAWeapon
             return;
         }
 
-        bool inLowerToLowReady =
-            weaponSprite.CurState.InStateSequence(
-                ResolveState("LowerToLowReady")
-            );
-
-        bool inLowReady =
-            weaponSprite.CurState.InStateSequence(
-                ResolveState("LowReady")
-            );
-
-        bool inRaiseFromLowReady =
-            weaponSprite.CurState.InStateSequence(
-                ResolveState("RaiseFromLowReady")
-            );
-
-        bool inRaiseFromLowReadyToRack =
-            weaponSprite.CurState.InStateSequence(
-                ResolveState("RaiseFromLowReadyToRack")
-            );
-
-        bool isInLowReadyFamily =
-            inLowerToLowReady
-            || inLowReady
-            || inRaiseFromLowReady
-            || inRaiseFromLowReadyToRack;
-
         if (
             (pendingRack || !chamberLoaded)
-            && !isInLowReadyFamily
+            && !IsInExtendedLowReadyStateFamily(weaponSprite)
         )
         {
             owner.player.SetPSprite(
