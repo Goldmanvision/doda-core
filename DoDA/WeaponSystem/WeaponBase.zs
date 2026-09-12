@@ -1016,11 +1016,69 @@ class DoDAWeapon : Weapon
         return ARCHETYPE_Default;
     }
 
+    Actor SpawnCasing(
+        class<Actor> casingClass,
+        double forwardDistance,
+        double angleOffset,
+        double heightFraction,
+        double speedMin,
+        double speedMax,
+        double upwardImpulseMin,
+        double upwardImpulseMax,
+        bool setCasingAngle = false
+    )
+    {
+        if (owner == null)
+        {
+            return null;
+        }
+
+        double resolvedAngle = owner.angle + angleOffset;
+        Vector3 spawnPos = owner.Vec3Angle(
+            forwardDistance,
+            resolvedAngle,
+            owner.height * heightFraction
+        );
+
+        Actor casing = Spawn(casingClass, spawnPos);
+        if (casing == null)
+        {
+            return null;
+        }
+
+        double speed = (speedMin == speedMax)
+            ? speedMin
+            : FRandom(speedMin, speedMax);
+
+        double upwardImpulse = (upwardImpulseMin == upwardImpulseMax)
+            ? upwardImpulseMin
+            : FRandom(upwardImpulseMin, upwardImpulseMax);
+
+        casing.vel = owner.vel;
+        casing.vel.x += Cos(resolvedAngle) * speed;
+        casing.vel.y += Sin(resolvedAngle) * speed;
+        casing.vel.z += upwardImpulse;
+
+        if (setCasingAngle)
+        {
+            casing.angle = resolvedAngle;
+        }
+
+        return casing;
+    }
+
     action void DoDA_SpawnPistolCasing()
     {
-        let pistol = DoDAPistol(invoker);
+        if (invoker == null || invoker.owner == null)
+        {
+            return;
+        }
 
-        if (pistol == null || invoker.owner == null)
+        let pistol = (invoker is "DoDAPistol")
+            ? DoDAPistol(invoker)
+            : DoDAPistol(invoker.owner.player.ReadyWeapon);
+
+        if (pistol == null)
         {
             return;
         }
@@ -1037,65 +1095,20 @@ class DoDAWeapon : Weapon
             ? agent.GetDeadzoneYawGap()
             : 0.0;
 
-        double weaponFacingAngle = invoker.owner.angle + yawOffset;
-
-        double ejectAngle = weaponFacingAngle
+        double angleOffset = yawOffset
             + (isLeftPistol ? 45.0 : -45.0);
 
-        vector2 ejectDirection = AngleToVector(ejectAngle, 1.0);
-
-        double PistolCasingForwardDiagonalSpawnOffset = 10.0;
-        double PistolCasingSpawnZFraction = 0.60;
-
-        vector2 spawnXY =
-            invoker.owner.Pos.XY
-            + ejectDirection * PistolCasingForwardDiagonalSpawnOffset;
-
-        vector3 spawnPos = (
-            spawnXY.X,
-            spawnXY.Y,
-            invoker.owner.Pos.Z
-                + invoker.owner.height * PistolCasingSpawnZFraction
+        invoker.SpawnCasing(
+            "DoDAPistolCasing",
+            10.0,
+            angleOffset,
+            0.60,
+            5.0,
+            5.0,
+            2.0,
+            3.0,
+            true
         );
-
-        Actor casing = Spawn("DoDAPistolCasing", spawnPos);
-
-        if (casing)
-        {
-            double PistolCasingEjectSpeed = 5.0;
-
-            casing.vel = invoker.owner.vel;
-            casing.vel.x += ejectDirection.X * PistolCasingEjectSpeed;
-            casing.vel.y += ejectDirection.Y * PistolCasingEjectSpeed;
-            casing.vel.z += FRandom(2.0, 3.0);
-            casing.angle = ejectAngle;
-        }
-    }
-
-    action void DoDA_SpawnCasing(class<Actor> casingType)
-    {
-        if (invoker == null || invoker.owner == null)
-        {
-            return;
-        }
-
-        Vector3 spawnPos = invoker.owner.Vec3Angle(
-            4.0,
-            invoker.owner.angle + 90.0,
-            invoker.owner.height * 0.7
-        );
-
-        Actor casing = Spawn(casingType, spawnPos);
-
-        if (casing)
-        {
-            casing.vel = invoker.owner.vel;
-            casing.vel.xy += (
-                Random(-1.0, 1.0),
-                Random(-1.0, 1.0)
-            );
-            casing.vel.z += 2.0;
-        }
     }
 
     bool FireDeadzoneHitscanRay(

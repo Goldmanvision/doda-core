@@ -518,27 +518,17 @@ class DoDAShotgun : DoDAWeapon
             return;
         }
 
-        // Right side, forward of the camera, and below eye height.
-        Vector3 spawnPos = invoker.owner.Vec3Angle(
+        invoker.SpawnCasing(
+            "DoDAShotgunCasing",
             10.0,
-            invoker.owner.angle - 55.0,
-            invoker.owner.height * 0.42
+            -55.0,
+            0.42,
+            6.0,
+            8.0,
+            1.5,
+            2.5,
+            false
         );
-
-        Actor casing = Spawn("DoDAShotgunCasing", spawnPos);
-
-        if (casing == null)
-        {
-            return;
-        }
-
-        double ejectAngle = invoker.owner.angle - 55.0;
-        double ejectSpeed = FRandom(6.0, 8.0);
-
-        casing.vel = invoker.owner.vel;
-        casing.vel.x += Cos(ejectAngle) * ejectSpeed;
-        casing.vel.y += Sin(ejectAngle) * ejectSpeed;
-        casing.vel.z += FRandom(1.5, 2.5);
     }
 
     action void A_Shotgun_DryFireSound()
