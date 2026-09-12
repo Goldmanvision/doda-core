@@ -692,29 +692,6 @@ class DoDAShotgun : DoDAWeapon
             return;
         }
 
-        let agent = FieldAgent(invoker.owner);
-
-        bool deadzoneActive = agent != null
-            && agent.IsDeadzoneAimActive();
-
-        double yawOffset = deadzoneActive
-            ? agent.GetDeadzoneYawGap()
-            : 0.0;
-
-        double pitchOffset = deadzoneActive
-            ? agent.GetDeadzonePitchGap()
-            : 0.0;
-
-        double leanOffset = invoker.leanController != null
-            ? invoker.leanController.GetAppliedOffset()
-            : 0.0;
-
-        double attackZ =
-            invoker.owner.height * 0.5
-            - invoker.owner.floorclip
-            + invoker.owner.player.mo.AttackZOffset
-                * invoker.owner.player.crouchFactor;
-
         A_StartSound(
             "doda/shotgun/fire",
             CHAN_WEAPON
@@ -725,25 +702,16 @@ class DoDAShotgun : DoDAWeapon
             double randomAngle = Random(0.0, 360.0);
             double randomRadius = Random(0.0, 5.0);
 
-            double fireYaw = invoker.owner.angle
-                + yawOffset
-                + Cos(randomAngle) * randomRadius;
-
-            double firePitch = invoker.owner.pitch
-                + pitchOffset
-                + Sin(randomAngle) * randomRadius;
+            double localYawOffset = Cos(randomAngle) * randomRadius;
+            double localPitchOffset = Sin(randomAngle) * randomRadius;
 
             FLineTraceData trace;
 
-            bool hit = invoker.owner.LineTrace(
-                fireYaw,
-                2048.0,
-                firePitch,
-                0,
-                attackZ,
-                0.0,
-                leanOffset,
-                trace
+            bool hit = invoker.FireDeadzoneHitscanRay(
+                localYawOffset,
+                localPitchOffset,
+                trace,
+                2048.0
             );
 
             if (!hit)

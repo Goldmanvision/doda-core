@@ -271,54 +271,13 @@ class DoDAMP5KSD : DoDAWeapon
 
     void FireDeadzoneAwareTrace()
     {
-        if (
-            owner == null
-            || owner.player == null
-            || owner.health <= 0
-            || owner.player.mo == null
-        )
-        {
-            return;
-        }
-
-        let agent = FieldAgent(owner);
-
-        bool deadzoneActive =
-            agent != null
-            && agent.IsDeadzoneAimActive();
-
-        double yawOffset = deadzoneActive
-            ? agent.GetDeadzoneYawGap()
-            : 0.0;
-
-        double pitchOffset = deadzoneActive
-            ? agent.GetDeadzonePitchGap()
-            : 0.0;
-
-        double fireYaw = owner.angle + yawOffset;
-        double firePitch = owner.pitch + pitchOffset;
-
-        double attackZ =
-            owner.height * 0.5
-            - owner.floorclip
-            + owner.player.mo.AttackZOffset
-                * owner.player.crouchFactor;
-
-        double leanOffset = leanController != null
-            ? leanController.GetAppliedOffset()
-            : 0.0;
-
         FLineTraceData trace;
 
-        bool hit = owner.LineTrace(
-            fireYaw,
-            2048.0,
-            firePitch,
-            0,
-            attackZ,
+        bool hit = FireDeadzoneHitscanRay(
             0.0,
-            leanOffset,
-            trace
+            0.0,
+            trace,
+            2048.0
         );
 
         if (!hit)

@@ -1090,13 +1090,68 @@ class DoDAWeapon : Weapon
         }
     }
 
+    bool FireDeadzoneHitscanRay(
+        double localYawOffset,
+        double localPitchOffset,
+        out FLineTraceData trace,
+        double maxRange = 2048.0
+    )
+    {
+        if (
+            owner == null
+            || owner.player == null
+            || owner.player.mo == null
+            || owner.health <= 0
+        )
+        {
+            return false;
+        }
+
+        let agent = FieldAgent(owner);
+
+        bool deadzoneActive =
+            agent != null
+            && agent.IsDeadzoneAimActive();
+
+        double yawOffset = deadzoneActive
+            ? agent.GetDeadzoneYawGap()
+            : 0.0;
+
+        double pitchOffset = deadzoneActive
+            ? agent.GetDeadzonePitchGap()
+            : 0.0;
+
+        double fireYaw = owner.angle + yawOffset + localYawOffset;
+        double firePitch = owner.pitch + pitchOffset + localPitchOffset;
+
+        double attackZ =
+            owner.height * 0.5
+            - owner.floorclip
+            + owner.player.mo.AttackZOffset
+                * owner.player.crouchFactor;
+
+        double leanOffset = leanController != null
+            ? leanController.GetAppliedOffset()
+            : 0.0;
+
+        return owner.LineTrace(
+            fireYaw,
+            maxRange,
+            firePitch,
+            0,
+            attackZ,
+            0.0,
+            leanOffset,
+            trace
+        );
+    }
+
     action void DoDA_FireTrace()
     {
         if (
             invoker == null
             || invoker.owner == null
             || invoker.owner.player == null
-            || invoker.owner.health <= 0
             || invoker.owner.player.mo == null
         )
         {
@@ -1148,45 +1203,18 @@ class DoDAWeapon : Weapon
         double randomAngle = Random(0.0, 360.0);
         double randomRadius = Random(0.0, spread);
 
-        double yawOffset = deadzoneActive
-            ? agent.GetDeadzoneYawGap()
-            : 0.0;
-
-        double pitchOffset = deadzoneActive
-            ? agent.GetDeadzonePitchGap()
-            : 0.0;
-
-        double fireYaw = invoker.owner.angle
-            + yawOffset
-            + Cos(randomAngle) * randomRadius;
-
-        double firePitch = invoker.owner.pitch
-            + pitchOffset
-            + Sin(randomAngle) * randomRadius;
+        double localYawOffset = Cos(randomAngle) * randomRadius;
+        double localPitchOffset = Sin(randomAngle) * randomRadius;
 
         pistol.DoDA_PlayFireSound();
 
         FLineTraceData trace;
 
-        double attackZ =
-            invoker.owner.height * 0.5
-            - invoker.owner.floorclip
-            + invoker.owner.player.mo.AttackZOffset
-                * invoker.owner.player.crouchFactor;
-
-        double leanOffset = invoker.leanController != null
-            ? invoker.leanController.GetAppliedOffset()
-            : 0.0;
-
-        bool hit = invoker.owner.LineTrace(
-            fireYaw,
-            2048.0,
-            firePitch,
-            0,
-            attackZ,
-            0.0,
-            leanOffset,
-            trace
+        bool hit = invoker.FireDeadzoneHitscanRay(
+            localYawOffset,
+            localPitchOffset,
+            trace,
+            2048.0
         );
 
         if (!hit)
