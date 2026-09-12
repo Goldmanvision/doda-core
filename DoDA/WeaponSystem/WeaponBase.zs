@@ -472,9 +472,12 @@ class DoDAWeapon : Weapon
         bool altPressed = altDown && !wasHoldingAlt;
         wasHoldingAlt = altDown;
 
+        let leftPistol = (isAkimbo && owner != null)
+            ? DoDAPistol(owner.FindInventory('DoDAB92Left'))
+            : null;
+
         if (isAkimbo && readyWasSelf && pistol != null)
         {
-            let leftPistol = DoDAPistol(owner.FindInventory('DoDAB92Left'));
             let rightPistol = pistol;
 
             bool isLeaningLeft = (leanController != null && leanController.GetLeanAmount() < -0.1);
@@ -849,7 +852,6 @@ class DoDAWeapon : Weapon
 
         if (isAkimbo)
         {
-            let leftPistol = DoDAPistol(owner.FindInventory('DoDAB92Left'));
             let rightPistol = pistol;
 
             bool rightReloading = (rightPistol != null && rightPistol.reloadInProgress);
