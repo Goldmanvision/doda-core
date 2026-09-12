@@ -2,63 +2,63 @@
 // DoDA/MissionSystem/MissionManager.zs
 *///////////////////////////|
 
-class DoDAMissionManager
+// Deprecated compatibility wrapper: DoDAMissionDirector is the single authoritative
+// live mission-state owner. DoDAMissionManager delegates all queries to MissionDirector.
+class DoDAMissionManager : Object
 {
-    DoDAMissionResult MissionResult;
-    int MissionIndex;
-    int MissionPercentComplete;
-    int MissionPhase;
-    string MissionName;
-    string MissionDescription;
-
-    void InitMission(int index, string name, string description)
+    play void InitMission(int index, string name, string description)
     {
-        MissionResult = MISSION_PENDING;
-        MissionIndex = index;
-        MissionPercentComplete = 0;
-        MissionPhase = 0;
-        MissionName = name;
-        MissionDescription = description;
+        Console.Printf("DoDA: Warning: DoDAMissionManager.InitMission is deprecated; DoDAMissionDirector owns live mission initialization.");
+        DoDAMissionDirector director = DoDAMissionDirector.GetInstance();
+        if (director != null)
+        {
+            director.ConfigureMissionForIndex(index);
+        }
     }
 
-    void SetMissionResult(DoDAMissionResult result)
+    play void SetMissionResult(DoDAMissionResult result)
     {
-        MissionResult = result;
+        Console.Printf("DoDA: Warning: DoDAMissionManager.SetMissionResult is deprecated; DoDAMissionDirector owns live mission state.");
     }
 
-    void SetMissionProgress(int percent, int phase)
+    play void SetMissionProgress(int percent, int phase)
     {
-        MissionPercentComplete = percent;
-        MissionPhase = phase;
+        Console.Printf("DoDA: Warning: DoDAMissionManager.SetMissionProgress is deprecated; DoDAMissionDirector owns live mission state.");
     }
 
-    DoDAMissionResult GetMissionResult()
+    clearscope DoDAMissionResult GetMissionResult()
     {
-        return MissionResult;
+        DoDAMissionDirector director = DoDAMissionDirector.GetInstance();
+        return director != null ? director.GetMissionResult() : MISSION_UNKNOWN;
     }
 
-    int GetMissionIndex()
+    clearscope int GetMissionIndex()
     {
-        return MissionIndex;
+        DoDAMissionDirector director = DoDAMissionDirector.GetInstance();
+        return director != null ? director.GetMissionIndex() : 0;
     }
 
-    int GetMissionPercentComplete()
+    clearscope int GetMissionPercentComplete()
     {
-        return MissionPercentComplete;
+        DoDAMissionDirector director = DoDAMissionDirector.GetInstance();
+        return director != null ? director.GetMissionPercentComplete() : 0;
     }
 
-    int GetMissionPhase()
+    clearscope int GetMissionPhase()
     {
-        return MissionPhase;
+        DoDAMissionDirector director = DoDAMissionDirector.GetInstance();
+        return director != null ? director.GetMissionPhase() : 0;
     }
 
-    string GetMissionName()
+    clearscope string GetMissionName()
     {
-        return MissionName;
+        DoDAMissionDirector director = DoDAMissionDirector.GetInstance();
+        return director != null ? director.GetMissionName() : "";
     }
 
-    string GetMissionDescription()
+    clearscope string GetMissionDescription()
     {
-        return MissionDescription;
+        DoDAMissionDirector director = DoDAMissionDirector.GetInstance();
+        return director != null ? director.GetMissionDescription() : "";
     }
 }

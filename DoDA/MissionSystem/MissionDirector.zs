@@ -159,6 +159,18 @@ void ConfigureMissionForIndex(int index)
         return DoDAMissionDirector(EventHandler.Find("DoDAMissionDirector"));
     }
 
+    clearscope DoDAMissionState GetState()
+    {
+        return DoDAMissionState.Create(
+            MissionResult,
+            MissionIndex,
+            MissionPercentComplete,
+            MissionPhase,
+            MissionName,
+            MissionDescription
+        );
+    }
+
     clearscope DoDAMissionResult GetMissionResult()
     {
         return MissionResult;
