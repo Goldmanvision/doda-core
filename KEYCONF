@@ -26,33 +26,33 @@ alias -doda_aimmode "DoDA_SetDeadzone 0"
 defaultbind mouse2 +doda_aimmode
 
 
-// Manual B92 hand swap / shotgun rack.
-
-addmenukey "Swap Beretta" +doda_swapberetta
-alias +doda_swapberetta "doda_swap_beretta 1"
-alias -doda_swapberetta "doda_swap_beretta 0"
-defaultbind v +doda_swapberetta
-
-
-// Secondary weapon action.
-// For DoDAShotgun, C toggles the normal-ready and low-ready poses.
+// Manual B92 hand swap / weapon secondary action.
+// For DoDAPistol, V requests a hand swap.
+// For DoDAShotgun, V toggles between normal-ready and low-ready.
 
 addmenukey "Weapon Secondary Action" +doda_weaponsecondary
 alias +doda_weaponsecondary "doda_weapon_secondary 1"
 alias -doda_weaponsecondary "doda_weapon_secondary 0"
 defaultbind v +doda_weaponsecondary
 
-// Pistol swap lock.
-addmenukey "Toggle Pistol Swap Lock" +doda_toggle_pistol_swap_lock
-alias +doda_toggle_pistol_swap_lock "doda_toggle_pistol_swap_lock 1"
-alias -doda_toggle_pistol_swap_lock "doda_toggle_pistol_swap_lock 0"
-defaultbind c +doda_toggle_pistol_swap_lock
+addmenukey "Swap Beretta" +doda_swapberetta
+alias +doda_swapberetta "doda_swap_beretta 1"
+alias -doda_swapberetta "doda_swap_beretta 0"
 
-// MP5 Fire Mode.
-addmenukey "Cycle MP5 Fire Mode" +doda_firemode
+
+// Manual weapon control / MP5 Fire Mode / Shotgun Manual Rack.
+// For DoDAMP5KSD, C cycles fire mode (semi/burst/auto).
+// For DoDAShotgun, C manually pumps the action (rack).
+
+addmenukey "Manual Weapon Action / Fire Mode" +doda_firemode
 alias +doda_firemode "+user3"
 alias -doda_firemode "-user3"
 defaultbind c +doda_firemode
+
+// Pistol swap lock (unbound by default to prevent binding collision).
+addmenukey "Toggle Pistol Swap Lock" +doda_toggle_pistol_swap_lock
+alias +doda_toggle_pistol_swap_lock "doda_toggle_pistol_swap_lock 1"
+alias -doda_toggle_pistol_swap_lock "doda_toggle_pistol_swap_lock 0"
 
 
 // Akimbo and Dual Wield controls.

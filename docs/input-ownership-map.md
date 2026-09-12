@@ -75,12 +75,12 @@ All CVar reads and buffer drains must use `DoDAInputUtility` methods:
 
 ## 5. Input Collision & Defect Catalog
 
-1. **Key `v` Dual-Binding**:
-   - In baseline `KEYCONF`, key `v` is bound to both `+doda_swapberetta` and `+doda_weaponsecondary`.
-   - *Status*: Cataloged baseline defect. Preservation required until dedicated binding refactor task.
-2. **Key `c` Dual-Binding**:
-   - In baseline `KEYCONF`, key `c` is bound to both `+doda_toggle_pistol_swap_lock` and `+doda_firemode`.
-   - *Status*: Cataloged baseline defect. Preservation required until dedicated binding refactor task.
+1. **Key `v` Dual-Binding Resolution**:
+   - In baseline `KEYCONF`, key `v` was bound to both `+doda_swapberetta` and `+doda_weaponsecondary`.
+   - *Status*: Resolved in Task 25. Key `v` is bound to `+doda_weaponsecondary` (which handles B92 hand swapping and Shotgun low-ready actions). `+doda_swapberetta` remains available as an alias without duplicate defaultbind.
+2. **Key `c` Dual-Binding Resolution**:
+   - In baseline `KEYCONF`, key `c` was bound to both `+doda_toggle_pistol_swap_lock` and `+doda_firemode`.
+   - *Status*: Resolved in Task 25. Key `c` is bound to `+doda_firemode` (which maps to `+user3` for Shotgun pump racking and MP5 firemode cycling). `+doda_toggle_pistol_swap_lock` is unbound by default and configurable in menu.
 3. **Scan-Code Constants**:
    - Inspection confirms all production input flows rely on engine button masks (`BT_*`), `UiEvent.Type_MouseMove`, or `ConsoleEvent.Name`.
    - Hardcoded keyboard scan codes are present only in inert diagnostic capture (`DODAGlobalInputCapture`), which is unreferenced in `MAPINFO`.
