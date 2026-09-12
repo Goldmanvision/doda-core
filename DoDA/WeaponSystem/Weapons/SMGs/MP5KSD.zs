@@ -7,9 +7,9 @@ class DoDAMP5KSD : DoDAWeapon
     const Fire_Burst = 1;
     const Fire_Auto = 2;
 
+    DoDADetachableMagState magState;
     int magazineRounds;
     bool chamberLoaded;
-    bool mp5Initialized;
 
     int fireMode;
     int burstShotsRemaining;
@@ -34,6 +34,12 @@ class DoDAMP5KSD : DoDAWeapon
         +WEAPON.NOAUTOFIRE;
         +WEAPON.NOAUTOAIM;
         +WEAPON.NOALERT;
+    }
+
+    private void SyncFields()
+    {
+        magazineRounds = magState.magazineRounds;
+        chamberLoaded = magState.chamberLoaded;
     }
 
     override bool ShouldStartFire(bool holdingFire, bool firePressed)
@@ -124,19 +130,13 @@ class DoDAMP5KSD : DoDAWeapon
 
     void EnsureFirearmState()
     {
-        if (mp5Initialized)
-        {
-            return;
-        }
-
-        magazineRounds = MagazineCapacity;
-        chamberLoaded = true;
-        mp5Initialized = true;
+        magState.Initialize(MagazineCapacity, true);
+        SyncFields();
     }
 
     clearscope int GetMagazineRoundCount()
     {
-        return magazineRounds;
+        return magState.magazineRounds;
     }
 
     clearscope int GetMagazineCapacity()
@@ -146,17 +146,17 @@ class DoDAMP5KSD : DoDAWeapon
 
     clearscope bool IsChamberLoaded()
     {
-        return chamberLoaded;
+        return magState.chamberLoaded;
     }
 
     clearscope int GetLoadedRoundCount()
     {
-        return magazineRounds + (chamberLoaded ? 1 : 0);
+        return magState.GetLoadedRoundCount();
     }
 
     clearscope bool IsEmpty()
     {
-        return !chamberLoaded && magazineRounds == 0;
+        return magState.IsEmpty();
     }
 
     bool CanReload()
@@ -167,10 +167,10 @@ class DoDAMP5KSD : DoDAWeapon
         }
 
         let reserveAmmo = Ammo(owner.FindInventory("Clip"));
+        int reserveCount = (reserveAmmo != null) ? reserveAmmo.Amount : 0;
 
         return GetLoadedRoundCount() < TotalCapacity
-            && reserveAmmo != null
-            && reserveAmmo.Amount > 0;
+            && magState.CanReload(MagazineCapacity, reserveCount);
     }
 
     void TryReload()
@@ -180,7 +180,7 @@ class DoDAMP5KSD : DoDAWeapon
             return;
         }
 
-        if (magazineRounds >= MagazineCapacity)
+        if (magState.magazineRounds >= MagazineCapacity)
         {
             return;
         }
@@ -226,45 +226,31 @@ class DoDAMP5KSD : DoDAWeapon
             return;
         }
 
-        int amount = Min(
-            MagazineCapacity - magazineRounds,
+        int transferred = magState.PerformTopOffTransfer(
+            MagazineCapacity,
             reserveAmmo.Amount
         );
 
-        magazineRounds += amount;
-        reserveAmmo.Amount -= amount;
+        reserveAmmo.Amount -= transferred;
+        SyncFields();
     }
 
     bool ConsumeFiredRound()
     {
-        if (!chamberLoaded)
-        {
-            return false;
-        }
-
-        chamberLoaded = false;
-
-        if (magazineRounds > 0)
-        {
-            magazineRounds--;
-            chamberLoaded = true;
-        }
-
-        return true;
+        bool ok = magState.ConsumeFiredRound();
+        SyncFields();
+        return ok;
     }
 
     void LoadChamberFromMagazine()
     {
-        if (!chamberLoaded && magazineRounds > 0)
-        {
-            magazineRounds--;
-            chamberLoaded = true;
-        }
+        magState.ChamberFromMagazine();
+        SyncFields();
     }
 
     bool CanCock()
     {
-        return !chamberLoaded && magazineRounds > 0;
+        return !magState.chamberLoaded && magState.magazineRounds > 0;
     }
 
     override void HandleManualWeaponControl()

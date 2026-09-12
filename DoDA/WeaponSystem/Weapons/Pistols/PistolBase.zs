@@ -8,9 +8,9 @@ class DoDAPistol : DoDAWeapon
 
     bool adsActive;
 
+    DoDADetachableMagState magState;
     int magazineRounds;
     bool chamberLoaded;
-    bool firearmStateInitialized;
 
     bool reloadQueued;
     bool reloadInProgress;
@@ -25,16 +25,16 @@ class DoDAPistol : DoDAWeapon
         Inventory.PickupMessage "Picked up the DoDA Pistol";
     }
 
+    private void SyncFields()
+    {
+        magazineRounds = magState.magazineRounds;
+        chamberLoaded = magState.chamberLoaded;
+    }
+
     void EnsureFirearmState()
     {
-        if (firearmStateInitialized)
-        {
-            return;
-        }
-
-        magazineRounds = MagazineCapacity;
-        chamberLoaded = true;
-        firearmStateInitialized = true;
+        magState.Initialize(MagazineCapacity, true);
+        SyncFields();
     }
 
     Ammo GetReserveAmmo()
@@ -69,7 +69,7 @@ class DoDAPistol : DoDAWeapon
 
     clearscope int GetMagazineRounds()
     {
-        return magazineRounds;
+        return magState.magazineRounds;
     }
 
     clearscope int GetMagazineCapacity()
@@ -79,13 +79,13 @@ class DoDAPistol : DoDAWeapon
 
     clearscope bool IsChamberLoaded()
     {
-        return chamberLoaded;
+        return magState.chamberLoaded;
     }
 
     bool IsEmpty()
     {
         EnsureFirearmState();
-        return magazineRounds == 0 && !chamberLoaded;
+        return magState.IsEmpty();
     }
 
     bool CanReload()
@@ -93,10 +93,9 @@ class DoDAPistol : DoDAWeapon
         EnsureFirearmState();
 
         let reserveAmmo = GetReserveAmmo();
+        int reserveCount = (reserveAmmo != null) ? reserveAmmo.Amount : 0;
 
-        return reserveAmmo != null
-            && reserveAmmo.Amount > 0
-            && magazineRounds < MagazineCapacity;
+        return magState.CanReload(MagazineCapacity, reserveCount);
     }
 
     bool TryReload()
@@ -121,16 +120,13 @@ class DoDAPistol : DoDAWeapon
     int GetLoadedRoundCount()
     {
         EnsureFirearmState();
-
-        return magazineRounds + (chamberLoaded ? 1 : 0);
+        return magState.GetLoadedRoundCount();
     }
 
     bool IsFullyLoaded()
     {
         EnsureFirearmState();
-
-        return magazineRounds >= MagazineCapacity
-            && chamberLoaded;
+        return magState.magazineRounds >= MagazineCapacity && magState.chamberLoaded;
     }
 
     bool NeedsReload()
@@ -141,29 +137,15 @@ class DoDAPistol : DoDAWeapon
     bool CanFireRound()
     {
         EnsureFirearmState();
-        return chamberLoaded;
+        return magState.CanFireRound();
     }
 
     bool ConsumeFiredRound()
     {
         EnsureFirearmState();
-
-        if (!chamberLoaded)
-        {
-            return false;
-        }
-
-        if (magazineRounds > 0)
-        {
-            magazineRounds--;
-            chamberLoaded = true;
-        }
-        else
-        {
-            chamberLoaded = false;
-        }
-
-        return true;
+        bool ok = magState.ConsumeFiredRound();
+        SyncFields();
+        return ok;
     }
 
     void QueueReload()
@@ -201,24 +183,9 @@ class DoDAPistol : DoDAWeapon
             return false;
         }
 
-        reserveAmmo.Amount += magazineRounds;
-        magazineRounds = 0;
-
-        int roundsToLoad = Min(
-            MagazineCapacity,
-            reserveAmmo.Amount
-        );
-
-        magazineRounds = roundsToLoad;
-        reserveAmmo.Amount -= roundsToLoad;
-
-        if (!chamberLoaded && magazineRounds > 0)
-        {
-            magazineRounds--;
-            chamberLoaded = true;
-        }
-
-        return true;
+        bool ok = magState.CommitReplacementReload(MagazineCapacity, reserveAmmo.Amount);
+        SyncFields();
+        return ok;
     }
 
     action void DoDA_PlayFireSound()
