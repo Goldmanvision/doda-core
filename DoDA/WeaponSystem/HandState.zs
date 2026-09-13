@@ -15,7 +15,7 @@ enum EDoDAHand
     DODA_HAND_RIGHT = 1
 };
 
-class DoDAHandState : Object
+class DoDAHandState : Object play
 {
     // Minimal foundation state
     Weapon LeftWeapon;

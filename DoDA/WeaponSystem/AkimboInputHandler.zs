@@ -101,8 +101,9 @@
 
         if (e.Name == "DoDA_ToggleAkimbo")
         {
+            if (e.Player < 0 || e.Player >= MAXPLAYERS || !playeringame[e.Player]) return;
             let p = players[e.Player];
-            if (p == null || p.mo == null) return;
+            if (p.mo == null) return;
 
             let playerBase = DoDAPlayerBase(p.mo);
             let handState = (playerBase != null) ? playerBase.GetHandState() : null;
@@ -200,7 +201,7 @@
     {
         for (int i = 0; i < MAXPLAYERS; i++)
         {
-            if (playeringame[i] && players[i] != null && players[i].mo != null)
+            if (playeringame[i] && players[i].mo != null)
             {
                 let pb = DoDAPlayerBase(players[i].mo);
                 if (pb != null)
@@ -220,7 +221,7 @@
     {
         for (int i = 0; i < MAXPLAYERS; i++)
         {
-            if (playeringame[i] && players[i] != null && players[i].mo != null)
+            if (playeringame[i] && players[i].mo != null)
             {
                 let pb = DoDAPlayerBase(players[i].mo);
                 if (pb != null)
@@ -238,7 +239,7 @@
 
     override void PlayerEntered(PlayerEvent e)
     {
-        if (e.PlayerNumber >= 0 && e.PlayerNumber < MAXPLAYERS && players[e.PlayerNumber] != null && players[e.PlayerNumber].mo != null)
+        if (e.PlayerNumber >= 0 && e.PlayerNumber < MAXPLAYERS && playeringame[e.PlayerNumber] && players[e.PlayerNumber].mo != null)
         {
             let pb = DoDAPlayerBase(players[e.PlayerNumber].mo);
             if (pb != null)
@@ -255,7 +256,7 @@
 
     override void PlayerRespawned(PlayerEvent e)
     {
-        if (e.PlayerNumber >= 0 && e.PlayerNumber < MAXPLAYERS && players[e.PlayerNumber] != null && players[e.PlayerNumber].mo != null)
+        if (e.PlayerNumber >= 0 && e.PlayerNumber < MAXPLAYERS && playeringame[e.PlayerNumber] && players[e.PlayerNumber].mo != null)
         {
             let pb = DoDAPlayerBase(players[e.PlayerNumber].mo);
             if (pb != null)
@@ -272,7 +273,7 @@
 
     override void PlayerDied(PlayerEvent e)
     {
-        if (e.PlayerNumber >= 0 && e.PlayerNumber < MAXPLAYERS && players[e.PlayerNumber] != null && players[e.PlayerNumber].mo != null)
+        if (e.PlayerNumber >= 0 && e.PlayerNumber < MAXPLAYERS && playeringame[e.PlayerNumber] && players[e.PlayerNumber].mo != null)
         {
             let pb = DoDAPlayerBase(players[e.PlayerNumber].mo);
             if (pb != null)
