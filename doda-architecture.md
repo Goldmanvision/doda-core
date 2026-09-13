@@ -6,8 +6,10 @@
 ### Confirmed
 - `FieldAgent` is the active ZScript authority for Deadzone Aim mode, angular offsets, smoothing, and limits.
 - `DoDALeanInput` and `DoDALeanController` own lean input reading and view translation math.
-- `DoDAWeapon` currently drives the update lifecycle for `DoDALeanInput` and `DoDALeanController`.
-- Native strategic simulation in UZDoom C++ fork owns canonical persistent state; Personnel Snapshot V1 is read-only (Native API v1, Save schema v2).
+- `DoDAFOIMSXSessionController` is the single active production authority for FOIMS-X session lifecycle, host binding, freeze/unfreeze orchestration, and input arbitration.
+- `DoDAHUDWeapon` consumes structured `DoDAWeaponHUDData` directly from `DoDAHUD.DrawWeaponHUD()`.
+- Native strategic simulation in UZDoom C++ fork owns canonical persistent state; Personnel Snapshot V1 and Assignment Snapshot V1 are read-only (Native API v1, Save Schema v4).
+- Known pre-existing defect: Left B92 weapon overlay sprite can disappear during left lean in dual/akimbo mode (traceable to layer-2 PSprite/lean pipeline around `d57d853`).
 
 ### Planned
 - Lean Ability Lifecycle Extraction: Extract `DoDALeanInput` and `DoDALeanController` update execution from `DoDAWeapon` into a player-owned ability lifecycle under `DoDA/Abilities/`.
@@ -843,3 +845,100 @@ This is a future design requirement only. The following elements are intentional
 - Versioned backward-safe save-schema fields and serialization (Cross-reference: Task 38).
 - Native invariant validation rules for recovery and persistence transitions (Cross-reference: Task 36 for save/restore validation).
 - FOIMS-X UI presentation and notifications for hospitalization/recovery.
+
+---
+
+# 17. FOIMS-X Production Architecture & Seam Boundaries
+
+## 17.1 Session Controller & Lifecycle Ownership
+- **Authority**: `DoDAFOIMSXSessionController` (`DoDA/UI/FOIMSX/FOIMSXSessionController.zs`) is a registered `StaticEventHandler` in `MAPINFO` and the sole production owner of FOIMS-X activation, deactivation, host binding, freeze/unfreeze orchestration, and lifecycle safety.
+- **Freeze Mechanics**: Centralizes player freeze using engine flag `CF_TOTALLYFROZEN` (`mFOIMSXAppliedFreeze`), ensuring idempotent application on session entry and guaranteed release on session exit, player death, player respawn, host destruction, map load (`WorldLoaded`), and map unload (`WorldUnloaded`).
+- **Input Interception**: Intercepts and consumes toggle (`O` / `FOIMSX_KEYSCAN_O`), close (`Escape` / `FOIMSX_KEYSCAN_ESCAPE`), and navigation keys while active, suppressing background gameplay firing, movement, and weapon switching.
+- **Host Binding**: Reconciles host bindings (`mBoundHost`) via `WorldLoaded` generation tracking, maintaining strict null-safety across map transitions and engine savegame reloads.
+
+## 17.2 Domain Separation & Pure Renderers
+- **Personnel & Assignment Domain Independence**: `PersonnelSnapshotV1` and `AssignmentSnapshotV1` remain distinct domain models, adapters, view states, and renderers.
+- **Pure Rendering**: `DoDAFOIMSXDirectoryRenderer` (`PersonnelSnapshotV1Renderer.zs`) and `DoDAAssignmentSnapshotV1Renderer` (`AssignmentSnapshotV1Renderer.zs`) are strictly read-only presentation components. Renderers read `DoDAFOIMSXSessionController.IsSessionActive()` and project view-state data without mutating engine freeze flags, altering session state, or invoking snapshot acquisition during `RenderOverlay()`.
+
+## 17.3 Snapshot Refresh & Invalidation Pipeline
+- **Activation-Boundary Refresh (Task 29)**: Successful session activation or re-entry in `DoDAFOIMSXSessionController.ActivateSession()` triggers an explicit full snapshot acquisition (`RefreshSessionData(true)`). No polling or rebuild checks occur during `Tick()`, `UiTick()`, `Render()`, or `RenderOverlay()`.
+- **Revision-Driven Refresh (Task 30)**: Native queries `DoDA.GetPersonnelSnapshotRevisionText()` and `DoDA.GetAssignmentSnapshotRevisionText()` provide monotonic revision tokens. Domain data refreshes only when native revisions change or explicit events (`"DoDAFOIMSXDataChanged"`, `"DoDAFOIMSXRefresh"`) are received. Unchanged domains bypass reconstruction.
+- **Shared Refresh Bookkeeping (Task 31)**: `DoDAFOIMSXSnapshotRefreshState` (`DoDA/UI/FOIMSX/FOIMSXSnapshotRefreshState.zs`) encapsulates domain-agnostic last-applied revision text, initialization status, `ShouldRefresh()`, and `MarkApplied()` without any domain or native knowledge.
+- **Standardized Acquisition Status (Task 32)**: `EDoDAFOIMSXSnapshotAcquireStatus` (`DoDA/UI/FOIMSX/FOIMSXSnapshotAcquireStatus.zs`) standardizes outcome states (`FOIMSX_ACQUIRE_SUCCESS`, `FOIMSX_ACQUIRE_UNAVAILABLE`, `FOIMSX_ACQUIRE_INCOMPATIBLE_VERSION`, `FOIMSX_ACQUIRE_REJECTED`). Failed, rejected, or incompatible acquisitions safely preserve existing UI state and never mark revisions as applied.
+
+## 17.4 Stateless Drawing Primitives (Task 33)
+- **Shared Helpers**: `DoDAFOIMSXDrawingHelpers` (`DoDA/UI/FOIMSX/FOIMSXDrawingHelpers.zs`) provides stateless 2D virtual coordinate (640x480) drawing primitives: `DrawVirtualRect`, `GetRealClipRect`, `DrawRaisedPanel`, `DrawSunkenPanel`, `DrawVirtualText`, and `DrawClippedText`.
+- **Domain Independence**: Drawing helpers accept all coordinates, fonts, colors, clipping bounds, and text strings explicitly via arguments, possessing zero session, model, adapter, or domain data references.
+
+## 17.5 Navigation Contract & Reserved Keys (Task 35)
+- **Command Classification**: `EDoDAFOIMSXNavCommand` formalizes navigation intent (`FOIMSX_NAV_NONE`, `FOIMSX_NAV_PREVIOUS`, `FOIMSX_NAV_NEXT`, `FOIMSX_NAV_PAGE_PREVIOUS`, `FOIMSX_NAV_PAGE_NEXT`, `FOIMSX_NAV_FIRST`, `FOIMSX_NAV_LAST`, `FOIMSX_NAV_SELECT`, `FOIMSX_NAV_CLEAR_SELECTION`).
+- **Input Parsing**: `ClassifyNavInput(keyScan, keyChar)` maps raw key inputs to semantic commands without hardcoded magic numbers.
+- **Engine-Reserved Escape**: The `Escape` key is engine-reserved for the game main menu and is never intercepted, consumed, or remapped as a FOIMS-X back/close command.
+
+---
+
+# 18. Weapon System HUD Data Flow & Presentation Boundary
+
+## 18.1 Structured HUD Data Parameter Flow (Task 34)
+- **Structured Data Forwarding**: `DoDAHUD.DrawWeaponHUD()` (`DoDA/UI/FieldAgent/HUD.zs`) acquires primary and companion weapon data via `DoDAHUDWeaponBridge` and forwards structured `DoDAWeaponHUDData` objects directly to `DoDAHUDWeapon.DrawWeaponReadout()` and `DrawWeaponSlot()` (`DoDA/UI/FieldAgent/HUDWeapon.zs`).
+- **Parameter Reduction**: Replaces 19-parameter and 11-parameter unpacked signatures with direct object references (`primary`, `companion`, `reserveRounds`), eliminating redundant field unpacking while preserving 100% of formatting, color-coding, and layout rules.
+- **Invariance**: Zero gameplay, damage, spread, aim, recoil, magazine capacity, chambering, or reload mechanics were altered.
+
+## 18.2 PSprite Layer-2 Pipeline & Known Akimbo Left-Lean Defect
+- **Pipeline Architecture**: Dual/akimbo weapon presentation renders the companion weapon on weapon PSprite layer 2 (`PSP_LEFTWEAPON`).
+- **Known Pre-existing Defect**: When dual B92 pistols are equipped and the player performs a left lean (`+user1`), the left B92 weapon overlay sprite can disappear. The HUD readout for the companion weapon remains active, proving companion weapon data is intact.
+- **Provenance**: Verified pre-existing prior to Task 34 and traceable to weapon layer-2 state resolution and lowering offsets in `WeaponBase.zs` / `PistolBase.zs` / `AkimboInputHandler.zs` (introduced in commit `d57d853`). This defect is outside Wave 3 scope and deferred to dedicated akimbo weapon system refactoring.
+
+---
+
+# 19. Native Strategic Persistence & Save Schema 4 Architecture
+
+## 19.1 Native Authority & Serialization Seam (Task 36, 37, 38)
+- **Authoritative Simulation**: Native `DoDASimulation` (`uzdoom-official/src/doda/DoDA_Simulation.cpp`) is the sole authoritative owner of strategic time, personnel, fatigue, tasks, locations, and assignments.
+- **Persistence Transport**: Serializes into and restores from `globals.json` under root object `"doda"`.
+- **Transient UI Separation**: FOIMS-X UI view-states, selection indices, and active session states are transient. Upon savegame restoration (`WorldLoaded`), UI sessions safely reconcile without dangling host pointers, leaving canonical simulation state entirely in native ownership.
+
+## 19.2 Save Schema Version 4 Specification
+- **Current Version**: `DODA_SAVE_SCHEMA_VERSION = 4` (`src/doda/DoDA_SaveSchema.h`).
+- **Root Fields**: `"schema_version"` (`int`), `"strategic_minutes"` (`uint64`), `"next_person_id"` (`uint64`), `"next_task_id"` (`uint64`), `"next_assignment_id"` (`uint64`), `"next_location_id"` (`uint64`).
+- **Entity Collections**:
+  - `"locations"`: Array of `{ "id": uint64, "name": string }` (up to `DODA_MAX_LOCATIONS = 1024`).
+  - `"people"`: Array of `{ "id": uint64, "name": string, "skill": int, "workload": int, "status": int, "fatigue": int }` (up to `DODA_MAX_PEOPLE = 1024`).
+  - `"tasks"`: Array of `{ "id": uint64, "title": string, "location_id": uint64, "priority": int, "required_skill": int, "estimated_work": int, "status": int, "progress": int }` (up to `DODA_MAX_TASKS = 1024`).
+  - `"assignments"`: Array of `{ "id": uint64, "person_id": uint64, "task_id": uint64, "cost": int }` (up to `DODA_MAX_ASSIGNMENTS = 1024`).
+- **Internal vs. Display Separation**: Native persistence fields (internal fatigue, allocator counters, raw numeric IDs, schema version) are persisted for simulation continuity but are not UI display requirements.
+
+## 19.3 Durable Native Identity & Relational Foreign Keys (Task 37)
+- **Durable 64-Bit Keys**: All entities utilize durable `uint64_t` scalar keys (`DoDAPersonId`, `DoDATaskId`, `DoDAAssignmentId`, `DoDALocationId`).
+- **Monotonic Allocator Counters**: Allocator counters (`mNextPersonId`, `mNextTaskId`, `mNextAssignmentId`, `mNextLocationId`) are serialized into savegames, strictly post-incremented, and never decremented, guaranteeing collision-free non-reuse of IDs across save/load.
+- **Foreign Key Relational Integrity**: All relationships (`Assignment -> Person`, `Assignment -> Task`, `Task -> Location`, `Person -> Assignment -> Task`) resolve exclusively via scalar ID matching. Deserialization strictly verifies foreign key existence and enforces per-person assignment uniqueness (`std::set`). Zero persistent relationships depend on vector indices, UI selection, display names, or memory addresses.
+
+## 19.4 Backward-Safe Schema Migration (Task 38)
+- **Schema 1 Migration**: Restores `strategic_minutes` and resets collections to default campaign baseline.
+- **Schema 2 Migration**: Deserializes canonical people, tasks, and assignments; synthesizes default Location `{ 1, "Morrow Point Waterworks" }` and `next_location_id = 2`; defaults `Task.LocationId = 1` and `Person.Fatigue = 0`.
+- **Schema 3 Migration**: Deserializes canonical people with explicit `fatigue`; synthesizes default location and defaults `Task.LocationId = 1`.
+- **Corrupt / Unsupported Save Rejection**: Malformed JSON, missing required fields, enum out-of-range, or unsupported schema versions safely invoke `ResetPersonnelSnapshotAfterLoadFailure()`, restoring clean defaults without engine crashes or memory corruption.
+
+---
+
+# 20. Wave 3 Refactor Task & Delivery Register
+
+| Task | Title | Scope & Delivery Summary | Code Change Status | Validation Status |
+|---|---|---|---|---|
+| **Task 27** | FOIMS-X Session Controller | Created `DoDAFOIMSXSessionController` as unified lifecycle, freeze, and input owner. | Implemented (`527a90f`) | User-run runtime verified green |
+| **Task 28** | FOIMS-X Rendering Consolidation | Audited active production render paths; confirmed single entry point in `DoDAFOIMSXDirectoryRenderer`. | No code change | Verified by static & reference audit |
+| **Task 29** | FOIMS-X Activation Refresh | Established forced snapshot refresh at activation boundary; removed render-loop snapshot acquisition. | Implemented (`e9a6161`) | User-run runtime verified green |
+| **Task 30** | Revision-Driven Snapshot Refresh | Added native revision query checking and event routing (`DoDAFOIMSXDataChanged`) to prevent redundant rebuilds. | Implemented (`1f24bf1`) | User-run runtime verified green |
+| **Task 31** | Shared Snapshot Infrastructure | Extracted domain-agnostic `DoDAFOIMSXSnapshotRefreshState`; includes parser compatibility repair (`83be123`). | Implemented (`f01fec4`, `83be123`) | User-run runtime verified green |
+| **Task 32** | Adapter Rejection Standardization | Added `EDoDAFOIMSXSnapshotAcquireStatus` to standardize acquisition outcomes across adapters. | Implemented (`b8a0cbf`) | User-run runtime verified green |
+| **Task 33** | FOIMS-X Drawing Helpers | Extracted stateless 2D virtual coordinate drawing primitives into `DoDAFOIMSXDrawingHelpers`. | Implemented (`128d2f1`) | User-run runtime verified green |
+| **Task 34** | Weapon/HUD Parameter Reduction | Forwarded structured `DoDAWeaponHUDData` directly to `DrawWeaponReadout`; documented known pre-existing B92 akimbo left-lean defect. | Implemented (`b399502`) | User-run runtime verified green |
+| **Task 35** | FOIMS-X Navigation Contract | Formalized `EDoDAFOIMSXNavCommand` and `ClassifyNavInput`; preserved engine-reserved Escape. | Implemented (`ed409d9`) | User-run runtime verified green |
+| **Task 36** | Static Host Save/Restore Validation | Validated static host and UI session reconciliation across engine save/restore routines. | No code change | User-run save/restore matrix green |
+| **Task 37** | Native Persistence Identity | Audited durable 64-bit scalar entity IDs, monotonic allocators, and foreign-key joins in Schema 4. | No code change | Source-proven & save/restore verified |
+| **Task 38** | Save Schema Extension | Audited Save Schema Version 4 field coverage and backward migration for Schemas 1–3. | No code change | User-run Schema 4 save/load verified |
+| **Task 39** | MAP03 Packaging Validation | Map packaging and dependency resolution previously validated. | Intentionally skipped | Previously validated |
+| **Task 40** | Repository Artifact Archiving | Produced comprehensive Artifact Classification Inventory; retained active POC handlers. | No code change | Classification inventory completed |
+| **Task 41** | Technical Documentation Regeneration | Reconciled authoritative architecture, persistence, HUD, and task registers. | Implemented (Task 41) | Documentation validation green |
+| **Task 42** | Final Cross-System Verification | End-to-end multi-system integration testing across weapons, FOIMS-X, and save/load. | Pending | Pending |
+| **Task 43** | Final Cleanup Gate | Final repository cleanliness audit, baseline verification, and artifact lock. | Pending | Pending |

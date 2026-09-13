@@ -19,8 +19,8 @@ This document establishes the explicit single owner for each input responsibilit
 | **Lean Offset & Viewport Smoothing** | `DoDALeanController` | Polled in `FieldAgent.Tick()` from `DoDALeanInput` flags | Applies smoothed `SetViewPos()` viewport offset and sets `FieldAgent.LeanOffset` | **Production** (`Object` component owned by `FieldAgent`) |
 | **Akimbo Mode Toggle** | `DoDAAkimboInputHandler` | `NetworkProcess(ConsoleEvent e)` via netevent `DoDA_ToggleAkimbo` | Invokes `DoDA.EnterAkimbo()` / `DoDA.ExitAkimbo()`, updates PSprite layers | **Production** (`StaticEventHandler`) |
 | **Hand Swap / Firemode Toggle** | Weapon State Machines (`PistolBase`, `MP5ModeHandler`, `MP5KSD`) | `BT_USER3` (`+user3` / `+doda_firemode`) or weapon secondary input | State jumps (`CheckHandSwap()`, `DoDA_FiremodeMP5`) | **Production** (Weapons & EventHandlers) |
-| **FOIMS-X Terminal Interaction** | `DoDAMissionTerminal` / `DoDAMissionDirector` | `+use` / activation trigger on world thing | Opens terminal / lifecycle event | **Production** (World Things / UI) |
-| **FOIMS-X UI Navigation** | FOIMS-X ViewStates (`PersonnelSnapshotV1ViewState`, `AssignmentSnapshotV1ViewState`) | UI Event routing / programmatic selection | ViewState selection index | **Production** (UI Models / ViewStates) |
+| **FOIMS-X Session Activation & Input Arbitration** | `DoDAFOIMSXSessionController` | `InputProcess(InputEvent e)` filtering `O` toggle / `Escape` close | Central session activation, player freeze, gameplay input suppression | **Production** (`StaticEventHandler`) |
+| **FOIMS-X UI Navigation & Selection** | `PersonnelSnapshotV1Renderer` (`ClassifyNavInput`) / ViewStates | `EDoDAFOIMSXNavCommand` via arrow keys, page up/down, home/end, Enter | ViewState focus and selection indices | **Production** (UI Renderers / ViewStates) |
 | **Global Raw Key Diagnostics** | `DODAGlobalInputCapture` | `InputProcess(InputEvent e)` | Console debug logging | **Diagnostic / Inert** (Debug handler; not registered in MAPINFO) |
 | **Background Sim POC Ticking** | `DoDABackgroundSimPOC` | Map / world ticks | Background simulation step | **POC / Simulation** (`StaticEventHandler`) |
 
