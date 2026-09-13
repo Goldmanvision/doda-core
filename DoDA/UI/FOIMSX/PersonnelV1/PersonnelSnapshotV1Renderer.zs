@@ -14,6 +14,8 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
 {
     private ui DoDAPersonnelSnapshotV1ViewState mViewState;
     private ui DoDAAssignmentSnapshotV1ViewState mAssignmentViewState;
+    private ui DoDAFOIMSXSnapshotRefreshState mPersonnelRefreshState;
+    private ui DoDAFOIMSXSnapshotRefreshState mAssignmentRefreshState;
     private ui int mFocusedIndex;
 
     ui void RefreshPersonnelData(bool force = false)
@@ -23,15 +25,22 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
             mViewState = DoDAPersonnelSnapshotV1ViewState.Create();
         }
 
+        if (mPersonnelRefreshState == null)
+        {
+            mPersonnelRefreshState = DoDAFOIMSXSnapshotRefreshState.Create();
+        }
+
         String currentRev = DoDAPersonnelSnapshotV1Adapter.GetCurrentRevisionText();
 
-        if (force ||
-            mViewState.LastAcceptedSnapshot == null ||
-            !mViewState.LastAcceptedSnapshot.IsValid ||
-            mViewState.ActiveRevisionText != currentRev)
+        if (mPersonnelRefreshState.ShouldRefresh(currentRev, force))
         {
             let snapshot = DoDAPersonnelSnapshotV1Adapter.AcquireSnapshot();
             mViewState.UpdateFromSnapshot(snapshot);
+
+            if (snapshot != null && snapshot.IsValid)
+            {
+                mPersonnelRefreshState.MarkApplied(snapshot.RevisionText);
+            }
 
             int rowCount = mViewState.GetDisplayRowCount();
             if (rowCount > 0)
@@ -55,15 +64,22 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
             mAssignmentViewState = DoDAAssignmentSnapshotV1ViewState.Create();
         }
 
+        if (mAssignmentRefreshState == null)
+        {
+            mAssignmentRefreshState = DoDAFOIMSXSnapshotRefreshState.Create();
+        }
+
         String currentRev = DoDAAssignmentSnapshotV1Adapter.GetCurrentRevisionText();
 
-        if (force ||
-            mAssignmentViewState.LastAcceptedSnapshot == null ||
-            !mAssignmentViewState.LastAcceptedSnapshot.IsValid ||
-            mAssignmentViewState.ActiveRevisionText != currentRev)
+        if (mAssignmentRefreshState.ShouldRefresh(currentRev, force))
         {
             let assignSnapshot = DoDAAssignmentSnapshotV1Adapter.AcquireSnapshot();
             mAssignmentViewState.UpdateFromSnapshot(assignSnapshot);
+
+            if (assignSnapshot != null && assignSnapshot.IsValid)
+            {
+                mAssignmentRefreshState.MarkApplied(assignSnapshot.RevisionText);
+            }
         }
     }
 

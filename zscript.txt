@@ -37,6 +37,11 @@ version "2.4"
 #endregion
 
 
+#region FOIMSXShared
+#include "DoDA/UI/FOIMSX/FOIMSXSnapshotRefreshState.zs"
+#endregion
+
+
 #region FOIMSXPersonnelV1
 #include "DoDA/UI/FOIMSX/PersonnelV1/PersonnelSnapshotV1Model.zs"
 #include "DoDA/UI/FOIMSX/PersonnelV1/PersonnelSnapshotV1Adapter.zs"
