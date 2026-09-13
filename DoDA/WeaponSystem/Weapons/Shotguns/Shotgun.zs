@@ -229,6 +229,11 @@ class DoDAShotgun : DoDAWeapon
 
     override void HandleManualWeaponControl()
     {
+        HandleSecondaryWeaponAction();
+    }
+
+    override void HandleSecondaryWeaponAction()
+    {
         if (owner == null || owner.player == null)
         {
             return;
@@ -253,90 +258,70 @@ class DoDAShotgun : DoDAWeapon
 
         lowReadyIdleTics = 0;
 
-        if (IsInBasicLowReadyStateFamily(weaponSprite))
-        {
-            pendingRack = true;
-
-            owner.player.SetPSprite(
-                PSP_WEAPON,
-                ResolveState("RaiseFromLowReadyToRack")
-            );
-
-            return;
-        }
-
-        if (
-            weaponSprite.CurState.InStateSequence(
-                ResolveState("RackWait")
-            )
-        )
-        {
-            pendingRack = true;
-
-            owner.player.SetPSprite(
-                PSP_WEAPON,
-                ResolveState("RackFromPreRack")
-            );
-
-            return;
-        }
-
-        if (weaponSprite.CurState == ResolveState("Ready"))
-        {
-            pendingRack = true;
-
-            owner.player.SetPSprite(
-                PSP_WEAPON,
-                ResolveState("HipRackApproach")
-            );
-        }
-    }
-
-    override void HandleSecondaryWeaponAction()
-    {
-        if (owner == null || owner.player == null)
-        {
-            return;
-        }
-
-        PSprite weaponSprite = owner.player.GetPSprite(
-            PSP_WEAPON
-        );
-
-        if (
-            weaponSprite == null
-            || weaponSprite.CurState == null
-        )
-        {
-            return;
-        }
-
-        lowReadyIdleTics = 0;
+        bool isBasicLowReady =
+            IsInBasicLowReadyStateFamily(weaponSprite);
 
         bool isRackWait =
             weaponSprite.CurState.InStateSequence(
                 ResolveState("RackWait")
             );
 
-        if (pendingRack && isRackWait)
-        {
-            owner.player.SetPSprite(
-                PSP_WEAPON,
-                ResolveState("LowerToLowReady")
-            );
+        bool isReady =
+            weaponSprite.CurState == ResolveState("Ready");
 
-            return;
+        if (pendingRack)
+        {
+            if (isBasicLowReady)
+            {
+                owner.player.SetPSprite(
+                    PSP_WEAPON,
+                    ResolveState("RaiseFromLowReadyToRack")
+                );
+
+                return;
+            }
+
+            if (isRackWait)
+            {
+                owner.player.SetPSprite(
+                    PSP_WEAPON,
+                    ResolveState("RackFromPreRack")
+                );
+
+                return;
+            }
+
+            if (isReady)
+            {
+                owner.player.SetPSprite(
+                    PSP_WEAPON,
+                    ResolveState("HipRackApproach")
+                );
+
+                return;
+            }
         }
-
-        if (
-            pendingRack
-            && IsInExtendedLowReadyStateFamily(weaponSprite)
-        )
+        else
         {
-            owner.player.SetPSprite(
-                PSP_WEAPON,
-                ResolveState("RaiseFromLowReady")
-            );
+            if (isBasicLowReady)
+            {
+                owner.player.SetPSprite(
+                    PSP_WEAPON,
+                    ResolveState("RaiseFromLowReady")
+                );
+
+                return;
+            }
+
+            if (isReady)
+            {
+                owner.player.SetPSprite(
+                    PSP_WEAPON,
+                    ResolveState("LowerToLowReady")
+                );
+
+                return;
+            }
         }
     }
 
@@ -871,7 +856,7 @@ class DoDAShotgun : DoDAWeapon
         SGUP C 2;
         SGUP B 2;
         SGUP A 2;
-        Goto RackWait;
+        Goto Ready;
 
     RaiseFromLowReadyToRack:
         SGUP D 2;
