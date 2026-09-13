@@ -2,16 +2,29 @@ class MP5ModeHandler : StaticEventHandler
 {
     override bool InputProcess(InputEvent e)
     {
+        if (menuactive != 0 || ConsoleState != 0 || gamestate != GS_LEVEL)
+        {
+            return false;
+        }
+
         if (e.Type != InputEvent.Type_KeyDown)
         {
             return false;
         }
 
-        // C key: cycle SEMI -> BURST -> AUTO.
+        String bind = Bindings.GetBinding(e.KeyScan);
+        if (bind == "")
+        {
+            return false;
+        }
+
+        // Cycle Left-Hand Fire Mode (default C): in single-weapon mode, cycles
+        // the selected weapon's fire mode when supported.
         if (
-            e.KeyString == "c"
-            || e.KeyString == "C"
-            || e.KeyChar == 99
+            bind ~== "+doda_cycle_firemode_left"
+            || bind ~== "doda_cycle_firemode_left"
+            || bind ~== "+doda_firemode"
+            || bind ~== "+user3"
         )
         {
             let player = players[consoleplayer];
@@ -33,11 +46,19 @@ class MP5ModeHandler : StaticEventHandler
             }
         }
 
-        // R key: request MP5 tactical or empty reload.
+        // Cycle Right-Hand Fire Mode (default B): in single-weapon mode, harmless no-op.
         if (
-            e.KeyString == "r"
-            || e.KeyString == "R"
-            || e.KeyChar == 114
+            bind ~== "doda_cycle_firemode_right"
+            || bind ~== "+doda_cycle_firemode_right"
+        )
+        {
+            return true;
+        }
+
+        // Reload weapon action (default R).
+        if (
+            bind ~== "+reload"
+            || bind ~== "reload"
         )
         {
             let player = players[consoleplayer];
@@ -55,7 +76,7 @@ class MP5ModeHandler : StaticEventHandler
                     "DoDA_MP5Reload"
                 );
 
-                return true;
+                return false;
             }
         }
 
@@ -98,6 +119,14 @@ class MP5ModeHandler : StaticEventHandler
             {
                 mp5.TryReload();
             }
+
+            return;
+        }
+
+        if (e.Name == "DoDA_CycleRightFireMode")
+        {
+            // Harmless no-op in single-weapon mode.
+            return;
         }
     }
 }

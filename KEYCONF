@@ -26,30 +26,53 @@ alias -doda_aimmode "DoDA_SetDeadzone 0"
 defaultbind mouse2 +doda_aimmode
 
 
-// Manual B92 hand swap / weapon secondary action.
-// For DoDAPistol, V requests a hand swap.
-// For DoDAShotgun, V toggles between normal-ready and low-ready.
+// Left-hand and right-hand weapon selectors.
+
+addmenukey "Equip Left Hand Weapon" +doda_equip_left
+alias +doda_equip_left "+user5"
+alias -doda_equip_left "-user5"
+defaultbind z +doda_equip_left
+
+addmenukey "Equip Right Hand Weapon" +doda_equip_right
+alias +doda_equip_right "+user6"
+alias -doda_equip_right "-user6"
+defaultbind x +doda_equip_right
+
+
+// Hand-based fire mode controls.
+
+addmenukey "Cycle Left-Hand Fire Mode" +doda_cycle_firemode_left
+alias +doda_cycle_firemode_left "+user3"
+alias -doda_cycle_firemode_left "-user3"
+defaultbind c +doda_cycle_firemode_left
+
+addmenukey "Cycle Right-Hand Fire Mode" doda_cycle_firemode_right
+alias doda_cycle_firemode_right "netevent DoDA_CycleRightFireMode"
+defaultbind b doda_cycle_firemode_right
+
+
+// Weapon hand swapping.
+
+addmenukey "Swap Weapon Hands" +doda_swap_hands
+alias +doda_swap_hands "+doda_weaponsecondary"
+alias -doda_swap_hands "-doda_weaponsecondary"
+defaultbind v +doda_swap_hands
+
+
+// Manual weapon secondary actions & legacy hand swap aliases.
 
 addmenukey "Weapon Secondary Action" +doda_weaponsecondary
 alias +doda_weaponsecondary "doda_weapon_secondary 1"
 alias -doda_weaponsecondary "doda_weapon_secondary 0"
-defaultbind v +doda_weaponsecondary
 
 addmenukey "Swap Beretta" +doda_swapberetta
 alias +doda_swapberetta "doda_swap_beretta 1"
 alias -doda_swapberetta "doda_swap_beretta 0"
 
-
-// Manual weapon control / MP5 Fire Mode / Shotgun Manual Rack.
-// For DoDAMP5KSD, C cycles fire mode (semi/burst/auto).
-// For DoDAShotgun, C manually pumps the action (rack).
-
 addmenukey "Manual Weapon Action / Fire Mode" +doda_firemode
 alias +doda_firemode "+user3"
 alias -doda_firemode "-user3"
-defaultbind c +doda_firemode
 
-// Pistol swap lock (unbound by default to prevent binding collision).
 addmenukey "Toggle Pistol Swap Lock" +doda_toggle_pistol_swap_lock
 alias +doda_toggle_pistol_swap_lock "doda_toggle_pistol_swap_lock 1"
 alias -doda_toggle_pistol_swap_lock "doda_toggle_pistol_swap_lock 0"
