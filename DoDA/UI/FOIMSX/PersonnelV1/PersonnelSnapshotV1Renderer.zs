@@ -349,7 +349,7 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
 
         DoDAFOIMSXDrawingHelpers.DrawSunkenPanel(16, 420, 610, 24, 0xFF121B2A);
         DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_WHITE, 22, 426,
-            "UP/DOWN FOCUS   ENTER SELECT   BACKSPACE CLEAR   O/ESC EXIT", 0.5, 0.5);
+            "UP/DOWN FOCUS   ENTER SELECT   BACKSPACE CLEAR   O EXIT", 0.5, 0.5);
     }
 
     private ui void RenderSelectedPerson()

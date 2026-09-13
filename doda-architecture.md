@@ -853,7 +853,7 @@ This is a future design requirement only. The following elements are intentional
 ## 17.1 Session Controller & Lifecycle Ownership
 - **Authority**: `DoDAFOIMSXSessionController` (`DoDA/UI/FOIMSX/FOIMSXSessionController.zs`) is a registered `StaticEventHandler` in `MAPINFO` and the sole production owner of FOIMS-X activation, deactivation, host binding, freeze/unfreeze orchestration, and lifecycle safety.
 - **Freeze Mechanics**: Centralizes player freeze using engine flag `CF_TOTALLYFROZEN` (`mFOIMSXAppliedFreeze`), ensuring idempotent application on session entry and guaranteed release on session exit, player death, player respawn, host destruction, map load (`WorldLoaded`), and map unload (`WorldUnloaded`).
-- **Input Interception**: Intercepts and consumes toggle (`O` / `FOIMSX_KEYSCAN_O`), close (`Escape` / `FOIMSX_KEYSCAN_ESCAPE`), and navigation keys while active, suppressing background gameplay firing, movement, and weapon switching.
+- **Input Interception**: Intercepts and consumes toggle (`O` / `FOIMSX_KEYSCAN_O`) and navigation keys while active, suppressing background gameplay firing, movement, and weapon switching.
 - **Host Binding**: Reconciles host bindings (`mBoundHost`) via `WorldLoaded` generation tracking, maintaining strict null-safety across map transitions and engine savegame reloads.
 
 ## 17.2 Domain Separation & Pure Renderers
@@ -934,11 +934,11 @@ This is a future design requirement only. The following elements are intentional
 | **Task 33** | FOIMS-X Drawing Helpers | Extracted stateless 2D virtual coordinate drawing primitives into `DoDAFOIMSXDrawingHelpers`. | Implemented (`128d2f1`) | User-run runtime verified green |
 | **Task 34** | Weapon/HUD Parameter Reduction | Forwarded structured `DoDAWeaponHUDData` directly to `DrawWeaponReadout`; documented known pre-existing B92 akimbo left-lean defect. | Implemented (`b399502`) | User-run runtime verified green |
 | **Task 35** | FOIMS-X Navigation Contract | Formalized `EDoDAFOIMSXNavCommand` and `ClassifyNavInput`; preserved engine-reserved Escape. | Implemented (`ed409d9`) | User-run runtime verified green |
-| **Task 36** | Static Host Save/Restore Validation | Validated static host and UI session reconciliation across engine save/restore routines. | No code change | User-run save/restore matrix green |
+| **Task 36** | Static Host Save/Restore Validation | Baseline static host and UI session reconciliation audit; save-while-open freeze leak subsequently identified and resolved in Task 42 repairs. | No code change | Repaired and user-run verified green in Task 42 |
 | **Task 37** | Native Persistence Identity | Audited durable 64-bit scalar entity IDs, monotonic allocators, and foreign-key joins in Schema 4. | No code change | Source-proven & save/restore verified |
 | **Task 38** | Save Schema Extension | Audited Save Schema Version 4 field coverage and backward migration for Schemas 1–3. | No code change | User-run Schema 4 save/load verified |
-| **Task 39** | MAP03 Packaging Validation | Map packaging and dependency resolution previously validated. | Intentionally skipped | Previously validated |
+| **Task 39** | MAP03 Packaging Validation | Map packaging and dependency resolution previously validated. | Intentionally skipped | Previously validated; skipped in this sequence |
 | **Task 40** | Repository Artifact Archiving | Produced comprehensive Artifact Classification Inventory; retained active POC handlers. | No code change | Classification inventory completed |
 | **Task 41** | Technical Documentation Regeneration | Reconciled authoritative architecture, persistence, HUD, and task registers. | Implemented (Task 41) | Documentation validation green |
-| **Task 42** | Final Cross-System Verification | End-to-end multi-system integration testing across weapons, FOIMS-X, and save/load. | Pending | Pending |
-| **Task 43** | Final Cleanup Gate | Final repository cleanliness audit, baseline verification, and artifact lock. | Pending | Pending |
+| **Task 42** | Final Cross-System Verification | End-to-end multi-system integration testing across weapons, FOIMS-X, and save/load; post-test repairs resolved save-while-open input freeze and typography scaling. | Implemented (`da5d290`, `1c3aba2`) | Repaired and user-run verified green |
+| **Task 43** | Final Cleanup Gate | Final repository cleanliness audit, baseline verification, and artifact lock. | Implemented (Task 43) | Pending user smoke matrix |
