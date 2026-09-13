@@ -26,7 +26,7 @@ class DoDAB92Right : DoDAPistol
             ? handState.IsAkimboActive()
             : DoDA.IsAkimboActive();
 
-        let leftW = handState ? handState.GetLeftWeapon(pistol.owner) : pistol.owner.FindInventory('DoDAB92Left');
+        let leftW = handState ? handState.GetLeftWeapon(pistol.owner) : Weapon(pistol.owner.FindInventory('DoDAB92Left'));
 
         if (leftW == null || isAkimbo)
         {

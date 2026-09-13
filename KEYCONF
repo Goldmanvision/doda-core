@@ -51,19 +51,18 @@ alias doda_cycle_firemode_right "netevent DoDA_CycleRightFireMode"
 defaultbind b doda_cycle_firemode_right
 
 
-// Weapon hand swapping.
+// Weapon Secondary Action / Hand Swapping.
 
-addmenukey "Swap Weapon Hands" +doda_swap_hands
-alias +doda_swap_hands "+doda_weaponsecondary"
-alias -doda_swap_hands "-doda_weaponsecondary"
-defaultbind v +doda_swap_hands
-
-
-// Manual weapon secondary actions & legacy hand swap aliases.
-
-addmenukey "Weapon Secondary Action" +doda_weaponsecondary
+addmenukey "Weapon Secondary Action / Swap Hands" +doda_weaponsecondary
 alias +doda_weaponsecondary "doda_weapon_secondary 1"
 alias -doda_weaponsecondary "doda_weapon_secondary 0"
+defaultbind v +doda_weaponsecondary
+
+alias +doda_swap_hands "+doda_weaponsecondary"
+alias -doda_swap_hands "-doda_weaponsecondary"
+
+
+// Legacy weapon secondary & hand swap aliases.
 
 addmenukey "Swap Beretta" +doda_swapberetta
 alias +doda_swapberetta "doda_swap_beretta 1"
