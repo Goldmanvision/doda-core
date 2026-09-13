@@ -63,6 +63,7 @@ class DoDAAssignmentSnapshotV1 : Object
     Array<DoDAAssignmentRecordV1> Records;
 
     bool IsValid;
+    EDoDAFOIMSXSnapshotAcquireStatus AcquireStatus;
     EDoDAAssignmentAcquisitionState AcquisitionState;
     EDoDAAssignmentValidationReason ValidationReason;
 
@@ -103,6 +104,7 @@ class DoDAAssignmentSnapshotV1 : Object
         Count = 0;
         Records.Clear();
         IsValid = false;
+        AcquireStatus = FOIMSX_ACQUIRE_UNAVAILABLE;
         AcquisitionState = ASSIGNMENT_ACQUISITION_UNAVAILABLE;
         ValidationReason = ASSIGNMENT_VALIDATION_NONE;
     }

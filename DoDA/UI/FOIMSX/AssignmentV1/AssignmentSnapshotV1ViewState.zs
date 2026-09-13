@@ -49,7 +49,7 @@ class DoDAAssignmentSnapshotV1ViewState : Object
     void UpdateFromSnapshot(DoDAAssignmentSnapshotV1 newSnapshot)
     {
         // Handle unacquired or rejected candidate snapshot
-        if (newSnapshot == null || !newSnapshot.IsValid)
+        if (newSnapshot == null || !newSnapshot.IsValid || newSnapshot.AcquireStatus != FOIMSX_ACQUIRE_SUCCESS)
         {
             // If a valid snapshot was previously accepted, retain display data and mark STALE
             if (LastAcceptedSnapshot != null && LastAcceptedSnapshot.IsValid)
@@ -59,7 +59,8 @@ class DoDAAssignmentSnapshotV1ViewState : Object
             }
 
             // No prior accepted snapshot held
-            if (newSnapshot != null && (newSnapshot.AcquisitionState == ACQUISITION_UNSUPPORTED_VERSION ||
+            if (newSnapshot != null && (newSnapshot.AcquireStatus == FOIMSX_ACQUIRE_INCOMPATIBLE_VERSION ||
+                                        newSnapshot.AcquisitionState == ACQUISITION_UNSUPPORTED_VERSION ||
                                         newSnapshot.ValidationReason == VALIDATION_UNSUPPORTED_API_VERSION))
             {
                 CurrentViewState = VIEWSTATE_INCOMPATIBLE_VERSION;

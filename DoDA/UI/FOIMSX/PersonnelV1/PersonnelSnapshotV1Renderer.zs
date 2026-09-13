@@ -37,7 +37,7 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
             let snapshot = DoDAPersonnelSnapshotV1Adapter.AcquireSnapshot();
             mViewState.UpdateFromSnapshot(snapshot);
 
-            if (snapshot != null && snapshot.IsValid)
+            if (snapshot != null && snapshot.IsValid && snapshot.AcquireStatus == FOIMSX_ACQUIRE_SUCCESS)
             {
                 mPersonnelRefreshState.MarkApplied(snapshot.RevisionText);
             }
@@ -76,7 +76,7 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
             let assignSnapshot = DoDAAssignmentSnapshotV1Adapter.AcquireSnapshot();
             mAssignmentViewState.UpdateFromSnapshot(assignSnapshot);
 
-            if (assignSnapshot != null && assignSnapshot.IsValid)
+            if (assignSnapshot != null && assignSnapshot.IsValid && assignSnapshot.AcquireStatus == FOIMSX_ACQUIRE_SUCCESS)
             {
                 mAssignmentRefreshState.MarkApplied(assignSnapshot.RevisionText);
             }

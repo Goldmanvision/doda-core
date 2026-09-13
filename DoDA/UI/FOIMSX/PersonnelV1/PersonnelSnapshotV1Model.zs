@@ -81,6 +81,7 @@ class DoDAPersonnelSnapshotV1 : Object
     Array<DoDAPersonRecordV1> Records;
 
     bool IsValid;
+    EDoDAFOIMSXSnapshotAcquireStatus AcquireStatus;
     EDoDAPersonnelAcquisitionState AcquisitionState;
     EDoDAPersonnelValidationReason ValidationReason;
 
@@ -121,6 +122,7 @@ class DoDAPersonnelSnapshotV1 : Object
         Count = 0;
         Records.Clear();
         IsValid = false;
+        AcquireStatus = FOIMSX_ACQUIRE_UNAVAILABLE;
         AcquisitionState = ACQUISITION_UNAVAILABLE;
         ValidationReason = VALIDATION_NONE;
     }

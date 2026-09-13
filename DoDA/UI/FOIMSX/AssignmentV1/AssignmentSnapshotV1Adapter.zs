@@ -54,6 +54,7 @@ class DoDAAssignmentSnapshotV1Adapter : Object
         if (apiVersion != EXPECTED_API_VERSION)
         {
             snapshot.IsValid = false;
+            snapshot.AcquireStatus = FOIMSX_ACQUIRE_INCOMPATIBLE_VERSION;
             snapshot.AcquisitionState = ACQUISITION_UNSUPPORTED_VERSION;
             snapshot.ValidationReason = VALIDATION_UNSUPPORTED_API_VERSION;
             return snapshot;
@@ -66,6 +67,7 @@ class DoDAAssignmentSnapshotV1Adapter : Object
         if (!IsDecimalString(revBefore))
         {
             snapshot.IsValid = false;
+            snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
             snapshot.AcquisitionState = ACQUISITION_INVALID_ROW;
             snapshot.ValidationReason = VALIDATION_INVALID_REVISION_TOKEN;
             return snapshot;
@@ -81,6 +83,7 @@ class DoDAAssignmentSnapshotV1Adapter : Object
         if (count < 0 || count > MAX_ASSIGNMENTS)
         {
             snapshot.IsValid = false;
+            snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
             snapshot.AcquisitionState = ACQUISITION_INVALID_COUNT;
             snapshot.ValidationReason = VALIDATION_INVALID_COUNT;
             return snapshot;
@@ -106,6 +109,7 @@ class DoDAAssignmentSnapshotV1Adapter : Object
             if (!IsDecimalString(assignId))
             {
                 snapshot.IsValid = false;
+                snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
                 snapshot.AcquisitionState = ACQUISITION_INVALID_ROW;
                 snapshot.ValidationReason = VALIDATION_INVALID_ASSIGNMENT_ID;
                 return snapshot;
@@ -115,6 +119,7 @@ class DoDAAssignmentSnapshotV1Adapter : Object
             if (!IsDecimalString(personId))
             {
                 snapshot.IsValid = false;
+                snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
                 snapshot.AcquisitionState = ACQUISITION_INVALID_ROW;
                 snapshot.ValidationReason = VALIDATION_INVALID_PERSON_ID;
                 return snapshot;
@@ -124,6 +129,7 @@ class DoDAAssignmentSnapshotV1Adapter : Object
             if (!IsDecimalString(taskId))
             {
                 snapshot.IsValid = false;
+                snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
                 snapshot.AcquisitionState = ACQUISITION_INVALID_ROW;
                 snapshot.ValidationReason = VALIDATION_INVALID_TASK_ID;
                 return snapshot;
@@ -133,6 +139,7 @@ class DoDAAssignmentSnapshotV1Adapter : Object
             if (!IsDecimalString(locId))
             {
                 snapshot.IsValid = false;
+                snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
                 snapshot.AcquisitionState = ACQUISITION_INVALID_ROW;
                 snapshot.ValidationReason = VALIDATION_INVALID_LOCATION_ID;
                 return snapshot;
@@ -142,6 +149,7 @@ class DoDAAssignmentSnapshotV1Adapter : Object
             if (personName == "")
             {
                 snapshot.IsValid = false;
+                snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
                 snapshot.AcquisitionState = ACQUISITION_INVALID_ROW;
                 snapshot.ValidationReason = VALIDATION_MISSING_PERSON_DISPLAY_NAME;
                 return snapshot;
@@ -151,6 +159,7 @@ class DoDAAssignmentSnapshotV1Adapter : Object
             if (taskTitle == "")
             {
                 snapshot.IsValid = false;
+                snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
                 snapshot.AcquisitionState = ACQUISITION_INVALID_ROW;
                 snapshot.ValidationReason = VALIDATION_MISSING_TASK_TITLE;
                 return snapshot;
@@ -160,6 +169,7 @@ class DoDAAssignmentSnapshotV1Adapter : Object
             if (locName == "")
             {
                 snapshot.IsValid = false;
+                snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
                 snapshot.AcquisitionState = ACQUISITION_INVALID_ROW;
                 snapshot.ValidationReason = VALIDATION_MISSING_LOCATION_DISPLAY_NAME;
                 return snapshot;
@@ -169,6 +179,7 @@ class DoDAAssignmentSnapshotV1Adapter : Object
             if (taskStatus < 0 || taskStatus > MAX_TASK_STATUS)
             {
                 snapshot.IsValid = false;
+                snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
                 snapshot.AcquisitionState = ACQUISITION_INVALID_ROW;
                 snapshot.ValidationReason = VALIDATION_INVALID_TASK_STATUS;
                 return snapshot;
@@ -178,6 +189,7 @@ class DoDAAssignmentSnapshotV1Adapter : Object
             if (taskProgress < 0 || taskProgress > 100)
             {
                 snapshot.IsValid = false;
+                snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
                 snapshot.AcquisitionState = ACQUISITION_INVALID_ROW;
                 snapshot.ValidationReason = VALIDATION_INVALID_TASK_PROGRESS;
                 return snapshot;
@@ -187,6 +199,7 @@ class DoDAAssignmentSnapshotV1Adapter : Object
             if (cost < 0 || cost > MAX_BASE_COST)
             {
                 snapshot.IsValid = false;
+                snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
                 snapshot.AcquisitionState = ACQUISITION_INVALID_ROW;
                 snapshot.ValidationReason = VALIDATION_INVALID_COST;
                 return snapshot;
@@ -198,6 +211,7 @@ class DoDAAssignmentSnapshotV1Adapter : Object
                 if (candidateRecords[j].AssignmentIdText == assignId)
                 {
                     snapshot.IsValid = false;
+                    snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
                     snapshot.AcquisitionState = ACQUISITION_INVALID_ROW;
                     snapshot.ValidationReason = VALIDATION_DUPLICATE_ASSIGNMENT_ID;
                     return snapshot;
@@ -223,6 +237,7 @@ class DoDAAssignmentSnapshotV1Adapter : Object
         if (candidateRecords.Size() != count)
         {
             snapshot.IsValid = false;
+            snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
             snapshot.AcquisitionState = ACQUISITION_INVALID_COUNT;
             snapshot.ValidationReason = VALIDATION_INVALID_COUNT;
             return snapshot;
@@ -235,6 +250,7 @@ class DoDAAssignmentSnapshotV1Adapter : Object
         if (revAfter != revBefore)
         {
             snapshot.IsValid = false;
+            snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
             snapshot.AcquisitionState = ASSIGNMENT_ACQUISITION_REVISION_CHANGED;
             snapshot.ValidationReason = ASSIGNMENT_VALIDATION_REVISION_CHANGED_DURING_ACQUISITION;
             return snapshot;
@@ -250,6 +266,7 @@ class DoDAAssignmentSnapshotV1Adapter : Object
         }
 
         snapshot.IsValid = true;
+        snapshot.AcquireStatus = FOIMSX_ACQUIRE_SUCCESS;
         snapshot.ValidationReason = ASSIGNMENT_VALIDATION_NONE;
         if (count == 0)
         {

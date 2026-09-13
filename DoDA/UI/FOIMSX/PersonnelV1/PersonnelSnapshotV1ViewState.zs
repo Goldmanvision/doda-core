@@ -92,7 +92,7 @@ class DoDAPersonnelSnapshotV1ViewState : Object
     void UpdateFromSnapshot(DoDAPersonnelSnapshotV1 newSnapshot)
     {
         // Handle unacquired or rejected candidate snapshot
-        if (newSnapshot == null || !newSnapshot.IsValid)
+        if (newSnapshot == null || !newSnapshot.IsValid || newSnapshot.AcquireStatus != FOIMSX_ACQUIRE_SUCCESS)
         {
             // If a valid snapshot was previously accepted, retain display data and mark STALE
             if (LastAcceptedSnapshot != null && LastAcceptedSnapshot.IsValid)
@@ -102,7 +102,8 @@ class DoDAPersonnelSnapshotV1ViewState : Object
             }
 
             // No prior accepted snapshot held
-            if (newSnapshot != null && newSnapshot.AcquisitionState == ACQUISITION_INVALID_VERSION)
+            if (newSnapshot != null && (newSnapshot.AcquireStatus == FOIMSX_ACQUIRE_INCOMPATIBLE_VERSION ||
+                                        newSnapshot.AcquisitionState == ACQUISITION_INVALID_VERSION))
             {
                 CurrentViewState = VIEWSTATE_INVALID_VERSION;
             }

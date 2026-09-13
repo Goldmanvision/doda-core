@@ -28,6 +28,7 @@ class DoDAPersonnelSnapshotV1Adapter : Object
         if (apiVersion != EXPECTED_API_VERSION)
         {
             snapshot.IsValid = false;
+            snapshot.AcquireStatus = FOIMSX_ACQUIRE_INCOMPATIBLE_VERSION;
             snapshot.AcquisitionState = ACQUISITION_INVALID_VERSION;
             snapshot.ValidationReason = VALIDATION_INCOMPATIBLE_API_VERSION;
             return snapshot;
@@ -40,6 +41,7 @@ class DoDAPersonnelSnapshotV1Adapter : Object
         if (count < 0)
         {
             snapshot.IsValid = false;
+            snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
             snapshot.AcquisitionState = ACQUISITION_INVALID_SNAPSHOT;
             snapshot.ValidationReason = VALIDATION_NEGATIVE_COUNT;
             return snapshot;
@@ -61,6 +63,7 @@ class DoDAPersonnelSnapshotV1Adapter : Object
             if (personId == "")
             {
                 snapshot.IsValid = false;
+                snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
                 snapshot.AcquisitionState = ACQUISITION_INVALID_SNAPSHOT;
                 snapshot.ValidationReason = VALIDATION_BLANK_PERSON_ID;
                 return snapshot;
@@ -70,6 +73,7 @@ class DoDAPersonnelSnapshotV1Adapter : Object
             if (displayName == "")
             {
                 snapshot.IsValid = false;
+                snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
                 snapshot.AcquisitionState = ACQUISITION_INVALID_SNAPSHOT;
                 snapshot.ValidationReason = VALIDATION_BLANK_DISPLAY_NAME;
                 return snapshot;
@@ -81,6 +85,7 @@ class DoDAPersonnelSnapshotV1Adapter : Object
                 if (candidateRecords[j].PersonIdText == personId)
                 {
                     snapshot.IsValid = false;
+                    snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
                     snapshot.AcquisitionState = ACQUISITION_INVALID_SNAPSHOT;
                     snapshot.ValidationReason = VALIDATION_DUPLICATE_PERSON_ID;
                     return snapshot;
@@ -91,6 +96,7 @@ class DoDAPersonnelSnapshotV1Adapter : Object
             if (status < 0 || status > 2)
             {
                 snapshot.IsValid = false;
+                snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
                 snapshot.AcquisitionState = ACQUISITION_INVALID_SNAPSHOT;
                 snapshot.ValidationReason = VALIDATION_INVALID_STATUS_VALUE;
                 return snapshot;
@@ -106,6 +112,7 @@ class DoDAPersonnelSnapshotV1Adapter : Object
             if (!allEmpty && !allNonEmpty)
             {
                 snapshot.IsValid = false;
+                snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
                 snapshot.AcquisitionState = ACQUISITION_INVALID_SNAPSHOT;
                 snapshot.ValidationReason = VALIDATION_MIXED_ASSIGNMENT_TRIPLE;
                 return snapshot;
@@ -128,6 +135,7 @@ class DoDAPersonnelSnapshotV1Adapter : Object
         if (candidateRecords.Size() != count)
         {
             snapshot.IsValid = false;
+            snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
             snapshot.AcquisitionState = ACQUISITION_INVALID_SNAPSHOT;
             snapshot.ValidationReason = VALIDATION_COUNT_SIZE_MISMATCH;
             return snapshot;
@@ -138,6 +146,7 @@ class DoDAPersonnelSnapshotV1Adapter : Object
         if (revAfter != revBefore)
         {
             snapshot.IsValid = false;
+            snapshot.AcquireStatus = FOIMSX_ACQUIRE_REJECTED;
             snapshot.AcquisitionState = ACQUISITION_REVISION_CHANGED;
             snapshot.ValidationReason = VALIDATION_REVISION_CHANGED_DURING_ACQUISITION;
             return snapshot;
@@ -153,6 +162,7 @@ class DoDAPersonnelSnapshotV1Adapter : Object
         }
 
         snapshot.IsValid = true;
+        snapshot.AcquireStatus = FOIMSX_ACQUIRE_SUCCESS;
         snapshot.ValidationReason = VALIDATION_NONE;
         if (count == 0)
         {

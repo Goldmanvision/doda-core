@@ -38,6 +38,7 @@ version "2.4"
 
 
 #region FOIMSXShared
+#include "DoDA/UI/FOIMSX/FOIMSXSnapshotAcquireStatus.zs"
 #include "DoDA/UI/FOIMSX/FOIMSXSnapshotRefreshState.zs"
 #endregion
 
