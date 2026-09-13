@@ -9,6 +9,12 @@ class DoDAPersonnelSnapshotV1Adapter : Object
 {
     const EXPECTED_API_VERSION = 1;
 
+    // Read-only query for the current native Personnel snapshot revision text.
+    static String GetCurrentRevisionText()
+    {
+        return DoDA.GetPersonnelSnapshotRevisionText();
+    }
+
     // Acquires a complete, validated read-only Personnel Snapshot V1 from native C++.
     // Fully validates bounded rows and pre/post revision equality before acceptance.
     static DoDAPersonnelSnapshotV1 AcquireSnapshot()

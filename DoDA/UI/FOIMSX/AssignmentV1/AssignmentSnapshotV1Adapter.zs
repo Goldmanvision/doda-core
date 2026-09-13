@@ -12,6 +12,12 @@ class DoDAAssignmentSnapshotV1Adapter : Object
     const MAX_TASK_STATUS = 3;
     const MAX_BASE_COST = 10000;
 
+    // Read-only query for the current native Assignment snapshot revision text.
+    static String GetCurrentRevisionText()
+    {
+        return DoDA.GetAssignmentSnapshotRevisionText();
+    }
+
     // Helper: Validates that a string is non-empty and contains only decimal digits [0-9].
     static bool IsDecimalString(String str)
     {

@@ -122,6 +122,42 @@ class DoDAFOIMSXSessionController : StaticEventHandler
         }
     }
 
+    static ui void RequestRefresh(bool force = false)
+    {
+        let ctrl = DoDAFOIMSXSessionController(
+            StaticEventHandler.Find("DoDAFOIMSXSessionController")
+        );
+
+        if (ctrl != null)
+        {
+            ctrl.RefreshSessionData(force);
+        }
+    }
+
+    static ui void RequestPersonnelRefresh(bool force = false)
+    {
+        let ctrl = DoDAFOIMSXSessionController(
+            StaticEventHandler.Find("DoDAFOIMSXSessionController")
+        );
+
+        if (ctrl != null)
+        {
+            ctrl.RefreshPersonnelData(force);
+        }
+    }
+
+    static ui void RequestAssignmentRefresh(bool force = false)
+    {
+        let ctrl = DoDAFOIMSXSessionController(
+            StaticEventHandler.Find("DoDAFOIMSXSessionController")
+        );
+
+        if (ctrl != null)
+        {
+            ctrl.RefreshAssignmentData(force);
+        }
+    }
+
     ui void ActivateSession(Actor host = null)
     {
         if (Level == null || Level.MapName != "MAP01")
@@ -132,7 +168,7 @@ class DoDAFOIMSXSessionController : StaticEventHandler
         mActive = true;
         mBoundHost = host;
         EventHandler.SendNetworkEvent("DoDAFOIMSXFreeze");
-        RefreshSessionData();
+        RefreshSessionData(true);
     }
 
     ui void DeactivateSession()
@@ -154,7 +190,7 @@ class DoDAFOIMSXSessionController : StaticEventHandler
         }
     }
 
-    private ui void RefreshSessionData()
+    ui void RefreshSessionData(bool force = false)
     {
         let renderer = DoDAFOIMSXDirectoryRenderer(
             EventHandler.Find("DoDAFOIMSXDirectoryRenderer")
@@ -162,7 +198,31 @@ class DoDAFOIMSXSessionController : StaticEventHandler
 
         if (renderer != null)
         {
-            renderer.RefreshSessionData();
+            renderer.RefreshSessionData(force);
+        }
+    }
+
+    ui void RefreshPersonnelData(bool force = false)
+    {
+        let renderer = DoDAFOIMSXDirectoryRenderer(
+            EventHandler.Find("DoDAFOIMSXDirectoryRenderer")
+        );
+
+        if (renderer != null)
+        {
+            renderer.RefreshPersonnelData(force);
+        }
+    }
+
+    ui void RefreshAssignmentData(bool force = false)
+    {
+        let renderer = DoDAFOIMSXDirectoryRenderer(
+            EventHandler.Find("DoDAFOIMSXDirectoryRenderer")
+        );
+
+        if (renderer != null)
+        {
+            renderer.RefreshAssignmentData(force);
         }
     }
 
@@ -243,6 +303,50 @@ class DoDAFOIMSXSessionController : StaticEventHandler
         if (e.Name == "DoDAFOIMSXUnfreeze")
         {
             ReleaseFOIMSXFreeze(e.Player);
+            return;
+        }
+
+        if (e.Name == "DoDAFOIMSXDataChanged" || e.Name == "DoDAFOIMSXRefresh")
+        {
+            EventHandler.SendInterfaceEvent(consoleplayer, e.Name);
+            return;
+        }
+
+        if (e.Name == "DoDAFOIMSXRefreshPersonnel")
+        {
+            EventHandler.SendInterfaceEvent(consoleplayer, e.Name);
+            return;
+        }
+
+        if (e.Name == "DoDAFOIMSXRefreshAssignment")
+        {
+            EventHandler.SendInterfaceEvent(consoleplayer, e.Name);
+            return;
+        }
+    }
+
+    override void InterfaceProcess(ConsoleEvent e)
+    {
+        if (e.Name == "DoDAFOIMSXDataChanged" || e.Name == "DoDAFOIMSXRefresh")
+        {
+            if (mActive)
+            {
+                RefreshSessionData(false);
+            }
+        }
+        else if (e.Name == "DoDAFOIMSXRefreshPersonnel")
+        {
+            if (mActive)
+            {
+                RefreshPersonnelData(false);
+            }
+        }
+        else if (e.Name == "DoDAFOIMSXRefreshAssignment")
+        {
+            if (mActive)
+            {
+                RefreshAssignmentData(false);
+            }
         }
     }
 

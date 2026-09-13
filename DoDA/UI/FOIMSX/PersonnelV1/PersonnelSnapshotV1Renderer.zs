@@ -16,32 +16,61 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
     private ui DoDAAssignmentSnapshotV1ViewState mAssignmentViewState;
     private ui int mFocusedIndex;
 
-    ui void RefreshSessionData()
+    ui void RefreshPersonnelData(bool force = false)
     {
         if (mViewState == null)
         {
             mViewState = DoDAPersonnelSnapshotV1ViewState.Create();
         }
 
-        let snapshot = DoDAPersonnelSnapshotV1Adapter.AcquireSnapshot();
-        mViewState.UpdateFromSnapshot(snapshot);
+        String currentRev = DoDAPersonnelSnapshotV1Adapter.GetCurrentRevisionText();
 
+        if (force ||
+            mViewState.LastAcceptedSnapshot == null ||
+            !mViewState.LastAcceptedSnapshot.IsValid ||
+            mViewState.ActiveRevisionText != currentRev)
+        {
+            let snapshot = DoDAPersonnelSnapshotV1Adapter.AcquireSnapshot();
+            mViewState.UpdateFromSnapshot(snapshot);
+
+            int rowCount = mViewState.GetDisplayRowCount();
+            if (rowCount > 0)
+            {
+                if (mFocusedIndex < 0 || mFocusedIndex >= rowCount)
+                {
+                    mFocusedIndex = 0;
+                }
+            }
+            else
+            {
+                mFocusedIndex = -1;
+            }
+        }
+    }
+
+    ui void RefreshAssignmentData(bool force = false)
+    {
         if (mAssignmentViewState == null)
         {
             mAssignmentViewState = DoDAAssignmentSnapshotV1ViewState.Create();
         }
 
-        let assignSnapshot = DoDAAssignmentSnapshotV1Adapter.AcquireSnapshot();
-        mAssignmentViewState.UpdateFromSnapshot(assignSnapshot);
+        String currentRev = DoDAAssignmentSnapshotV1Adapter.GetCurrentRevisionText();
 
-        if (mViewState.GetDisplayRowCount() > 0)
+        if (force ||
+            mAssignmentViewState.LastAcceptedSnapshot == null ||
+            !mAssignmentViewState.LastAcceptedSnapshot.IsValid ||
+            mAssignmentViewState.ActiveRevisionText != currentRev)
         {
-            mFocusedIndex = 0;
+            let assignSnapshot = DoDAAssignmentSnapshotV1Adapter.AcquireSnapshot();
+            mAssignmentViewState.UpdateFromSnapshot(assignSnapshot);
         }
-        else
-        {
-            mFocusedIndex = -1;
-        }
+    }
+
+    ui void RefreshSessionData(bool force = false)
+    {
+        RefreshPersonnelData(force);
+        RefreshAssignmentData(force);
     }
 
     ui bool HandleNavInput(int keyScan, int keyChar)
