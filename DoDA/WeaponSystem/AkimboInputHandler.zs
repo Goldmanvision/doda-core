@@ -60,6 +60,7 @@
                             psp.y = 8.0;
                             psp.bMirror = false;
                             psp.bAddBob = true;
+                            psp.bAddWeapon = false;
                         }
                         Console.Printf("[DoDA Akimbo] Akimbo mode entered via toggle action");
                     }
