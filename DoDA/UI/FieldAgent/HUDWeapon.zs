@@ -5,87 +5,83 @@
 class DoDAHUDWeapon : Object
 {
     void DrawWeaponSlot(
-        String label,
-        bool available,
-        bool equipped,
-        bool isShotgun,
-        bool isMP5,
-        int magazineRounds,
-        int magazineCapacity,
-        bool chamberLoaded,
-        String chamberStatus,
-        int fireMode,
+        DoDAWeaponHUDData data,
         int y
     )
     {
-        int textColor = equipped
+        if (data == null)
+        {
+            return;
+        }
+
+        int textColor = data.Equipped
             ? Font.CR_GREEN
             : Font.CR_WHITE;
 
-        if (!isShotgun && !isMP5 && (magazineRounds + (chamberLoaded ? 1 : 0)) == 0)
+        if (!data.IsShotgun && !data.IsMP5 && (data.MagazineRounds + (data.ChamberLoaded ? 1 : 0)) == 0)
         {
             textColor = Font.CR_RED;
         }
 
         String text;
 
-        if (!available)
+        if (!data.Available)
         {
             textColor = Font.CR_RED;
 
             text = String.Format(
                 "%s: UNAVAILABLE",
-                label
+                data.Label
             );
         }
-        else if (isShotgun)
+        else if (data.IsShotgun)
         {
-            if (chamberStatus == "SPENT / UNRACKED")
+            if (data.ChamberStatus == "SPENT / UNRACKED")
             {
                 textColor = Font.CR_GOLD;
             }
-            else if (chamberStatus == "EMPTY")
+            else if (data.ChamberStatus == "EMPTY")
             {
                 textColor = Font.CR_RED;
             }
 
             text = String.Format(
                 "%s%s  TUBE %02d/%02d  CH %s",
-                equipped ? ">" : " ",
-                label,
-                magazineRounds,
-                magazineCapacity,
-                chamberStatus
+                data.Equipped ? ">" : " ",
+                data.Label,
+                data.MagazineRounds,
+                data.MagazineCapacity,
+                data.ChamberStatus
             );
         }
-        else if (isMP5)
+        else if (data.IsMP5)
         {
             text = String.Format(
                 "%s%s  %02d + %d  %s",
-                equipped ? ">" : " ",
-                label,
-                magazineRounds,
-                chamberLoaded ? 1 : 0,
-                fireMode == 0 ? "SEMI" : (fireMode == 1 ? "BURST" : "AUTO")
+                data.Equipped ? ">" : " ",
+                data.Label,
+                data.MagazineRounds,
+                data.ChamberLoaded ? 1 : 0,
+                data.FireMode == 0 ? "SEMI" : (data.FireMode == 1 ? "BURST" : "AUTO")
             );
         }
-        else if (magazineCapacity <= 0)
+        else if (data.MagazineCapacity <= 0)
         {
             text = String.Format(
                 "%s%s  NO MAGAZINE",
-                equipped ? ">" : " ",
-                label
+                data.Equipped ? ">" : " ",
+                data.Label
             );
         }
         else
         {
             text = String.Format(
                 "%s%s  MAG %02d/%02d  CH %d",
-                equipped ? ">" : " ",
-                label,
-                magazineRounds,
-                magazineCapacity,
-                chamberLoaded ? 1 : 0
+                data.Equipped ? ">" : " ",
+                data.Label,
+                data.MagazineRounds,
+                data.MagazineCapacity,
+                data.ChamberLoaded ? 1 : 0
             );
         }
 
@@ -101,27 +97,16 @@ class DoDAHUDWeapon : Object
     }
 
     void DrawWeaponReadout(
-        String primaryLabel,
-        bool primaryAvailable,
-        bool primaryEquipped,
-        bool primaryIsShotgun,
-        bool primaryIsMP5,
-        int primaryMagazineRounds,
-        int primaryMagazineCapacity,
-        bool primaryChamberLoaded,
-        String primaryChamberStatus,
-        int primaryFireMode,
-        String companionLabel,
-        bool companionAvailable,
-        bool companionEquipped,
-        bool companionIsShotgun,
-        int companionMagazineRounds,
-        int companionMagazineCapacity,
-        bool companionChamberLoaded,
-        String companionChamberStatus,
+        DoDAWeaponHUDData primary,
+        DoDAWeaponHUDData companion,
         int reserveRounds
     )
     {
+        if (primary == null)
+        {
+            return;
+        }
+
         int bottomMargin = 20;
         int lineGap = 6;
         int lineHeight = SmallFont.GetHeight();
@@ -133,42 +118,26 @@ class DoDAHUDWeapon : Object
 
         int companionY = reserveY - lineStep;
 
+        bool companionAvailable = companion != null && companion.Available;
+
         int primaryY = companionAvailable
             ? companionY - lineStep
             : companionY;
 
         DrawWeaponSlot(
-            primaryLabel,
-            primaryAvailable,
-            primaryEquipped,
-            primaryIsShotgun,
-            primaryIsMP5, // New
-            primaryMagazineRounds,
-            primaryMagazineCapacity,
-            primaryChamberLoaded,
-            primaryChamberStatus,
-            primaryFireMode, // New
+            primary,
             primaryY
         );
 
         if (companionAvailable)
         {
             DrawWeaponSlot(
-                companionLabel,
-                true,
-                companionEquipped,
-                companionIsShotgun,
-                false, // companionIsMP5
-                companionMagazineRounds,
-                companionMagazineCapacity,
-                companionChamberLoaded,
-                companionChamberStatus,
-                0, // companionFireMode
+                companion,
                 companionY
             );
         }
 
-        String reserveLabel = primaryIsShotgun
+        String reserveLabel = primary.IsShotgun
             ? "SHELLS"
             : "RESERVE";
 

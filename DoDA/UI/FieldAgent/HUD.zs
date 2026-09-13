@@ -50,24 +50,8 @@ class DoDAHUD : BaseStatusBar
             );
 
         m_Weapon.DrawWeaponReadout(
-            primary.Label,
-            primary.Available,
-            primary.Equipped,
-            primary.IsShotgun,
-            primary.IsMP5,
-            primary.MagazineRounds,
-            primary.MagazineCapacity,
-            primary.ChamberLoaded,
-            primary.ChamberStatus,
-            primary.FireMode,
-            companion != null ? companion.Label : "",
-            companion != null && companion.Available,
-            companion != null && companion.Equipped,
-            companion != null && companion.IsShotgun,
-            companion != null ? companion.MagazineRounds : 0,
-            companion != null ? companion.MagazineCapacity : 0,
-            companion != null && companion.ChamberLoaded,
-            companion != null ? companion.ChamberStatus : "",
+            primary,
+            companion,
             reserveRounds
         );
     }
