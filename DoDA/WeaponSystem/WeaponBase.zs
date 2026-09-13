@@ -490,7 +490,7 @@ class DoDAWeapon : Weapon
 
         let leftPistol = DoDAPistol(leftW);
         let leftMP5 = DoDAMP5KSD(leftW);
-        let rightPistol = DoDAPistol(rightW ? rightW : pistol);
+        let rightPistol = rightW ? DoDAPistol(rightW) : pistol;
 
         if (isAkimbo && readyWasSelf && rightPistol != null)
         {
