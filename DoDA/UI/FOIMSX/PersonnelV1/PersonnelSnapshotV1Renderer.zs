@@ -13,6 +13,7 @@
 class DoDAFOIMSXDirectoryRenderer : EventHandler
 {
     private ui DoDAPersonnelSnapshotV1ViewState mViewState;
+    private ui DoDAAssignmentSnapshotV1ViewState mAssignmentViewState;
     private ui bool mLastActiveState;
     private ui int mFocusedIndex;
 
@@ -216,7 +217,7 @@ if (mViewState == null)
     {
         if (Level == null ||
             Level.MapName != "MAP01" ||
-            !DoDAFOIMSXHostLifecycleProbe.IsFOIMSXActive())
+            !DoDAFOIMSXSessionController.IsSessionActive())
         {
             mLastActiveState = false;
             mFocusedIndex = -1;
@@ -232,6 +233,14 @@ if (mViewState == null)
 
             let snapshot = DoDAPersonnelSnapshotV1Adapter.AcquireSnapshot();
             mViewState.UpdateFromSnapshot(snapshot);
+
+            if (mAssignmentViewState == null)
+            {
+                mAssignmentViewState = DoDAAssignmentSnapshotV1ViewState.Create();
+            }
+
+            let assignSnapshot = DoDAAssignmentSnapshotV1Adapter.AcquireSnapshot();
+            mAssignmentViewState.UpdateFromSnapshot(assignSnapshot);
 
             if (mViewState.GetDisplayRowCount() > 0)
             {
@@ -274,6 +283,11 @@ if (mViewState == null)
             DTA_VirtualWidth, 640, DTA_VirtualHeight, 480);
 
         RenderSelectedPerson();
+
+        if (mAssignmentViewState != null)
+        {
+            DoDAAssignmentSnapshotV1Renderer.Render(mAssignmentViewState);
+        }
 
         DrawSunkenPanel(16, 420, 610, 24, 0xFF121B2A);
         Screen.DrawText(SmallFont, Font.CR_WHITE, 22, 426,

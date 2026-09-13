@@ -50,8 +50,8 @@ version "2.4"
 #endregion
 
 
-#region FOIMSXHostLifecycleProbe
-#include "DoDA/UI/FOIMSX/FOIMSXHostLifecycleProbe.zs"
+#region FOIMSXSessionController
+#include "DoDA/UI/FOIMSX/FOIMSXSessionController.zs"
 #endregion
 
 
