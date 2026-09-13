@@ -132,6 +132,7 @@ class DoDAFOIMSXSessionController : StaticEventHandler
         mActive = true;
         mBoundHost = host;
         EventHandler.SendNetworkEvent("DoDAFOIMSXFreeze");
+        RefreshSessionData();
     }
 
     ui void DeactivateSession()
@@ -150,6 +151,18 @@ class DoDAFOIMSXSessionController : StaticEventHandler
         else
         {
             ActivateSession(host);
+        }
+    }
+
+    private ui void RefreshSessionData()
+    {
+        let renderer = DoDAFOIMSXDirectoryRenderer(
+            EventHandler.Find("DoDAFOIMSXDirectoryRenderer")
+        );
+
+        if (renderer != null)
+        {
+            renderer.RefreshSessionData();
         }
     }
 

@@ -14,17 +14,41 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
 {
     private ui DoDAPersonnelSnapshotV1ViewState mViewState;
     private ui DoDAAssignmentSnapshotV1ViewState mAssignmentViewState;
-    private ui bool mLastActiveState;
     private ui int mFocusedIndex;
+
+    ui void RefreshSessionData()
+    {
+        if (mViewState == null)
+        {
+            mViewState = DoDAPersonnelSnapshotV1ViewState.Create();
+        }
+
+        let snapshot = DoDAPersonnelSnapshotV1Adapter.AcquireSnapshot();
+        mViewState.UpdateFromSnapshot(snapshot);
+
+        if (mAssignmentViewState == null)
+        {
+            mAssignmentViewState = DoDAAssignmentSnapshotV1ViewState.Create();
+        }
+
+        let assignSnapshot = DoDAAssignmentSnapshotV1Adapter.AcquireSnapshot();
+        mAssignmentViewState.UpdateFromSnapshot(assignSnapshot);
+
+        if (mViewState.GetDisplayRowCount() > 0)
+        {
+            mFocusedIndex = 0;
+        }
+        else
+        {
+            mFocusedIndex = -1;
+        }
+    }
 
     ui bool HandleNavInput(int keyScan, int keyChar)
     {
-if (mViewState == null)
+        if (mViewState == null)
         {
-            mViewState = DoDAPersonnelSnapshotV1ViewState.Create();
-
-            let snapshot = DoDAPersonnelSnapshotV1Adapter.AcquireSnapshot();
-            mViewState.UpdateFromSnapshot(snapshot);
+            return false;
         }
 
         int rowCount = mViewState.GetDisplayRowCount();
@@ -219,39 +243,8 @@ if (mViewState == null)
             Level.MapName != "MAP01" ||
             !DoDAFOIMSXSessionController.IsSessionActive())
         {
-            mLastActiveState = false;
             mFocusedIndex = -1;
             return;
-        }
-
-        if (!mLastActiveState)
-        {
-            if (mViewState == null)
-            {
-                mViewState = DoDAPersonnelSnapshotV1ViewState.Create();
-            }
-
-            let snapshot = DoDAPersonnelSnapshotV1Adapter.AcquireSnapshot();
-            mViewState.UpdateFromSnapshot(snapshot);
-
-            if (mAssignmentViewState == null)
-            {
-                mAssignmentViewState = DoDAAssignmentSnapshotV1ViewState.Create();
-            }
-
-            let assignSnapshot = DoDAAssignmentSnapshotV1Adapter.AcquireSnapshot();
-            mAssignmentViewState.UpdateFromSnapshot(assignSnapshot);
-
-            if (mViewState.GetDisplayRowCount() > 0)
-            {
-                mFocusedIndex = 0;
-            }
-            else
-            {
-                mFocusedIndex = -1;
-            }
-
-            mLastActiveState = true;
         }
 
         Screen.Dim(0xFF000814, 1.0, 0, 0, Screen.GetWidth(), Screen.GetHeight());
