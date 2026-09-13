@@ -116,13 +116,15 @@ class DoDAFOIMSXDrawingHelpers : Object
         Screen.DrawLine(x1, y0, x1, y1, 0xFF364860);
     }
 
-    // Draws unscaled virtual text (e.g. headers and footer hints) in 640x480 coordinate space.
+    // Draws virtual text (e.g. headers and footer hints) in 640x480 coordinate space.
     static ui void DrawVirtualText(
         Font font,
         int fontColor,
         double x,
         double y,
-        String text
+        String text,
+        double scaleX = 1.0,
+        double scaleY = 1.0
     )
     {
         Screen.DrawText(
@@ -132,7 +134,9 @@ class DoDAFOIMSXDrawingHelpers : Object
             y,
             text,
             DTA_VirtualWidth, 640,
-            DTA_VirtualHeight, 480
+            DTA_VirtualHeight, 480,
+            DTA_ScaleX, scaleX,
+            DTA_ScaleY, scaleY
         );
     }
 

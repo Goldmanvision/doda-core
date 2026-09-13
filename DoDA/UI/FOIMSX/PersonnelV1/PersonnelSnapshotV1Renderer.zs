@@ -322,7 +322,7 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
 
         DoDAFOIMSXDrawingHelpers.DrawVirtualRect(14, 14, 612, 20, 0xFF0A3678);
         DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_WHITE, 20, 18,
-            "FOIMS-X STRATEGIC INTERFACE");
+            "FOIMS-X STRATEGIC INTERFACE", 0.5, 0.5);
 
         DoDAFOIMSXDrawingHelpers.DrawVirtualRect(14, 36, 612, 18, 0xFF121B2A);
         DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_GRAY, 20, 40,

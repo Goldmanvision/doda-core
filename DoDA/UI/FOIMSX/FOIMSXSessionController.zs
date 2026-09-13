@@ -237,7 +237,7 @@ class DoDAFOIMSXSessionController : StaticEventHandler
     override void WorldLoaded(WorldEvent e)
     {
         mWorldLoadGeneration++;
-        ReleaseFOIMSXFreeze(consoleplayer);
+        ReleaseFOIMSXFreeze(consoleplayer, true);
 
         Console.Printf(
             "[DoDA-FOIMSX-SessionController] event=worldloaded scope=static "
@@ -249,7 +249,7 @@ class DoDAFOIMSXSessionController : StaticEventHandler
     override void WorldUnloaded(WorldEvent e)
     {
         mWorldLoadGeneration++;
-        ReleaseFOIMSXFreeze(consoleplayer);
+        ReleaseFOIMSXFreeze(consoleplayer, true);
     }
 
     override void PlayerDied(PlayerEvent e)
@@ -257,7 +257,7 @@ class DoDAFOIMSXSessionController : StaticEventHandler
         if (e.PlayerNumber == consoleplayer)
         {
             mWorldLoadGeneration++;
-            ReleaseFOIMSXFreeze(e.PlayerNumber);
+            ReleaseFOIMSXFreeze(e.PlayerNumber, true);
         }
     }
 
@@ -265,7 +265,7 @@ class DoDAFOIMSXSessionController : StaticEventHandler
     {
         if (e.PlayerNumber == consoleplayer)
         {
-            ReleaseFOIMSXFreeze(e.PlayerNumber);
+            ReleaseFOIMSXFreeze(e.PlayerNumber, true);
         }
     }
 
@@ -350,9 +350,9 @@ class DoDAFOIMSXSessionController : StaticEventHandler
         }
     }
 
-    private void ReleaseFOIMSXFreeze(int playerNum)
+    private void ReleaseFOIMSXFreeze(int playerNum, bool force = false)
     {
-        if (mFOIMSXAppliedFreeze &&
+        if ((force || mFOIMSXAppliedFreeze) &&
             playerNum >= 0 &&
             playerNum < MAXPLAYERS)
         {
