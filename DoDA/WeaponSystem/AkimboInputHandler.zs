@@ -91,18 +91,10 @@
     {
         if (e.Name == "DoDA_HandWeaponRequest")
         {
-            if (e.Player < 0 || e.Player >= MAXPLAYERS || !playeringame[e.Player]) return;
-            let p = players[e.Player];
-            if (p.mo == null || p.mo.health <= 0) return;
-
-            let playerBase = DoDAPlayerBase(p.mo);
-            let handState = (playerBase != null) ? playerBase.GetHandState() : null;
-            if (handState != null)
-            {
-                int hand = e.Args[0];
-                int slot = e.Args[1];
-                handState.HandleHandWeaponRequest(p, hand, slot);
-            }
+            int hand = e.Args[0];
+            int slot = e.Args[1];
+            String handName = (hand == 0) ? "left hand" : "right hand";
+            Console.Printf("[DoDA Hand Routing] Hand assignment request received for %s: slot %d (routing proof only)", handName, slot);
             return;
         }
 

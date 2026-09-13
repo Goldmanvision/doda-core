@@ -29,13 +29,13 @@ defaultbind mouse2 +doda_aimmode
 // Left-hand and right-hand weapon selectors.
 
 addmenukey "Equip Left Hand Weapon" +doda_equip_left
-alias +doda_equip_left "+user5"
-alias -doda_equip_left "-user5"
+alias +doda_equip_left "doda_equip_left 1"
+alias -doda_equip_left "doda_equip_left 0"
 defaultbind z +doda_equip_left
 
 addmenukey "Equip Right Hand Weapon" +doda_equip_right
-alias +doda_equip_right "+user6"
-alias -doda_equip_right "-user6"
+alias +doda_equip_right "doda_equip_right 1"
+alias -doda_equip_right "doda_equip_right 0"
 defaultbind x +doda_equip_right
 
 

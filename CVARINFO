@@ -11,6 +11,8 @@ user float doda_raw_mouse_y = 0.0;
 
 user bool doda_swap_beretta = false;
 user bool doda_weapon_secondary = false;
+user bool doda_equip_left = false;
+user bool doda_equip_right = false;
 
 // Deadzone development controls.
 user bool doda_debug_force_deadzone = false;
