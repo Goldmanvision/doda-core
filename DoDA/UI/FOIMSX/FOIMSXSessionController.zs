@@ -367,14 +367,18 @@ class DoDAFOIMSXSessionController : StaticEventHandler
         mFOIMSXAppliedFreeze = false;
     }
 
+    const FOIMSX_KEYSCAN_O = 24;
+    const FOIMSX_KEYCHAR_O = 111;
+    const FOIMSX_KEYSCAN_ESCAPE = 219;
+
     private ui bool IsFOIMSXToggleKey(InputEvent e)
     {
-        return int(e.KeyScan) == 24 && int(e.KeyChar) == 111;
+        return int(e.KeyScan) == FOIMSX_KEYSCAN_O && int(e.KeyChar) == FOIMSX_KEYCHAR_O;
     }
 
     private ui bool IsFOIMSXCloseKey(InputEvent e)
     {
-        return IsFOIMSXToggleKey(e) || int(e.KeyScan) == 219;
+        return IsFOIMSXToggleKey(e) || int(e.KeyScan) == FOIMSX_KEYSCAN_ESCAPE;
     }
 
     override bool InputProcess(InputEvent e)
