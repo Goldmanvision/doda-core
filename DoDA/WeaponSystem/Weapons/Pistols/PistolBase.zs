@@ -291,8 +291,12 @@ class DoDAPistol : DoDAWeapon
             return ResolveState("ReadyEmpty");
         }
 
+        let playerBase = (invoker != null && invoker.owner != null) ? DoDAPlayerBase(invoker.owner) : null;
+        let handState = playerBase ? playerBase.GetHandState() : null;
+        bool isAkimbo = (handState != null) ? handState.IsAkimboActive() : DoDA.IsAkimboActive();
+
         int readyFlags = WRF_ALLOWZOOM | WRF_NOSECONDARY;
-        if (DoDA.IsAkimboActive())
+        if (isAkimbo)
         {
             readyFlags |= WRF_NOBOB | WRF_NOPRIMARY;
         }
@@ -322,9 +326,13 @@ class DoDAPistol : DoDAWeapon
             return;
         }
 
+        let playerBase = (invoker != null && invoker.owner != null) ? DoDAPlayerBase(invoker.owner) : null;
+        let handState = playerBase ? playerBase.GetHandState() : null;
+        bool isAkimbo = (handState != null) ? handState.IsAkimboActive() : DoDA.IsAkimboActive();
+
         pistol.CommitReload();
         pistol.reloadInProgress = false;
-        if (DoDA.IsAkimboActive())
+        if (isAkimbo)
         {
             DoDA.SetReloadLock(false);
         }
@@ -383,12 +391,15 @@ class DoDAPistol : DoDAWeapon
             return null;
         }
 
+        let playerBase = DoDAPlayerBase(owner);
+        let handState = playerBase ? playerBase.GetHandState() : null;
+
         if (GetWeaponHand() == DoDAHandSwapController.Hand_Left)
         {
-            return Weapon(owner.FindInventory('DoDAB92Right'));
+            return handState ? handState.GetRightWeapon(owner) : Weapon(owner.FindInventory('DoDAB92Right'));
         }
 
-        return Weapon(owner.FindInventory('DoDAB92Left'));
+        return handState ? handState.GetLeftWeapon(owner) : Weapon(owner.FindInventory('DoDAB92Left'));
     }
 
     bool RequestHandSwap(

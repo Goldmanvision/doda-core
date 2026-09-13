@@ -15,12 +15,20 @@ class DoDAB92Right : DoDAPistol
     {
         let pistol = DoDAPistol(invoker);
 
-        if (
-            pistol == null
-            || pistol.owner == null
-            || pistol.owner.FindInventory('DoDAB92Left') == null
-            || DoDA.IsAkimboActive()
-        )
+        if (pistol == null || pistol.owner == null)
+        {
+            return ResolveState("ReloadSolo");
+        }
+
+        let playerBase = DoDAPlayerBase(pistol.owner);
+        let handState = playerBase ? playerBase.GetHandState() : null;
+        bool isAkimbo = (handState != null)
+            ? handState.IsAkimboActive()
+            : DoDA.IsAkimboActive();
+
+        let leftW = handState ? handState.GetLeftWeapon(pistol.owner) : pistol.owner.FindInventory('DoDAB92Left');
+
+        if (leftW == null || isAkimbo)
         {
             return ResolveState("ReloadSolo");
         }

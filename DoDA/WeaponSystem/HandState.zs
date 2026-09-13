@@ -23,6 +23,7 @@ class DoDAHandState : Object play
     int CombatMode;
     bool Layer2Active;
     int FocusedHand;
+    bool EnteredFromLeft;
 
     const PSP_DODA_SECONDARY = 2;
 
@@ -38,6 +39,73 @@ class DoDAHandState : Object play
         CombatMode = DODA_MODE_SINGLE;
         Layer2Active = false;
         FocusedHand = DODA_HAND_RIGHT;
+        EnteredFromLeft = false;
+    }
+
+    clearscope bool IsAkimboActive() const
+    {
+        return CombatMode == DODA_MODE_AKIMBO && Layer2Active;
+    }
+
+    clearscope bool IsLayer2Active() const
+    {
+        return Layer2Active;
+    }
+
+    clearscope int GetCombatMode() const
+    {
+        return CombatMode;
+    }
+
+    Weapon GetLeftWeapon(Actor ownerActor = null)
+    {
+        if (LeftWeapon != null)
+        {
+            return LeftWeapon;
+        }
+        if (ownerActor != null)
+        {
+            return Weapon(ownerActor.FindInventory('DoDAB92Left'));
+        }
+        return null;
+    }
+
+    Weapon GetRightWeapon(Actor ownerActor = null)
+    {
+        if (RightWeapon != null)
+        {
+            return RightWeapon;
+        }
+        if (ownerActor != null)
+        {
+            return Weapon(ownerActor.FindInventory('DoDAB92Right'));
+        }
+        return null;
+    }
+
+    DoDAPistol GetLeftPistol(Actor ownerActor = null)
+    {
+        return DoDAPistol(GetLeftWeapon(ownerActor));
+    }
+
+    DoDAPistol GetRightPistol(Actor ownerActor = null)
+    {
+        return DoDAPistol(GetRightWeapon(ownerActor));
+    }
+
+    clearscope int GetFocusedHand() const
+    {
+        return FocusedHand;
+    }
+
+    clearscope bool WasEnteredFromLeft() const
+    {
+        return EnteredFromLeft;
+    }
+
+    void SetEnteredFromLeft(bool fromLeft)
+    {
+        EnteredFromLeft = fromLeft;
     }
 
     // Centralized Layer 2 setup path for companion weapon (B92 Akimbo)
@@ -65,6 +133,70 @@ class DoDAHandState : Object play
         RightWeapon = rightW;
         FocusedHand = DODA_HAND_RIGHT;
 
+        return true;
+    }
+
+    // Authoritative Akimbo entry for B92 pistols
+    bool EnterB92Akimbo(PlayerInfo p)
+    {
+        if (p == null || p.mo == null)
+        {
+            return false;
+        }
+
+        let leftW = DoDAB92Left(p.mo.FindInventory('DoDAB92Left'));
+        let rightW = DoDAB92Right(p.mo.FindInventory('DoDAB92Right'));
+
+        if (leftW != null && rightW != null && (p.ReadyWeapon == leftW || p.ReadyWeapon == rightW))
+        {
+            EnteredFromLeft = (p.ReadyWeapon == leftW);
+
+            if (p.ReadyWeapon != rightW)
+            {
+                p.ReadyWeapon = rightW;
+                p.PendingWeapon = WP_NOCHANGE;
+                p.SetPSprite(PSP_WEAPON, rightW.ResolveState("Ready"));
+            }
+
+            bool ok = DoDA.EnterAkimbo();
+            if (ok)
+            {
+                SetupB92CompanionLayer(p, leftW.ResolveState("SecondaryReady"), leftW, rightW);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Authoritative Akimbo exit for B92 pistols
+    bool ExitB92Akimbo(PlayerInfo p)
+    {
+        if (p == null || p.mo == null)
+        {
+            return false;
+        }
+
+        bool wasFromLeft = EnteredFromLeft;
+        let leftW = LeftWeapon ? LeftWeapon : Weapon(p.mo.FindInventory('DoDAB92Left'));
+        let rightW = RightWeapon ? RightWeapon : Weapon(p.mo.FindInventory('DoDAB92Right'));
+
+        ClearLayer2(p);
+
+        if (wasFromLeft && leftW != null)
+        {
+            p.ReadyWeapon = leftW;
+            p.PendingWeapon = WP_NOCHANGE;
+            p.SetPSprite(PSP_WEAPON, leftW.ResolveState("Ready"));
+        }
+        else if (rightW != null)
+        {
+            p.ReadyWeapon = rightW;
+            p.PendingWeapon = WP_NOCHANGE;
+            p.SetPSprite(PSP_WEAPON, rightW.ResolveState("Ready"));
+        }
+
+        EnteredFromLeft = false;
         return true;
     }
 
@@ -130,30 +262,5 @@ class DoDAHandState : Object play
     {
         ClearLayer2(p);
         ResetState();
-    }
-
-    clearscope bool IsLayer2Active() const
-    {
-        return Layer2Active;
-    }
-
-    clearscope int GetCombatMode() const
-    {
-        return CombatMode;
-    }
-
-    clearscope Weapon GetLeftWeapon() const
-    {
-        return LeftWeapon;
-    }
-
-    clearscope Weapon GetRightWeapon() const
-    {
-        return RightWeapon;
-    }
-
-    clearscope int GetFocusedHand() const
-    {
-        return FocusedHand;
     }
 }

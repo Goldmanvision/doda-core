@@ -203,13 +203,16 @@ class DoDAWeapon : Weapon
             return;
         }
 
-        let leftPistol = DoDAPistol(
-            owner.FindInventory('DoDAB92Left')
-        );
+        let playerBase = DoDAPlayerBase(owner);
+        let handState = playerBase ? playerBase.GetHandState() : null;
 
-        let rightPistol = DoDAPistol(
-            owner.FindInventory('DoDAB92Right')
-        );
+        let leftPistol = handState
+            ? handState.GetLeftPistol(owner)
+            : DoDAPistol(owner.FindInventory('DoDAB92Left'));
+
+        let rightPistol = handState
+            ? handState.GetRightPistol(owner)
+            : DoDAPistol(owner.FindInventory('DoDAB92Right'));
 
         bool leftCanReload = leftPistol != null
             && leftPistol.CanReload();
@@ -455,7 +458,13 @@ class DoDAWeapon : Weapon
             handSwapController.TogglePistolSwapLock();
         }
 
-        bool isAkimbo = DoDA.IsAkimboActive();
+        let playerBase = DoDAPlayerBase(owner);
+        let handState = playerBase ? playerBase.GetHandState() : null;
+
+        bool isAkimbo = (handState != null)
+            ? handState.IsAkimboActive()
+            : DoDA.IsAkimboActive();
+
         if (isAkimbo && !wasAkimboActive)
         {
             currentLeftLowerY = 120.0; // B92Left initializes below screen on Akimbo entry and raises smoothly!
@@ -472,13 +481,15 @@ class DoDAWeapon : Weapon
         bool altPressed = altDown && !wasHoldingAlt;
         wasHoldingAlt = altDown;
 
-        let leftPistol = (isAkimbo && owner != null)
-            ? DoDAPistol(owner.FindInventory('DoDAB92Left'))
-            : null;
+        let leftPistol = (isAkimbo && handState != null)
+            ? handState.GetLeftPistol(owner)
+            : ((isAkimbo && owner != null) ? DoDAPistol(owner.FindInventory('DoDAB92Left')) : null);
 
         if (isAkimbo && readyWasSelf && pistol != null)
         {
-            let rightPistol = pistol;
+            let rightPistol = (handState != null && handState.GetRightPistol() != null)
+                ? handState.GetRightPistol()
+                : pistol;
 
             bool isLeaningLeft = (leanController != null && leanController.GetLeanAmount() < -0.1);
             bool isLeaningRight = (leanController != null && leanController.GetLeanAmount() > 0.1);
@@ -852,7 +863,12 @@ class DoDAWeapon : Weapon
 
         if (isAkimbo)
         {
-            let rightPistol = pistol;
+            let rightPistol = (handState != null && handState.GetRightPistol() != null)
+                ? handState.GetRightPistol()
+                : pistol;
+            let leftPistol = (handState != null)
+                ? handState.GetLeftPistol(owner)
+                : ((owner != null) ? DoDAPistol(owner.FindInventory('DoDAB92Left')) : null);
 
             bool rightReloading = (rightPistol != null && rightPistol.reloadInProgress);
             bool leftReloading = (leftPistol != null && leftPistol.reloadInProgress);
@@ -1202,11 +1218,17 @@ class DoDAWeapon : Weapon
 
         double spread = invoker.hipfireSpread;
 
+        let playerBase = DoDAPlayerBase(invoker.owner);
+        let handState = playerBase ? playerBase.GetHandState() : null;
+        bool isAkimbo = (handState != null)
+            ? handState.IsAkimboActive()
+            : DoDA.IsAkimboActive();
+
         if (deadzoneActive)
         {
             spread = 0.0;
         }
-        else if (DoDA.IsAkimboActive())
+        else if (isAkimbo)
         {
             bool isLeaning = (invoker.leanController != null && abs(invoker.leanController.GetLeanAmount()) > 0.1) || (agent != null && abs(agent.LeanOffset) > 0.1);
             if (isLeaning)

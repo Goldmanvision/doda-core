@@ -1,6 +1,5 @@
 ﻿class DoDAAkimboInputHandler : StaticEventHandler
 {
-    bool enteredFromLeft;
     ui bool leftSelectorHeld;
     ui bool rightSelectorHeld;
 
@@ -108,83 +107,24 @@
             let playerBase = DoDAPlayerBase(p.mo);
             let handState = (playerBase != null) ? playerBase.GetHandState() : null;
 
-            if (DoDA.IsAkimboActive())
+            if (handState != null)
             {
-                if (handState != null)
+                if (handState.IsAkimboActive())
                 {
-                    handState.ClearLayer2(p);
+                    handState.ExitB92Akimbo(p);
+                    Console.Printf("[DoDA Akimbo] Akimbo mode exited via toggle action");
                 }
                 else
                 {
-                    DoDA.ExitAkimbo();
-                    p.SetPSprite(2, null);
-                }
-
-                let leftW = DoDAB92Left(p.mo.FindInventory('DoDAB92Left'));
-                let rightW = DoDAB92Right(p.mo.FindInventory('DoDAB92Right'));
-
-                if (enteredFromLeft && leftW != null)
-                {
-                    p.ReadyWeapon = leftW;
-                    p.PendingWeapon = WP_NOCHANGE;
-                    p.SetPSprite(PSP_WEAPON, leftW.ResolveState("Ready"));
-                }
-                else if (rightW != null)
-                {
-                    p.ReadyWeapon = rightW;
-                    p.PendingWeapon = WP_NOCHANGE;
-                    p.SetPSprite(PSP_WEAPON, rightW.ResolveState("Ready"));
-                }
-
-                enteredFromLeft = false;
-                Console.Printf("[DoDA Akimbo] Akimbo mode exited via toggle action");
-            }
-            else
-            {
-                let leftW = DoDAB92Left(p.mo.FindInventory('DoDAB92Left'));
-                let rightW = DoDAB92Right(p.mo.FindInventory('DoDAB92Right'));
-
-                if (leftW != null && rightW != null && (p.ReadyWeapon == leftW || p.ReadyWeapon == rightW))
-                {
-                    enteredFromLeft = (p.ReadyWeapon == leftW);
-
-                    if (p.ReadyWeapon != rightW)
-                    {
-                        p.ReadyWeapon = rightW;
-                        p.PendingWeapon = WP_NOCHANGE;
-                        p.SetPSprite(PSP_WEAPON, rightW.ResolveState("Ready"));
-                    }
-
-                    bool ok = DoDA.EnterAkimbo();
+                    bool ok = handState.EnterB92Akimbo(p);
                     if (ok)
                     {
-                        if (handState != null)
-                        {
-                            handState.SetupB92CompanionLayer(p, leftW.ResolveState("SecondaryReady"), leftW, rightW);
-                        }
-                        else
-                        {
-                            p.SetPSprite(2, leftW.ResolveState("SecondaryReady"));
-                            let psp = p.GetPSprite(2);
-                            if (psp != null)
-                            {
-                                psp.x = -48.0;
-                                psp.y = 8.0;
-                                psp.bMirror = false;
-                                psp.bAddBob = true;
-                                psp.bAddWeapon = false;
-                            }
-                        }
                         Console.Printf("[DoDA Akimbo] Akimbo mode entered via toggle action");
                     }
                     else
                     {
                         Console.Printf("[DoDA Akimbo] Akimbo mode enter failed: Pair validation rejected");
                     }
-                }
-                else
-                {
-                    Console.Printf("[DoDA Akimbo] Akimbo mode enter failed: Pair validation rejected");
                 }
             }
             return;
@@ -214,7 +154,6 @@
                 }
             }
         }
-        enteredFromLeft = false;
     }
 
     override void WorldUnloaded(WorldEvent e)
@@ -234,7 +173,6 @@
                 }
             }
         }
-        enteredFromLeft = false;
     }
 
     override void PlayerEntered(PlayerEvent e)
@@ -251,7 +189,6 @@
                 }
             }
         }
-        enteredFromLeft = false;
     }
 
     override void PlayerRespawned(PlayerEvent e)
@@ -268,7 +205,6 @@
                 }
             }
         }
-        enteredFromLeft = false;
     }
 
     override void PlayerDied(PlayerEvent e)
@@ -285,6 +221,5 @@
                 }
             }
         }
-        enteredFromLeft = false;
     }
 }

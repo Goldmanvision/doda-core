@@ -22,7 +22,8 @@ class FieldAgent : DoDAPlayerBase
             return false;
         }
 
-        bool isAkimbo = DoDA.IsAkimboActive();
+        let handState = GetHandState();
+        bool isAkimbo = (handState != null) ? handState.IsAkimboActive() : DoDA.IsAkimboActive();
         bool leaningLeft = (player.cmd.buttons & BT_USER1) != 0;
         bool leaningRight = (player.cmd.buttons & BT_USER2) != 0;
         bool isLeaning = (leaningLeft || leaningRight) && !(leaningLeft && leaningRight);
