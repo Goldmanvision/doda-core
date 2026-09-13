@@ -24,6 +24,8 @@ class DoDAHandState : Object play
     bool Layer2Active;
     int FocusedHand;
     bool EnteredFromLeft;
+    int PendingLeftSlot;
+    int PendingRightSlot;
 
     const PSP_DODA_SECONDARY = 2;
 
@@ -40,6 +42,8 @@ class DoDAHandState : Object play
         Layer2Active = false;
         FocusedHand = DODA_HAND_RIGHT;
         EnteredFromLeft = false;
+        PendingLeftSlot = 0;
+        PendingRightSlot = 0;
     }
 
     clearscope bool IsAkimboActive() const
@@ -120,6 +124,7 @@ class DoDAHandState : Object play
         let psp = p.GetPSprite(PSP_DODA_SECONDARY);
         if (psp != null)
         {
+            psp.Caller = leftW;
             psp.x = -48.0;
             psp.y = 8.0;
             psp.bMirror = false;
@@ -132,6 +137,39 @@ class DoDAHandState : Object play
         LeftWeapon = leftW;
         RightWeapon = rightW;
         FocusedHand = DODA_HAND_RIGHT;
+        PendingLeftSlot = 0;
+        PendingRightSlot = 0;
+
+        return true;
+    }
+
+    // Centralized Layer 2 setup path for companion MP5KSD (Mixed Akimbo)
+    bool SetupMP5CompanionLayer(PlayerInfo p, Weapon leftW, Weapon rightW)
+    {
+        if (p == null || leftW == null || rightW == null)
+        {
+            return false;
+        }
+
+        p.SetPSprite(PSP_DODA_SECONDARY, leftW.ResolveState("SecondaryReady"));
+        let psp = p.GetPSprite(PSP_DODA_SECONDARY);
+        if (psp != null)
+        {
+            psp.Caller = leftW;
+            psp.x = -48.0;
+            psp.y = 8.0;
+            psp.bMirror = true; // Temporarily mirror Layer 2 MP5 placeholder
+            psp.bAddBob = true;
+            psp.bAddWeapon = false; // MANDATORY INVARIANT
+        }
+
+        Layer2Active = true;
+        CombatMode = DODA_MODE_AKIMBO;
+        LeftWeapon = leftW;
+        RightWeapon = rightW;
+        FocusedHand = DODA_HAND_RIGHT;
+        PendingLeftSlot = 0;
+        PendingRightSlot = 0;
 
         return true;
     }
@@ -167,6 +205,107 @@ class DoDAHandState : Object play
         }
 
         return false;
+    }
+
+    // Authoritative Akimbo entry for Left MP5KSD / Right B92
+    bool EnterMixedAkimbo(PlayerInfo p)
+    {
+        if (p == null || p.mo == null)
+        {
+            return false;
+        }
+
+        let leftW = DoDAMP5KSD(p.mo.FindInventory('DoDAMP5KSD'));
+        let rightW = DoDAB92Right(p.mo.FindInventory('DoDAB92Right'));
+
+        if (leftW == null || rightW == null)
+        {
+            return false;
+        }
+
+        if (p.ReadyWeapon != rightW)
+        {
+            p.ReadyWeapon = rightW;
+            p.PendingWeapon = WP_NOCHANGE;
+            p.SetPSprite(PSP_WEAPON, rightW.ResolveState("Ready"));
+        }
+
+        bool ok = DoDA.EnterAkimbo();
+        if (ok)
+        {
+            SetupMP5CompanionLayer(p, leftW, rightW);
+            return true;
+        }
+
+        return false;
+    }
+
+    // Authoritative handler for Z/X modifier + slot weapon requests
+    void HandleHandWeaponRequest(PlayerInfo p, int hand, int slot)
+    {
+        if (p == null || p.mo == null || p.mo.health <= 0)
+        {
+            return;
+        }
+
+        if (hand == DODA_HAND_LEFT)
+        {
+            if (slot != 4)
+            {
+                return; // Unsupported left-hand slot in Phase 4A
+            }
+
+            let mp5 = DoDAMP5KSD(p.mo.FindInventory('DoDAMP5KSD'));
+            if (mp5 == null)
+            {
+                return; // MP5KSD not owned
+            }
+
+            let b92Right = DoDAB92Right(p.mo.FindInventory('DoDAB92Right'));
+            if (b92Right == null)
+            {
+                return; // B92 not owned
+            }
+
+            bool rightIsB92 = (p.ReadyWeapon is "DoDAPistol") || (PendingRightSlot == 2);
+            if (rightIsB92)
+            {
+                EnterMixedAkimbo(p);
+            }
+            else
+            {
+                PendingLeftSlot = 4;
+            }
+        }
+        else if (hand == DODA_HAND_RIGHT)
+        {
+            if (slot != 2)
+            {
+                return; // Unsupported right-hand slot in Phase 4A
+            }
+
+            let b92Right = DoDAB92Right(p.mo.FindInventory('DoDAB92Right'));
+            if (b92Right == null)
+            {
+                return; // B92 not owned
+            }
+
+            let mp5 = DoDAMP5KSD(p.mo.FindInventory('DoDAMP5KSD'));
+            if (mp5 == null)
+            {
+                return; // MP5 not owned
+            }
+
+            bool leftIsMP5 = (p.ReadyWeapon is "DoDAMP5KSD") || (PendingLeftSlot == 4) || (LeftWeapon is "DoDAMP5KSD");
+            if (leftIsMP5)
+            {
+                EnterMixedAkimbo(p);
+            }
+            else
+            {
+                PendingRightSlot = 2;
+            }
+        }
     }
 
     // Authoritative Akimbo exit for B92 pistols
@@ -218,6 +357,8 @@ class DoDAHandState : Object play
         LeftWeapon = null;
         RightWeapon = null;
         FocusedHand = DODA_HAND_RIGHT;
+        PendingLeftSlot = 0;
+        PendingRightSlot = 0;
     }
 
     // Validates whether current Layer 2 owner remains valid (e.g. during weapon switch, deselect, or death)
@@ -238,10 +379,15 @@ class DoDAHandState : Object play
                 return;
             }
 
-            // If switching away (PendingWeapon is set to a non-akimbo weapon)
+            // If switching away (PendingWeapon is set to any weapon)
             if (p.PendingWeapon != WP_NOCHANGE && p.PendingWeapon != null)
             {
-                if (!(p.PendingWeapon is "DoDAPistol"))
+                if (LeftWeapon is "DoDAMP5KSD")
+                {
+                    ClearLayer2(p);
+                    return;
+                }
+                else if (!(p.PendingWeapon is "DoDAPistol"))
                 {
                     ClearLayer2(p);
                     return;

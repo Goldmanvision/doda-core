@@ -85,6 +85,41 @@ class DoDAMP5KSD : DoDAWeapon
         return ResolveState("Fire");
     }
 
+    State GetSecondaryFireState(bool holdingFire, bool firePressed)
+    {
+        if (isReloading || burstInProgress)
+        {
+            return null;
+        }
+
+        if (IsEmpty())
+        {
+            if (firePressed)
+            {
+                return ResolveState("SecondaryDryFire");
+            }
+            return null;
+        }
+
+        if (fireMode == Fire_Burst)
+        {
+            State burstState = ResolveState("SecondaryBurstFire");
+
+            if (burstState == null)
+            {
+                burstShotsRemaining = 0;
+                burstInProgress = false;
+                return null;
+            }
+
+            burstShotsRemaining = Min(3, GetLoadedRoundCount());
+            burstInProgress = true;
+            return burstState;
+        }
+
+        return ResolveState("SecondaryFire");
+    }
+
     override void Tick()
     {
         Super.Tick();
@@ -95,7 +130,11 @@ class DoDAMP5KSD : DoDAWeapon
             return;
         }
 
-        if (owner.player.ReadyWeapon != self)
+        let playerBase = DoDAPlayerBase(owner);
+        let handState = (playerBase != null) ? playerBase.GetHandState() : null;
+        bool isLeftHandActive = (handState != null && handState.IsAkimboActive() && handState.GetLeftWeapon(owner) == self);
+
+        if (owner.player.ReadyWeapon != self && !isLeftHandActive)
         {
             burstShotsRemaining = 0;
             burstInProgress = false;
@@ -557,5 +596,52 @@ class DoDAMP5KSD : DoDAWeapon
             }
         }
         Goto Ready;
+
+    SecondaryReady:
+        MP5A A 1;
+        Loop;
+
+    SecondaryReadyEmpty:
+        MP5A A 1;
+        Loop;
+
+    SecondaryFire:
+        MP5A A 1 Bright MP5KSD_Fire;
+        MP5A B 1;
+        MP5A C 1;
+        MP5A D 1;
+        Goto SecondaryReady;
+
+    SecondaryBurstFire:
+        MP5A A 1 Bright MP5KSD_BurstFire;
+        MP5A B 1;
+        MP5A C 1;
+        MP5A D 1;
+
+        MP5A A 1 Bright MP5KSD_BurstFire;
+        MP5A B 1;
+        MP5A C 1;
+        MP5A D 1;
+
+        MP5A A 1 Bright MP5KSD_BurstFire;
+        MP5A B 1;
+        MP5A C 1;
+        MP5A D 1;
+
+        TNT1 A 0
+        {
+            let mp5 = DoDAMP5KSD(invoker);
+
+            if (mp5)
+            {
+                mp5.burstShotsRemaining = 0;
+                mp5.burstInProgress = false;
+            }
+        }
+        Goto SecondaryReady;
+
+    SecondaryDryFire:
+        MP5R A 1 A_StartSound("doda/mp5/dryfire", CHAN_WEAPON);
+        Goto SecondaryReady;
     }
 }

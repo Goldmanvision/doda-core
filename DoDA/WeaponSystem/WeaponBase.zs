@@ -481,46 +481,47 @@ class DoDAWeapon : Weapon
         bool altPressed = altDown && !wasHoldingAlt;
         wasHoldingAlt = altDown;
 
-        let leftPistol = (isAkimbo && handState != null)
-            ? handState.GetLeftPistol(owner)
-            : ((isAkimbo && owner != null) ? DoDAPistol(owner.FindInventory('DoDAB92Left')) : null);
+        let leftW = (isAkimbo && handState != null)
+            ? handState.GetLeftWeapon(owner)
+            : ((isAkimbo && owner != null) ? Weapon(owner.FindInventory('DoDAB92Left')) : null);
+        let rightW = (isAkimbo && handState != null)
+            ? handState.GetRightWeapon(owner)
+            : ((isAkimbo && owner != null) ? Weapon(owner.FindInventory('DoDAB92Right')) : null);
 
-        if (isAkimbo && readyWasSelf && pistol != null)
+        let leftPistol = DoDAPistol(leftW);
+        let leftMP5 = DoDAMP5KSD(leftW);
+        let rightPistol = DoDAPistol(rightW ? rightW : pistol);
+
+        if (isAkimbo && readyWasSelf && rightPistol != null)
         {
-            let rightPistol = (handState != null && handState.GetRightPistol() != null)
-                ? handState.GetRightPistol()
-                : pistol;
-
-            bool isLeaningLeft = (leanController != null && leanController.GetLeanAmount() < -0.1);
-            bool isLeaningRight = (leanController != null && leanController.GetLeanAmount() > 0.1);
-            bool isLeaning = isLeaningLeft || isLeaningRight;
-
-            // Priority 3: Akimbo leaning left (focus Left B92 only; Right mouse = Deadzone Aim)
-            if (isLeaningLeft && !DoDA.IsReloadLocked())
+            if (leftMP5 != null)
             {
-                if (attackPressed && leftFireLockTics <= 0)
+                // Mixed Left MP5KSD / Right B92 Akimbo mode:
+                // Left click (BT_ATTACK) fires Left MP5KSD
+                bool shouldFire = leftMP5.ShouldStartFire(attackDown, attackPressed);
+                if (shouldFire && leftFireLockTics <= 0 && !DoDA.IsReloadLocked())
                 {
                     if (DoDA.RequestLeftHandFire())
                     {
-                        leftFireLockTics = 2;
-                        if (leftPistol != null)
+                        State fireState = leftMP5.GetSecondaryFireState(attackDown, attackPressed);
+                        if (fireState != null)
                         {
-                            if (leftPistol.IsChamberLoaded())
+                            owner.player.SetPSprite(2, fireState);
+                            let psp = owner.player.GetPSprite(2);
+                            if (psp != null)
                             {
-                                owner.player.SetPSprite(2, leftPistol.ResolveState("SecondaryFire"));
+                                psp.Caller = leftMP5;
+                                psp.bMirror = true;
+                                psp.bAddBob = true;
+                                psp.bAddWeapon = false;
                             }
-                            else
-                            {
-                                owner.player.SetPSprite(2, leftPistol.ResolveState("SecondaryDryFire"));
-                            }
+                            leftFireLockTics = (leftMP5.fireMode == DoDAMP5KSD.Fire_Auto) ? 4 : 2;
                         }
                     }
                 }
-            }
-            // Priority 4: Akimbo leaning right (focus Right B92 only; Right mouse = Deadzone Aim)
-            else if (isLeaningRight && !DoDA.IsReloadLocked())
-            {
-                if (attackPressed && rightFireLockTics <= 0)
+
+                // Right click (BT_ALTATTACK) fires Right B92
+                if (altPressed && rightFireLockTics <= 0 && !DoDA.IsReloadLocked())
                 {
                     if (DoDA.RequestRightHandFire())
                     {
@@ -535,86 +536,136 @@ class DoDAWeapon : Weapon
                         }
                     }
                 }
+
+                // Note: Mixed-pair reload is deferred/rejected in Phase 4A to preserve state integrity
             }
-            // Priority 5: Akimbo neutral (Left click = Left B92; Right click = Right B92)
-            else if (!isLeaning && !DoDA.IsReloadLocked())
+            else
             {
-                // Left Mouse requests Left Hand
-                if (attackPressed && leftFireLockTics <= 0)
+                bool isLeaningLeft = (leanController != null && leanController.GetLeanAmount() < -0.1);
+                bool isLeaningRight = (leanController != null && leanController.GetLeanAmount() > 0.1);
+                bool isLeaning = isLeaningLeft || isLeaningRight;
+
+                // Priority 3: Akimbo leaning left (focus Left B92 only; Right mouse = Deadzone Aim)
+                if (isLeaningLeft && !DoDA.IsReloadLocked())
                 {
-                    if (DoDA.RequestLeftHandFire())
+                    if (attackPressed && leftFireLockTics <= 0)
                     {
-                        leftFireLockTics = 2;
-                        if (leftPistol != null)
+                        if (DoDA.RequestLeftHandFire())
                         {
-                            if (leftPistol.IsChamberLoaded())
+                            leftFireLockTics = 2;
+                            if (leftPistol != null)
                             {
-                                owner.player.SetPSprite(2, leftPistol.ResolveState("SecondaryFire"));
+                                if (leftPistol.IsChamberLoaded())
+                                {
+                                    owner.player.SetPSprite(2, leftPistol.ResolveState("SecondaryFire"));
+                                }
+                                else
+                                {
+                                    owner.player.SetPSprite(2, leftPistol.ResolveState("SecondaryDryFire"));
+                                }
+                            }
+                        }
+                    }
+                }
+                // Priority 4: Akimbo leaning right (focus Right B92 only; Right mouse = Deadzone Aim)
+                else if (isLeaningRight && !DoDA.IsReloadLocked())
+                {
+                    if (attackPressed && rightFireLockTics <= 0)
+                    {
+                        if (DoDA.RequestRightHandFire())
+                        {
+                            rightFireLockTics = 2;
+                            if (rightPistol.IsChamberLoaded())
+                            {
+                                owner.player.SetPSprite(PSP_WEAPON, rightPistol.ResolveState("Fire"));
                             }
                             else
                             {
-                                owner.player.SetPSprite(2, leftPistol.ResolveState("SecondaryDryFire"));
+                                owner.player.SetPSprite(PSP_WEAPON, rightPistol.ResolveState("DryFire"));
+                            }
+                        }
+                    }
+                }
+                // Priority 5: Akimbo neutral (Left click = Left B92; Right click = Right B92)
+                else if (!isLeaning && !DoDA.IsReloadLocked())
+                {
+                    // Left Mouse requests Left Hand
+                    if (attackPressed && leftFireLockTics <= 0)
+                    {
+                        if (DoDA.RequestLeftHandFire())
+                        {
+                            leftFireLockTics = 2;
+                            if (leftPistol != null)
+                            {
+                                if (leftPistol.IsChamberLoaded())
+                                {
+                                    owner.player.SetPSprite(2, leftPistol.ResolveState("SecondaryFire"));
+                                }
+                                else
+                                {
+                                    owner.player.SetPSprite(2, leftPistol.ResolveState("SecondaryDryFire"));
+                                }
+                            }
+                        }
+                    }
+
+                    // Right Mouse requests Right Hand
+                    if (altPressed && rightFireLockTics <= 0)
+                    {
+                        if (DoDA.RequestRightHandFire())
+                        {
+                            rightFireLockTics = 2;
+                            if (rightPistol.IsChamberLoaded())
+                            {
+                                owner.player.SetPSprite(PSP_WEAPON, rightPistol.ResolveState("Fire"));
+                            }
+                            else
+                            {
+                                owner.player.SetPSprite(PSP_WEAPON, rightPistol.ResolveState("DryFire"));
                             }
                         }
                     }
                 }
 
-                // Right Mouse requests Right Hand
-                if (altPressed && rightFireLockTics <= 0)
+                // In Akimbo mode: Sequential Reload (lowest-loaded pistol first; if tied, right first)
+                if (reloadPressed && leftFireLockTics <= 0 && rightFireLockTics <= 0 && !DoDA.IsReloadLocked())
                 {
-                    if (DoDA.RequestRightHandFire())
+                    int leftTotal = leftPistol ? leftPistol.GetLoadedRoundCount() : 16;
+                    int rightTotal = rightPistol ? rightPistol.GetLoadedRoundCount() : 16;
+
+                    bool leftEligible = (leftPistol != null && leftTotal < 16);
+                    bool rightEligible = (rightPistol != null && rightTotal < 16);
+
+                    if (leftEligible || rightEligible)
                     {
-                        rightFireLockTics = 2;
-                        if (rightPistol.IsChamberLoaded())
+                        bool pickRight = false;
+                        if (rightEligible && leftEligible)
                         {
-                            owner.player.SetPSprite(PSP_WEAPON, rightPistol.ResolveState("Fire"));
+                            pickRight = (rightTotal <= leftTotal); // If tied, select right B92 first!
+                        }
+                        else if (rightEligible)
+                        {
+                            pickRight = true;
                         }
                         else
                         {
-                            owner.player.SetPSprite(PSP_WEAPON, rightPistol.ResolveState("DryFire"));
+                            pickRight = false;
                         }
-                    }
-                }
-            }
 
-            // In Akimbo mode: Sequential Reload (lowest-loaded pistol first; if tied, right first)
-            if (reloadPressed && leftFireLockTics <= 0 && rightFireLockTics <= 0 && !DoDA.IsReloadLocked())
-            {
-                int leftTotal = leftPistol ? leftPistol.GetLoadedRoundCount() : 16;
-                int rightTotal = rightPistol ? rightPistol.GetLoadedRoundCount() : 16;
-
-                bool leftEligible = (leftPistol != null && leftTotal < 16);
-                bool rightEligible = (rightPistol != null && rightTotal < 16);
-
-                if (leftEligible || rightEligible)
-                {
-                    bool pickRight = false;
-                    if (rightEligible && leftEligible)
-                    {
-                        pickRight = (rightTotal <= leftTotal); // If tied, select right B92 first!
-                    }
-                    else if (rightEligible)
-                    {
-                        pickRight = true;
-                    }
-                    else
-                    {
-                        pickRight = false;
-                    }
-
-                    if (DoDA.RequestAkimboReload())
-                    {
-                        if (pickRight)
+                        if (DoDA.RequestAkimboReload())
                         {
-                            rightPistol.reloadQueued = false;
-                            rightPistol.reloadInProgress = true;
-                            owner.player.SetPSprite(PSP_WEAPON, rightPistol.ResolveState("Reload"));
-                        }
-                        else
-                        {
-                            leftPistol.reloadQueued = false;
-                            leftPistol.reloadInProgress = true;
-                            owner.player.SetPSprite(2, leftPistol.ResolveState("SecondaryReload"));
+                            if (pickRight)
+                            {
+                                rightPistol.reloadQueued = false;
+                                rightPistol.reloadInProgress = true;
+                                owner.player.SetPSprite(PSP_WEAPON, rightPistol.ResolveState("Reload"));
+                            }
+                            else
+                            {
+                                leftPistol.reloadQueued = false;
+                                leftPistol.reloadInProgress = true;
+                                owner.player.SetPSprite(2, leftPistol.ResolveState("SecondaryReload"));
+                            }
                         }
                     }
                 }
