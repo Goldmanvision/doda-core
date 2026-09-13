@@ -5,6 +5,7 @@
 class DoDAPlayerBase : DoomPlayer
 {
     bool DeadzoneAimActive;
+    DoDAHandState HandState;
 
     // Sole authority for the signed angular gap between actor aim and red-dot aim.
     double ReticleYawOffset;
@@ -23,6 +24,32 @@ class DoDAPlayerBase : DoomPlayer
 
         DeadzoneYawLimit = 12.0;
         DeadzonePitchLimit = 8.0;
+
+        if (HandState == null)
+        {
+            HandState = new("DoDAHandState");
+            HandState.Init(self);
+        }
+    }
+
+    DoDAHandState GetHandState()
+    {
+        if (HandState == null)
+        {
+            HandState = new("DoDAHandState");
+            HandState.Init(self);
+        }
+        return HandState;
+    }
+
+    override void Die(Actor source, Actor inflictor, int dmgflags, Name MeansOfDeath)
+    {
+        ResetDeadzoneAim();
+        if (HandState != null && player != null)
+        {
+            HandState.ClearLayer2(player);
+        }
+        Super.Die(source, inflictor, dmgflags, MeansOfDeath);
     }
 
     void ResetDeadzoneAim()
@@ -64,9 +91,18 @@ class DoDAPlayerBase : DoomPlayer
             return;
         }
 
+        if (HandState != null)
+        {
+            HandState.ValidateLayer2(player);
+        }
+
         if (health <= 0)
         {
             ResetDeadzoneAim();
+            if (HandState != null)
+            {
+                HandState.ClearLayer2(player);
+            }
             return;
         }
 

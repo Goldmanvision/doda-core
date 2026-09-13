@@ -104,10 +104,20 @@
             let p = players[e.Player];
             if (p == null || p.mo == null) return;
 
+            let playerBase = DoDAPlayerBase(p.mo);
+            let handState = (playerBase != null) ? playerBase.GetHandState() : null;
+
             if (DoDA.IsAkimboActive())
             {
-                DoDA.ExitAkimbo();
-                p.SetPSprite(2, null);
+                if (handState != null)
+                {
+                    handState.ClearLayer2(p);
+                }
+                else
+                {
+                    DoDA.ExitAkimbo();
+                    p.SetPSprite(2, null);
+                }
 
                 let leftW = DoDAB92Left(p.mo.FindInventory('DoDAB92Left'));
                 let rightW = DoDAB92Right(p.mo.FindInventory('DoDAB92Right'));
@@ -147,15 +157,22 @@
                     bool ok = DoDA.EnterAkimbo();
                     if (ok)
                     {
-                        p.SetPSprite(2, leftW.ResolveState("SecondaryReady"));
-                        let psp = p.GetPSprite(2);
-                        if (psp != null)
+                        if (handState != null)
                         {
-                            psp.x = -48.0;
-                            psp.y = 8.0;
-                            psp.bMirror = false;
-                            psp.bAddBob = true;
-                            psp.bAddWeapon = false;
+                            handState.SetupB92CompanionLayer(p, leftW.ResolveState("SecondaryReady"), leftW, rightW);
+                        }
+                        else
+                        {
+                            p.SetPSprite(2, leftW.ResolveState("SecondaryReady"));
+                            let psp = p.GetPSprite(2);
+                            if (psp != null)
+                            {
+                                psp.x = -48.0;
+                                psp.y = 8.0;
+                                psp.bMirror = false;
+                                psp.bAddBob = true;
+                                psp.bAddWeapon = false;
+                            }
                         }
                         Console.Printf("[DoDA Akimbo] Akimbo mode entered via toggle action");
                     }
@@ -177,5 +194,96 @@
             Console.Printf("[DoDA] Dual Wield toggle is not implemented in this proof.");
             return;
         }
+    }
+
+    override void WorldLoaded(WorldEvent e)
+    {
+        for (int i = 0; i < MAXPLAYERS; i++)
+        {
+            if (playeringame[i] && players[i] != null && players[i].mo != null)
+            {
+                let pb = DoDAPlayerBase(players[i].mo);
+                if (pb != null)
+                {
+                    let hs = pb.GetHandState();
+                    if (hs != null)
+                    {
+                        hs.ResetLifecycle(players[i]);
+                    }
+                }
+            }
+        }
+        enteredFromLeft = false;
+    }
+
+    override void WorldUnloaded(WorldEvent e)
+    {
+        for (int i = 0; i < MAXPLAYERS; i++)
+        {
+            if (playeringame[i] && players[i] != null && players[i].mo != null)
+            {
+                let pb = DoDAPlayerBase(players[i].mo);
+                if (pb != null)
+                {
+                    let hs = pb.GetHandState();
+                    if (hs != null)
+                    {
+                        hs.ResetLifecycle(players[i]);
+                    }
+                }
+            }
+        }
+        enteredFromLeft = false;
+    }
+
+    override void PlayerEntered(PlayerEvent e)
+    {
+        if (e.PlayerNumber >= 0 && e.PlayerNumber < MAXPLAYERS && players[e.PlayerNumber] != null && players[e.PlayerNumber].mo != null)
+        {
+            let pb = DoDAPlayerBase(players[e.PlayerNumber].mo);
+            if (pb != null)
+            {
+                let hs = pb.GetHandState();
+                if (hs != null)
+                {
+                    hs.ResetLifecycle(players[e.PlayerNumber]);
+                }
+            }
+        }
+        enteredFromLeft = false;
+    }
+
+    override void PlayerRespawned(PlayerEvent e)
+    {
+        if (e.PlayerNumber >= 0 && e.PlayerNumber < MAXPLAYERS && players[e.PlayerNumber] != null && players[e.PlayerNumber].mo != null)
+        {
+            let pb = DoDAPlayerBase(players[e.PlayerNumber].mo);
+            if (pb != null)
+            {
+                let hs = pb.GetHandState();
+                if (hs != null)
+                {
+                    hs.ResetLifecycle(players[e.PlayerNumber]);
+                }
+            }
+        }
+        enteredFromLeft = false;
+    }
+
+    override void PlayerDied(PlayerEvent e)
+    {
+        if (e.PlayerNumber >= 0 && e.PlayerNumber < MAXPLAYERS && players[e.PlayerNumber] != null && players[e.PlayerNumber].mo != null)
+        {
+            let pb = DoDAPlayerBase(players[e.PlayerNumber].mo);
+            if (pb != null)
+            {
+                let hs = pb.GetHandState();
+                if (hs != null)
+                {
+                    hs.ClearLayer2(players[e.PlayerNumber]);
+                }
+            }
+        }
+        enteredFromLeft = false;
     }
 }

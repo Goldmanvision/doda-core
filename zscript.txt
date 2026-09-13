@@ -80,6 +80,7 @@ version "2.4"
 #endregion
 
 #region WeaponSystem
+#include "DoDA/WeaponSystem/HandState.zs"
 #include "DoDA/WeaponSystem/DetachableMagazineState.zs"
 #include "DoDA/WeaponSystem/HandSwapController.zs"
 #include "DoDA/WeaponSystem/SpriteAnimator.zs"
