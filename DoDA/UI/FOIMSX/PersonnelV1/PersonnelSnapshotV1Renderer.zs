@@ -294,31 +294,27 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
 
         Screen.Dim(0xFF000814, 1.0, 0, 0, Screen.GetWidth(), Screen.GetHeight());
 
-        DrawRaisedPanel(10, 10, 620, 460, 0xFF182234);
+        DoDAFOIMSXDrawingHelpers.DrawRaisedPanel(10, 10, 620, 460, 0xFF182234);
 
-        DrawVirtualRect(14, 14, 612, 20, 0xFF0A3678);
-        Screen.DrawText(SmallFont, Font.CR_WHITE, 20, 18,
-            "FOIMS-X STRATEGIC INTERFACE",
-            DTA_VirtualWidth, 640, DTA_VirtualHeight, 480);
+        DoDAFOIMSXDrawingHelpers.DrawVirtualRect(14, 14, 612, 20, 0xFF0A3678);
+        DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_WHITE, 20, 18,
+            "FOIMS-X STRATEGIC INTERFACE");
 
-        DrawVirtualRect(14, 36, 612, 18, 0xFF121B2A);
-        Screen.DrawText(SmallFont, Font.CR_GRAY, 20, 40,
-            "FILE   DIRECTORY   CASES   OPERATIONS   SYSTEM",
-            DTA_VirtualWidth, 640, DTA_VirtualHeight, 480);
+        DoDAFOIMSXDrawingHelpers.DrawVirtualRect(14, 36, 612, 18, 0xFF121B2A);
+        DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_GRAY, 20, 40,
+            "FILE   DIRECTORY   CASES   OPERATIONS   SYSTEM");
 
-        DrawSunkenPanel(16, 58, 286, 356, 0xFF0A101C);
-        DrawVirtualRect(18, 60, 282, 18, 0xFF1A2638);
-        Screen.DrawText(SmallFont, Font.CR_GOLD, 24, 64,
-            "PERSONNEL DIRECTORY",
-            DTA_VirtualWidth, 640, DTA_VirtualHeight, 480);
+        DoDAFOIMSXDrawingHelpers.DrawSunkenPanel(16, 58, 286, 356, 0xFF0A101C);
+        DoDAFOIMSXDrawingHelpers.DrawVirtualRect(18, 60, 282, 18, 0xFF1A2638);
+        DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_GOLD, 24, 64,
+            "PERSONNEL DIRECTORY");
 
         RenderPersonnelDirectory();
 
-        DrawSunkenPanel(308, 58, 318, 356, 0xFF0A101C);
-        DrawVirtualRect(310, 60, 314, 18, 0xFF1A2638);
-        Screen.DrawText(SmallFont, Font.CR_GOLD, 316, 64,
-            "SELECTED PERSON",
-            DTA_VirtualWidth, 640, DTA_VirtualHeight, 480);
+        DoDAFOIMSXDrawingHelpers.DrawSunkenPanel(308, 58, 318, 356, 0xFF0A101C);
+        DoDAFOIMSXDrawingHelpers.DrawVirtualRect(310, 60, 314, 18, 0xFF1A2638);
+        DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_GOLD, 316, 64,
+            "SELECTED PERSON");
 
         RenderSelectedPerson();
 
@@ -327,41 +323,27 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
             DoDAAssignmentSnapshotV1Renderer.Render(mAssignmentViewState);
         }
 
-        DrawSunkenPanel(16, 420, 610, 24, 0xFF121B2A);
-        Screen.DrawText(SmallFont, Font.CR_WHITE, 22, 426,
-            "UP/DOWN FOCUS   ENTER SELECT   BACKSPACE CLEAR   O/ESC EXIT",
-            DTA_VirtualWidth, 640, DTA_VirtualHeight, 480);
+        DoDAFOIMSXDrawingHelpers.DrawSunkenPanel(16, 420, 610, 24, 0xFF121B2A);
+        DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_WHITE, 22, 426,
+            "UP/DOWN FOCUS   ENTER SELECT   BACKSPACE CLEAR   O/ESC EXIT");
     }
 
     private ui void RenderSelectedPerson()
     {
-        Vector2 realClipPos, realClipSize;
-        [realClipPos, realClipSize] = Screen.VirtualToRealCoords(
-            (312, 80), (310, 330), (640, 480), false, true
+        int clipLeft, clipTop, clipRight, clipBottom;
+        DoDAFOIMSXDrawingHelpers.GetRealClipRect(
+            312, 80, 310, 330, clipLeft, clipTop, clipRight, clipBottom
         );
-
-        int clipLeft = int(realClipPos.x);
-        int clipTop = int(realClipPos.y);
-        int clipRight = int(realClipPos.x + realClipSize.x);
-        int clipBottom = int(realClipPos.y + realClipSize.y);
 
         if (mViewState == null || !mViewState.HasSelection)
         {
-            Screen.DrawText(NewSmallFont, Font.CR_GRAY, 330, 210,
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GRAY, 330, 210,
                 "NO AGENT SELECTED",
-                DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-                DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-                DTA_Monospace, 1, DTA_Spacing, 9,
-                DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-                DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+                clipLeft, clipTop, clipRight, clipBottom);
 
-            Screen.DrawText(NewSmallFont, Font.CR_DARKGRAY, 330, 224,
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_DARKGRAY, 330, 224,
                 "PRESS ENTER TO INSPECT",
-                DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-                DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-                DTA_Monospace, 1, DTA_Spacing, 9,
-                DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-                DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+                clipLeft, clipTop, clipRight, clipBottom);
             return;
         }
 
@@ -377,165 +359,88 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
         String assignText = GetAssignmentString(assignClass);
         int assignColor = GetAssignmentColor(assignClass);
 
-        Screen.DrawText(NewSmallFont, Font.CR_WHITE, 330, 90, nameText,
-            DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-            DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-            DTA_Monospace, 1, DTA_Spacing, 9,
-            DTA_TextLen, 32,
-            DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-            DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+        DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_WHITE, 330, 90, nameText,
+            clipLeft, clipTop, clipRight, clipBottom, 32);
 
-        Screen.DrawText(NewSmallFont, Font.CR_GRAY, 330, 114, "STATUS:",
-            DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-            DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-            DTA_Monospace, 1, DTA_Spacing, 9,
-            DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-            DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+        DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GRAY, 330, 114, "STATUS:",
+            clipLeft, clipTop, clipRight, clipBottom);
 
-        Screen.DrawText(NewSmallFont, statusColor, 410, 114, statusText,
-            DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-            DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-            DTA_Monospace, 1, DTA_Spacing, 9,
-            DTA_TextLen, 18,
-            DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-            DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+        DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, statusColor, 410, 114, statusText,
+            clipLeft, clipTop, clipRight, clipBottom, 18);
 
-        Screen.DrawText(NewSmallFont, Font.CR_GRAY, 330, 132, "ASSIGNMENT:",
-            DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-            DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-            DTA_Monospace, 1, DTA_Spacing, 9,
-            DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-            DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+        DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GRAY, 330, 132, "ASSIGNMENT:",
+            clipLeft, clipTop, clipRight, clipBottom);
 
-        Screen.DrawText(NewSmallFont, assignColor, 410, 132, assignText,
-            DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-            DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-            DTA_Monospace, 1, DTA_Spacing, 9,
-            DTA_TextLen, 18,
-            DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-            DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+        DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, assignColor, 410, 132, assignText,
+            clipLeft, clipTop, clipRight, clipBottom, 18);
 
-        Screen.DrawText(NewSmallFont, Font.CR_GRAY, 330, 150, "SKILL:",
-            DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-            DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-            DTA_Monospace, 1, DTA_Spacing, 9,
-            DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-            DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+        DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GRAY, 330, 150, "SKILL:",
+            clipLeft, clipTop, clipRight, clipBottom);
 
-        Screen.DrawText(NewSmallFont, Font.CR_WHITE, 410, 150,
+        DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_WHITE, 410, 150,
             String.Format("%d", mViewState.SelectedSkill),
-            DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-            DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-            DTA_Monospace, 1, DTA_Spacing, 9,
-            DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-            DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+            clipLeft, clipTop, clipRight, clipBottom);
 
-        Screen.DrawText(NewSmallFont, Font.CR_GRAY, 330, 168, "WORKLOAD:",
-            DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-            DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-            DTA_Monospace, 1, DTA_Spacing, 9,
-            DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-            DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+        DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GRAY, 330, 168, "WORKLOAD:",
+            clipLeft, clipTop, clipRight, clipBottom);
 
-        Screen.DrawText(NewSmallFont, Font.CR_WHITE, 410, 168,
+        DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_WHITE, 410, 168,
             String.Format("%d%%", mViewState.SelectedWorkload),
-            DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-            DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-            DTA_Monospace, 1, DTA_Spacing, 9,
-            DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-            DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+            clipLeft, clipTop, clipRight, clipBottom);
 
         if (mViewState.SelectedAssignmentClassification ==
                 ASSIGNMENT_ASSIGNED &&
             mViewState.SelectedTaskTitle.Length() > 0)
         {
-            Screen.DrawText(NewSmallFont, Font.CR_GRAY, 330, 190, "TASK:",
-                DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-                DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-                DTA_Monospace, 1, DTA_Spacing, 9,
-                DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-                DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GRAY, 330, 190, "TASK:",
+                clipLeft, clipTop, clipRight, clipBottom);
 
-            Screen.DrawText(NewSmallFont, Font.CR_CYAN, 410, 190,
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_CYAN, 410, 190,
                 mViewState.SelectedTaskTitle.MakeUpper(),
-                DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-                DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-                DTA_Monospace, 1, DTA_Spacing, 9,
-                DTA_TextLen, 18,
-                DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-                DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+                clipLeft, clipTop, clipRight, clipBottom, 18);
         }
     }
     private ui void RenderPersonnelDirectory()
     {
-        Vector2 realClipPos, realClipSize;
-        [realClipPos, realClipSize] = Screen.VirtualToRealCoords(
-            (18, 80), (282, 330), (640, 480), false, true
+        int clipLeft, clipTop, clipRight, clipBottom;
+        DoDAFOIMSXDrawingHelpers.GetRealClipRect(
+            18, 80, 282, 330, clipLeft, clipTop, clipRight, clipBottom
         );
-
-        int clipLeft = int(realClipPos.x);
-        int clipTop = int(realClipPos.y);
-        int clipRight = int(realClipPos.x + realClipSize.x);
-        int clipBottom = int(realClipPos.y + realClipSize.y);
 
         if (mViewState == null ||
             mViewState.CurrentViewState == VIEWSTATE_UNAVAILABLE)
         {
-            Screen.DrawText(NewSmallFont, Font.CR_RED, 20, 104,
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_RED, 20, 104,
                 "[DIRECTORY UNAVAILABLE]",
-                DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-                DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-                DTA_Monospace, 1, DTA_Spacing, 9,
-                DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-                DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+                clipLeft, clipTop, clipRight, clipBottom);
 
-            Screen.DrawText(NewSmallFont, Font.CR_GRAY, 20, 116,
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GRAY, 20, 116,
                 "AWAITING SNAPSHOT",
-                DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-                DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-                DTA_Monospace, 1, DTA_Spacing, 9,
-                DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-                DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+                clipLeft, clipTop, clipRight, clipBottom);
             return;
         }
 
         if (mViewState.CurrentViewState == VIEWSTATE_INVALID_VERSION)
         {
-            Screen.DrawText(NewSmallFont, Font.CR_RED, 20, 104,
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_RED, 20, 104,
                 "[SNAPSHOT VERSION ERROR]",
-                DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-                DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-                DTA_Monospace, 1, DTA_Spacing, 9,
-                DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-                DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+                clipLeft, clipTop, clipRight, clipBottom);
 
-            Screen.DrawText(NewSmallFont, Font.CR_GRAY, 20, 116,
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GRAY, 20, 116,
                 "DIRECTORY OFFLINE",
-                DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-                DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-                DTA_Monospace, 1, DTA_Spacing, 9,
-                DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-                DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+                clipLeft, clipTop, clipRight, clipBottom);
             return;
         }
 
         if (mViewState.CurrentViewState == VIEWSTATE_EMPTY)
         {
-            Screen.DrawText(NewSmallFont, Font.CR_YELLOW, 20, 104,
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_YELLOW, 20, 104,
                 "[NO PERSONNEL RECORDS]",
-                DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-                DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-                DTA_Monospace, 1, DTA_Spacing, 9,
-                DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-                DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+                clipLeft, clipTop, clipRight, clipBottom);
 
-            Screen.DrawText(NewSmallFont, Font.CR_GRAY, 20, 116,
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GRAY, 20, 116,
                 "DIRECTORY EMPTY",
-                DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-                DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-                DTA_Monospace, 1, DTA_Spacing, 9,
-                DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-                DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+                clipLeft, clipTop, clipRight, clipBottom);
             return;
         }
 
@@ -543,31 +448,19 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
 
         if (totalRecords <= 0)
         {
-            Screen.DrawText(NewSmallFont, Font.CR_GRAY, 20, 104,
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GRAY, 20, 104,
                 "NO DATA",
-                DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-                DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-                DTA_Monospace, 1, DTA_Spacing, 9,
-                DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-                DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+                clipLeft, clipTop, clipRight, clipBottom);
             return;
         }
 
-        Screen.DrawText(NewSmallFont, Font.CR_WHITE, 20, 82,
+        DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_WHITE, 20, 82,
             "  NAME                         STATUS         ASSIGNMENT",
-            DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-            DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-            DTA_Monospace, 1, DTA_Spacing, 9,
-            DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-            DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+            clipLeft, clipTop, clipRight, clipBottom);
 
-        Screen.DrawText(NewSmallFont, Font.CR_DARKGRAY, 20, 92,
+        DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_DARKGRAY, 20, 92,
             "------------------------------------------------------------",
-            DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-            DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-            DTA_Monospace, 1, DTA_Spacing, 9,
-            DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-            DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+            clipLeft, clipTop, clipRight, clipBottom);
 
         int maxRows = 29;
         int renderCount = (totalRecords < maxRows) ? totalRecords : maxRows;
@@ -591,24 +484,16 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
 
             if (isFocused)
             {
-                DrawVirtualRect(19, rowY - 1, 280, 10, 0xFF183868);
+                DoDAFOIMSXDrawingHelpers.DrawVirtualRect(19, rowY - 1, 280, 10, 0xFF183868);
 
-                Screen.DrawText(NewSmallFont, Font.CR_GOLD, 20.0, rowY, ">",
-                    DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-                    DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-                    DTA_Monospace, 1, DTA_Spacing, 9,
-                    DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-                    DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+                DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GOLD, 20.0, rowY, ">",
+                    clipLeft, clipTop, clipRight, clipBottom);
             }
 
             if (isSelected)
             {
-                Screen.DrawText(NewSmallFont, Font.CR_CYAN, 24.5, rowY, "*",
-                    DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-                    DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-                    DTA_Monospace, 1, DTA_Spacing, 9,
-                    DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-                    DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+                DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_CYAN, 24.5, rowY, "*",
+                    clipLeft, clipTop, clipRight, clipBottom);
             }
 
             String nameText =
@@ -622,40 +507,21 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
             String assignText = GetAssignmentString(assignClass);
             int assignColor = GetAssignmentColor(assignClass);
 
-            Screen.DrawText(NewSmallFont, Font.CR_WHITE, 29.0, rowY, nameText,
-                DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-                DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-                DTA_Monospace, 1, DTA_Spacing, 9,
-                DTA_TextLen, 28,
-                DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-                DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_WHITE, 29.0, rowY, nameText,
+                clipLeft, clipTop, clipRight, clipBottom, 28);
 
-            Screen.DrawText(NewSmallFont, statusColor, 159.5, rowY, statusText,
-                DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-                DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-                DTA_Monospace, 1, DTA_Spacing, 9,
-                DTA_TextLen, 14,
-                DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-                DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, statusColor, 159.5, rowY, statusText,
+                clipLeft, clipTop, clipRight, clipBottom, 14);
 
-            Screen.DrawText(NewSmallFont, assignColor, 227.0, rowY, assignText,
-                DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-                DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-                DTA_Monospace, 1, DTA_Spacing, 9,
-                DTA_TextLen, 15,
-                DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-                DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, assignColor, 227.0, rowY, assignText,
+                clipLeft, clipTop, clipRight, clipBottom, 15);
         }
 
         if (totalRecords > maxRows)
         {
-            Screen.DrawText(NewSmallFont, Font.CR_DARKGRAY, 20, 396,
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_DARKGRAY, 20, 396,
                 "[DIRECTORY TRUNCATED]",
-                DTA_VirtualWidth, 640, DTA_VirtualHeight, 480,
-                DTA_ScaleX, 0.5, DTA_ScaleY, 0.5,
-                DTA_Monospace, 1, DTA_Spacing, 9,
-                DTA_ClipLeft, clipLeft, DTA_ClipRight, clipRight,
-                DTA_ClipTop, clipTop, DTA_ClipBottom, clipBottom);
+                clipLeft, clipTop, clipRight, clipBottom);
         }
     }
 
@@ -713,83 +579,5 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
         default:
             return Font.CR_RED;
         }
-    }
-
-    private static ui void DrawVirtualRect(
-        double vx,
-        double vy,
-        double vw,
-        double vh,
-        Color col
-    )
-    {
-        Vector2 realPos, realSize;
-
-        [realPos, realSize] = Screen.VirtualToRealCoords(
-            (vx, vy), (vw, vh), (640, 480), false, true
-        );
-
-        Screen.Dim(
-            col,
-            1.0,
-            int(realPos.x),
-            int(realPos.y),
-            int(realSize.x),
-            int(realSize.y)
-        );
-    }
-
-    private static ui void DrawRaisedPanel(
-        double vx,
-        double vy,
-        double vw,
-        double vh,
-        Color bgCol
-    )
-    {
-        DrawVirtualRect(vx, vy, vw, vh, bgCol);
-
-        Vector2 realPos, realSize;
-
-        [realPos, realSize] = Screen.VirtualToRealCoords(
-            (vx, vy), (vw, vh), (640, 480), false, true
-        );
-
-        double x0 = realPos.x;
-        double y0 = realPos.y;
-        double x1 = realPos.x + realSize.x;
-        double y1 = realPos.y + realSize.y;
-
-        Screen.DrawLine(x0, y0, x1, y0, 0xFF5A7292);
-        Screen.DrawLine(x0, y0, x0, y1, 0xFF5A7292);
-        Screen.DrawLine(x0, y1, x1, y1, 0xFF080D14);
-        Screen.DrawLine(x1, y0, x1, y1, 0xFF080D14);
-    }
-
-    private static ui void DrawSunkenPanel(
-        double vx,
-        double vy,
-        double vw,
-        double vh,
-        Color bgCol
-    )
-    {
-        DrawVirtualRect(vx, vy, vw, vh, bgCol);
-
-        Vector2 realPos, realSize;
-
-        [realPos, realSize] = Screen.VirtualToRealCoords(
-            (vx, vy), (vw, vh), (640, 480), false, true
-        );
-
-        double x0 = realPos.x;
-        double y0 = realPos.y;
-        double x1 = realPos.x + realSize.x;
-        double y1 = realPos.y + realSize.y;
-
-        Screen.DrawLine(x0, y0, x1, y0, 0xFF080D14);
-        Screen.DrawLine(x0, y0, x0, y1, 0xFF080D14);
-        Screen.DrawLine(x0, y1, x1, y1, 0xFF364860);
-        Screen.DrawLine(x1, y0, x1, y1, 0xFF364860);
     }
 }
