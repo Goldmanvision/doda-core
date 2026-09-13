@@ -326,19 +326,19 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
 
         DoDAFOIMSXDrawingHelpers.DrawVirtualRect(14, 36, 612, 18, 0xFF121B2A);
         DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_GRAY, 20, 40,
-            "FILE   DIRECTORY   CASES   OPERATIONS   SYSTEM");
+            "FILE   DIRECTORY   CASES   OPERATIONS   SYSTEM", 0.5, 0.5);
 
         DoDAFOIMSXDrawingHelpers.DrawSunkenPanel(16, 58, 286, 356, 0xFF0A101C);
         DoDAFOIMSXDrawingHelpers.DrawVirtualRect(18, 60, 282, 18, 0xFF1A2638);
         DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_GOLD, 24, 64,
-            "PERSONNEL DIRECTORY");
+            "PERSONNEL DIRECTORY", 0.5, 0.5);
 
         RenderPersonnelDirectory();
 
         DoDAFOIMSXDrawingHelpers.DrawSunkenPanel(308, 58, 318, 356, 0xFF0A101C);
         DoDAFOIMSXDrawingHelpers.DrawVirtualRect(310, 60, 314, 18, 0xFF1A2638);
         DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_GOLD, 316, 64,
-            "SELECTED PERSON");
+            "SELECTED PERSON", 0.5, 0.5);
 
         RenderSelectedPerson();
 
@@ -349,7 +349,7 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
 
         DoDAFOIMSXDrawingHelpers.DrawSunkenPanel(16, 420, 610, 24, 0xFF121B2A);
         DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_WHITE, 22, 426,
-            "UP/DOWN FOCUS   ENTER SELECT   BACKSPACE CLEAR   O/ESC EXIT");
+            "UP/DOWN FOCUS   ENTER SELECT   BACKSPACE CLEAR   O/ESC EXIT", 0.5, 0.5);
     }
 
     private ui void RenderSelectedPerson()

@@ -23,7 +23,7 @@ class DoDAAssignmentSnapshotV1Renderer : Object
         DoDAFOIMSXDrawingHelpers.DrawSunkenPanel(PANEL_X, PANEL_Y, PANEL_W, PANEL_H, 0xFF0A101C);
 
         DoDAFOIMSXDrawingHelpers.DrawVirtualRect(PANEL_X + 2, PANEL_Y + 2, PANEL_W - 4, 18, 0xFF1A2638);
-        DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_GOLD, PANEL_X + 8, PANEL_Y + 6, "ASSIGNMENT STATUS");
+        DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_GOLD, PANEL_X + 8, PANEL_Y + 6, "ASSIGNMENT STATUS", 0.5, 0.5);
 
         int clipLeft, clipTop, clipRight, clipBottom;
         DoDAFOIMSXDrawingHelpers.GetRealClipRect(PANEL_X + 4, PANEL_Y + 22, PANEL_W - 8, PANEL_H - 26, clipLeft, clipTop, clipRight, clipBottom);
