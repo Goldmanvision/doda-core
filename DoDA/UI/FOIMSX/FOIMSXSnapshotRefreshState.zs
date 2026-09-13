@@ -21,9 +21,9 @@ class DoDAFOIMSXSnapshotRefreshState : Object
     // Factory method for creating an initialized refresh state object.
     static DoDAFOIMSXSnapshotRefreshState Create()
     {
-        let state = new("DoDAFOIMSXSnapshotRefreshState");
-        state.Reset();
-        return state;
+        let refreshState = new("DoDAFOIMSXSnapshotRefreshState");
+        refreshState.Reset();
+        return refreshState;
     }
 
     // Resets refresh state to uninitialized.
