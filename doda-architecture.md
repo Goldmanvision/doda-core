@@ -816,3 +816,30 @@ The V2 weekend slice is complete when all of the following are true:
 7. Selection survives roster reorder only through exact persistent ID reconciliation.
 8. TAPLINE/TAB and FOIMS-X remain separate UI modes.
 9. No ZScript component becomes authoritative for strategic state, persistence, task progression, or validation.
+
+---
+
+# 16. Deferred Policy — Recovery, Strategic Continuity, and Persistence
+
+## 16.1 Field-Player Recovery and Strategic State Continuity
+
+**Status:** Approved design policy and future persistence requirement; implementation deferred.
+
+### Design Policy and Lore
+- **Recovery and Hospitalization:** Field-player death is represented in game lore and future strategic systems as recovery and hospitalization, not campaign death or strategic-state reset.
+- **Strategic Continuity:** A player recovery/respawn must not reset FOIMS-X strategic progression, including personnel availability, assignment progress, cases, evidence, locations, strategic time, or other durable campaign records.
+- **Save/Load Independence:** FOIMS-X should not require loading a saved game merely to preserve strategic progression across field-player recovery/respawn.
+
+### Validated Baseline Behavior vs. Future Requirements
+- **Current Validated Behavior:** Direct workstation testing showed FOIMS-X personnel task progression survived player recovery/respawn, advancing from 50 percent to 75 percent and then 100 percent after respawn and re-entry.
+- **Future Required Implementation:** Persistent recovery/hospitalization mechanics and operational-budget consequences require dedicated native/persistence design and validation. Future approved strategic systems may apply a recovery cost against the player’s operational budget and may apply corresponding recovery, availability, cost, or time effects to downed field agents.
+
+### Deliberately Unresolved Elements (Deferred Scope)
+This is a future design requirement only. The following elements are intentionally unresolved and must be designed and implemented in later dedicated tasks:
+- Exact recovery cost formulas and operational budget models.
+- Hospitalization and recovery duration calculation.
+- Downed field-agent recovery, cost, availability, and time rules.
+- Stable native identity model for persistent entities (Cross-reference: Task 37).
+- Versioned backward-safe save-schema fields and serialization (Cross-reference: Task 38).
+- Native invariant validation rules for recovery and persistence transitions (Cross-reference: Task 36 for save/restore validation).
+- FOIMS-X UI presentation and notifications for hospitalization/recovery.
