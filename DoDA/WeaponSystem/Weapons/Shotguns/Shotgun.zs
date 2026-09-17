@@ -24,9 +24,16 @@ class DoDAShotgun : DoDAWeapon
         }
 
         State curState = weaponSprite.CurState;
-        return curState.InStateSequence(ResolveState("LowerToLowReady"))
-            || curState.InStateSequence(ResolveState("LowReady"))
-            || curState.InStateSequence(ResolveState("RaiseFromLowReady"));
+
+        return curState.InStateSequence(
+            ResolveState("LowerToLowReady")
+        )
+        || curState.InStateSequence(
+            ResolveState("LowReady")
+        )
+        || curState.InStateSequence(
+            ResolveState("RaiseFromLowReady")
+        );
     }
 
     // Extended low-ready family membership: includes all basic low-ready states
@@ -36,6 +43,11 @@ class DoDAShotgun : DoDAWeapon
         if (IsInBasicLowReadyStateFamily(weaponSprite))
         {
             return true;
+        }
+
+        if (weaponSprite == null || weaponSprite.CurState == null)
+        {
+            return false;
         }
 
         return weaponSprite.CurState.InStateSequence(
@@ -52,11 +64,22 @@ class DoDAShotgun : DoDAWeapon
         }
 
         State curState = weaponSprite.CurState;
-        return curState.InStateSequence(ResolveState("HipRackApproach"))
-            || curState.InStateSequence(ResolveState("RaiseFromLowReadyToRack"))
-            || curState.InStateSequence(ResolveState("RackFromPreRack"))
-            || curState.InStateSequence(ResolveState("RackFromReady"))
-            || curState.InStateSequence(ResolveState("RackReturn"));
+
+        return curState.InStateSequence(
+            ResolveState("HipRackApproach")
+        )
+        || curState.InStateSequence(
+            ResolveState("RaiseFromLowReadyToRack")
+        )
+        || curState.InStateSequence(
+            ResolveState("RackFromPreRack")
+        )
+        || curState.InStateSequence(
+            ResolveState("RackFromReady")
+        )
+        || curState.InStateSequence(
+            ResolveState("RackReturn")
+        );
     }
 
     Default
@@ -70,7 +93,7 @@ class DoDAShotgun : DoDAWeapon
         Obituary "$OB_MPSHOTGUN";
         Tag "$TAG_SHOTGUN";
         +WEAPON.NOAUTOFIRE;
-		DamageFunction random(5, 10);
+        DamageFunction random(5, 10);
     }
 
     override void Tick()
@@ -185,9 +208,12 @@ class DoDAShotgun : DoDAWeapon
             lowReadyIdleTics = 0;
         }
 
+        // Permit a reload continuation from PostReload and permit reload-before-rack
+        // from RackWait. pendingRack intentionally remains true while reloading
+        // an empty-chamber weapon.
         if (
             reloadPressed
-            && isPostReload
+            && (isPostReload || isRackWait)
             && tubeShells < TubeCapacity
             && hasReserveShells
         )
@@ -613,8 +639,11 @@ class DoDAShotgun : DoDAWeapon
             double randomAngle = Random(0.0, 360.0);
             double randomRadius = Random(0.0, 5.0);
 
-            double localYawOffset = Cos(randomAngle) * randomRadius;
-            double localPitchOffset = Sin(randomAngle) * randomRadius;
+            double localYawOffset =
+                Cos(randomAngle) * randomRadius;
+
+            double localPitchOffset =
+                Sin(randomAngle) * randomRadius;
 
             FLineTraceData trace;
 
@@ -717,6 +746,14 @@ class DoDAShotgun : DoDAWeapon
         reserveShells.Amount--;
         invoker.tubeShells++;
 
+        // A shell loaded into the tube does not load the chamber.
+        // If the chamber is empty, preserve the requirement to rack
+        // before the weapon may fire.
+        if (!invoker.chamberLoaded)
+        {
+            invoker.pendingRack = true;
+        }
+
         invoker.A_Shotgun_LoadShellSound();
 
         Console.Printf(
@@ -727,6 +764,31 @@ class DoDAShotgun : DoDAWeapon
         );
 
         return ResolveState("PostReload");
+    }
+
+    // Resolves the mechanical state after the reload animation.
+    // A loaded tube does not mean the weapon is fire-ready when
+    // the chamber remains empty: route it to RackWait instead.
+    action State A_Shotgun_FinishReload()
+    {
+        if (
+            invoker == null
+            || invoker.owner == null
+            || invoker.owner.player == null
+        )
+        {
+            return ResolveState("Ready");
+        }
+
+        if (!invoker.chamberLoaded && invoker.tubeShells > 0)
+        {
+            invoker.pendingRack = true;
+            invoker.lowReadyIdleTics = 0;
+
+            return ResolveState("RackWait");
+        }
+
+        return ResolveState("Ready");
     }
 
     action State A_Shotgun_FinishRack()
@@ -749,6 +811,8 @@ class DoDAShotgun : DoDAWeapon
             invoker.chamberLoaded = true;
         }
 
+        // A successful chambering clears the rack requirement.
+        // An empty rack returns to an empty, unchambered state.
         invoker.pendingRack = false;
         invoker.lowReadyIdleTics = 0;
 
@@ -837,8 +901,8 @@ class DoDAShotgun : DoDAWeapon
         SHTN D 1;
         SHTN C 1;
         SHTN B 1;
-        SHTN A 1;
-        Goto Ready;
+        SHTN A 1 A_Shotgun_FinishReload;
+        Stop;
 
     LowerToLowReady:
         SGUP A 2;

@@ -1,0 +1,8 @@
+track_id,display_name,description,sort_order,active
+EVIDENCE_HANDLING,Evidence Handling,Maintains chain of custody processes evidence and converts field findings into reliable institutional knowledge,1,TRUE
+FIELD_OPERATIONS,Field Operations,Maintains readiness training logistics and operational doctrine for field personnel,2,TRUE
+INTELLIGENCE,Intelligence and Analysis,Correlates leads signals cases and historical records into actionable understanding,3,TRUE
+PUBLIC_COMMUNICATION,Public Communication and Liaison,Maintains witnesses public confidence disclosure standards and interagency relationships,4,TRUE
+INTERNAL_AFFAIRS,Internal Affairs and Ethics,Detects misconduct reduces compromise and protects the Department from its own blind spots,5,TRUE
+TECHNICAL_INFRASTRUCTURE,Technical Infrastructure,Maintains FOIMS-X data systems secure links specialized tools and technical continuity--------,6,TRUE
+TEST_TRACK,TESTERINO,tepatg asgog awogapgh opweanmg po nw OH SHIT,7,TRUE
