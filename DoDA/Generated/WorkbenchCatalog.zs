@@ -3,8 +3,9 @@
 *///////////////////////////|
 // GENERATED FILE - DO NOT EDIT. Regenerate with
 //   tools/doda_content_workbench/doda_zscript_catalog.py
-// Generator 0.1.1; network content sha256 ca30bb147d2525c2d7ba9aeab9360fb3e53be65dd639812bee4f51ec8d0dfa36
+// Generator 0.2.0; network content sha256 ca30bb147d2525c2d7ba9aeab9360fb3e53be65dd639812bee4f51ec8d0dfa36
 // equipment content sha256 52bf81d446b00a3f0c808618224c12ed629738d5cd819ae0e6b5c800a9c39cab
+// department catalog content sha256 997d36d30088fa5df6658974380c30da53fb621061c328df97de91d940a135c7
 // Read-only display/lookup catalog (Option B stopgap). No simulation rules.
 
 class DoDAWorkbenchCatalog : Object
@@ -13,11 +14,15 @@ class DoDAWorkbenchCatalog : Object
     const HARDWARE_COUNT = 10;
     const FAMILY_COUNT = 5;
     const MODEL_COUNT = 7;
+    const FACILITY_COUNT = 6;
+    const CAPABILITY_COUNT = 2;
+    const FACILITY_CAPABILITY_COUNT = 2;
     const TOTAL_PERSONAL_DEVICE_LIMIT = 8;
 
-    static String GeneratorVersion() { return "0.1.1"; }
+    static String GeneratorVersion() { return "0.2.0"; }
     static String NetworkSourceHash() { return "ca30bb147d2525c2"; }
     static String EquipmentSourceHash() { return "52bf81d446b00a3f"; }
+    static String DepartmentSourceHash() { return "997d36d30088fa5d"; }
 
     // Network tiers
     static String TierId(int i)
@@ -366,6 +371,227 @@ class DoDAWorkbenchCatalog : Object
         return -1;
     }
 
+    // Authored facilities/capabilities. Initial tiers are NOT campaign status.
+    static String FacilityId(int i)
+    {
+        switch (i)
+        {
+        case 0: return "EVIDENCE_LAB";
+        case 1: return "FIELD_OPERATIONS_ROOM";
+        case 2: return "INTELLIGENCE_CELL";
+        case 3: return "OVERSIGHT_WING";
+        case 4: return "PUBLIC_LIAISON_OFFICE";
+        case 5: return "TECHOPS_HUB";
+        default: return "";
+        }
+    }
+
+    static String FacilityDisplayName(int i)
+    {
+        switch (i)
+        {
+        case 0: return "Evidence Laboratory";
+        case 1: return "Field Operations Room";
+        case 2: return "Intelligence Cell";
+        case 3: return "Oversight Wing";
+        case 4: return "Public Liaison Office";
+        case 5: return "Technical Operations Hub";
+        default: return "";
+        }
+    }
+
+    static String FacilityDescription(int i)
+    {
+        switch (i)
+        {
+        case 0: return "Processes physical and digital evidence through documented custody procedures";
+        case 1: return "Coordinates deployments readiness and field support";
+        case 2: return "Links case records field reports signals and leads";
+        case 3: return "Reviews conduct risk patterns compromise and accountability failures";
+        case 4: return "Coordinates witness care disclosure and public-facing institutional work";
+        case 5: return "Maintains secure information systems specialized tools and FOIMS-X infrastructure";
+        default: return "";
+        }
+    }
+
+    static String FacilityTrackId(int i)
+    {
+        switch (i)
+        {
+        case 0: return "EVIDENCE_HANDLING";
+        case 1: return "FIELD_OPERATIONS";
+        case 2: return "INTELLIGENCE";
+        case 3: return "INTERNAL_AFFAIRS";
+        case 4: return "PUBLIC_COMMUNICATION";
+        case 5: return "TECHNICAL_INFRASTRUCTURE";
+        default: return "";
+        }
+    }
+
+    static String FacilityZoneId(int i)
+    {
+        switch (i)
+        {
+        case 0: return "HQ_LAB";
+        case 1: return "HQ_OPERATIONS";
+        case 2: return "HQ_ANALYSIS";
+        case 3: return "HQ_OVERSIGHT";
+        case 4: return "HQ_LIAISON";
+        case 5: return "HQ_TECHOPS";
+        default: return "";
+        }
+    }
+
+    static String FacilityInitialTier(int i)
+    {
+        switch (i)
+        {
+        case 0: return "UNBUILT";
+        case 1: return "OPERATIONAL";
+        case 2: return "UNBUILT";
+        case 3: return "UNBUILT";
+        case 4: return "UNBUILT";
+        case 5: return "OPERATIONAL";
+        default: return "";
+        }
+    }
+
+    static String FacilityTrackName(int i)
+    {
+        switch (i)
+        {
+        case 0: return "Evidence Handling";
+        case 1: return "Field Operations";
+        case 2: return "Intelligence and Analysis";
+        case 3: return "Internal Affairs and Ethics";
+        case 4: return "Public Communication and Liaison";
+        case 5: return "Technical Infrastructure";
+        default: return "";
+        }
+    }
+
+    static int FacilityCapacity(int i)
+    {
+        switch (i)
+        {
+        case 0: return 2;
+        case 1: return 2;
+        case 2: return 2;
+        case 3: return 2;
+        case 4: return 2;
+        case 5: return 3;
+        default: return -2;
+        }
+    }
+
+    static int FindFacility(String id)
+    {
+        for (int i = 0; i < FACILITY_COUNT; i++)
+        {
+            if (FacilityId(i) == id) return i;
+        }
+        return -1;
+    }
+
+    static String CapabilityId(int i)
+    {
+        switch (i)
+        {
+        case 0: return "ELECTRONIC_SURVEILLANCE";
+        case 1: return "OCCULT_RESPONSE";
+        default: return "";
+        }
+    }
+
+    static String CapabilityDisplayName(int i)
+    {
+        switch (i)
+        {
+        case 0: return "Electronic Surveillance";
+        case 1: return "Occult Response";
+        default: return "";
+        }
+    }
+
+    static String CapabilityDescription(int i)
+    {
+        switch (i)
+        {
+        case 0: return "Authorized collection and analysis of electronic signals.";
+        case 1: return "Specialized investigation and containment of anomalous threats.";
+        default: return "";
+        }
+    }
+
+    static String CapabilityStandingLabel(int i)
+    {
+        switch (i)
+        {
+        case 0: return "Signal Monitoring";
+        case 1: return "Response Readiness";
+        default: return "";
+        }
+    }
+
+    static int FindCapability(String id)
+    {
+        for (int i = 0; i < CAPABILITY_COUNT; i++)
+        {
+            if (CapabilityId(i) == id) return i;
+        }
+        return -1;
+    }
+
+    static String FacilityCapabilityFacilityId(int i)
+    {
+        switch (i)
+        {
+        case 0: return "FIELD_OPERATIONS_ROOM";
+        case 1: return "TECHOPS_HUB";
+        default: return "";
+        }
+    }
+
+    static String FacilityCapabilityCapabilityId(int i)
+    {
+        switch (i)
+        {
+        case 0: return "OCCULT_RESPONSE";
+        case 1: return "ELECTRONIC_SURVEILLANCE";
+        default: return "";
+        }
+    }
+
+    static String FacilityCapabilityInitialTier(int i)
+    {
+        switch (i)
+        {
+        case 0: return "UNBUILT";
+        case 1: return "UNBUILT";
+        default: return "";
+        }
+    }
+
+    static String FacilityCapabilityDisplayName(int i)
+    {
+        switch (i)
+        {
+        case 0: return "Occult Task Force";
+        case 1: return "Electronic Surveillance";
+        default: return "";
+        }
+    }
+
+    static int FacilityCapabilityCapacity(int i)
+    {
+        switch (i)
+        {
+        case 0: return 2;
+        case 1: return 2;
+        default: return -2;
+        }
+    }
+
 }
 
 // Console: netevent DoDA_CatalogDump
@@ -374,7 +600,7 @@ class DoDAWorkbenchCatalogProbe : EventHandler
     override void NetworkProcess(ConsoleEvent e)
     {
         if (e.Name != "DoDA_CatalogDump") return;
-        Console.PrintF("DODA_CATALOG BEGIN gen=%s net=%s eq=%s", DoDAWorkbenchCatalog.GeneratorVersion(), DoDAWorkbenchCatalog.NetworkSourceHash(), DoDAWorkbenchCatalog.EquipmentSourceHash());
+        Console.PrintF("DODA_CATALOG BEGIN gen=%s net=%s eq=%s dept=%s", DoDAWorkbenchCatalog.GeneratorVersion(), DoDAWorkbenchCatalog.NetworkSourceHash(), DoDAWorkbenchCatalog.EquipmentSourceHash(), DoDAWorkbenchCatalog.DepartmentSourceHash());
         Console.PrintF("DODA_CATALOG COUNTS tiers=%d hardware=%d families=%d models=%d limit=%d", DoDAWorkbenchCatalog.TIER_COUNT, DoDAWorkbenchCatalog.HARDWARE_COUNT, DoDAWorkbenchCatalog.FAMILY_COUNT, DoDAWorkbenchCatalog.MODEL_COUNT, DoDAWorkbenchCatalog.TOTAL_PERSONAL_DEVICE_LIMIT);
         for (int t = 0; t < DoDAWorkbenchCatalog.TIER_COUNT; t++)
             Console.PrintF("DODA_CATALOG TIER %s", DoDAWorkbenchCatalog.TierId(t));
@@ -384,6 +610,13 @@ class DoDAWorkbenchCatalogProbe : EventHandler
             Console.PrintF("DODA_CATALOG FAMILY %s", DoDAWorkbenchCatalog.FamilyId(f));
         for (int m = 0; m < DoDAWorkbenchCatalog.MODEL_COUNT; m++)
             Console.PrintF("DODA_CATALOG MODEL %s %s", DoDAWorkbenchCatalog.ModelId(m), DoDAWorkbenchCatalog.ModelFamilyId(m));
+        Console.PrintF("DODA_CATALOG DEPARTMENT facilities=%d capabilities=%d links=%d", DoDAWorkbenchCatalog.FACILITY_COUNT, DoDAWorkbenchCatalog.CAPABILITY_COUNT, DoDAWorkbenchCatalog.FACILITY_CAPABILITY_COUNT);
+        for (int fi = 0; fi < DoDAWorkbenchCatalog.FACILITY_COUNT; fi++)
+            Console.PrintF("DODA_CATALOG FACILITY %s", DoDAWorkbenchCatalog.FacilityId(fi));
+        for (int ca = 0; ca < DoDAWorkbenchCatalog.CAPABILITY_COUNT; ca++)
+            Console.PrintF("DODA_CATALOG CAPABILITY %s", DoDAWorkbenchCatalog.CapabilityId(ca));
+        for (int li = 0; li < DoDAWorkbenchCatalog.FACILITY_CAPABILITY_COUNT; li++)
+            Console.PrintF("DODA_CATALOG LINK %s %s", DoDAWorkbenchCatalog.FacilityCapabilityFacilityId(li), DoDAWorkbenchCatalog.FacilityCapabilityCapabilityId(li));
         Console.PrintF("DODA_CATALOG END");
     }
 }

@@ -50,7 +50,7 @@ import doda_zscript_catalog
 
 
 APP_TITLE = "DoDA Content Workbench"
-APP_VERSION = "0.12.0"
+APP_VERSION = "0.13.0"
 
 SOURCE_FILES = {
     "enum_catalog": "enum_catalog.csv",
@@ -557,7 +557,7 @@ class ContentWorkbenchApp(tk.Tk):
             command=lambda: self.run_network_rules("validate", announce=True),
         )
         self.rules_only_menu.add_command(
-            label="Export Network, Transfer, Equipment, and ZScript Catalog Only",
+            label="Export Rules + Catalog (Reuses Last Department Export)",
             command=lambda: self.run_network_rules("export", announce=True),
         )
         self.actions_menu.add_cascade(label="Rules Only (No PK3)", menu=self.rules_only_menu)
@@ -941,7 +941,7 @@ class ContentWorkbenchApp(tk.Tk):
 
         ttk.Label(
             footer,
-            text="v0.12 — Grouped navigation, network/transfer and equipment authoring; network export also regenerates the read-only ZScript catalog.",
+            text="v0.13 - Export All rebuilds content, rules, and the read-only ZScript catalog, including facilities and capabilities.",
             foreground="#9da7b3",
         ).pack(side=tk.RIGHT)
 
@@ -1555,12 +1555,16 @@ class ContentWorkbenchApp(tk.Tk):
             "validate",
         ]
 
-        self.run_command(
+        if not self.run_command(
             label="Validation",
             command=command,
             success_message="Validation completed successfully.",
-        )
-        self.run_network_rules("validate", announce=False)
+            announce_success=False,
+        ):
+            return
+        if self.run_network_rules("validate", announce=False):
+            self.status_text.set("Validate All passed.")
+            messagebox.showinfo(APP_TITLE, "Validate All passed. See the Activity Log for warnings.")
 
     def run_export(self) -> None:
         if not self.exporter_path.is_file():
@@ -1577,12 +1581,20 @@ class ContentWorkbenchApp(tk.Tk):
             str(self.project_root),
         ]
 
-        self.run_command(
+        if not self.run_command(
             label="Export",
             command=command,
             success_message="Export and PK3 build completed successfully.",
-        )
-        self.run_network_rules("export", announce=False)
+            announce_success=False,
+        ):
+            self.log("Export All stopped: content export failed; catalog was not regenerated.")
+            return
+        if not self.run_network_rules("export", announce=False):
+            self.status_text.set("Export All incomplete: rules/catalog export failed.")
+            self.log("Export All incomplete: content/PK3 may have updated; no full success.")
+            return
+        self.status_text.set("Export All completed successfully.")
+        messagebox.showinfo(APP_TITLE, "Export All completed: content, PK3, rules, and ZScript catalog.")
 
     def run_network_rules(self, mode: str, announce: bool) -> bool:
         """Validate or export network/transfer rules in-process and log the result.
@@ -1595,6 +1607,9 @@ class ContentWorkbenchApp(tk.Tk):
             self.log("Network rules note: unsaved drafts are not included: " + ", ".join(dirty))
         try:
             if mode == "export":
+                if announce:
+                    self.log("Rules-only export reuses generated/data/department_content.json; "
+                             "use Export All to include saved facility/capability changes.")
                 result, out_path = doda_network_rules.export(self.project_root)
                 if result.valid:
                     equipment_result, equipment_path = doda_equipment_rules.export(self.project_root)
@@ -1645,7 +1660,8 @@ class ContentWorkbenchApp(tk.Tk):
         label: str,
         command: list[str],
         success_message: str,
-    ) -> None:
+        announce_success: bool = True,
+    ) -> bool:
         self.config(cursor="watch")
         self.update_idletasks()
 
@@ -1678,7 +1694,9 @@ class ContentWorkbenchApp(tk.Tk):
 
             if completed.returncode == 0:
                 self.status_text.set(success_message)
-                messagebox.showinfo(APP_TITLE, success_message)
+                if announce_success:
+                    messagebox.showinfo(APP_TITLE, success_message)
+                return True
             else:
                 self.status_text.set(f"{label} failed.")
                 messagebox.showerror(
@@ -1686,6 +1704,7 @@ class ContentWorkbenchApp(tk.Tk):
                     f"{label} failed with exit code {completed.returncode}.\n\n"
                     "Review the Activity Log tab for complete output.",
                 )
+                return False
 
         except OSError as error:
             self.status_text.set(f"{label} could not start.")
@@ -1694,6 +1713,7 @@ class ContentWorkbenchApp(tk.Tk):
                 APP_TITLE,
                 f"Could not start {label.lower()}.\n\n{error}",
             )
+            return False
         finally:
             self.config(cursor="")
             self.update_idletasks()
@@ -1815,8 +1835,6 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-
-
 
 
 

@@ -1,4 +1,4 @@
-﻿/*//////////////////////////|
+/*//////////////////////////|
 // DoDA/UI/FOIMSX/PersonnelV1/PersonnelSnapshotV1Renderer.zs
 //
 // FOIMS-X Dedicated Personnel Directory V1 Presentation Renderer.
@@ -30,6 +30,28 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
     private ui DoDAFOIMSXSnapshotRefreshState mPersonnelRefreshState;
     private ui DoDAFOIMSXSnapshotRefreshState mAssignmentRefreshState;
     private ui int mFocusedIndex;
+
+    // Workbench Catalog V1 (read-only). Page 0 = personnel; 1..6 = catalog sections.
+    const FOIMSX_KEYSCAN_TAB = 0x0f;
+    const FOIMSX_KEYCHAR_TAB = 9;
+    const FOIMSX_PAGE_COUNT = 7;
+    private ui DoDAFOIMSXCatalogV1View mCatalogView;
+    private ui int mPage;
+
+    private ui void CyclePage()
+    {
+        mPage = (mPage + 1) % FOIMSX_PAGE_COUNT;
+
+        if (mPage > 0)
+        {
+            if (mCatalogView == null)
+            {
+                mCatalogView = DoDAFOIMSXCatalogV1View.Create();
+            }
+
+            mCatalogView.SetSection(mPage - 1);
+        }
+    }
 
     ui void RefreshPersonnelData(bool force = false)
     {
@@ -222,6 +244,17 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
 
     ui bool HandleNavInput(int keyScan, int keyChar)
     {
+        if (keyScan == FOIMSX_KEYSCAN_TAB || keyChar == FOIMSX_KEYCHAR_TAB)
+        {
+            CyclePage();
+            return true;
+        }
+
+        if (mPage > 0 && mCatalogView != null)
+        {
+            return mCatalogView.HandleNav(ClassifyNavInput(keyScan, keyChar));
+        }
+
         if (mViewState == null)
         {
             return false;
@@ -328,6 +361,12 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
         DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_GRAY, 20, 40,
             "FILE   DIRECTORY   CASES   OPERATIONS   SYSTEM", 0.5, 0.5);
 
+        if (mPage > 0 && mCatalogView != null)
+        {
+            RenderCatalogPage();
+            return;
+        }
+
         DoDAFOIMSXDrawingHelpers.DrawSunkenPanel(16, 58, 286, 356, 0xFF0A101C);
         DoDAFOIMSXDrawingHelpers.DrawVirtualRect(18, 60, 282, 18, 0xFF1A2638);
         DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_GOLD, 24, 64,
@@ -349,7 +388,28 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
 
         DoDAFOIMSXDrawingHelpers.DrawSunkenPanel(16, 420, 610, 24, 0xFF121B2A);
         DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_WHITE, 22, 426,
-            "UP/DOWN FOCUS   ENTER SELECT   BACKSPACE CLEAR   O EXIT", 0.5, 0.5);
+            "UP/DOWN FOCUS   ENTER SELECT   BACKSPACE CLEAR   TAB CATALOG   O EXIT", 0.5, 0.5);
+    }
+
+    private ui void RenderCatalogPage()
+    {
+        DoDAFOIMSXDrawingHelpers.DrawSunkenPanel(16, 58, 286, 356, 0xFF0A101C);
+        DoDAFOIMSXDrawingHelpers.DrawVirtualRect(18, 60, 282, 18, 0xFF1A2638);
+        DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_GOLD, 24, 64,
+            String.Format("CATALOG %d/6: %s", mPage, mCatalogView.GetSectionTitle()), 0.5, 0.5);
+
+        mCatalogView.RenderList();
+
+        DoDAFOIMSXDrawingHelpers.DrawSunkenPanel(308, 58, 318, 356, 0xFF0A101C);
+        DoDAFOIMSXDrawingHelpers.DrawVirtualRect(310, 60, 314, 18, 0xFF1A2638);
+        DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_GOLD, 316, 64,
+            "CATALOG RECORD", 0.5, 0.5);
+
+        mCatalogView.RenderDetail();
+
+        DoDAFOIMSXDrawingHelpers.DrawSunkenPanel(16, 420, 610, 24, 0xFF121B2A);
+        DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_WHITE, 22, 426,
+            "UP/DOWN FOCUS   HOME/END FIRST/LAST   TAB NEXT PAGE   O EXIT", 0.5, 0.5);
     }
 
     private ui void RenderSelectedPerson()

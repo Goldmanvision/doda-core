@@ -68,8 +68,13 @@ version "2.4"
 
 
 
+#region WorkbenchCatalog // GENERATED read-only catalog (Option B stopgap); regenerate with tools/doda_content_workbench/doda_zscript_catalog.py
+#include "DoDA/Generated/WorkbenchCatalog.zs"
+#endregion
+
 #region FOIMSXRenderer
 #include "DoDA/UI/FOIMSX/PersonnelV1/PersonnelSnapshotV1Renderer.zs"
+#include "DoDA/UI/FOIMSX/CatalogV1/FOIMSXCatalogV1View.zs"
 #include "DoDA/UI/FOIMSX/FOIMSXCampaignClock.zs"
 #include "DoDA/UI/FOIMSX/AssignmentV1/AssignmentSnapshotV1Renderer.zs"
 #endregion
@@ -122,8 +127,4 @@ version "2.4"
 #include "DoDA/MissionSystem/Things/MissionTerminal.zs"
 #include "DoDA/MissionSystem/Things/ExtractionInteractable.zs"
 #include "DoDA/MissionSystem/Things/DeployMissionInteractable.zs"
-#endregion
-
-#region WorkbenchCatalog // GENERATED read-only catalog (Option B stopgap); regenerate with tools/doda_content_workbench/doda_zscript_catalog.py
-#include "DoDA/Generated/WorkbenchCatalog.zs"
 #endregion
