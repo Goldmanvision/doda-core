@@ -1,0 +1,13 @@
+Continue DoDA Workbench from the attached Working Specification and Branch Handoff dated October 7, 2026.
+
+Read the handoff first. The original transcript and diagram are supporting references. Latest explicit user decisions override earlier wording. Do not treat assistant proposals or historical test reports as current implementation verification.
+
+We paused design questions to consolidate before branching. Preserve all settled rules, especially eight simultaneous devices, one active task per person, exact local modem matching without shared-bandwidth contention, permanent contracts, processed-versus-lost evidence accounting, provisional probation restoration, and technician/location-dependent bug removal.
+
+First acknowledge the checkpoint briefly, then ask only NET-01, NET-02, and NET-03: router compatibility, manual/automatic compatible modem selection, and whether the receiving transfer endpoint requires attendance. Use TTS-friendly language and a small numbered batch. These questions remain unanswered.
+
+Do not write implementation code, change repository records, redraw the whole diagram, or launch Computer spending yet. Before later coding, reconcile the current local source; the older Project snapshot may omit tested changes. Preserve the completed coordinated metric/tier service, editor, and Actions menu rather than reinstalling them. Grouped navigation and shared metadata are approved/planned but not verified installed.
+
+Use v102 as the personnel design reference, overridden by newer confirmed decisions. Authoring/validation/export/documentation is the approved immediate coding scope; runtime integration is separate. Future local implementation should use complete PowerShell 5.1/ISE-compatible CLI blocks and small tested steps.
+
+After my responses, update the issue register and affected rules, then address interruption behavior. Leave balancing values open unless required for a bounded prototype.

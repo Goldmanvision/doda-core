@@ -1,0 +1,363 @@
+# DoDA Workbench: Working Specification and Branch Handoff
+
+Checkpoint date: 2026-10-07, user-local time.
+Status: reviewable consolidation, not a frozen implementation specification.
+
+## Reading and authority
+
+This document consolidates the provided WorkbenchUpdate_thread.md, reviewed transcript passages, and the latest maintenance clarifications in the current conversation. The transcript remains the historical record. The progression diagram is a design input, not a complete executable rule set.
+
+Labels used here:
+- CONFIRMED: explicit user decisions, including later corrections.
+- RECORDED CHECKPOINT: implementation or testing reported in the transcript; not freshly executed or verified here.
+- PROPOSED: assistant architecture or safeguards; not silently promoted to user-approved mechanics.
+- OPEN: unanswered design or implementation question.
+
+Precedence: latest explicit user clarification over earlier statements; confirmed rules over illustrative examples; current inspected local source over stale uploaded code when assessing implementation. Do not infer gameplay behavior from diagram arrow geometry or from an assistant's suggested schema.
+
+This is a design-and-handoff document. Keep the Workbench user manual separate and describe only verified functionality there. No repository modifications or runtime tests were performed during this consolidation.
+
+# Part One: Working Specification
+
+## 1. Progression and accounting
+
+CONFIRMED:
+- Progression is additive. New branches, contracts, and developments do not delete prior acquired developments.
+- Branches may have their own points, levels, upgrades, and cross-branch unlock criteria. Organizational nesting is not itself a purchase prerequisite.
+- Unlockables support multiple prerequisites, each with its own threshold and selected measure.
+- Requirement accounting can vary by category: current standing, accumulated achievements, earned/collected totals, investment, or spending are not one universal counter.
+- Acquisition-time checks and ongoing checks are independently configurable. Acquisition-only checks do not deactivate an acquired feature after later declines.
+- Ongoing conditional permissions may disable when requirements fail and automatically restore when requirements recover, without repurchase.
+- Public Perception and Congressional Support fluctuate. Department Funding fluctuates and acts as player currency. Apprehensions and closed cases are cumulative achievements.
+- Evidence investment does not spend or remove earned evidence credit.
+- Positive and negative historical contributions must be tracked separately where applicable. Favorable current standing does not erase adverse history.
+
+PROPOSED integration boundaries:
+- Separate organizational nodes, counter definitions, requirements, contracts/acquired developments, effects, and costs/investment.
+- Reference stable IDs and specific counters, not just display names or entire branches.
+- Store multiple prerequisites as related rows, not a comma-separated field.
+- Keep authored active flags separate from campaign-time availability.
+- Preserve existing numeric metric status bands; do not repurpose them as acquired progression upgrades.
+- ALL/ANY combination controls, exact comparator vocabulary, and serialization remain schema proposals to review.
+
+## 2. Technology development and purchases
+
+CONFIRMED:
+- Tech Infrastructure has its own cumulative points, contributed by its branches.
+- Data Processing is both an organizational branch and an investment target.
+- Investing Department Funding in Data Processing increases Data Processing progress and contributes to the Tech Infrastructure total.
+- Communications investment likewise contributes to its branch and Tech Infrastructure.
+- Starting equipment is actually owned: rotary phones and desktop computers. Starting quantities are not specified.
+- Desktop computers, laptops, and PDAs are separate equipment families, unlocked sequentially through development. Older families remain relevant.
+- Family availability requires relevant overall Tech Infrastructure and Data Processing thresholds.
+- Reaching development criteria makes equipment contracts available. Purchasing a contract grants access to purchase and use the model. Purchasing actual equipment units is separate.
+- Contracts are permanent, including obsolete contracts, and do not themselves award development points.
+- Equipment purchases are separate from development investment.
+- Phone models follow the threshold, permanent-contract, individual-unit purchase sequence.
+
+## 3. Personnel assignments and tasks
+
+CONFIRMED:
+- Each working analyst requires dedicated equipment; personnel may own/hold assignments to more equipment than they can use simultaneously.
+- One active task per analyst or agent. One active task per technician. Extra equipment does not create parallel task slots.
+- Maximum participation in one task: two desktops, two laptops, two phones, and two PDAs, for eight devices total.
+- Participating devices must be at the user's location. Assigned devices elsewhere do not contribute to that task.
+- Device selection supports manual and automatic options.
+- Performance depends on equipment model, skills, relevant traits/proficiency, and current personnel condition. Additional equipment has diminishing returns and may not benefit every person equally.
+- Desktops support heavy laboratory processing; laptops support light field processing; PDAs emphasize communication and text/photographic gathering. Basic text, email, and data functions overlap.
+- On-duty assignment with an operational accessible device earns a small Data Processing baseline. No evidence credit is earned merely from idle assignment.
+- Active qualifying task effects add to, rather than replace, the assignment baseline.
+- Baseline gains stop off duty, when incapacitated, or when otherwise unavailable.
+- Task effects can target Department tracks/metrics and personnel stats, with separate active-tick, successful-completion, and failure effects.
+- Success and completion are one successful terminal outcome, not two reward events.
+- Task failure should be rare and depend on loyalty and relevant competence; it can harm personnel stats and destroy evidence.
+- Tick rewards already earned remain after failure; separate failure consequences apply.
+- If equipment becomes unavailable, a task continues at reduced effectiveness if remaining equipment meets requirements; otherwise it pauses. Equipment unavailability alone is not automatic evidence destruction.
+
+## 4. Evidence accounting
+
+CONFIRMED:
+- Evidence Handling and evidence-gathering points name the same counter.
+- Successfully processed portions award retained positive evidence credit.
+- On failure, the unresolved destroyed portion contributes to lifetime negative evidence/lost-evidence history. It does not subtract that unearned portion from already earned positive credit.
+- Example: evidence worth 100 points fails after 25 percent processing. Retain 25 positive points; record 75 lost points. Earlier wording suggesting deduction from all established Evidence Handling credit was corrected.
+- Loss causes immediate, one-time Public Perception and Congressional Support deductions.
+- Success ratios separately control upgrade eligibility and reward reductions.
+- Lifetime and recent success ratios are separate measures. Recent means a rolling strategic-time window.
+- Ratio basis is successfully processed value divided by resolved value; unresolved pending evidence is excluded.
+- Later success may improve ratios without deleting historical failures.
+
+OPEN: define zero-denominator behavior and exactly when partially processed value enters each time window. The formula's broad basis is settled, but those event/accounting boundaries are not.
+
+## 5. Automatic relief and probation
+
+CONFIRMED:
+- Relief is automatic when eligibility conditions are met, not a player-requested action.
+- Eligibility requires a good recent success ratio and a minimum amount of resolved evidence in the recent window.
+- Public Perception and Congressional Support losses may be restored. Appeals do not recover lost funds, evidence value, Intelligence points, or other operational resources.
+- Restoration is provisional during strategic-time probation and occurs immediately when probation begins.
+- Covered upgrade restrictions and reward reductions remain until successful probation completion, even after provisional score restoration.
+- Only severe infractions revoke relief; severity supports explicit event/failure classifications and numerical rules.
+- Revocation withdraws the old incident's relief and adds new penalties.
+- Successful probation makes covered relief permanent. Ordinary probation uses strategic duration without a severe infraction; high-level appeals additionally require a minimum success ratio.
+
+PROPOSED safeguards: record exact restoration amounts and incident coverage; reversal must not count the original deduction twice; one eligible incident must not restore points every tick. These safeguards need an explicit implementation contract, not an invented gameplay multiplier.
+
+OPEN: high-level appeal end date with insufficient ratio; overlapping incidents; re-eligibility after revocation; full versus partial restoration policy; exact lifetime/recent comparison; durations and severity thresholds.
+
+## 6. Equipment, storage, and reassignment
+
+CONFIRMED:
+- Equipment assignments persist unless the player reassigns them.
+- Reassignment requires a replacement for the original owner and preservation/transfer of their storage data.
+- Each agent/analyst has four interchangeable desktop/laptop hard-drive identities and two PDA storage-card identities created with them. This does not grant six hardware devices.
+- Storage identifiers are hidden until corresponding assignments make them relevant.
+- HDD storage works across desktops and laptops. PDA SC storage is separate and incompatible with HDD storage.
+- Those personal storage identities serve the larger collection of assigned devices; they are not permanently tied to six hardware units.
+- Four HDDs do not override per-family use limits: two desktops and two laptops, not four desktops.
+- Personnel can swap their own compatible storage among already assigned devices without a technician, but it takes a small amount of strategic time.
+- Safe data transfer, device onboarding, and Department equipment reassignment require a technician and allocated strategic time.
+- The original local procedure requires the affected person, technician, and equipment together. Later remote abilities allow remote technician work; how every local-onboarding requirement changes is still OPEN.
+- Phones do not use HDD/SC storage slots. One number per phone; numbers can change freely/frequently. Two active phones can be any landline/mobile combination.
+
+## 7. Communications and bandwidth
+
+CONFIRMED:
+- Phone models affect communication speed, reliability, map coverage, and ease of use/stress reduction.
+- Bandwidth infrastructure is location-specific. Higher local bandwidth contributes to Department-wide transfer efficiency; the exact aggregate effect is OPEN.
+- Each location buys modem infrastructure; routers connect individual devices.
+- A device's local modem tier must match its network-bandwidth tier exactly. Neither higher nor lower unmatched tiers are compatible.
+- Different locations may exchange data across different bandwidth tiers. Cross-location compatibility does not relax each device's local exact match.
+- Maintain older modem types to support older devices until they are replaced or upgraded; individual-device bandwidth upgrading remains OPEN.
+- Transfer time depends on both endpoint bandwidths and workload volume. Data sizes are intentionally exaggerated for gameplay incentives.
+- Bandwidth is not shared consumption. Multiple devices may each transfer at the supported rate without slowing one another down.
+- Transfers occupy a person's active-task slot and count as active on-duty work. A technician can attend instead of an agent/analyst, freeing the owner to work on another available assigned device or task.
+- The device performing a transfer is unavailable for other work.
+- Remote technician operation is a separate upgrade requiring Internet at both the technician and operated locations.
+- No T1 minimum for remote operation. Any bandwidth can support remote access; large workloads are simply slower over lower-bandwidth connections.
+
+## 8. Bugs and system updates
+
+CONFIRMED:
+- Bugs may disable ordinary work while leaving remote technician access available. Bug type determines remote versus on-site servicing.
+- Only technicians remove bugs.
+- Remote system updating is separately unlocked; basic remote access does not automatically grant it.
+- Updates are manually triggered by the player or an NPC, then run automatically with an attending person occupied throughout. They are not unattended background work.
+- A technician may attend instead of the equipment owner. One active-task slot is occupied; the owner may use other owned/assigned equipment or perform another task.
+- Updating equipment is unavailable until completion.
+- Updates are maintenance, not permanent stat or capability upgrades.
+- Updates become due at randomized intervals. A due device remains usable with repeated prompts; delay raises failure/bug risk progressively.
+- Completing an update resets overdue-update risks.
+- Agent/analyst update: existing bugs remain.
+- On-site technician update: all existing bugs are removed within update time, without an added repair duration.
+- Remote technician update: remote-serviceable bugs are removed within update time; on-site-only bugs remain for later on-site repair.
+- An on-site-only bug does not itself prohibit a remote update if remote access remains possible and remote updating is unlocked.
+
+OPEN: bug catalog classifications, interruption/cancellation rules, timing values, technician training requirements, and simultaneous bug interactions. Do not assign network-card, display-driver, or corrupted-drive examples to service classes without the user's decision.
+
+## 9. Personnel and authoring integration
+
+CONFIRMED direction:
+- Personnel HP, skills, abilities, and expertise are needed to connect individual performance to Department development.
+- dodabase-v102.xlsx is a relatively accurate starting reference; newer user decisions take precedence.
+- Immediate implementation scope is Workbench authoring, validation, export, and documentation, not game-runtime changes.
+- Grouped resizable/collapsible navigation with matching View-menu access was accepted in the transcript; preserve unfinished edits or warn before discarding them.
+- Text/log-based UI checks are acceptable. Do not require screenshots.
+- Preserve existing IDs and behavior where possible; use explicit migrations when necessary.
+
+PROPOSED architecture to reconcile with current source/workbook:
+- Conditions/vitals, traits, skills/training, qualifications, expertise, and personal abilities must not be collapsed into one catalog.
+- Reuse existing qualifications and capability staffing rules rather than create duplicates.
+- Strategic Health and current/max HP need a synchronization contract, not an automatic equation.
+- Persistent personnel identity is separate from temporary map actors.
+- Catalogs contain authored definitions; current conditions, acquired developments, assignments, and purchase history belong to campaign/save state.
+- Central page registry for sidebar and menus; shared table/field metadata for validation, editing, export, and candidate snapshots.
+- Equipment modifiers should be derived, not repeatedly added permanently when equipping/unequipping.
+
+# Part Two: Unresolved-Issue Register
+
+This is a scoped working register, not a declaration that every transcript line or every future mechanic has been exhaustively audited. E = explicitly left open; N = implementation edge case newly identified during consolidation; R = remaining broad design area. None blocks preservation of this checkpoint.
+
+| ID | Origin | Question or decision | Needed before |
+|---|---|---|---|
+| NET-01 | E | RESOLVED 2026-10-07: routers must match the modem's generation/type exactly. | Connection model |
+| NET-02 | E | RESOLVED 2026-10-07: game auto-selects a compatible modem; player may override. | Network editor/runtime |
+| NET-03 | E | RESOLVED 2026-10-07: receiving end requires agent/analyst verification and sign-off before completion. NET-03b RESOLVED: one technician may attend both ends only if able to move between both device locations. | Transfer scheduler |
+| NET-04 | E | Can individual devices receive bandwidth upgrades? How is compatibility changed? | Equipment upgrade schema |
+| NET-05 | E | What is Department-wide transfer efficiency and how does it affect endpoint-limited transfers? | Transfer formula |
+| NET-06 | N | PARTIAL 2026-10-07: labels kept verbatim; file sizes exaggerated for gamification. Numeric timing units open. | Timing calculation |
+| TASK-01 | N | RESOLVED 2026-10-07: transfers INT-01..INT-11; processing TASK-01a..c; updates UPD-01..02. | Scheduler |
+| TASK-02 | N | RESOLVED 2026-10-07: another qualified person may take over a partly finished processing task and keeps its progress. | Scheduler |
+| EQ-01 | E | Can desktop/laptop/PDA replacements cross families if they support the needed work? | Reassignment rules |
+| EQ-02 | E | In remote onboarding/reassignment, which owner and endpoint presence requirements remain? | Remote workflow |
+| EQ-03 | N | Recovery/reassignment when original storage or owner becomes permanently unavailable? | Inventory persistence |
+| APP-01 | E | Exact lifetime/recent comparison and full/partial restoration policy? | Relief evaluation |
+| APP-02 | E | What happens when high-level probation expires without its required ratio? | Probation states |
+| APP-03 | N | Coverage of overlapping incidents, repeat relief prevention, and re-eligibility after revocation? | Relief ledger |
+| EVID-01 | N | Zero resolved value and timing of partial evidence contributions within rolling windows? | Evidence counters |
+| EVID-02 | E | Can the same retained evidence contribute to several branches, and how often? | Investment rules |
+| PERS-01 | R | Canonical skills, expertise, qualifications, personal abilities, and condition definitions? | Personnel schema |
+| PERS-02 | R | HP/strategic Health synchronization and incapacity/death rules? | Runtime personnel |
+| FX-01 | R | Modifier stacking, equipment diminishing returns, and applicable task requirements? | Performance evaluation |
+| TREE-01 | R | Typed meanings for connections and canonical IDs/aliases for repeated track labels? | Diagram/schema import |
+| TREE-02 | R | Audio/Video formats, required facilities, equipment, and personnel? | Media-processing slice |
+| TREE-03 | R | Digital Encantation: eligible users, devices, acquired spells, and ongoing conditions? | Ability slice |
+| TREE-04 | R | Asset custody/disposition, auctions/handoffs, and retained historical credit? | Asset slice |
+| TREE-05 | R | Jurisdiction scope and legal grants by region, operation, or circumstance? | Permission slice |
+| TREE-06 | R | Funding/staffing/Intelligence/Field Operations branches beyond confirmed examples? | Their respective slices |
+| WB-01 | E | Which current local source files match the installed tested Workbench? | Any code change |
+| WB-02 | N | Formal requirement comparators, ALL/ANY timing semantics, and dependency validation? | Requirements validator |
+
+Deferred balancing: prices, thresholds, gains/losses, processing and transfer scales, probation durations, severity limits, starting quantities, model lists. Keep them configurable; do not invent final values.
+
+Resume only NET-01, NET-02, and NET-03 in the first question batch after the user reviews this handoff. Questions were already presented but remain unanswered; their presentation is not approval of any option.
+
+# Part Three: Implementation Checkpoint
+
+## Recorded verified work
+
+The supplied transcript reports these completed checkpoints, largely from the October 6, 2026 working session. These are historical records, not rerun results.
+
+| Component | Recorded result | Boundary |
+|---|---|---|
+| Metric Tiers layout | Patch checks and user visual check passed | Not all editor layout tested |
+| Recursive enum helper | Removed without changing save path | Do not reinstall the removal blindly |
+| Task Templates selection/refresh | 5/5 selection regression | Existing/new forms, revert, deliberate selection |
+| Enum save/refresh | 6/6 sandbox regression | Backups, choices, unsaved task name, referenced-priority rejection |
+| Coordinated metric save service | 10/10 sandbox checks | Creation, range changes, rejection, backups, caught-failure rollback |
+| Coordinated metric editor | 9/9 behavioral checks | Drafts, save/cancel, validation, root protection |
+| Actions menu integration, Phase 42 | Patch/import checks and user 'success' | Integrated window visually checked |
+
+Live source CSV integrity checks were reported unchanged during the sandbox/patch checks. Do not extrapolate Task Templates preservation to all editors.
+
+## Transaction boundary
+
+The coordinated service stages and validates Metrics and Metric Tiers together, preserving complete status-band coverage and references. Transcript-described safeguards include snapshots, backups, external-change checks, a transaction record, and a cooperative lock. Two file replacements are not a single atomic transaction. Caught-failure rollback is not proof of power-loss recovery or protection from unrelated external editors.
+
+## Source reconciliation before changes
+
+The transcript explicitly says newer local changes were not uploaded to Project Files. No fresh source audit was completed in this consolidation. Do not overwrite newer local modules with stale project snapshots.
+
+Modules previously requested for reconciliation:
+- doda_content_gui.py
+- doda_metric_tiers_editor.py
+- doda_enum_catalog_editor.py
+- doda_task_templates_editor.py
+- doda_metric_bundle_service.py
+- doda_metric_bundle_editor.py
+
+Verify actual names, locations, source CSVs, test commands, and project root from the current local package. Earlier conversations contain differing path representations; this handoff does not certify an authoritative Windows root.
+
+## Not established as implemented
+
+Grouped navigation and shared schema metadata were approved/planned, not proven installed by the reviewed checkpoint. New progression, counter/accounting, equipment, bug/maintenance, and personnel integrations are design work unless current source demonstrates otherwise. Automatic permission restoration, evidence ledgers, probation, remote work, and persistent campaign behavior must not be described as working gameplay merely because definitions can be exported.
+
+## Documentation position
+
+The manual was paused after the coordinated editor checkpoint. Planned updates include Chapters 2 through 4 for the new coordinated metric workflow, Actions menu, backups/locks/recovery boundaries, and removal of resolved defect warnings. Chapter 5, Capabilities and Staffing, was to follow. PDF compilation was deferred until the Markdown manual was complete and reviewed. Do not report those manual updates as completed without the actual revised document.
+
+# Part Four: Continuation Instructions
+
+## Branch handoff
+
+The user creates the branch and attaches this master document, the original thread transcript, and the latest diagram JSON/XML/image as references. No branch has been created by this consolidation and no service credits were spent through Computer here.
+
+In the new thread:
+1. Read this handoff first. Confirm understanding of settled rules without restating the entire document.
+2. Keep user-approved mechanics, assistant proposals, reported tests, and current implementation separate.
+3. Ask NET-01, NET-02, and NET-03 in one small, TTS-friendly batch. Do not add a new maintenance question to that batch.
+4. Record responses by issue ID, update only affected rules, and preserve the superseded-decision log.
+5. Resolve interruption contracts next, then continue remaining diagram areas in small batches.
+6. Clarify diagram semantics before a polished redraw. Preserve original diagrams; repeated labels may be references, not duplicate tracks.
+7. Before implementation, reconcile current local source and workbook concepts; preserve the coordinated metric workflow.
+8. Begin Workbench changes with bounded navigation/schema work, then a limited progression/accounting/contract slice and tests. Personnel integration follows explicit contracts. Runtime integration is separate and needs separate approval.
+9. Do not demand all balancing values before implementing a coherent structural slice.
+
+## Workflow preferences
+
+- TTS-friendly conversational answers: plain language and small numbered batches rather than dense tables.
+- For later local changes, the transcript requests complete PowerShell 5.1/ISE-compatible CLI blocks; do not silently substitute unattached Python files for that workflow.
+- User may reply 'y' or short numbered responses. Keep each implementation step independently reviewable and verify its output before advancing.
+- Preserve backups, candidate validation, rollback boundaries, source hashes, and unsaved forms. No silent source overwrites.
+- Use v102 as a reference, not immutable truth.
+- Approximately $20 in Computer credits was reported by the user. Preserve for a bounded programming/testing task unless expiration changes that decision. Credit balance and expiry were not checked here; no cost guarantee is made.
+
+## Superseded decisions not to revive
+
+- Six simultaneous devices -> eight, two of each of four families.
+- PDA HDD identifier -> SC; desktop/laptop HDD remains interchangeable.
+- Two numbers per phone -> one number per phone.
+- T1 required for remote technician transfers -> removed; separate Internet-based upgrade remains.
+- Device bandwidth merely a maximum -> exact local modem tier match.
+- Shared modem bandwidth consumption -> deliberately no contention between devices.
+- Assignment alone generates evidence -> no; qualifying work required.
+- Separate success and completion rewards -> one successful-completion event.
+- Lost unresolved evidence subtracts established earned credit -> retain processed positive credit, record destroyed remainder as negative history.
+- Appeals restore all resource losses -> only Public Perception/Congressional Support points and covered benefit restrictions.
+- Relief permanent immediately -> provisional restoration, then permanent after probation; restrictions lift only afterward.
+- Updates unattended after trigger -> attending person remains occupied.
+- Every technician update removes every bug -> remote only removes remotely serviceable bugs; on-site-only bugs remain.
+- Remote access automatically enables remote system updating -> separate unlocks.
+
+## Review limits
+
+This handoff is a structured working consolidation, not a certified line-by-line source-code audit or complete catalog extraction. It preserves the reviewed mechanics and recorded checkpoint, explicitly lists newly identified edge cases, and leaves unresolved details open. Original transcript should be retained for exact wording or omitted historical detail.
+
+Transcript provenance: WorkbenchUpdate_thread.md; SHA-256 08dc41dc51f3d97af65d8d9be112a5547d5968cc72f3a25b8e34e0e4ed88da85.
+
+# Part Five: Decisions Recorded 2026-10-07 (this branch)
+
+All items below are CONFIRMED user decisions from the continuation thread. They extend Section 7 and supersede nothing settled earlier.
+
+## Network (Section 7 additions)
+- NET-01: A router works only with a modem of the same generation and type. Exact match at every link: device to modem to router.
+- NET-02: When several compatible modems are free, the game selects one automatically; the player may override it manually.
+- NET-03: A transfer is complete only after a staff member at the receiving end verifies and signs off. Until then it is "Awaiting sign-off". Sign-off occupies that person's one active-task slot. Evidence counts as processed only on sign-off.
+
+## Transfer interruption contract
+- INT-01: A delivered, unsigned transfer waits indefinitely. It never expires and is never lost by waiting.
+- INT-02: An interrupted sign-off pauses and can resume later.
+- INT-03: If a modem or router fails or disconnects during an active transfer, the transfer is lost and its unresolved value is recorded as lost evidence, unless it was manually paused before the connection was lost.
+- INT-04: Only agents and analysts may sign off.
+- INT-05: Only the person who started a sign-off may resume it with progress kept; anyone else restarts it from the beginning.
+- INT-06: Pausing a transfer is either a staff task (occupies the active-task slot) or a manual player action on one device at a time. There is no global pause-all.
+- INT-07: Paused transfers resume from where they stopped.
+- INT-08: Any staff member may perform the pause task.
+- INT-09: Staff must be at the device to pause it; technicians may pause remotely (with remote access).
+- INT-10: If the sign-off starter becomes permanently unavailable, the sign-off waits until an eligible agent/analyst restarts it. (Contracts are permanent; "permanently unavailable" is the trigger wording, not contract end.)
+
+## Task and update interruption contract
+- TASK-01a: Shift end pauses a processing task; it resumes at the person's next shift unless the player reassigns it to another person.
+- TASK-01b: Incapacity mid-task fails the task and destroys the unresolved evidence. The processed portion keeps its positive credit; the remainder is recorded as lost evidence.
+- TASK-01c: Player cancellation leaves the evidence waiting as partly processed. It is not lost and not reset.
+- TASK-02: Another qualified person may take over a partly finished processing task and keeps its progress.
+- Unchanged: equipment unavailability gives reduced effectiveness or a pause, never destruction.
+- UPD-01: An interrupted system update must restart from the beginning.
+- UPD-02: Overdue-update risk keeps building through a restart until the update actually completes.
+
+## Resolved follow-ups
+- NET-03b: One technician may attend both ends of a transfer only if able to move between both device locations. Sign-off still requires an agent or analyst.
+- INT-11: A person is permanently unavailable on death, dismissal, defection, or retirement.
+
+## Network content (populated from diagram)
+- NET-CONTENT-01: Five tiers confirmed: DIALUP G1 (14.4KB/s), DIALUP G2 (56K), LEASED_LINE G1 (1.5MB/s, T1), LEASED_LINE G2 (44MB/s, T3), FIBER G1 (2GB/s).
+- NET-CONTENT-02: One placeholder router per tier confirmed (diagram shows no routers).
+- NET-06 PARTIAL: diagram speed labels kept verbatim; file sizes deliberately exaggerated for gamification. Numeric units for timing remain open.
+
+## New open items
+- None raised in this batch.
+
+## Implementation record (2026-10-07)
+Authoring/validation/export slice only; no runtime behaviour.
+- Added tools/doda_content_workbench/doda_network_rules.py: validates network_tiers.csv and network_hardware_models.csv (unique type+generation per tier, MODEM/ROUTER kinds, tier references, active-tier checks, warning for routers with no matching modem), self-checks the transfer state machine, and exports generated/data/network_transfer_rules.json.
+- Added header-only data_authoring/source/network_tiers.csv and network_hardware_models.csv. No model lists or balancing values invented.
+- Added tests/test_network_rules.py. 12 tests passed on the local machine (JQ-Workstation) after a temp-folder fix for Python 3.13+ Windows ACLs.
+- Added TASK_INTERRUPTION and permanent-unavailability causes to the exported contract.
+- Existing modules (validator, exporter, GUI, coordinated metric service/editor, Actions menu) were not modified. GUI page and main-validator integration are deferred to the grouped-navigation/shared-metadata step.
+
+## Workbench v0.10 record (2026-10-07)
+- Grouped, resizable, collapsible navigation sidebar (doda_navigation.py) with View > Navigation menu; built from existing notebook tabs, no editors reinstalled.
+- Central page registry and shared table metadata (doda_page_registry.py); network tables migrated, older editors not yet.
+- Network Tiers, Modems and Routers editors and a read-only Transfer and Interruption Rules page (doda_network_editor.py), with candidate validation, backups, and external-change protection.
+- Validate/Export also run network rules; 16 tests pass locally. User visually confirmed the GUI. Committed and pushed.
+- Documentation folder relocated into doda-core/docs/workbench (2026-10-07).
