@@ -1,0 +1,1035 @@
+DoDA V1.1 Facilities Editor Inspection
+Generated: 2026-10-01T12:52:49.7044438-04:00
+
+=== Facilities Editor Relevant References ===
+
+LineNumber Line                                                                                
+---------- ----                                                                                
+        17 FIELDS = (                                                                          
+        18     "facility_id",                                                                  
+        19     "display_name",                                                                 
+        20     "track_id",                                                                     
+        21     "hq_zone_id",                                                                   
+        22     "description",                                                                  
+        23     "initial_tier_id",                                                              
+        24     "interaction_asset_id",                                                         
+        25     "foims_panel_id",                                                               
+        26     "active",                                                                       
+        46         self.facility_id = tk.StringVar()                                           
+        47         self.display_name = tk.StringVar()                                          
+        48         self.track_id = tk.StringVar()                                              
+        49         self.hq_zone_id = tk.StringVar()                                            
+        50         self.initial_tier_id = tk.StringVar()                                       
+        51         self.interaction_asset_id = tk.StringVar()                                  
+        52         self.foims_panel_id = tk.StringVar()                                        
+        53         self.active = tk.BooleanVar(value=True)                                     
+        66     def track_ids(self) -> list[str]:                                               
+        68             row.get("track_id", "")                                                 
+        70             if row.get("track_id", "")                                              
+        71             and row.get("active", "").upper() == "TRUE"                             
+        96                         or (row.get("active") or "").strip().upper() != "TRUE"      
+       139         self.tree = ttk.Treeview(                                                   
+       141             columns=("facility", "name", "track", "tier", "active"),                
+       151             ("active", "Active", 70),                                               
+       168         self.tree.bind("<<TreeviewSelect>>", self.on_select)                        
+       185         self.facility_id_entry = ttk.Entry(                                         
+       187             textvariable=self.facility_id,                                          
+       190         self.facility_id_entry.grid(                                                
+       210         ttk.Entry(                                                                  
+       212             textvariable=self.display_name,                                         
+       222         self.track_combo = ttk.Combobox(                                            
+       224             textvariable=self.track_id,                                             
+       226             values=self.track_ids(),                                                
+       238         ttk.Entry(                                                                  
+       240             textvariable=self.hq_zone_id,                                           
+       248         label("Description:", 5)                                                    
+       250         self.description = tk.Text(                                                 
+       261         self.description.grid(                                                      
+       270         self.tier_combo = ttk.Combobox(                                             
+       272             textvariable=self.initial_tier_id,                                      
+       286         ttk.Entry(                                                                  
+       288             textvariable=self.interaction_asset_id,                                 
+       298         ttk.Entry(                                                                  
+       300             textvariable=self.foims_panel_id,                                       
+       308         label("Active:", 9)                                                         
+       312             text="This facility is active",                                         
+       313             variable=self.active,                                                   
+       338             text="Save Facility",                                                   
+       339             command=self.save,                                                      
+       363                 "Save validates the complete candidate project before replacing "   
+       381         self.track_combo.configure(values=self.track_ids())                         
+       388             facility_id = row.get("facility_id", "")                                
+       393                 iid=facility_id,                                                    
+       395                     facility_id,                                                    
+       396                     row.get("display_name", ""),                                    
+       397                     row.get("track_id", ""),                                        
+       398                     row.get("initial_tier_id", ""),                                 
+       399                     row.get("active", ""),                                          
+       410         self.facility_id_entry.configure(state=tk.NORMAL)                           
+       412         tracks = self.track_ids()                                                   
+       415         self.facility_id.set("")                                                    
+       416         self.display_name.set("")                                                   
+       417         self.track_id.set(tracks[0] if tracks else "")                              
+       418         self.hq_zone_id.set("")                                                     
+       419         self.initial_tier_id.set(                                                   
+       422         self.interaction_asset_id.set("")                                           
+       423         self.foims_panel_id.set("")                                                 
+       424         self.active.set(True)                                                       
+       426         self.description.delete("1.0", tk.END)                                      
+       427         self.facility_id_entry.focus_set()                                          
+       439                 if item.get("facility_id") == selection[0]                          
+       447         self.editing_id = row["facility_id"]                                        
+       449         self.facility_id_entry.configure(state=tk.NORMAL)                           
+       450         self.facility_id.set(row.get("facility_id", ""))                            
+       451         self.facility_id_entry.configure(state=tk.DISABLED)                         
+       453         self.display_name.set(row.get("display_name", ""))                          
+       454         self.track_id.set(row.get("track_id", ""))                                  
+       455         self.hq_zone_id.set(row.get("hq_zone_id", ""))                              
+       456         self.initial_tier_id.set(row.get("initial_tier_id", ""))                    
+       457         self.interaction_asset_id.set(row.get("interaction_asset_id", ""))          
+       458         self.foims_panel_id.set(row.get("foims_panel_id", ""))                      
+       459         self.active.set(row.get("active", "").upper() == "TRUE")                    
+       461         self.description.delete("1.0", tk.END)                                      
+       462         self.description.insert("1.0", row.get("description", ""))                  
+       471     def record(self) -> dict[str, str] | None:                                      
+       473             "facility_id": self.facility_id.get().strip(),                          
+       474             "display_name": self.display_name.get().strip(),                        
+       475             "track_id": self.track_id.get().strip(),                                
+       476             "hq_zone_id": self.hq_zone_id.get().strip(),                            
+       477             "description": self.description.get("1.0", tk.END).strip(),             
+       478             "initial_tier_id": self.initial_tier_id.get().strip(),                  
+       479             "interaction_asset_id": self.interaction_asset_id.get().strip(),        
+       480             "foims_panel_id": self.foims_panel_id.get().strip(),                    
+       481             "active": "TRUE" if self.active.get() else "FALSE",                     
+       486         if not ID_PATTERN.fullmatch(row["facility_id"]):                            
+       492         if not row["display_name"]:                                                 
+       495         if row["track_id"] not in self.track_ids():                                 
+       498         if not row["hq_zone_id"]:                                                   
+       501         if not row["description"]:                                                  
+       502             errors.append("Description is required.")                               
+       504         if row["initial_tier_id"] not in self.facility_tiers():                     
+       507         if not row["interaction_asset_id"]:                                         
+       510         if not row["foims_panel_id"]:                                               
+       523     def write(self, path: Path, rows: list[dict[str, str]]) -> None:                
+       525             writer = csv.DictWriter(                                                
+       527                 fieldnames=FIELDS,                                                  
+       531             writer.writeheader()                                                    
+       534                 writer.writerow(                                                    
+       536                         field: row.get(field, "")                                   
+       537                         for field in FIELDS                                         
+       541     def candidate_valid(self, candidate: Path) -> tuple[bool, str]:                 
+       581     def post_validate(self) -> tuple[bool, str]:                                    
+       607     def save(self) -> None:                                                         
+       608         row = self.record()                                                         
+       616             if row["facility_id"] != self.editing_id:                               
+       624                 row if item.get("facility_id") == self.editing_id else item         
+       632                 item.get("facility_id") == row["facility_id"]                       
+       652             self.write(temporary, rows)                                             
+       654             valid, output = self.candidate_valid(temporary)                         
+       683             self.editing_id = row["facility_id"]                                    
+       686             self.app.log(f"Facility {action}: {row['facility_id']}")                
+       690             valid, output = self.post_validate()                                    
+       701                         f"Facility '{row['facility_id']}' {action}.\n\n"            
+       710                         f"Facility {action}, but post-save validation failed.\n\n"  
+       716             self.app.log(f"FACILITY SAVE ERROR: {error}")                           
+       720                 f"Unable to save facility.\n\n{error}",                             
+       738         facility_id = self.editing_id                                               
+       743                 f"ARE YOU SURE you want to remove '{facility_id}'?\n\n"             
+       751             self.app.log(f"Remove Facility cancelled for '{facility_id}'.")         
+       757             if row.get("facility_id") != facility_id                                
+       768             self.write(temporary, rows)                                             
+       770             valid, output = self.candidate_valid(temporary)                         
+       773                 f"Facility removal candidate validation output for '{facility_id}':"
+       804             self.app.log(f"Removed facility: {facility_id}")                        
+       809             valid, output = self.post_validate()                                    
+       820                         f"Facility '{facility_id}' removed.\n\n"                    
+       829                         f"Facility '{facility_id}' removed, but post-save "         
+       854 def install_facilities_editor(app: Any) -> None:
+
+=== Facilities Editor Full Source ===
+   1: from __future__ import annotations
+   2: 
+   3: import csv
+   4: import os
+   5: import re
+   6: import shutil
+   7: import subprocess
+   8: import sys
+   9: import tempfile
+  10: import tkinter as tk
+  11: from datetime import datetime
+  12: from pathlib import Path
+  13: from tkinter import messagebox, ttk
+  14: from typing import Any
+  15: from uuid import uuid4
+  16: 
+  17: FIELDS = (
+  18:     "facility_id",
+  19:     "display_name",
+  20:     "track_id",
+  21:     "hq_zone_id",
+  22:     "description",
+  23:     "initial_tier_id",
+  24:     "interaction_asset_id",
+  25:     "foims_panel_id",
+  26:     "active",
+  27: )
+  28: 
+  29: FILES = (
+  30:     "enum_catalog.csv",
+  31:     "department_tracks.csv",
+  32:     "metrics.csv",
+  33:     "metric_tiers.csv",
+  34:     "facilities.csv",
+  35:     "flavor_text.csv",
+  36: )
+  37: 
+  38: ID_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
+  39: 
+  40: 
+  41: class FacilitiesEditor:
+  42:     def __init__(self, app: Any) -> None:
+  43:         self.app = app
+  44:         self.editing_id: str | None = None
+  45: 
+  46:         self.facility_id = tk.StringVar()
+  47:         self.display_name = tk.StringVar()
+  48:         self.track_id = tk.StringVar()
+  49:         self.hq_zone_id = tk.StringVar()
+  50:         self.initial_tier_id = tk.StringVar()
+  51:         self.interaction_asset_id = tk.StringVar()
+  52:         self.foims_panel_id = tk.StringVar()
+  53:         self.active = tk.BooleanVar(value=True)
+  54: 
+  55:         self.build()
+  56: 
+  57:     def source_path(self) -> Path:
+  58:         return self.app.source_directory / "facilities.csv"
+  59: 
+  60:     def backup_directory(self) -> Path:
+  61:         return self.app.project_root / "data_authoring" / "backups" / "facilities"
+  62: 
+  63:     def rows(self) -> list[dict[str, str]]:
+  64:         return [dict(row) for row in self.app.tables.get("facilities", [])]
+  65: 
+  66:     def track_ids(self) -> list[str]:
+  67:         return sorted(
+  68:             row.get("track_id", "")
+  69:             for row in self.app.tables.get("department_tracks", [])
+  70:             if row.get("track_id", "")
+  71:             and row.get("active", "").upper() == "TRUE"
+  72:         )
+  73: 
+  74:     def facility_tiers(self) -> list[str]:
+  75:         source_path = self.app.source_directory / "enum_catalog.csv"
+  76: 
+  77:         if not source_path.is_file():
+  78:             return []
+  79: 
+  80:         values: list[tuple[int, str]] = []
+  81: 
+  82:         try:
+  83:             with source_path.open(
+  84:                 "r",
+  85:                 encoding="utf-8-sig",
+  86:                 newline="",
+  87:             ) as source_file:
+  88:                 reader = csv.DictReader(source_file)
+  89: 
+  90:                 for row in reader:
+  91:                     if row is None:
+  92:                         continue
+  93: 
+  94:                     if (
+  95:                         (row.get("enum_group") or "").strip() != "FACILITY_TIER"
+  96:                         or (row.get("active") or "").strip().upper() != "TRUE"
+  97:                     ):
+  98:                         continue
+  99: 
+ 100:                     value = (row.get("enum_value") or "").strip()
+ 101: 
+ 102:                     if not value:
+ 103:                         continue
+ 104: 
+ 105:                     try:
+ 106:                         order = int((row.get("sort_order") or "999999").strip())
+ 107:                     except ValueError:
+ 108:                         order = 999999
+ 109: 
+ 110:                     values.append((order, value))
+ 111: 
+ 112:         except (OSError, csv.Error):
+ 113:             return []
+ 114: 
+ 115:         return [
+ 116:             value
+ 117:             for _, value in sorted(values, key=lambda item: (item[0], item[1]))
+ 118:         ]
+ 119: 
+ 120:     def build(self) -> None:
+ 121:         for child in self.app.facilities_tab.winfo_children():
+ 122:             child.destroy()
+ 123: 
+ 124:         tab = self.app.facilities_tab
+ 125:         tab.columnconfigure(0, weight=3)
+ 126:         tab.columnconfigure(1, weight=2)
+ 127:         tab.rowconfigure(0, weight=1)
+ 128: 
+ 129:         list_frame = ttk.LabelFrame(tab, text="Facilities", padding=8)
+ 130:         editor_frame = ttk.LabelFrame(tab, text="Facility Editor", padding=10)
+ 131: 
+ 132:         list_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=(0, 6))
+ 133:         editor_frame.grid(row=0, column=1, sticky=tk.NSEW)
+ 134: 
+ 135:         list_frame.columnconfigure(0, weight=1)
+ 136:         list_frame.rowconfigure(0, weight=1)
+ 137:         editor_frame.columnconfigure(1, weight=1)
+ 138: 
+ 139:         self.tree = ttk.Treeview(
+ 140:             list_frame,
+ 141:             columns=("facility", "name", "track", "tier", "active"),
+ 142:             show="headings",
+ 143:             selectmode="browse",
+ 144:         )
+ 145: 
+ 146:         columns = (
+ 147:             ("facility", "Facility ID", 180),
+ 148:             ("name", "Display Name", 220),
+ 149:             ("track", "Track", 180),
+ 150:             ("tier", "Initial Tier", 130),
+ 151:             ("active", "Active", 70),
+ 152:         )
+ 153: 
+ 154:         for key, title, width in columns:
+ 155:             self.tree.heading(key, text=title)
+ 156:             self.tree.column(key, width=width, anchor=tk.W)
+ 157: 
+ 158:         scrollbar = ttk.Scrollbar(
+ 159:             list_frame,
+ 160:             orient=tk.VERTICAL,
+ 161:             command=self.tree.yview,
+ 162:         )
+ 163: 
+ 164:         self.tree.configure(yscrollcommand=scrollbar.set)
+ 165:         self.tree.grid(row=0, column=0, sticky=tk.NSEW)
+ 166:         scrollbar.grid(row=0, column=1, sticky=tk.NS)
+ 167: 
+ 168:         self.tree.bind("<<TreeviewSelect>>", self.on_select)
+ 169: 
+ 170:         def label(text: str, row: int) -> None:
+ 171:             ttk.Label(
+ 172:                 editor_frame,
+ 173:                 text=text,
+ 174:                 style="Section.TLabel",
+ 175:             ).grid(
+ 176:                 row=row,
+ 177:                 column=0,
+ 178:                 sticky=tk.NW,
+ 179:                 padx=(0, 8),
+ 180:                 pady=(0, 8),
+ 181:             )
+ 182: 
+ 183:         label("Facility ID:", 0)
+ 184: 
+ 185:         self.facility_id_entry = ttk.Entry(
+ 186:             editor_frame,
+ 187:             textvariable=self.facility_id,
+ 188:         )
+ 189: 
+ 190:         self.facility_id_entry.grid(
+ 191:             row=0,
+ 192:             column=1,
+ 193:             sticky=tk.EW,
+ 194:             pady=(0, 8),
+ 195:         )
+ 196: 
+ 197:         ttk.Label(
+ 198:             editor_frame,
+ 199:             text="Uppercase ID; immutable after creation.",
+ 200:             foreground="#9da7b3",
+ 201:         ).grid(
+ 202:             row=1,
+ 203:             column=1,
+ 204:             sticky=tk.W,
+ 205:             pady=(0, 10),
+ 206:         )
+ 207: 
+ 208:         label("Display Name:", 2)
+ 209: 
+ 210:         ttk.Entry(
+ 211:             editor_frame,
+ 212:             textvariable=self.display_name,
+ 213:         ).grid(
+ 214:             row=2,
+ 215:             column=1,
+ 216:             sticky=tk.EW,
+ 217:             pady=(0, 8),
+ 218:         )
+ 219: 
+ 220:         label("Department Track:", 3)
+ 221: 
+ 222:         self.track_combo = ttk.Combobox(
+ 223:             editor_frame,
+ 224:             textvariable=self.track_id,
+ 225:             state="readonly",
+ 226:             values=self.track_ids(),
+ 227:         )
+ 228: 
+ 229:         self.track_combo.grid(
+ 230:             row=3,
+ 231:             column=1,
+ 232:             sticky=tk.EW,
+ 233:             pady=(0, 8),
+ 234:         )
+ 235: 
+ 236:         label("HQ Zone ID:", 4)
+ 237: 
+ 238:         ttk.Entry(
+ 239:             editor_frame,
+ 240:             textvariable=self.hq_zone_id,
+ 241:         ).grid(
+ 242:             row=4,
+ 243:             column=1,
+ 244:             sticky=tk.EW,
+ 245:             pady=(0, 8),
+ 246:         )
+ 247: 
+ 248:         label("Description:", 5)
+ 249: 
+ 250:         self.description = tk.Text(
+ 251:             editor_frame,
+ 252:             height=5,
+ 253:             wrap=tk.WORD,
+ 254:             background="#0d1117",
+ 255:             foreground="#e6edf3",
+ 256:             insertbackground="#e6edf3",
+ 257:             highlightbackground="#3b4754",
+ 258:             highlightcolor="#58a6ff",
+ 259:         )
+ 260: 
+ 261:         self.description.grid(
+ 262:             row=5,
+ 263:             column=1,
+ 264:             sticky=tk.EW,
+ 265:             pady=(0, 8),
+ 266:         )
+ 267: 
+ 268:         label("Initial Tier:", 6)
+ 269: 
+ 270:         self.tier_combo = ttk.Combobox(
+ 271:             editor_frame,
+ 272:             textvariable=self.initial_tier_id,
+ 273:             state="readonly",
+ 274:             values=self.facility_tiers(),
+ 275:         )
+ 276: 
+ 277:         self.tier_combo.grid(
+ 278:             row=6,
+ 279:             column=1,
+ 280:             sticky=tk.EW,
+ 281:             pady=(0, 8),
+ 282:         )
+ 283: 
+ 284:         label("Interaction Asset ID:", 7)
+ 285: 
+ 286:         ttk.Entry(
+ 287:             editor_frame,
+ 288:             textvariable=self.interaction_asset_id,
+ 289:         ).grid(
+ 290:             row=7,
+ 291:             column=1,
+ 292:             sticky=tk.EW,
+ 293:             pady=(0, 8),
+ 294:         )
+ 295: 
+ 296:         label("FOIMS Panel ID:", 8)
+ 297: 
+ 298:         ttk.Entry(
+ 299:             editor_frame,
+ 300:             textvariable=self.foims_panel_id,
+ 301:         ).grid(
+ 302:             row=8,
+ 303:             column=1,
+ 304:             sticky=tk.EW,
+ 305:             pady=(0, 8),
+ 306:         )
+ 307: 
+ 308:         label("Active:", 9)
+ 309: 
+ 310:         ttk.Checkbutton(
+ 311:             editor_frame,
+ 312:             text="This facility is active",
+ 313:             variable=self.active,
+ 314:         ).grid(
+ 315:             row=9,
+ 316:             column=1,
+ 317:             sticky=tk.W,
+ 318:             pady=(0, 8),
+ 319:         )
+ 320: 
+ 321:         buttons = ttk.Frame(editor_frame)
+ 322:         buttons.grid(
+ 323:             row=10,
+ 324:             column=0,
+ 325:             columnspan=2,
+ 326:             sticky=tk.EW,
+ 327:             pady=(8, 0),
+ 328:         )
+ 329: 
+ 330:         ttk.Button(
+ 331:             buttons,
+ 332:             text="Add Facility",
+ 333:             command=self.new,
+ 334:         ).pack(side=tk.LEFT)
+ 335: 
+ 336:         ttk.Button(
+ 337:             buttons,
+ 338:             text="Save Facility",
+ 339:             command=self.save,
+ 340:         ).pack(side=tk.LEFT, padx=6)
+ 341: 
+ 342:         ttk.Button(
+ 343:             buttons,
+ 344:             text="Remove Facility",
+ 345:             command=self.remove,
+ 346:         ).pack(side=tk.LEFT, padx=6)
+ 347: 
+ 348:         ttk.Button(
+ 349:             buttons,
+ 350:             text="Revert Form",
+ 351:             command=self.revert,
+ 352:         ).pack(side=tk.LEFT, padx=6)
+ 353: 
+ 354:         ttk.Button(
+ 355:             buttons,
+ 356:             text="Open Backups",
+ 357:             command=self.open_backups,
+ 358:         ).pack(side=tk.RIGHT)
+ 359: 
+ 360:         ttk.Label(
+ 361:             editor_frame,
+ 362:             text=(
+ 363:                 "Save validates the complete candidate project before replacing "
+ 364:                 "facilities.csv. Track and tier choices are controlled."
+ 365:             ),
+ 366:             foreground="#9da7b3",
+ 367:             wraplength=390,
+ 368:         ).grid(
+ 369:             row=11,
+ 370:             column=0,
+ 371:             columnspan=2,
+ 372:             sticky=tk.EW,
+ 373:             pady=(12, 0),
+ 374:         )
+ 375: 
+ 376:         self.new()
+ 377: 
+ 378:     def update(self) -> None:
+ 379:         selected = self.editing_id
+ 380: 
+ 381:         self.track_combo.configure(values=self.track_ids())
+ 382:         self.tier_combo.configure(values=self.facility_tiers())
+ 383: 
+ 384:         for item in self.tree.get_children():
+ 385:             self.tree.delete(item)
+ 386: 
+ 387:         for row in self.rows():
+ 388:             facility_id = row.get("facility_id", "")
+ 389: 
+ 390:             self.tree.insert(
+ 391:                 "",
+ 392:                 tk.END,
+ 393:                 iid=facility_id,
+ 394:                 values=(
+ 395:                     facility_id,
+ 396:                     row.get("display_name", ""),
+ 397:                     row.get("track_id", ""),
+ 398:                     row.get("initial_tier_id", ""),
+ 399:                     row.get("active", ""),
+ 400:                 ),
+ 401:             )
+ 402: 
+ 403:         if selected and self.tree.exists(selected):
+ 404:             self.tree.selection_set(selected)
+ 405:             self.tree.focus(selected)
+ 406: 
+ 407:     def new(self) -> None:
+ 408:         self.editing_id = None
+ 409: 
+ 410:         self.facility_id_entry.configure(state=tk.NORMAL)
+ 411: 
+ 412:         tracks = self.track_ids()
+ 413:         tiers = self.facility_tiers()
+ 414: 
+ 415:         self.facility_id.set("")
+ 416:         self.display_name.set("")
+ 417:         self.track_id.set(tracks[0] if tracks else "")
+ 418:         self.hq_zone_id.set("")
+ 419:         self.initial_tier_id.set(
+ 420:             "UNBUILT" if "UNBUILT" in tiers else (tiers[0] if tiers else "")
+ 421:         )
+ 422:         self.interaction_asset_id.set("")
+ 423:         self.foims_panel_id.set("")
+ 424:         self.active.set(True)
+ 425: 
+ 426:         self.description.delete("1.0", tk.END)
+ 427:         self.facility_id_entry.focus_set()
+ 428: 
+ 429:     def on_select(self, _event: Any = None) -> None:
+ 430:         selection = self.tree.selection()
+ 431: 
+ 432:         if not selection:
+ 433:             return
+ 434: 
+ 435:         row = next(
+ 436:             (
+ 437:                 item
+ 438:                 for item in self.rows()
+ 439:                 if item.get("facility_id") == selection[0]
+ 440:             ),
+ 441:             None,
+ 442:         )
+ 443: 
+ 444:         if row is None:
+ 445:             return
+ 446: 
+ 447:         self.editing_id = row["facility_id"]
+ 448: 
+ 449:         self.facility_id_entry.configure(state=tk.NORMAL)
+ 450:         self.facility_id.set(row.get("facility_id", ""))
+ 451:         self.facility_id_entry.configure(state=tk.DISABLED)
+ 452: 
+ 453:         self.display_name.set(row.get("display_name", ""))
+ 454:         self.track_id.set(row.get("track_id", ""))
+ 455:         self.hq_zone_id.set(row.get("hq_zone_id", ""))
+ 456:         self.initial_tier_id.set(row.get("initial_tier_id", ""))
+ 457:         self.interaction_asset_id.set(row.get("interaction_asset_id", ""))
+ 458:         self.foims_panel_id.set(row.get("foims_panel_id", ""))
+ 459:         self.active.set(row.get("active", "").upper() == "TRUE")
+ 460: 
+ 461:         self.description.delete("1.0", tk.END)
+ 462:         self.description.insert("1.0", row.get("description", ""))
+ 463: 
+ 464:     def revert(self) -> None:
+ 465:         if self.editing_id and self.tree.exists(self.editing_id):
+ 466:             self.tree.selection_set(self.editing_id)
+ 467:             self.on_select()
+ 468:         else:
+ 469:             self.new()
+ 470: 
+ 471:     def record(self) -> dict[str, str] | None:
+ 472:         row = {
+ 473:             "facility_id": self.facility_id.get().strip(),
+ 474:             "display_name": self.display_name.get().strip(),
+ 475:             "track_id": self.track_id.get().strip(),
+ 476:             "hq_zone_id": self.hq_zone_id.get().strip(),
+ 477:             "description": self.description.get("1.0", tk.END).strip(),
+ 478:             "initial_tier_id": self.initial_tier_id.get().strip(),
+ 479:             "interaction_asset_id": self.interaction_asset_id.get().strip(),
+ 480:             "foims_panel_id": self.foims_panel_id.get().strip(),
+ 481:             "active": "TRUE" if self.active.get() else "FALSE",
+ 482:         }
+ 483: 
+ 484:         errors: list[str] = []
+ 485: 
+ 486:         if not ID_PATTERN.fullmatch(row["facility_id"]):
+ 487:             errors.append(
+ 488:                 "Facility ID must begin with an uppercase letter and use only "
+ 489:                 "uppercase letters, digits, or underscores."
+ 490:             )
+ 491: 
+ 492:         if not row["display_name"]:
+ 493:             errors.append("Display Name is required.")
+ 494: 
+ 495:         if row["track_id"] not in self.track_ids():
+ 496:             errors.append("Select a valid Department Track.")
+ 497: 
+ 498:         if not row["hq_zone_id"]:
+ 499:             errors.append("HQ Zone ID is required.")
+ 500: 
+ 501:         if not row["description"]:
+ 502:             errors.append("Description is required.")
+ 503: 
+ 504:         if row["initial_tier_id"] not in self.facility_tiers():
+ 505:             errors.append("Select a valid Initial Tier.")
+ 506: 
+ 507:         if not row["interaction_asset_id"]:
+ 508:             errors.append("Interaction Asset ID is required.")
+ 509: 
+ 510:         if not row["foims_panel_id"]:
+ 511:             errors.append("FOIMS Panel ID is required.")
+ 512: 
+ 513:         if errors:
+ 514:             messagebox.showerror(
+ 515:                 "DoDA Content Workbench",
+ 516:                 "Correct before saving:\n\n- " + "\n- ".join(errors),
+ 517:             )
+ 518: 
+ 519:             return None
+ 520: 
+ 521:         return row
+ 522: 
+ 523:     def write(self, path: Path, rows: list[dict[str, str]]) -> None:
+ 524:         with path.open("w", encoding="utf-8", newline="") as handle:
+ 525:             writer = csv.DictWriter(
+ 526:                 handle,
+ 527:                 fieldnames=FIELDS,
+ 528:                 lineterminator="\n",
+ 529:             )
+ 530: 
+ 531:             writer.writeheader()
+ 532: 
+ 533:             for row in rows:
+ 534:                 writer.writerow(
+ 535:                     {
+ 536:                         field: row.get(field, "")
+ 537:                         for field in FIELDS
+ 538:                     }
+ 539:                 )
+ 540: 
+ 541:     def candidate_valid(self, candidate: Path) -> tuple[bool, str]:
+ 542:         with tempfile.TemporaryDirectory(prefix="doda-facility-") as temporary:
+ 543:             root = Path(temporary)
+ 544:             destination = root / "data_authoring" / "source"
+ 545:             destination.mkdir(parents=True)
+ 546: 
+ 547:             for filename in FILES:
+ 548:                 source = (
+ 549:                     candidate
+ 550:                     if filename == "facilities.csv"
+ 551:                     else self.app.source_directory / filename
+ 552:                 )
+ 553: 
+ 554:                 shutil.copy2(source, destination / filename)
+ 555: 
+ 556:             command = [
+ 557:                 sys.executable,
+ 558:                 str(self.app.validator_path),
+ 559:                 "--root",
+ 560:                 str(root),
+ 561:                 "validate",
+ 562:             ]
+ 563: 
+ 564:             completed = subprocess.run(
+ 565:                 command,
+ 566:                 cwd=root,
+ 567:                 text=True,
+ 568:                 encoding="utf-8",
+ 569:                 errors="replace",
+ 570:                 capture_output=True,
+ 571:             )
+ 572: 
+ 573:             output = (
+ 574:                 completed.stdout
+ 575:                 + ("\n" if completed.stdout and completed.stderr else "")
+ 576:                 + completed.stderr
+ 577:             ).strip()
+ 578: 
+ 579:             return completed.returncode == 0, output
+ 580: 
+ 581:     def post_validate(self) -> tuple[bool, str]:
+ 582:         command = [
+ 583:             sys.executable,
+ 584:             str(self.app.validator_path),
+ 585:             "--root",
+ 586:             str(self.app.project_root),
+ 587:             "validate",
+ 588:         ]
+ 589: 
+ 590:         completed = subprocess.run(
+ 591:             command,
+ 592:             cwd=self.app.project_root,
+ 593:             text=True,
+ 594:             encoding="utf-8",
+ 595:             errors="replace",
+ 596:             capture_output=True,
+ 597:         )
+ 598: 
+ 599:         output = (
+ 600:             completed.stdout
+ 601:             + ("\n" if completed.stdout and completed.stderr else "")
+ 602:             + completed.stderr
+ 603:         ).strip()
+ 604: 
+ 605:         return completed.returncode == 0, output
+ 606: 
+ 607:     def save(self) -> None:
+ 608:         row = self.record()
+ 609: 
+ 610:         if row is None:
+ 611:             return
+ 612: 
+ 613:         rows = self.rows()
+ 614: 
+ 615:         if self.editing_id:
+ 616:             if row["facility_id"] != self.editing_id:
+ 617:                 messagebox.showerror(
+ 618:                     "DoDA Content Workbench",
+ 619:                     "Facility ID cannot change after creation.",
+ 620:                 )
+ 621:                 return
+ 622: 
+ 623:             rows = [
+ 624:                 row if item.get("facility_id") == self.editing_id else item
+ 625:                 for item in rows
+ 626:             ]
+ 627: 
+ 628:             action = "updated"
+ 629: 
+ 630:         else:
+ 631:             if any(
+ 632:                 item.get("facility_id") == row["facility_id"]
+ 633:                 for item in rows
+ 634:             ):
+ 635:                 messagebox.showerror(
+ 636:                     "DoDA Content Workbench",
+ 637:                     "Facility ID already exists.",
+ 638:                 )
+ 639:                 return
+ 640: 
+ 641:             rows.append(row)
+ 642:             action = "added"
+ 643: 
+ 644:         temporary = self.app.source_directory / (
+ 645:             f".facilities-{uuid4().hex}.tmp.csv"
+ 646:         )
+ 647: 
+ 648:         self.app.config(cursor="watch")
+ 649:         self.app.update_idletasks()
+ 650: 
+ 651:         try:
+ 652:             self.write(temporary, rows)
+ 653: 
+ 654:             valid, output = self.candidate_valid(temporary)
+ 655: 
+ 656:             self.app.log("Facility candidate validation output:")
+ 657: 
+ 658:             for line in output.splitlines():
+ 659:                 self.app.log(" " + line)
+ 660: 
+ 661:             if not valid:
+ 662:                 messagebox.showerror(
+ 663:                     "DoDA Content Workbench",
+ 664:                     (
+ 665:                         "Facility candidate validation failed. Source CSV was "
+ 666:                         "unchanged.\n\nReview Activity Log for details."
+ 667:                     ),
+ 668:                 )
+ 669:                 return
+ 670: 
+ 671:             folder = self.backup_directory()
+ 672:             folder.mkdir(parents=True, exist_ok=True)
+ 673: 
+ 674:             backup = folder / (
+ 675:                 "facilities_"
+ 676:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+ 677:                 + ".csv"
+ 678:             )
+ 679: 
+ 680:             shutil.copy2(self.source_path(), backup)
+ 681:             os.replace(temporary, self.source_path())
+ 682: 
+ 683:             self.editing_id = row["facility_id"]
+ 684: 
+ 685:             self.app.log(f"Created facility backup: {backup}")
+ 686:             self.app.log(f"Facility {action}: {row['facility_id']}")
+ 687: 
+ 688:             self.app.refresh_all(False)
+ 689: 
+ 690:             valid, output = self.post_validate()
+ 691: 
+ 692:             for line in output.splitlines():
+ 693:                 self.app.log(" " + line)
+ 694: 
+ 695:             self.app.refresh_all(False)
+ 696: 
+ 697:             if valid:
+ 698:                 messagebox.showinfo(
+ 699:                     "DoDA Content Workbench",
+ 700:                     (
+ 701:                         f"Facility '{row['facility_id']}' {action}.\n\n"
+ 702:                         f"Backup created:\n{backup}\n\n"
+ 703:                         "Project validation passed."
+ 704:                     ),
+ 705:                 )
+ 706:             else:
+ 707:                 messagebox.showwarning(
+ 708:                     "DoDA Content Workbench",
+ 709:                     (
+ 710:                         f"Facility {action}, but post-save validation failed.\n\n"
+ 711:                         f"Backup:\n{backup}"
+ 712:                     ),
+ 713:                 )
+ 714: 
+ 715:         except (OSError, ValueError) as error:
+ 716:             self.app.log(f"FACILITY SAVE ERROR: {error}")
+ 717: 
+ 718:             messagebox.showerror(
+ 719:                 "DoDA Content Workbench",
+ 720:                 f"Unable to save facility.\n\n{error}",
+ 721:             )
+ 722: 
+ 723:         finally:
+ 724:             if temporary.exists():
+ 725:                 temporary.unlink()
+ 726: 
+ 727:             self.app.config(cursor="")
+ 728:             self.app.update_idletasks()
+ 729: 
+ 730:     def remove(self) -> None:
+ 731:         if not self.editing_id:
+ 732:             messagebox.showwarning(
+ 733:                 "DoDA Content Workbench",
+ 734:                 "Select an existing facility before using Remove Facility.",
+ 735:             )
+ 736:             return
+ 737: 
+ 738:         facility_id = self.editing_id
+ 739: 
+ 740:         confirmed = messagebox.askyesno(
+ 741:             "Remove Facility?",
+ 742:             (
+ 743:                 f"ARE YOU SURE you want to remove '{facility_id}'?\n\n"
+ 744:                 "A timestamped backup will be created before removal."
+ 745:             ),
+ 746:             icon="warning",
+ 747:             default=messagebox.NO,
+ 748:         )
+ 749: 
+ 750:         if not confirmed:
+ 751:             self.app.log(f"Remove Facility cancelled for '{facility_id}'.")
+ 752:             return
+ 753: 
+ 754:         rows = [
+ 755:             row
+ 756:             for row in self.rows()
+ 757:             if row.get("facility_id") != facility_id
+ 758:         ]
+ 759: 
+ 760:         temporary = self.app.source_directory / (
+ 761:             f".facilities-remove-{uuid4().hex}.tmp.csv"
+ 762:         )
+ 763: 
+ 764:         self.app.config(cursor="watch")
+ 765:         self.app.update_idletasks()
+ 766: 
+ 767:         try:
+ 768:             self.write(temporary, rows)
+ 769: 
+ 770:             valid, output = self.candidate_valid(temporary)
+ 771: 
+ 772:             self.app.log(
+ 773:                 f"Facility removal candidate validation output for '{facility_id}':"
+ 774:             )
+ 775: 
+ 776:             for line in output.splitlines():
+ 777:                 self.app.log(" " + line)
+ 778: 
+ 779:             if not valid:
+ 780:                 messagebox.showerror(
+ 781:                     "DoDA Content Workbench",
+ 782:                     (
+ 783:                         "Facility removal was blocked by validation.\n\n"
+ 784:                         "Source CSV was unchanged."
+ 785:                     ),
+ 786:                 )
+ 787:                 return
+ 788: 
+ 789:             folder = self.backup_directory()
+ 790:             folder.mkdir(parents=True, exist_ok=True)
+ 791: 
+ 792:             backup = folder / (
+ 793:                 "facilities_before_remove_"
+ 794:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+ 795:                 + ".csv"
+ 796:             )
+ 797: 
+ 798:             shutil.copy2(self.source_path(), backup)
+ 799:             os.replace(temporary, self.source_path())
+ 800: 
+ 801:             self.editing_id = None
+ 802: 
+ 803:             self.app.log(f"Created pre-removal facility backup: {backup}")
+ 804:             self.app.log(f"Removed facility: {facility_id}")
+ 805: 
+ 806:             self.app.refresh_all(False)
+ 807:             self.new()
+ 808: 
+ 809:             valid, output = self.post_validate()
+ 810: 
+ 811:             for line in output.splitlines():
+ 812:                 self.app.log(" " + line)
+ 813: 
+ 814:             self.app.refresh_all(False)
+ 815: 
+ 816:             if valid:
+ 817:                 messagebox.showinfo(
+ 818:                     "DoDA Content Workbench",
+ 819:                     (
+ 820:                         f"Facility '{facility_id}' removed.\n\n"
+ 821:                         f"Backup created:\n{backup}\n\n"
+ 822:                         "Project validation passed."
+ 823:                     ),
+ 824:                 )
+ 825:             else:
+ 826:                 messagebox.showwarning(
+ 827:                     "DoDA Content Workbench",
+ 828:                     (
+ 829:                         f"Facility '{facility_id}' removed, but post-save "
+ 830:                         f"validation failed.\n\nBackup:\n{backup}"
+ 831:                     ),
+ 832:                 )
+ 833: 
+ 834:         except (OSError, ValueError) as error:
+ 835:             self.app.log(f"FACILITY REMOVE ERROR: {error}")
+ 836: 
+ 837:             messagebox.showerror(
+ 838:                 "DoDA Content Workbench",
+ 839:                 f"Unable to remove facility.\n\n{error}",
+ 840:             )
+ 841: 
+ 842:         finally:
+ 843:             if temporary.exists():
+ 844:                 temporary.unlink()
+ 845: 
+ 846:             self.app.config(cursor="")
+ 847:             self.app.update_idletasks()
+ 848: 
+ 849:     def open_backups(self) -> None:
+ 850:         self.backup_directory().mkdir(parents=True, exist_ok=True)
+ 851:         self.app.open_folder(self.backup_directory())
+ 852: 
+ 853: 
+ 854: def install_facilities_editor(app: Any) -> None:
+ 855:     editor = FacilitiesEditor(app)
+ 856: 
+ 857:     app.facilities_editor = editor
+ 858:     app.update_facilities = editor.update
+
+=== GUI Launcher Facilities Integration References ===
+
+LineNumber Line                                                                       
+---------- ----                                                                       
+         9 - Browse tracks, metrics, facilities, and flavor text.                     
+        34 from doda_facilities_editor import install_facilities_editor               
+        48     "facilities": "facilities.csv",                                        
+       217         install_facilities_editor(self)                                    
+       859         self.facilities_tab = ttk.Frame(self.notebook, padding=10)         
+       867         self.notebook.add(self.facilities_tab, text="Facilities — Editor") 
+       874         self._build_facilities_tab()                                       
+       985     def _build_facilities_tab(self) -> None:                               
+       986         self.facilities_tree, self.facilities_detail = self._build_browser(
+       987             parent=self.facilities_tab,                                    
+       988             title="Facilities",                                            
+      1152             if hasattr(self, "facilities_editor"):                         
+      1153                 self.facilities_editor.update()                            
+      1162             self.update_facilities()                                       
+      1327     def update_facilities(self) -> None:                                   
+      1328         for item in self.facilities_tree.get_children():                   
+      1329             self.facilities_tree.delete(item)                              
+      1331         for row in self.tables.get("facilities", []):                      
+      1333             self.facilities_tree.insert(                                   
+      1345         self.clear_detail(self.facilities_detail)                          
+      1434         selection = self.facilities_tree.selection()                       
+      1440             "facilities",                                                  
+      1446             self.set_detail(self.facilities_detail, row)

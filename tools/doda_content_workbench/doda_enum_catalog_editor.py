@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import csv
 import os
@@ -30,6 +30,12 @@ FILES = (
     "metric_tiers.csv",
     "facilities.csv",
     "flavor_text.csv",
+    "qualification_catalog.csv",
+    "capabilities.csv",
+    "facility_capabilities.csv",
+    "capability_staffing_rules.csv",
+    "facility_capability_staffing_overrides.csv",
+    "task_templates.csv",
 )
 
 ID_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
@@ -145,19 +151,6 @@ class EnumCatalogEditor:
 
         if current_value:
             self.enum_value.set(current_value)
-    def refresh_dependents_after_catalog_save(self) -> None:
-        try:
-            self.refresh_dependents_after_catalog_save()
-        except Exception as error:
-            self.app.log(
-                "Enum Catalog saved, but dependent editor refresh failed: "
-                + str(error)
-            )
-            return
-
-        self.app.log(
-            "Enum Catalog saved; refreshed dependent editor choices."
-        )
     def catalog_groups(self) -> list[str]:
         groups = sorted(
             {

@@ -1,0 +1,1070 @@
+﻿========================================================================================
+FILE: doda_content_workbench.py
+========================================================================================
+   1: #!/usr/bin/env python3
+   2: r"""
+   3: DoDA Content Workbench - CLI validator.
+   4: 
+   5: Validates authored CSV source data before any content export, PK3 packaging,
+   6: or game integration occurs.
+   7: 
+   8: Usage:
+   9:     python .\tools\doda_content_workbench\doda_content_workbench.py validate
+  10: 
+  11: Optional:
+  12:     python .\tools\doda_content_workbench\doda_content_workbench.py validate --root C:/Dev/uzdoom_src/doda-core
+  13: """
+  14: 
+  15: from __future__ import annotations
+  16: 
+  17: import argparse
+  18: import csv
+  19: import json
+  20: import sys
+  21: from collections import defaultdict
+  22: from dataclasses import dataclass, field
+  23: from datetime import datetime, timezone
+  24: from pathlib import Path
+  25: from typing import Any
+  26: 
+  27: 
+  28: TOOL_VERSION = "0.1.0"
+  29: 
+  30: 
+  31: @dataclass
+  32: class ValidationResult:
+  33:     errors: list[str] = field(default_factory=list)
+  34:     warnings: list[str] = field(default_factory=list)
+  35:     stats: dict[str, int] = field(default_factory=dict)
+  36: 
+  37:     @property
+  38:     def valid(self) -> bool:
+  39:         return not self.errors
+  40: 
+  41:     def error(self, message: str) -> None:
+  42:         self.errors.append(message)
+  43: 
+  44:     def warning(self, message: str) -> None:
+  45:         self.warnings.append(message)
+  46: 
+  47: 
+  48: TABLE_SPECS: dict[str, dict[str, Any]] = {
+  49:     "enum_catalog": {
+  50:         "filename": "enum_catalog.csv",
+  51:         "required_columns": [
+  52:             "enum_group",
+  53:             "enum_value",
+  54:             "display_label",
+  55:             "description",
+  56:             "sort_order",
+  57:             "active",
+  58:         ],
+  59:         "key_columns": ["enum_group", "enum_value"],
+  60:     },
+  61:     "department_tracks": {
+  62:         "filename": "department_tracks.csv",
+  63:         "required_columns": [
+  64:             "track_id",
+  65:             "display_name",
+  66:             "description",
+  67:             "sort_order",
+  68:             "active",
+  69:         ],
+  70:         "key_columns": ["track_id"],
+  71:     },
+  72:     "metrics": {
+  73:         "filename": "metrics.csv",
+  74:         "required_columns": [
+  75:             "metric_id",
+  76:             "display_name",
+  77:             "description",
+  78:             "owner_system",
+  79:             "internal_min",
+  80:             "internal_max",
+  81:             "default_value",
+  82:             "polarity",
+  83:             "ui_display_mode",
+  84:             "update_notes",
+  85:             "active",
+  86:         ],
+  87:         "key_columns": ["metric_id"],
+  88:     },
+  89:     "metric_tiers": {
+  90:         "filename": "metric_tiers.csv",
+  91:         "required_columns": [
+  92:             "metric_id",
+  93:             "tier_id",
+  94:             "min_inclusive",
+  95:             "max_inclusive",
+  96:             "display_label",
+  97:             "short_status",
+  98:             "ui_color",
+  99:             "flavor_text_id",
+ 100:             "sort_order",
+ 101:         ],
+ 102:         "key_columns": ["metric_id", "tier_id"],
+ 103:     },
+ 104:     "facilities": {
+ 105:         "filename": "facilities.csv",
+ 106:         "required_columns": [
+ 107:             "facility_id",
+ 108:             "display_name",
+ 109:             "track_id",
+ 110:             "hq_zone_id",
+ 111:             "description",
+ 112:             "initial_tier_id",
+ 113:             "interaction_asset_id",
+ 114:             "foims_panel_id",
+ 115:             "active",
+ 116:         ],
+ 117:         "key_columns": ["facility_id"],
+ 118:     },
+ 119:     "flavor_text": {
+ 120:         "filename": "flavor_text.csv",
+ 121:         "required_columns": [
+ 122:             "flavor_text_id",
+ 123:             "category",
+ 124:             "title",
+ 125:             "body",
+ 126:             "active",
+ 127:         ],
+ 128:         "key_columns": ["flavor_text_id"],
+ 129:     },
+ 130: }
+ 131: 
+ 132: 
+ 133: def find_project_root(start: Path) -> Path:
+ 134:     current = start.resolve()
+ 135: 
+ 136:     for candidate in (current, *current.parents):
+ 137:         if (
+ 138:             (candidate / "data_authoring").is_dir()
+ 139:             and (candidate / "tools").is_dir()
+ 140:             and (candidate / "DoDA").is_dir()
+ 141:         ):
+ 142:             return candidate
+ 143: 
+ 144:     raise FileNotFoundError(
+ 145:         "Unable to locate DoDA project root. Expected a folder containing "
+ 146:         "'data_authoring', 'tools', and 'DoDA'. Use --root to provide it explicitly."
+ 147:     )
+ 148: 
+ 149: 
+ 150: def load_csv(
+ 151:     path: Path,
+ 152:     required_columns: list[str],
+ 153:     table_name: str,
+ 154:     result: ValidationResult,
+ 155: ) -> list[dict[str, str]]:
+ 156:     if not path.is_file():
+ 157:         result.error(f"[{table_name}] Missing required source file: {path}")
+ 158:         return []
+ 159: 
+ 160:     try:
+ 161:         with path.open("r", encoding="utf-8-sig", newline="") as source_file:
+ 162:             reader = csv.DictReader(source_file)
+ 163: 
+ 164:             if reader.fieldnames is None:
+ 165:                 result.error(f"[{table_name}] File has no CSV header row: {path.name}")
+ 166:                 return []
+ 167: 
+ 168:             actual_columns = [column.strip() for column in reader.fieldnames]
+ 169:             missing_columns = [
+ 170:                 column for column in required_columns if column not in actual_columns
+ 171:             ]
+ 172: 
+ 173:             if missing_columns:
+ 174:                 result.error(
+ 175:                     f"[{table_name}] Missing required columns in {path.name}: "
+ 176:                     + ", ".join(missing_columns)
+ 177:                 )
+ 178:                 return []
+ 179: 
+ 180:             rows: list[dict[str, str]] = []
+ 181: 
+ 182:             for line_number, raw_row in enumerate(reader, start=2):
+ 183:                 row = {
+ 184:                     key.strip(): (value or "").strip()
+ 185:                     for key, value in raw_row.items()
+ 186:                     if key is not None
+ 187:                 }
+ 188: 
+ 189:                 if not any(row.values()):
+ 190:                     continue
+ 191: 
+ 192:                 row["_line_number"] = str(line_number)
+ 193:                 rows.append(row)
+ 194: 
+ 195:             result.stats[table_name] = len(rows)
+ 196: 
+ 197:             if not rows:
+ 198:                 result.warning(f"[{table_name}] Source file contains no data rows: {path.name}")
+ 199: 
+ 200:             return rows
+ 201: 
+ 202:     except UnicodeDecodeError as error:
+ 203:         result.error(f"[{table_name}] Could not read UTF-8 CSV {path.name}: {error}")
+ 204:         return []
+ 205:     except csv.Error as error:
+ 206:         result.error(f"[{table_name}] CSV parsing error in {path.name}: {error}")
+ 207:         return []
+ 208: 
+ 209: 
+ 210: def validate_keys(
+ 211:     table_name: str,
+ 212:     rows: list[dict[str, str]],
+ 213:     key_columns: list[str],
+ 214:     result: ValidationResult,
+ 215: ) -> None:
+ 216:     seen_keys: dict[tuple[str, ...], int] = {}
+ 217: 
+ 218:     for row in rows:
+ 219:         line_number = row["_line_number"]
+ 220:         key = tuple(row.get(column, "").strip() for column in key_columns)
+ 221: 
+ 222:         if any(not value for value in key):
+ 223:             result.error(
+ 224:                 f"[{table_name}] Line {line_number}: blank key value in "
+ 225:                 + ", ".join(key_columns)
+ 226:             )
+ 227:             continue
+ 228: 
+ 229:         if key in seen_keys:
+ 230:             original_line = seen_keys[key]
+ 231:             result.error(
+ 232:                 f"[{table_name}] Line {line_number}: duplicate key "
+ 233:                 f"{' / '.join(key)}; first defined on line {original_line}"
+ 234:             )
+ 235:         else:
+ 236:             seen_keys[key] = int(line_number)
+ 237: 
+ 238: 
+ 239: def validate_active_values(
+ 240:     table_name: str,
+ 241:     rows: list[dict[str, str]],
+ 242:     result: ValidationResult,
+ 243: ) -> None:
+ 244:     if not rows or "active" not in rows[0]:
+ 245:         return
+ 246: 
+ 247:     for row in rows:
+ 248:         value = row.get("active", "").upper()
+ 249: 
+ 250:         if value not in {"TRUE", "FALSE"}:
+ 251:             result.error(
+ 252:                 f"[{table_name}] Line {row['_line_number']}: active must be TRUE "
+ 253:                 f"or FALSE, found '{row.get('active', '')}'"
+ 254:             )
+ 255: 
+ 256: 
+ 257: def parse_int(
+ 258:     table_name: str,
+ 259:     row: dict[str, str],
+ 260:     column: str,
+ 261:     result: ValidationResult,
+ 262: ) -> int | None:
+ 263:     value = row.get(column, "")
+ 264: 
+ 265:     try:
+ 266:         return int(value)
+ 267:     except ValueError:
+ 268:         result.error(
+ 269:             f"[{table_name}] Line {row['_line_number']}: {column} must be an "
+ 270:             f"integer, found '{value}'"
+ 271:         )
+ 272:         return None
+ 273: 
+ 274: 
+ 275: def build_id_set(rows: list[dict[str, str]], column: str) -> set[str]:
+ 276:     return {
+ 277:         row[column]
+ 278:         for row in rows
+ 279:         if row.get(column, "").strip()
+ 280:     }
+ 281: 
+ 282: 
+ 283: def validate_metrics(
+ 284:     metrics: list[dict[str, str]],
+ 285:     enum_values: dict[str, set[str]],
+ 286:     result: ValidationResult,
+ 287: ) -> dict[str, dict[str, str]]:
+ 288:     metric_by_id: dict[str, dict[str, str]] = {}
+ 289: 
+ 290:     allowed_polarity = enum_values.get("METRIC_POLARITY", set())
+ 291:     allowed_display_modes = enum_values.get("METRIC_DISPLAY_MODE", set())
+ 292: 
+ 293:     for row in metrics:
+ 294:         metric_id = row["metric_id"]
+ 295:         metric_by_id[metric_id] = row
+ 296: 
+ 297:         minimum = parse_int("metrics", row, "internal_min", result)
+ 298:         maximum = parse_int("metrics", row, "internal_max", result)
+ 299:         default_value = parse_int("metrics", row, "default_value", result)
+ 300: 
+ 301:         if minimum is not None and maximum is not None and minimum > maximum:
+ 302:             result.error(
+ 303:                 f"[metrics] Line {row['_line_number']}: internal_min ({minimum}) "
+ 304:                 f"cannot exceed internal_max ({maximum}) for {metric_id}"
+ 305:             )
+ 306: 
+ 307:         if (
+ 308:             minimum is not None
+ 309:             and maximum is not None
+ 310:             and default_value is not None
+ 311:             and not minimum <= default_value <= maximum
+ 312:         ):
+ 313:             result.error(
+ 314:                 f"[metrics] Line {row['_line_number']}: default_value "
+ 315:                 f"({default_value}) is outside [{minimum}, {maximum}] for {metric_id}"
+ 316:             )
+ 317: 
+ 318:         polarity = row["polarity"]
+ 319:         if polarity not in allowed_polarity:
+ 320:             result.error(
+ 321:                 f"[metrics] Line {row['_line_number']}: polarity '{polarity}' "
+ 322:                 "does not exist in enum_catalog METRIC_POLARITY"
+ 323:             )
+ 324: 
+ 325:         display_mode = row["ui_display_mode"]
+ 326:         if display_mode not in allowed_display_modes:
+ 327:             result.error(
+ 328:                 f"[metrics] Line {row['_line_number']}: ui_display_mode "
+ 329:                 f"'{display_mode}' does not exist in enum_catalog METRIC_DISPLAY_MODE"
+ 330:             )
+ 331: 
+ 332:     return metric_by_id
+ 333: 
+ 334: 
+ 335: def validate_metric_tiers(
+ 336:     tiers: list[dict[str, str]],
+ 337:     metrics_by_id: dict[str, dict[str, str]],
+ 338:     flavor_text_ids: set[str],
+ 339:     result: ValidationResult,
+ 340: ) -> None:
+ 341:     tiers_by_metric: dict[str, list[dict[str, str]]] = defaultdict(list)
+ 342: 
+ 343:     for row in tiers:
+ 344:         metric_id = row["metric_id"]
+ 345: 
+ 346:         if metric_id not in metrics_by_id:
+ 347:             result.error(
+ 348:                 f"[metric_tiers] Line {row['_line_number']}: metric_id '{metric_id}' "
+ 349:                 "does not exist in metrics.csv"
+ 350:             )
+ 351: 
+ 352:         flavor_text_id = row["flavor_text_id"]
+ 353:         if flavor_text_id not in flavor_text_ids:
+ 354:             result.error(
+ 355:                 f"[metric_tiers] Line {row['_line_number']}: flavor_text_id "
+ 356:                 f"'{flavor_text_id}' does not exist in flavor_text.csv"
+ 357:             )
+ 358: 
+ 359:         minimum = parse_int("metric_tiers", row, "min_inclusive", result)
+ 360:         maximum = parse_int("metric_tiers", row, "max_inclusive", result)
+ 361:         sort_order = parse_int("metric_tiers", row, "sort_order", result)
+ 362: 
+ 363:         if minimum is not None and maximum is not None and minimum > maximum:
+ 364:             result.error(
+ 365:                 f"[metric_tiers] Line {row['_line_number']}: min_inclusive "
+ 366:                 f"({minimum}) cannot exceed max_inclusive ({maximum})"
+ 367:             )
+ 368: 
+ 369:         if sort_order is not None and sort_order < 1:
+ 370:             result.error(
+ 371:                 f"[metric_tiers] Line {row['_line_number']}: sort_order must be "
+ 372:                 "at least 1"
+ 373:             )
+ 374: 
+ 375:         tiers_by_metric[metric_id].append(row)
+ 376: 
+ 377:     for metric_id, metric_row in metrics_by_id.items():
+ 378:         metric_tiers = tiers_by_metric.get(metric_id, [])
+ 379: 
+ 380:         if not metric_tiers:
+ 381:             result.error(
+ 382:                 f"[metric_tiers] No tiers exist for metric '{metric_id}'"
+ 383:             )
+ 384:             continue
+ 385: 
+ 386:         parsed_tiers: list[tuple[int, int, int, dict[str, str]]] = []
+ 387: 
+ 388:         for row in metric_tiers:
+ 389:             minimum = parse_int("metric_tiers", row, "min_inclusive", result)
+ 390:             maximum = parse_int("metric_tiers", row, "max_inclusive", result)
+ 391:             sort_order = parse_int("metric_tiers", row, "sort_order", result)
+ 392: 
+ 393:             if minimum is None or maximum is None or sort_order is None:
+ 394:                 continue
+ 395: 
+ 396:             parsed_tiers.append((minimum, maximum, sort_order, row))
+ 397: 
+ 398:         parsed_tiers.sort(key=lambda item: (item[0], item[1], item[2]))
+ 399: 
+ 400:         metric_minimum = parse_int("metrics", metric_row, "internal_min", result)
+ 401:         metric_maximum = parse_int("metrics", metric_row, "internal_max", result)
+ 402: 
+ 403:         if metric_minimum is None or metric_maximum is None or not parsed_tiers:
+ 404:             continue
+ 405: 
+ 406:         first_minimum = parsed_tiers[0][0]
+ 407:         if first_minimum != metric_minimum:
+ 408:             result.error(
+ 409:                 f"[metric_tiers] Metric '{metric_id}' begins at {first_minimum}, "
+ 410:                 f"but metrics.csv defines internal_min {metric_minimum}"
+ 411:             )
+ 412: 
+ 413:         expected_next_minimum = metric_minimum
+ 414: 
+ 415:         for minimum, maximum, _, row in parsed_tiers:
+ 416:             if minimum < expected_next_minimum:
+ 417:                 result.error(
+ 418:                     f"[metric_tiers] Line {row['_line_number']}: tier range "
+ 419:                     f"[{minimum}, {maximum}] overlaps or starts before the "
+ 420:                     f"expected next value {expected_next_minimum} for {metric_id}"
+ 421:                 )
+ 422:             elif minimum > expected_next_minimum:
+ 423:                 result.error(
+ 424:                     f"[metric_tiers] Line {row['_line_number']}: tier range "
+ 425:                     f"[{minimum}, {maximum}] leaves a gap after "
+ 426:                     f"{expected_next_minimum - 1} for {metric_id}"
+ 427:                 )
+ 428: 
+ 429:             expected_next_minimum = max(expected_next_minimum, maximum + 1)
+ 430: 
+ 431:         final_maximum = parsed_tiers[-1][1]
+ 432:         if final_maximum != metric_maximum:
+ 433:             result.error(
+ 434:                 f"[metric_tiers] Metric '{metric_id}' ends at {final_maximum}, "
+ 435:                 f"but metrics.csv defines internal_max {metric_maximum}"
+ 436:             )
+ 437: 
+ 438: 
+ 439: def validate_facilities(
+ 440:     facilities: list[dict[str, str]],
+ 441:     track_ids: set[str],
+ 442:     enum_values: dict[str, set[str]],
+ 443:     result: ValidationResult,
+ 444: ) -> None:
+ 445:     allowed_tiers = enum_values.get("FACILITY_TIER", set())
+ 446: 
+ 447:     for row in facilities:
+ 448:         track_id = row["track_id"]
+ 449:         tier_id = row["initial_tier_id"]
+ 450: 
+ 451:         if track_id not in track_ids:
+ 452:             result.error(
+ 453:                 f"[facilities] Line {row['_line_number']}: track_id '{track_id}' "
+ 454:                 "does not exist in department_tracks.csv"
+ 455:             )
+ 456: 
+ 457:         if tier_id not in allowed_tiers:
+ 458:             result.error(
+ 459:                 f"[facilities] Line {row['_line_number']}: initial_tier_id "
+ 460:                 f"'{tier_id}' does not exist in enum_catalog FACILITY_TIER"
+ 461:             )
+ 462: 
+ 463: 
+ 464: def build_enum_index(rows: list[dict[str, str]]) -> dict[str, set[str]]:
+ 465:     enum_values: dict[str, set[str]] = defaultdict(set)
+ 466: 
+ 467:     for row in rows:
+ 468:         enum_values[row["enum_group"]].add(row["enum_value"])
+ 469: 
+ 470:     return dict(enum_values)
+ 471: 
+ 472: 
+ 473: def validate_project(project_root: Path) -> ValidationResult:
+ 474:     result = ValidationResult()
+ 475:     source_directory = project_root / "data_authoring" / "source"
+ 476: 
+ 477:     loaded_tables: dict[str, list[dict[str, str]]] = {}
+ 478: 
+ 479:     for table_name, specification in TABLE_SPECS.items():
+ 480:         path = source_directory / specification["filename"]
+ 481:         rows = load_csv(
+ 482:             path,
+ 483:             specification["required_columns"],
+ 484:             table_name,
+ 485:             result,
+ 486:         )
+ 487: 
+ 488:         loaded_tables[table_name] = rows
+ 489:         validate_keys(table_name, rows, specification["key_columns"], result)
+ 490:         validate_active_values(table_name, rows, result)
+ 491: 
+ 492:     enum_values = build_enum_index(loaded_tables["enum_catalog"])
+ 493:     track_ids = build_id_set(loaded_tables["department_tracks"], "track_id")
+ 494:     flavor_text_ids = build_id_set(loaded_tables["flavor_text"], "flavor_text_id")
+ 495: 
+ 496:     metrics_by_id = validate_metrics(
+ 497:         loaded_tables["metrics"],
+ 498:         enum_values,
+ 499:         result,
+ 500:     )
+ 501: 
+ 502:     validate_metric_tiers(
+ 503:         loaded_tables["metric_tiers"],
+ 504:         metrics_by_id,
+ 505:         flavor_text_ids,
+ 506:         result,
+ 507:     )
+ 508: 
+ 509:     validate_facilities(
+ 510:         loaded_tables["facilities"],
+ 511:         track_ids,
+ 512:         enum_values,
+ 513:         result,
+ 514:     )
+ 515: 
+ 516:     return result
+ 517: 
+ 518: 
+ 519: def write_report(project_root: Path, result: ValidationResult) -> Path:
+ 520:     report_directory = project_root / "generated" / "reports"
+ 521:     report_directory.mkdir(parents=True, exist_ok=True)
+ 522: 
+ 523:     report_path = report_directory / "content_validation_report.json"
+ 524: 
+ 525:     report = {
+ 526:         "toolVersion": TOOL_VERSION,
+ 527:         "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
+ 528:         "projectRoot": str(project_root),
+ 529:         "valid": result.valid,
+ 530:         "errorCount": len(result.errors),
+ 531:         "warningCount": len(result.warnings),
+ 532:         "stats": result.stats,
+ 533:         "errors": result.errors,
+ 534:         "warnings": result.warnings,
+ 535:     }
+ 536: 
+ 537:     report_path.write_text(
+ 538:         json.dumps(report, indent=2) + "\n",
+ 539:         encoding="utf-8",
+ 540:     )
+ 541: 
+ 542:     return report_path
+ 543: 
+ 544: 
+ 545: def print_result(project_root: Path, result: ValidationResult, report_path: Path) -> None:
+ 546:     print()
+ 547:     print("=" * 72)
+ 548:     print("DoDA Content Workbench Validation")
+ 549:     print("=" * 72)
+ 550:     print(f"Project root: {project_root}")
+ 551:     print()
+ 552: 
+ 553:     print("Loaded rows:")
+ 554:     for table_name in sorted(result.stats):
+ 555:         print(f"  {table_name}: {result.stats[table_name]}")
+ 556: 
+ 557:     print()
+ 558: 
+ 559:     if result.warnings:
+ 560:         print(f"Warnings ({len(result.warnings)}):")
+ 561:         for warning in result.warnings:
+ 562:             print(f"  WARNING: {warning}")
+ 563:         print()
+ 564: 
+ 565:     if result.errors:
+ 566:         print(f"Validation failed with {len(result.errors)} error(s):")
+ 567:         for error in result.errors:
+ 568:             print(f"  ERROR: {error}")
+ 569:     else:
+ 570:         print("Validation passed with zero errors.")
+ 571: 
+ 572:     print()
+ 573:     print(f"Report written to: {report_path}")
+ 574:     print("=" * 72)
+ 575: 
+ 576: 
+ 577: def build_parser() -> argparse.ArgumentParser:
+ 578:     parser = argparse.ArgumentParser(
+ 579:         prog="doda_content_workbench",
+ 580:         description="Validate and later export DoDA authored content.",
+ 581:     )
+ 582: 
+ 583:     parser.add_argument(
+ 584:         "--root",
+ 585:         type=Path,
+ 586:         default=None,
+ 587:         help="Path to the doda-core project root. Defaults to auto-detection.",
+ 588:     )
+ 589: 
+ 590:     subparsers = parser.add_subparsers(dest="command", required=True)
+ 591: 
+ 592:     subparsers.add_parser(
+ 593:         "validate",
+ 594:         help="Validate authored CSV source data and write a JSON report.",
+ 595:     )
+ 596: 
+ 597:     return parser
+ 598: 
+ 599: 
+ 600: def main() -> int:
+ 601:     parser = build_parser()
+ 602:     arguments = parser.parse_args()
+ 603: 
+ 604:     try:
+ 605:         project_root = (
+ 606:             arguments.root.resolve()
+ 607:             if arguments.root is not None
+ 608:             else find_project_root(Path.cwd())
+ 609:         )
+ 610:     except FileNotFoundError as error:
+ 611:         parser.error(str(error))
+ 612:         return 2
+ 613: 
+ 614:     if arguments.command == "validate":
+ 615:         result = validate_project(project_root)
+ 616:         report_path = write_report(project_root, result)
+ 617:         print_result(project_root, result, report_path)
+ 618:         return 0 if result.valid else 1
+ 619: 
+ 620:     parser.error(f"Unsupported command: {arguments.command}")
+ 621:     return 2
+ 622: 
+ 623: 
+ 624: if __name__ == "__main__":
+ 625:     sys.exit(main())
+ 626: 
+ 627: 
+ 628: 
+
+========================================================================================
+FILE: doda_content_export.py
+========================================================================================
+   1: #!/usr/bin/env python3
+   2: r"""
+   3: DoDA Content Workbench - content exporter and PK3 builder.
+   4: 
+   5: This script performs a safe, data-only export pipeline:
+   6: 
+   7: 1. Runs the CSV validator.
+   8: 2. Loads validated authoring CSV files.
+   9: 3. Creates normalized JSON content data.
+  10: 4. Creates a future UZDoom LANGUAGE fragment.
+  11: 5. Creates a source/output hash manifest.
+  12: 6. Builds a standalone PK3 overlay archive.
+  13: 
+  14: This version deliberately does not edit MAPINFO, GAMEINFO, LANGUAGE, zscript.txt,
+  15: maps, native C++, ZScript, or the doda-core package.
+  16: 
+  17: Usage:
+  18:     python tools/doda_content_workbench/doda_content_export.py
+  19:     python tools/doda_content_workbench/doda_content_export.py --root C:/Dev/uzdoom_src/doda-core
+  20: """
+  21: 
+  22: from __future__ import annotations
+  23: 
+  24: import argparse
+  25: import csv
+  26: import hashlib
+  27: import json
+  28: import re
+  29: import subprocess
+  30: import sys
+  31: import zipfile
+  32: from datetime import datetime, timezone
+  33: from pathlib import Path
+  34: from typing import Any
+  35: 
+  36: 
+  37: TOOL_VERSION = "0.1.0"
+  38: SCHEMA_VERSION = 1
+  39: 
+  40: TABLE_FILES = {
+  41:     "enum_catalog": "enum_catalog.csv",
+  42:     "department_tracks": "department_tracks.csv",
+  43:     "metrics": "metrics.csv",
+  44:     "metric_tiers": "metric_tiers.csv",
+  45:     "facilities": "facilities.csv",
+  46:     "flavor_text": "flavor_text.csv",
+  47: }
+  48: 
+  49: INTEGER_COLUMNS = {
+  50:     "enum_catalog": {"sort_order"},
+  51:     "department_tracks": {"sort_order"},
+  52:     "metrics": {"internal_min", "internal_max", "default_value"},
+  53:     "metric_tiers": {"min_inclusive", "max_inclusive", "sort_order"},
+  54: }
+  55: 
+  56: BOOLEAN_COLUMNS = {
+  57:     "enum_catalog": {"active"},
+  58:     "department_tracks": {"active"},
+  59:     "metrics": {"active"},
+  60:     "facilities": {"active"},
+  61:     "flavor_text": {"active"},
+  62: }
+  63: 
+  64: 
+  65: def find_project_root(start: Path) -> Path:
+  66:     current = start.resolve()
+  67: 
+  68:     for candidate in (current, *current.parents):
+  69:         if (
+  70:             (candidate / "data_authoring").is_dir()
+  71:             and (candidate / "tools").is_dir()
+  72:             and (candidate / "DoDA").is_dir()
+  73:         ):
+  74:             return candidate
+  75: 
+  76:     raise FileNotFoundError(
+  77:         "Unable to locate the DoDA project root. Use --root to provide it explicitly."
+  78:     )
+  79: 
+  80: 
+  81: def sha256_file(path: Path) -> str:
+  82:     digest = hashlib.sha256()
+  83: 
+  84:     with path.open("rb") as source_file:
+  85:         for chunk in iter(lambda: source_file.read(65536), b""):
+  86:             digest.update(chunk)
+  87: 
+  88:     return digest.hexdigest()
+  89: 
+  90: 
+  91: def run_validator(project_root: Path) -> None:
+  92:     validator_path = (
+  93:         project_root
+  94:         / "tools"
+  95:         / "doda_content_workbench"
+  96:         / "doda_content_workbench.py"
+  97:     )
+  98: 
+  99:     if not validator_path.is_file():
+ 100:         raise FileNotFoundError(
+ 101:             f"Validator script was not found: {validator_path}"
+ 102:         )
+ 103: 
+ 104:     command = [
+ 105:         sys.executable,
+ 106:         str(validator_path),
+ 107:         "--root",
+ 108:         str(project_root),
+ 109:         "validate",
+ 110:     ]
+ 111: 
+ 112:     print("Running source-data validation...")
+ 113:     completed = subprocess.run(command, cwd=project_root)
+ 114: 
+ 115:     if completed.returncode != 0:
+ 116:         raise RuntimeError(
+ 117:             "Source-data validation failed. Export was not attempted. "
+ 118:             "Correct CSV source data first, then run export again."
+ 119:         )
+ 120: 
+ 121: 
+ 122: def normalize_value(table_name: str, column_name: str, value: str) -> Any:
+ 123:     normalized = value.strip()
+ 124: 
+ 125:     if column_name in INTEGER_COLUMNS.get(table_name, set()):
+ 126:         return int(normalized)
+ 127: 
+ 128:     if column_name in BOOLEAN_COLUMNS.get(table_name, set()):
+ 129:         return normalized.upper() == "TRUE"
+ 130: 
+ 131:     return normalized
+ 132: 
+ 133: 
+ 134: def load_table(
+ 135:     project_root: Path,
+ 136:     table_name: str,
+ 137:     filename: str,
+ 138: ) -> list[dict[str, Any]]:
+ 139:     path = project_root / "data_authoring" / "source" / filename
+ 140: 
+ 141:     with path.open("r", encoding="utf-8-sig", newline="") as source_file:
+ 142:         reader = csv.DictReader(source_file)
+ 143:         rows: list[dict[str, Any]] = []
+ 144: 
+ 145:         for raw_row in reader:
+ 146:             if raw_row is None:
+ 147:                 continue
+ 148: 
+ 149:             if not any((value or "").strip() for value in raw_row.values()):
+ 150:                 continue
+ 151: 
+ 152:             row: dict[str, Any] = {}
+ 153: 
+ 154:             for column_name, raw_value in raw_row.items():
+ 155:                 if column_name is None:
+ 156:                     continue
+ 157: 
+ 158:                 row[column_name.strip()] = normalize_value(
+ 159:                     table_name,
+ 160:                     column_name.strip(),
+ 161:                     raw_value or "",
+ 162:                 )
+ 163: 
+ 164:             rows.append(row)
+ 165: 
+ 166:         return rows
+ 167: 
+ 168: 
+ 169: def escape_language_text(value: str) -> str:
+ 170:     return (
+ 171:         value.replace("\\", "\\\\")
+ 172:         .replace('"', '\\"')
+ 173:         .replace("\r\n", "\\n")
+ 174:         .replace("\n", "\\n")
+ 175:         .replace("\r", "\\n")
+ 176:     )
+ 177: 
+ 178: 
+ 179: def language_key_from_flavor_id(flavor_text_id: str) -> str:
+ 180:     safe_key = re.sub(r"[^A-Za-z0-9_]", "_", flavor_text_id.upper())
+ 181:     return f"DODA_{safe_key}"
+ 182: 
+ 183: 
+ 184: def build_language_fragment(flavor_rows: list[dict[str, Any]]) -> str:
+ 185:     lines = [
+ 186:         "// GENERATED FILE - DO NOT EDIT BY HAND",
+ 187:         "// Source: data_authoring/source/flavor_text.csv",
+ 188:         "// Generated by DoDA Content Workbench.",
+ 189:         "",
+ 190:         "[default]",
+ 191:         "",
+ 192:     ]
+ 193: 
+ 194:     for row in sorted(flavor_rows, key=lambda item: item["flavor_text_id"]):
+ 195:         base_key = language_key_from_flavor_id(str(row["flavor_text_id"]))
+ 196:         title = escape_language_text(str(row["title"]))
+ 197:         body = escape_language_text(str(row["body"]))
+ 198: 
+ 199:         lines.append(f'{base_key}_TITLE = "{title}";')
+ 200:         lines.append(f'{base_key}_BODY = "{body}";')
+ 201:         lines.append("")
+ 202: 
+ 203:     return "\n".join(lines).rstrip() + "\n"
+ 204: 
+ 205: 
+ 206: def write_json(path: Path, payload: dict[str, Any]) -> None:
+ 207:     path.parent.mkdir(parents=True, exist_ok=True)
+ 208:     path.write_text(
+ 209:         json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+ 210:         encoding="utf-8",
+ 211:     )
+ 212: 
+ 213: 
+ 214: def write_text(path: Path, content: str) -> None:
+ 215:     path.parent.mkdir(parents=True, exist_ok=True)
+ 216:     path.write_text(content, encoding="utf-8")
+ 217: 
+ 218: 
+ 219: def build_pk3(
+ 220:     pk3_path: Path,
+ 221:     department_json_path: Path,
+ 222:     language_path: Path,
+ 223:     manifest_path: Path,
+ 224: ) -> list[str]:
+ 225:     pk3_path.parent.mkdir(parents=True, exist_ok=True)
+ 226: 
+ 227:     archive_entries = {
+ 228:         "data/department_content.json": department_json_path,
+ 229:         "language/DODA_GENERATED_LANGUAGE.txt": language_path,
+ 230:         "manifest/content_manifest.json": manifest_path,
+ 231:     }
+ 232: 
+ 233:     package_readme = (
+ 234:         "DoDA Generated Content Overlay\n"
+ 235:         "==============================\n"
+ 236:         "\n"
+ 237:         "This PK3 was generated by DoDA Content Workbench.\n"
+ 238:         "\n"
+ 239:         "It is currently a data-packaging proof. The archive contains generated\n"
+ 240:         "department data, a future LANGUAGE fragment, and a build manifest.\n"
+ 241:         "It does not yet add active runtime behavior because doda-core has not\n"
+ 242:         "yet been given a native data loader or static include seam for these\n"
+ 243:         "generated resources.\n"
+ 244:     )
+ 245: 
+ 246:     temporary_path = pk3_path.with_suffix(".pk3.tmp")
+ 247: 
+ 248:     if temporary_path.exists():
+ 249:         temporary_path.unlink()
+ 250: 
+ 251:     with zipfile.ZipFile(
+ 252:         temporary_path,
+ 253:         mode="w",
+ 254:         compression=zipfile.ZIP_DEFLATED,
+ 255:         compresslevel=9,
+ 256:     ) as archive:
+ 257:         archive.writestr("README.txt", package_readme)
+ 258: 
+ 259:         for archive_name, source_path in archive_entries.items():
+ 260:             archive.write(source_path, archive_name)
+ 261: 
+ 262:     if pk3_path.exists():
+ 263:         pk3_path.unlink()
+ 264: 
+ 265:     temporary_path.replace(pk3_path)
+ 266: 
+ 267:     with zipfile.ZipFile(pk3_path, mode="r") as archive:
+ 268:         return sorted(archive.namelist())
+ 269: 
+ 270: 
+ 271: def export_content(project_root: Path) -> tuple[dict[str, Path], list[str]]:
+ 272:     run_validator(project_root)
+ 273: 
+ 274:     print()
+ 275:     print("Loading validated authoring CSV files...")
+ 276: 
+ 277:     tables: dict[str, list[dict[str, Any]]] = {}
+ 278: 
+ 279:     for table_name, filename in TABLE_FILES.items():
+ 280:         table_rows = load_table(project_root, table_name, filename)
+ 281:         tables[table_name] = table_rows
+ 282:         print(f"  {table_name}: {len(table_rows)} row(s)")
+ 283: 
+ 284:     generated_at = datetime.now(timezone.utc).isoformat()
+ 285: 
+ 286:     department_payload = {
+ 287:         "schemaVersion": SCHEMA_VERSION,
+ 288:         "toolVersion": TOOL_VERSION,
+ 289:         "generatedAtUtc": generated_at,
+ 290:         "tables": tables,
+ 291:     }
+ 292: 
+ 293:     generated_directory = project_root / "generated"
+ 294:     department_json_path = generated_directory / "data" / "department_content.json"
+ 295:     language_path = (
+ 296:         generated_directory
+ 297:         / "language"
+ 298:         / "DODA_GENERATED_LANGUAGE.txt"
+ 299:     )
+ 300:     manifest_path = (
+ 301:         generated_directory
+ 302:         / "manifest"
+ 303:         / "content_manifest.json"
+ 304:     )
+ 305:     pk3_path = project_root / "build" / "doda-generated-content.pk3"
+ 306: 
+ 307:     write_json(department_json_path, department_payload)
+ 308: 
+ 309:     language_fragment = build_language_fragment(tables["flavor_text"])
+ 310:     write_text(language_path, language_fragment)
+ 311: 
+ 312:     source_hashes = {
+ 313:         filename: sha256_file(
+ 314:             project_root / "data_authoring" / "source" / filename
+ 315:         )
+ 316:         for filename in TABLE_FILES.values()
+ 317:     }
+ 318: 
+ 319:     output_hashes = {
+ 320:         "generated/data/department_content.json": sha256_file(department_json_path),
+ 321:         "generated/language/DODA_GENERATED_LANGUAGE.txt": sha256_file(language_path),
+ 322:     }
+ 323: 
+ 324:     manifest_payload = {
+ 325:         "schemaVersion": SCHEMA_VERSION,
+ 326:         "toolVersion": TOOL_VERSION,
+ 327:         "generatedAtUtc": generated_at,
+ 328:         "projectRoot": str(project_root),
+ 329:         "sourceFiles": source_hashes,
+ 330:         "outputFiles": output_hashes,
+ 331:         "tableRowCounts": {
+ 332:             table_name: len(rows)
+ 333:             for table_name, rows in tables.items()
+ 334:         },
+ 335:         "runtimeStatus": {
+ 336:             "nativeLoaderAvailable": False,
+ 337:             "mapinfoIntegrationEnabled": False,
+ 338:             "languageIntegrationEnabled": False,
+ 339:             "zscriptIntegrationEnabled": False,
+ 340:             "notes": [
+ 341:                 "This is a generated content overlay proof.",
+ 342:                 "The PK3 is not yet active runtime data.",
+ 343:                 "Do not manually edit generated output files.",
+ 344:             ],
+ 345:         },
+ 346:     }
+ 347: 
+ 348:     write_json(manifest_path, manifest_payload)
+ 349: 
+ 350:     archive_entries = build_pk3(
+ 351:         pk3_path,
+ 352:         department_json_path,
+ 353:         language_path,
+ 354:         manifest_path,
+ 355:     )
+ 356: 
+ 357:     outputs = {
+ 358:         "department_json": department_json_path,
+ 359:         "language_fragment": language_path,
+ 360:         "manifest": manifest_path,
+ 361:         "pk3_overlay": pk3_path,
+ 362:     }
+ 363: 
+ 364:     return outputs, archive_entries
+ 365: 
+ 366: 
+ 367: def print_export_result(
+ 368:     project_root: Path,
+ 369:     outputs: dict[str, Path],
+ 370:     archive_entries: list[str],
+ 371: ) -> None:
+ 372:     print()
+ 373:     print("=" * 72)
+ 374:     print("DoDA Content Workbench Export")
+ 375:     print("=" * 72)
+ 376:     print(f"Project root: {project_root}")
+ 377:     print()
+ 378: 
+ 379:     print("Generated outputs:")
+ 380:     for output_name, output_path in outputs.items():
+ 381:         print(f"  {output_name}: {output_path}")
+ 382: 
+ 383:     print()
+ 384:     print("PK3 archive entries:")
+ 385:     for entry in archive_entries:
+ 386:         print(f"  {entry}")
+ 387: 
+ 388:     print()
+ 389:     print(
+ 390:         "Export completed successfully. This PK3 is a safe data overlay proof "
+ 391:         "and does not yet alter live UZDoom behavior."
+ 392:     )
+ 393:     print("=" * 72)
+ 394: 
+ 395: 
+ 396: def build_parser() -> argparse.ArgumentParser:
+ 397:     parser = argparse.ArgumentParser(
+ 398:         prog="doda_content_export",
+ 399:         description="Export validated DoDA authoring content and build a PK3 overlay.",
+ 400:     )
+ 401: 
+ 402:     parser.add_argument(
+ 403:         "--root",
+ 404:         type=Path,
+ 405:         default=None,
+ 406:         help="Path to doda-core. Defaults to automatic project-root discovery.",
+ 407:     )
+ 408: 
+ 409:     return parser
+ 410: 
+ 411: 
+ 412: def main() -> int:
+ 413:     parser = build_parser()
+ 414:     arguments = parser.parse_args()
+ 415: 
+ 416:     try:
+ 417:         project_root = (
+ 418:             arguments.root.resolve()
+ 419:             if arguments.root is not None
+ 420:             else find_project_root(Path.cwd())
+ 421:         )
+ 422: 
+ 423:         outputs, archive_entries = export_content(project_root)
+ 424:         print_export_result(project_root, outputs, archive_entries)
+ 425:         return 0
+ 426: 
+ 427:     except (FileNotFoundError, RuntimeError, ValueError, OSError, zipfile.BadZipFile) as error:
+ 428:         print()
+ 429:         print(f"EXPORT FAILED: {error}", file=sys.stderr)
+ 430:         return 1
+ 431: 
+ 432: 
+ 433: if __name__ == "__main__":
+ 434:     sys.exit(main())
+

@@ -1,21 +1,21 @@
-﻿"metric_id","tier_id","min_inclusive","max_inclusive","display_label","short_status","ui_color","flavor_text_id","sort_order"
-"PREPAREDNESS","FRAGILE","0","200","Fragile","Capacity is thin and commitments exceed certainty","#EF5B5B","FLV_METRIC_PREPAREDNESS_FRAGILE","1"
-"PREPAREDNESS","OPERATIONAL","201","500","Operational","The Department can meet ordinary demands","#58A6FF","FLV_METRIC_PREPAREDNESS_OPERATIONAL","2"
-"PREPAREDNESS","HARDENED","501","800","Hardened","Core systems can absorb sustained pressure","#5CCB72","FLV_METRIC_PREPAREDNESS_HARDENED","3"
-"PREPAREDNESS","OVEREXTENDED","801","1000","Overextended","Capability is high but the institution is carrying too much","#F4B942","FLV_METRIC_PREPAREDNESS_OVEREXTENDED","4"
-"INTEL_QUALITY","ANECDOTAL","0","249","Anecdotal","Fragments reports and unverified accounts","#8C939F","FLV_METRIC_INTEL_ANECDOTAL","1"
-"INTEL_QUALITY","STRUCTURED","250","599","Structured","Patterns are beginning to hold","#58A6FF","FLV_METRIC_INTEL_STRUCTURED","2"
-"INTEL_QUALITY","CORRELATED","600","849","Correlated","Independent sources reinforce one another","#5CCB72","FLV_METRIC_INTEL_CORRELATED","3"
-"INTEL_QUALITY","PREDICTIVE","850","1000","Predictive","The Department sees movement before it understands it","#F4B942","FLV_METRIC_INTEL_PREDICTIVE","4"
-"PUBLIC_TRUST","CONTESTED","0","249","Contested","The Department's mandate is openly questioned","#EF5B5B","FLV_METRIC_TRUST_CONTESTED","1"
-"PUBLIC_TRUST","TOLERATED","250","499","Tolerated","The Department is accepted when it remains useful","#F4B942","FLV_METRIC_TRUST_TOLERATED","2"
-"PUBLIC_TRUST","ESTABLISHED","500","749","Established","The public broadly accepts Department authority","#58A6FF","FLV_METRIC_TRUST_ESTABLISHED","3"
-"PUBLIC_TRUST","RESILIENT","750","1000","Resilient","Public confidence survives difficult disclosures","#5CCB72","FLV_METRIC_TRUST_RESILIENT","4"
-"CORRUPTION_PRESSURE","CONTAINED","0","249","Contained","Controls are holding and scrutiny is active","#5CCB72","FLV_METRIC_CORRUPTION_CONTAINED","1"
-"CORRUPTION_PRESSURE","LATENT","250","499","Latent","Warning signs exist but remain manageable","#58A6FF","FLV_METRIC_CORRUPTION_LATENT","2"
-"CORRUPTION_PRESSURE","ENTRENCHED","500","749","Entrenched","Compromise is shaping institutional choices","#F4B942","FLV_METRIC_CORRUPTION_ENTRENCHED","3"
-"CORRUPTION_PRESSURE","CRITICAL","750","1000","Critical","The Department may be unable to investigate itself","#EF5B5B","FLV_METRIC_CORRUPTION_CRITICAL","4"
-"STAFF_STRESS","STEADY","0","249","Steady","Personnel can absorb routine operational strain","#5CCB72","FLV_METRIC_STRESS_STEADY","1"
-"STAFF_STRESS","STRAINED","250","499","Strained","Recovery is becoming a planning requirement","#58A6FF","FLV_METRIC_STRESS_STRAINED","2"
-"STAFF_STRESS","EXHAUSTED","500","749","Exhausted","The Department is functioning through accumulated fatigue","#F4B942","FLV_METRIC_STRESS_EXHAUSTED","3"
-"STAFF_STRESS","BREAKING","750","1000","Breaking","Personnel systems are approaching failure","#EF5B5B","FLV_METRIC_STRESS_BREAKING","4"
+metric_id,tier_id,min_inclusive,max_inclusive,display_label,short_status,ui_color,flavor_text_id,sort_order
+PREPAREDNESS,FRAGILE,0,200,Fragile,Capacity is thin and commitments exceed certainty,#EF5B5B,FLV_METRIC_PREPAREDNESS_FRAGILE,1
+PREPAREDNESS,OPERATIONAL,201,500,Operational,The Department can meet ordinary demands,#58A6FF,FLV_METRIC_PREPAREDNESS_OPERATIONAL,2
+PREPAREDNESS,HARDENED,501,800,Hardened,Core systems can absorb sustained pressure,#5CCB72,FLV_METRIC_PREPAREDNESS_HARDENED,3
+PREPAREDNESS,OVEREXTENDED,801,1000,Overextended,Capability is high but the institution is carrying too much,#F4B942,FLV_METRIC_PREPAREDNESS_OVEREXTENDED,4
+INTEL_QUALITY,ANECDOTAL,0,249,Anecdotal,Fragments reports and unverified accounts,#8C939F,FLV_METRIC_INTEL_ANECDOTAL,1
+INTEL_QUALITY,STRUCTURED,250,599,Structured,Patterns are beginning to hold,#58A6FF,FLV_METRIC_INTEL_STRUCTURED,2
+INTEL_QUALITY,CORRELATED,600,849,Correlated,Independent sources reinforce one another,#5CCB72,FLV_METRIC_INTEL_CORRELATED,3
+INTEL_QUALITY,PREDICTIVE,850,1000,Predictive,The Department sees movement before it understands it,#F4B942,FLV_METRIC_INTEL_PREDICTIVE,4
+PUBLIC_TRUST,CONTESTED,0,249,Contested,The Department's mandate is openly questioned,#EF5B5B,FLV_METRIC_TRUST_CONTESTED,1
+PUBLIC_TRUST,TOLERATED,250,499,Tolerated,The Department is accepted when it remains useful,#F4B942,FLV_METRIC_TRUST_TOLERATED,2
+PUBLIC_TRUST,ESTABLISHED,500,749,Established,The public broadly accepts Department authority,#58A6FF,FLV_METRIC_TRUST_ESTABLISHED,3
+PUBLIC_TRUST,RESILIENT,750,1000,Resilient,Public confidence survives difficult disclosures,#5CCB72,FLV_METRIC_TRUST_RESILIENT,4
+CORRUPTION_PRESSURE,CONTAINED,0,249,Contained,Controls are holding and scrutiny is active,#5CCB72,FLV_METRIC_CORRUPTION_CONTAINED,1
+CORRUPTION_PRESSURE,LATENT,250,499,Latent,Warning signs exist but remain manageable,#FF80FF,FLV_METRIC_CORRUPTION_LATENT,2
+CORRUPTION_PRESSURE,ENTRENCHED,500,749,Entrenched,Compromise is shaping institutional choices,#F4B942,FLV_METRIC_CORRUPTION_ENTRENCHED,3
+CORRUPTION_PRESSURE,CRITICAL,750,1000,Critical,The Department may be unable to investigate itself,#EF5B5B,FLV_METRIC_CORRUPTION_CRITICAL,4
+STAFF_STRESS,STEADY,0,249,Steady,Personnel can absorb routine operational strain,#5CCB72,FLV_METRIC_STRESS_STEADY,1
+STAFF_STRESS,STRAINED,250,499,Strained,Recovery is becoming a planning requirement,#58A6FF,FLV_METRIC_STRESS_STRAINED,2
+STAFF_STRESS,EXHAUSTED,500,749,Exhausted,The Department is functioning through accumulated fatigue,#F4B942,FLV_METRIC_STRESS_EXHAUSTED,3
+STAFF_STRESS,BREAKING,750,1000,Breaking,Personnel systems are approaching failure,#EF5B5B,FLV_METRIC_STRESS_BREAKING,4

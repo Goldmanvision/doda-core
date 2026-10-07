@@ -1,0 +1,26 @@
+﻿{
+    "staging_created_local":  "2026-10-01T12:08:01.1535707-04:00",
+    "purpose":  "V1.1 schema foundation preview only; no live source or Python files modified",
+    "based_on_source":  "E:\\Dev\\uzdoom_src\\doda-core\\data_authoring\\source",
+    "expected_tables":  [
+                            "department_tracks.csv",
+                            "enum_catalog.csv",
+                            "facilities.csv",
+                            "flavor_text.csv",
+                            "metric_tiers.csv",
+                            "metrics.csv",
+                            "qualification_catalog.csv",
+                            "capabilities.csv",
+                            "facility_capabilities.csv",
+                            "capability_staffing_rules.csv",
+                            "facility_capability_staffing_overrides.csv",
+                            "task_templates.csv"
+                        ],
+    "decisions":  {
+                      "facility_capability_key":  "facility_id + capability_id",
+                      "facility_capability_tiers":  "Reuse FACILITY_TIER",
+                      "field_operations_occult_response_initial_tier":  "UNBUILT",
+                      "staffing":  "Global defaults with optional per-installation overrides",
+                      "live_personnel":  "Native simulation only"
+                  }
+}

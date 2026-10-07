@@ -1,0 +1,46 @@
+{
+  "testedAtLocal": "2026-10-06T08:33:58.370826-04:00",
+  "scope": "Real hidden GUI and coordinated service in temporary projects; dialogs mocked; no export; not a visual layout acceptance test",
+  "valid": true,
+  "passedCount": 9,
+  "testCount": 9,
+  "liveSourcesUnchanged": true,
+  "results": [
+    {
+      "name": "Load existing metric and tiers without saving",
+      "passed": true
+    },
+    {
+      "name": "Apply new tier forms and validate complete draft",
+      "passed": true
+    },
+    {
+      "name": "Canceled save changes no CSVs or transactions",
+      "passed": true
+    },
+    {
+      "name": "Confirmed save commits both tables and exact backups",
+      "passed": true
+    },
+    {
+      "name": "Reject unapplied tier form",
+      "passed": true
+    },
+    {
+      "name": "Reject incomplete coverage without saving",
+      "passed": true
+    },
+    {
+      "name": "Dirty close requires discard confirmation",
+      "passed": true
+    },
+    {
+      "name": "Reject changed application project root",
+      "passed": true
+    },
+    {
+      "name": "Live source CSV hashes unchanged",
+      "passed": true
+    }
+  ]
+}

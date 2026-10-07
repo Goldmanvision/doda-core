@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import math
 import tkinter as tk
+import time
+from datetime import datetime, timedelta
 from pathlib import Path
 from tkinter import ttk
 from typing import Any
@@ -21,7 +23,19 @@ from PIL import Image, ImageDraw, ImageFont, ImageTk
 
 DESIGN_SIZE = (640, 480)
 
-CRT_OVERLAY_SIZE = (412, 309)
+# Dual CRT hardware scene dimensions.
+DUAL_CRT_OVERLAY_SIZE = (1920, 1080)
+
+# Physical display openings inside the dual CRT overlay.
+# Format: x, y, width, height.
+LEFT_CRT_APERTURE = (35, 110, 860, 640)
+RIGHT_CRT_APERTURE = (1025, 110, 860, 640)
+
+# Exact 4:3 FOIMS-X viewport inside each 860 x 640 physical opening.
+FOIMS_VIEWPORT_SIZE = (853, 640)
+
+# Compatibility alias for any existing CRT overlay reference.
+CRT_OVERLAY_SIZE = DUAL_CRT_OVERLAY_SIZE
 
 # Native overlay screen opening: x, y, width, height.
 # The bezel is scaled and positioned from this rectangle—not from
@@ -84,6 +98,33 @@ def numeric_value(value: str, fallback: float = 0.0) -> float:
         return fallback
 
 
+# FOIMS_X_CANONICAL_CLOCK_1992_02_01
+# Canonical DoDA campaign epoch: February 1, 1992 at 00:00:00.
+# One real second advances one in-game minute.
+FOIMS_X_EPOCH = datetime(1992, 2, 1, 0, 0, 0)
+FOIMS_X_GAME_MINUTES_PER_REAL_SECOND = 1
+FOIMS_X_GAME_DAY_MINUTES = 24 * 60
+
+
+def foims_x_game_clock(elapsed_real_seconds: float) -> dict[str, object]:
+    """Convert monotonic preview elapsed time into FOIMS-X campaign time."""
+    elapsed_game_minutes = max(
+        0,
+        int(elapsed_real_seconds * FOIMS_X_GAME_MINUTES_PER_REAL_SECOND),
+    )
+
+    game_datetime = FOIMS_X_EPOCH + timedelta(minutes=elapsed_game_minutes)
+    day_number = elapsed_game_minutes // FOIMS_X_GAME_DAY_MINUTES + 1
+    minute_of_day = elapsed_game_minutes % FOIMS_X_GAME_DAY_MINUTES
+
+    return {
+        "date": game_datetime.strftime("%Y-%m-%d"),
+        "time": game_datetime.strftime("%H:%M:%S"),
+        "day": day_number,
+        "cycle_percent": minute_of_day / FOIMS_X_GAME_DAY_MINUTES * 100.0,
+    }
+
+
 class FoimsXPreview:
     """Read-only FOIMS-X authoring preview at high-resolution output."""
 
@@ -102,7 +143,10 @@ class FoimsXPreview:
             value="FOIMS-X native high-resolution preview ready."
         )
         self._photo: ImageTk.PhotoImage | None = None
+        self._canvas_image_id: int | None = None
+        self._presented_size: tuple[int, int] | None = None
         self._pending_resize: str | None = None
+        self._clock_started_at = time.monotonic()
 
         self._build_controls()
         self._build_canvas()
@@ -113,12 +157,25 @@ class FoimsXPreview:
         self.window.bind("<Escape>", self.exit_fullscreen)
         self.window.bind("<Configure>", self._on_resize)
         self.window.after_idle(self.refresh_preview)
+        self.window.after(1000, self._clock_tick)
 
     def is_open(self) -> bool:
         try:
             return bool(self.window.winfo_exists())
         except tk.TclError:
             return False
+
+    def _current_game_clock(self) -> dict[str, object]:
+        """Return the canonical campaign time for this preview session."""
+        return foims_x_game_clock(time.monotonic() - self._clock_started_at)
+
+    def _clock_tick(self) -> None:
+        """Rerender the preview once per real second while the window exists."""
+        if not self.is_open():
+            return
+
+        self.render()
+        self.window.after(1000, self._clock_tick)
 
     def show(self) -> None:
         if not self.is_open():
@@ -175,8 +232,17 @@ class FoimsXPreview:
         return "break"
 
     def _render_fullscreen_presentation(self) -> None:
-        """Render after Tk has assigned the fullscreen canvas dimensions."""
-        self.render()
+        """Render after Tkinter applies its final fullscreen geometry."""
+        if not self.is_open():
+            return
+
+        if self._pending_resize is not None:
+            self.canvas.after_cancel(self._pending_resize)
+
+        # Tk updates fullscreen canvas metrics asynchronously. Render after
+        # the geometry event has settled, not during the transition frame.
+        self._pending_resize = self.canvas.after(120, self.render)
+
     def _font_path(self) -> Path:
         return (
             self.app.project_root
@@ -257,20 +323,28 @@ class FoimsXPreview:
         )
         self.canvas.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
 
-    def _on_presentation_size_change(
-        self,
-        _event: tk.Event[Any],
-    ) -> None:
-        self.render()
-
-    def _on_resize(self, event: tk.Event[Any]) -> None:
-        if event.widget is not self.window:
+    def _on_presentation_size_change(self, _event: tk.Event[Any]) -> None:
+        """Schedule a rerender after a fullscreen/windowed geometry change."""
+        if not self.is_open():
             return
 
         if self._pending_resize is not None:
-            self.window.after_cancel(self._pending_resize)
+            self.canvas.after_cancel(self._pending_resize)
 
-        self._pending_resize = self.window.after(90, self.render)
+        self._pending_resize = self.canvas.after(90, self.render)
+
+    def _on_resize(self, event: tk.Event[Any]) -> None:
+        """Rerender after a real canvas-size change, with resize debouncing."""
+        if event.widget is not self.window:
+            return
+
+        if not self.is_open():
+            return
+
+        if self._pending_resize is not None:
+            self.canvas.after_cancel(self._pending_resize)
+
+        self._pending_resize = self.canvas.after(90, self.render)
 
     def refresh_preview(self, _event: tk.Event[Any] | None = None) -> str:
         try:
@@ -289,36 +363,27 @@ class FoimsXPreview:
             return
 
         self._pending_resize = None
-        self.canvas.delete("all")
 
         try:
-            if bool(self.window.attributes("-fullscreen")):
-                presentation_width = max(self.window.winfo_screenwidth(), 1)
-                presentation_height = max(self.window.winfo_screenheight(), 1)
-            else:
-                presentation_width, presentation_height = PRESENTATION_SIZES[
-                    self.presentation_size_name.get()
-                ]
-
-            active_width = round(presentation_height * 4 / 3)
-
-            foims_screen = self._render_foims_screen(
-                active_width,
-                presentation_height,
+            left_screen = self._render_foims_screen(
+                FOIMS_VIEWPORT_SIZE[0],
+                FOIMS_VIEWPORT_SIZE[1],
+            )
+            right_screen = self._render_secondary_console(
+                FOIMS_VIEWPORT_SIZE[0],
+                FOIMS_VIEWPORT_SIZE[1],
             )
 
-            presentation = self._compose_presentation(
-                foims_screen,
-                presentation_width,
-                presentation_height,
+            dual_crt_scene = self._compose_dual_crt(
+                left_screen,
+                right_screen,
             )
 
-            self._present(presentation)
+            self._present(dual_crt_scene)
 
         except Exception as error:
             self.status_text.set(f"FOIMS-X render error: {error}")
             self._draw_error(str(error))
-
     def _render_foims_screen(
         self,
         active_width: int,
@@ -434,11 +499,13 @@ class FoimsXPreview:
             12,
             PALETTE["accent"],
         )
+        clock = self._current_game_clock()
+
         text(
             612,
             26,
-            "LINK: SECURE  SYS: NOMINAL",
-            10,
+            f'{clock["date"]} // {clock["time"]} // D{clock["day"]:03d}',
+            8,
             PALETTE["muted"],
             "right",
         )
@@ -599,6 +666,160 @@ class FoimsXPreview:
                 f"T:{len(tiers):02d} "
                 f"F:{len(facilities):02d}"
             ),
+            8,
+            PALETTE["muted"],
+            "right",
+        )
+
+        return image
+
+    def _render_secondary_console(
+        self,
+        active_width: int,
+        active_height: int,
+    ) -> Image.Image:
+        """Render a stable, independent FOIMS-X secondary operations panel."""
+        image = Image.new(
+            "RGBA",
+            (active_width, active_height),
+            PALETTE["screen"],
+        )
+        draw = ImageDraw.Draw(image)
+
+        scale_x = active_width / DESIGN_SIZE[0]
+        scale_y = active_height / DESIGN_SIZE[1]
+        ui_scale = min(scale_x, scale_y)
+
+        def sx(value: float) -> int:
+            return round(value * scale_x)
+
+        def sy(value: float) -> int:
+            return round(value * scale_y)
+
+        def line_width() -> int:
+            return max(1, round(ui_scale))
+
+        def panel(
+            left: float,
+            top: float,
+            right: float,
+            bottom: float,
+            fill: str = PALETTE["panel_alt"],
+        ) -> None:
+            draw.rectangle(
+                (sx(left), sy(top), sx(right), sy(bottom)),
+                fill=fill,
+                outline=PALETTE["border"],
+                width=line_width(),
+            )
+
+        def text(
+            left: float,
+            top: float,
+            value: str,
+            size: int,
+            color: str = PALETTE["text"],
+            align: str = "left",
+            max_width: float | None = None,
+        ) -> None:
+            self._draw_text(
+                image=image,
+                left=sx(left),
+                top=sy(top),
+                value=value,
+                pixel_size=max(8, round(size * ui_scale)),
+                color=color,
+                align=align,
+                max_width=sx(max_width) if max_width is not None else None,
+            )
+
+        for grid_x in range(sx(16), active_width, max(8, sx(16))):
+            draw.line(
+                (grid_x, sy(16), grid_x, sy(464)),
+                fill=PALETTE["grid"],
+                width=line_width(),
+            )
+
+        for grid_y in range(sy(16), sy(464), max(8, sy(16))):
+            draw.line(
+                (sx(16), grid_y, sx(624), grid_y),
+                fill=PALETTE["grid"],
+                width=line_width(),
+            )
+
+        panel(12, 12, 628, 468, PALETTE["screen"])
+        panel(18, 18, 622, 48, PALETTE["panel"])
+
+        text(
+            28,
+            25,
+            "F.O.I.M.S.-X // OPERATIONS CONSOLE",
+            12,
+            PALETTE["accent"],
+        )
+        clock = self._current_game_clock()
+
+        text(
+            612,
+            26,
+            f'TEMPORAL LINK // {clock["time"]} // D{clock["day"]:03d}',
+            8,
+            PALETTE["muted"],
+            "right",
+        )
+
+        panel(18, 58, 622, 198)
+        panel(18, 208, 622, 342)
+        panel(18, 352, 622, 450)
+
+        text(30, 70, "SECONDARY SYSTEM STATUS", 12, PALETTE["accent"])
+
+        status_rows = (
+            ("CAMPAIGN DATE", str(clock["date"])),
+            ("24-HOUR TIME", str(clock["time"])),
+            ("CAMPAIGN DAY", f'DAY {clock["day"]:03d}'),
+            (
+                "DAY CYCLE",
+                f'{clock["cycle_percent"]:05.2f}% // 01 GAME MIN / REAL SEC',
+            ),
+        )
+
+        for index, (label, value) in enumerate(status_rows):
+            top = 101 + index * 21
+            panel(34, top, 606, top + 16, PALETTE["panel"])
+            text(44, top + 3, label, 8, PALETTE["muted"])
+            text(594, top + 2, value, 9, PALETTE["accent"], "right")
+
+        text(30, 220, "FOIMS-X TELEMETRY", 12, PALETTE["accent"])
+
+        telemetry_rows = (
+            ("DISPLAY MODE", "DUAL CRT"),
+            ("LEFT CHANNEL", "DEPARTMENT OPERATIONS"),
+            ("RIGHT CHANNEL", "OPERATIONS CONSOLE"),
+            ("RENDER PATH", "NATIVE UI"),
+        )
+
+        for index, (label, value) in enumerate(telemetry_rows):
+            top = 250 + index * 20
+            text(40, top, label, 8, PALETTE["muted"])
+            text(594, top, value, 8, PALETTE["text"], "right")
+
+        text(30, 364, "SYSTEM QUEUE", 12, PALETTE["accent"])
+        text(40, 397, "NO PENDING OPERATIONAL ALERTS", 9, PALETTE["text"])
+        text(40, 417, "SECONDARY MONITOR ACTIVE", 9, PALETTE["muted"])
+
+        panel(18, 454, 622, 466, PALETTE["panel"])
+        text(
+            26,
+            456,
+            "FOIMS-X // SECONDARY OPERATIONS DISPLAY",
+            8,
+            PALETTE["muted"],
+        )
+        text(
+            614,
+            456,
+            "DUAL DISPLAY MODE",
             8,
             PALETTE["muted"],
             "right",
@@ -877,167 +1098,135 @@ class FoimsXPreview:
 
         return "\n".join(lines)
 
-    def _compose_presentation(
+    def _compose_dual_crt(
         self,
-        foims_screen: Image.Image,
-        presentation_width: int,
-        presentation_height: int,
+        left_screen: Image.Image,
+        right_screen: Image.Image,
     ) -> Image.Image:
-        """
-        Strict compositing order:
-
-        Layer 1 (back):  native-resolution FOIMS-X display.
-        Layer 2 (front): raster-scaled CRT hardware/bezel overlay.
-
-        The CRT screen opening is explicitly transparent in Layer 2, so the
-        front bezel never destroys the text rendered on Layer 1.
-        """
-        presentation = Image.new(
+        """Compose two native FOIMS-X screens beneath a front CRT bezel."""
+        composition = Image.new(
             "RGBA",
-            (presentation_width, presentation_height),
+            DUAL_CRT_OVERLAY_SIZE,
             PALETTE["desktop"],
         )
 
-        active_width, active_height = foims_screen.size
-        active_x = (presentation_width - active_width) // 2
+        left_x, left_y, left_width, left_height = LEFT_CRT_APERTURE
+        right_x, right_y, right_width, right_height = RIGHT_CRT_APERTURE
+        viewport_width, viewport_height = FOIMS_VIEWPORT_SIZE
 
-        # -----------------------------------------------------------------
-        # LAYER 1: FOIMS-X is installed first, at its native final display
-        # resolution. It is never raster-scaled by the CRT compositor.
-        # -----------------------------------------------------------------
-        presentation.alpha_composite(foims_screen, (active_x, 0))
+        left_viewport_x = left_x + (left_width - viewport_width) // 2
+        left_viewport_y = left_y + (left_height - viewport_height) // 2
+        right_viewport_x = right_x + (right_width - viewport_width) // 2
+        right_viewport_y = right_y + (right_height - viewport_height) // 2
 
-        # -----------------------------------------------------------------
-        # LAYER 2: CRT overlay is installed after FOIMS-X. This is the
-        # closest/front-most visual layer.
-        # -----------------------------------------------------------------
-        bezel = Image.open(self._overlay_path()).convert("RGBA")
+        # Layer 1: FOIMS-X UI screens, rendered at final native dimensions.
+        composition.alpha_composite(
+            left_screen,
+            (left_viewport_x, left_viewport_y),
+        )
+        composition.alpha_composite(
+            right_screen,
+            (right_viewport_x, right_viewport_y),
+        )
 
-        if bezel.size != CRT_OVERLAY_SIZE:
-            bezel = bezel.resize(
-                CRT_OVERLAY_SIZE,
+        # Layer 2: CRT hardware overlay, closest to the viewer.
+        overlay = Image.open(self._overlay_path()).convert("RGBA")
+
+        if overlay.size != DUAL_CRT_OVERLAY_SIZE:
+            overlay = overlay.resize(
+                DUAL_CRT_OVERLAY_SIZE,
                 Image.Resampling.NEAREST,
             )
 
-        aperture_x, aperture_y, aperture_width, aperture_height = (
-            CRT_SCREEN_APERTURE
-        )
+        overlay_alpha = overlay.getchannel("A")
+        aperture_draw = ImageDraw.Draw(overlay_alpha)
 
-        # Resize only the raster overlay. X/Y use the screen-opening size
-        # as their source reference, allowing the physical bezel opening
-        # to align with the complete 4:3 FOIMS-X active display.
-        bezel_scale_x = active_width / aperture_width
-        bezel_scale_y = active_height / aperture_height
-
-        bezel_width = max(
-            1,
-            round(CRT_OVERLAY_SIZE[0] * bezel_scale_x),
-        )
-        bezel_height = max(
-            1,
-            round(CRT_OVERLAY_SIZE[1] * bezel_scale_y),
-        )
-
-        bezel = bezel.resize(
-            (bezel_width, bezel_height),
-            Image.Resampling.NEAREST,
-        )
-
-        # The scaled CRT screen opening is registered exactly to FOIMS-X.
-        bezel_x = round(active_x - aperture_x * bezel_scale_x)
-        bezel_y = round(-aperture_y * bezel_scale_y)
-
-        # Cut an alpha hole in the front layer where the CRT tube/display
-        # opening sits. The bezel, corners, edges, and monitor housing
-        # remain visible above FOIMS-X; the UI remains visible through
-        # the transparent opening.
-        bezel_alpha = bezel.getchannel("A")
-        aperture_mask = ImageDraw.Draw(bezel_alpha)
-
-        opening_left = round(aperture_x * bezel_scale_x)
-        opening_top = round(aperture_y * bezel_scale_y)
-        opening_right = round(
-            (aperture_x + aperture_width) * bezel_scale_x
-        )
-        opening_bottom = round(
-            (aperture_y + aperture_height) * bezel_scale_y
-        )
-
-        aperture_mask.rectangle(
+        # The asset contains white display regions. Clear them to alpha
+        # so FOIMS-X remains visible behind the front monitor hardware.
+        aperture_draw.rectangle(
             (
-                opening_left,
-                opening_top,
-                opening_right,
-                opening_bottom,
+                left_x,
+                left_y,
+                left_x + left_width - 1,
+                left_y + left_height - 1,
+            ),
+            fill=0,
+        )
+        aperture_draw.rectangle(
+            (
+                right_x,
+                right_y,
+                right_x + right_width - 1,
+                right_y + right_height - 1,
             ),
             fill=0,
         )
 
-        bezel.putalpha(bezel_alpha)
+        overlay.putalpha(overlay_alpha)
+        composition.alpha_composite(overlay, (0, 0))
 
-        # This is deliberately the final visual composition operation:
-        # the CRT overlay is Layer 2, in front of FOIMS-X.
-        presentation.alpha_composite(bezel, (bezel_x, bezel_y))
-
-        return presentation
+        return composition
     def _present(self, presentation: Image.Image) -> None:
+        """FOIMS_X_PERSISTENT_CANVAS_CLOCK_REPAIR: update one canvas image in place."""
+        self.canvas.update_idletasks()
+
         canvas_width = max(self.canvas.winfo_width(), 1)
         canvas_height = max(self.canvas.winfo_height(), 1)
 
-        if bool(self.window.attributes("-fullscreen")):
-            output_width = canvas_width
-            output_height = canvas_height
+        source_width, source_height = presentation.size
 
-            if presentation.size != (output_width, output_height):
-                output = presentation.resize(
-                    (output_width, output_height),
-                    Image.Resampling.LANCZOS,
-                )
-            else:
-                output = presentation
+        if source_width <= 0 or source_height <= 0:
+            raise ValueError("FOIMS-X presentation image has invalid dimensions.")
+
+        # A single uniform scale factor preserves the 1920x1080 dual-CRT bezel.
+        scale = min(
+            canvas_width / source_width,
+            canvas_height / source_height,
+        )
+
+        output_width = max(1, round(source_width * scale))
+        output_height = max(1, round(source_height * scale))
+
+        if (output_width, output_height) == presentation.size:
+            output = presentation
         else:
-            fit_scale = min(
-                canvas_width / presentation.width,
-                canvas_height / presentation.height,
-            )
-
-            output_width = max(1, round(presentation.width * fit_scale))
-            output_height = max(1, round(presentation.height * fit_scale))
-
             output = presentation.resize(
                 (output_width, output_height),
                 Image.Resampling.LANCZOS,
             )
 
-        self._photo = ImageTk.PhotoImage(output)
+        offset_x = (canvas_width - output_width) // 2
+        offset_y = (canvas_height - output_height) // 2
 
-        self.canvas.create_image(
-            0,
-            0,
-            image=self._photo,
-            anchor=tk.NW,
-        )
+        size_changed = self._presented_size != output.size
 
-        presentation_width, presentation_height = presentation.size
-        active_width = round(presentation_height * 4 / 3)
-
-        if bool(self.window.attributes("-fullscreen")):
-            self.status_text.set(
-                (
-                    f"FULLSCREEN OUTPUT: "
-                    f"{presentation_width}x{presentation_height} // "
-                    f"FOIMS-X ACTIVE: "
-                    f"{active_width}x{presentation_height}"
-                )
+        if self._photo is None or self._canvas_image_id is None or size_changed:
+            # Rebuild only on first presentation or a real window-size change.
+            self.canvas.delete("all")
+            self._photo = ImageTk.PhotoImage(output)
+            self._canvas_image_id = self.canvas.create_image(
+                offset_x,
+                offset_y,
+                image=self._photo,
+                anchor=tk.NW,
             )
+            self._presented_size = output.size
         else:
-            self.status_text.set(
-                (
-                    f"OUTPUT: {presentation_width}x{presentation_height} // "
-                    f"FOIMS-X ACTIVE: {active_width}x{presentation_height} // "
-                    "UI: NATIVE SCALED // ASPECT: 4:3"
-                )
+            # Clock updates retain the existing canvas image and avoid blank frames.
+            self._photo.paste(output)
+            self.canvas.coords(
+                self._canvas_image_id,
+                offset_x,
+                offset_y,
             )
+
+        mode = "FULLSCREEN" if bool(self.window.attributes("-fullscreen")) else "WINDOWED"
+
+        self.status_text.set(
+            f"{mode}: {output_width}x{output_height} of "
+            f"{canvas_width}x{canvas_height} // "
+            "SCENE: UNIFORM 16:9 // UI: RASTER RENDER"
+        )
 
     def _draw_error(self, message: str) -> None:
         canvas_width = max(self.canvas.winfo_width(), 1)
@@ -1097,6 +1286,8 @@ class FoimsXPreview:
                 return flavor
 
         return {}
+
+
 
 
 

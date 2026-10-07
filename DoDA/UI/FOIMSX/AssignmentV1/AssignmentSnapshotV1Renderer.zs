@@ -1,4 +1,4 @@
-﻿// ===========================================================================
+// ===========================================================================
 // DoDA Assignment Snapshot V1 Renderer (Milestone C Presentation)
 //
 // Read-only presentation of accepted Assignment Snapshot V1 data within
@@ -64,7 +64,14 @@ class DoDAAssignmentSnapshotV1Renderer : Object
         }
         else
         {
-            String metaText = String.Format("STRATEGIC TIME: %s MIN   ACTIVE: %d", viewState.ActiveStrategicMinutesText, viewState.TotalCount);
+            // FOIMS_X_CANONICAL_CLOCK_1992_02_01
+            // Read the native strategic-minute authority. This renderer
+            // only presents campaign time; it does not advance or persist it.
+            int strategicMinutes = DoDA.GetStrategicMinutes();
+            String metaText = DoDAFOIMSXCampaignClock.GetAssignmentMetaText(
+                strategicMinutes,
+                viewState.TotalCount
+            );
             DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GRAY, PANEL_X + 8, PANEL_Y + 24, metaText,
                 clipLeft, clipTop, clipRight, clipBottom);
         }

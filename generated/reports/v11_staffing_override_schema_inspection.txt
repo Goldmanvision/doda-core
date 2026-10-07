@@ -1,0 +1,60 @@
+DoDA V1.1 Facility Capability Staffing Overrides Schema Inspection
+Generated: 2026-10-01T13:25:08.0557610-04:00
+
+=== Summary ===
+
+
+OverrideRows                          : 0
+OverrideHeaders                       : facility_id,capability_id,qualification_id,min_contributors,preferred_co
+                                        ntributors,max_contributors,sort_order,active
+ActiveFacilityCapabilityInstallations : 2
+ActiveGlobalStaffingRules             : 4
+ValidOverrideTargets                  : 4
+
+=== Active Facility Capability Installations ===
+
+facility_id           capability_id           display_name_override max_concurrent_personnel initial_tier_id foi
+                                                                                                             ms_
+                                                                                                             pan
+                                                                                                             el_
+                                                                                                             id 
+-----------           -------------           --------------------- ------------------------ --------------- ---
+FIELD_OPERATIONS_ROOM OCCULT_RESPONSE         Occult Task Force     2                        UNBUILT         FOI
+                                                                                                             MS_
+                                                                                                             FIE
+                                                                                                             LD_
+                                                                                                             OCC
+                                                                                                             ULT
+                                                                                                             _RE
+                                                                                                             SPO
+                                                                                                             NSE
+TECHOPS_HUB           ELECTRONIC_SURVEILLANCE                       2                        OPERATIONAL     FOI
+                                                                                                             MS_
+                                                                                                             TEC
+                                                                                                             HOP
+                                                                                                             S_S
+                                                                                                             URV
+                                                                                                             EIL
+                                                                                                             LAN
+                                                                                                             CE
+
+=== Active Global Staffing Rules ===
+
+capability_id           qualification_id min_contributors preferred_contributors max_contributors sort_order
+-------------           ---------------- ---------------- ---------------------- ---------------- ----------
+ELECTRONIC_SURVEILLANCE SIGNALS_ANALYSIS 1                2                      2                10        
+ELECTRONIC_SURVEILLANCE DATA_SYSTEMS     0                1                      1                20        
+OCCULT_RESPONSE         FIELD_RESPONSE   1                2                      2                10        
+OCCULT_RESPONSE         OCCULT_RESPONSE  0                1                      2                20
+
+=== Valid Override Targets ===
+
+Facility              Capability              Qualification    Global_Min Global_Preferred Global_Max
+--------              ----------              -------------    ---------- ---------------- ----------
+FIELD_OPERATIONS_ROOM OCCULT_RESPONSE         FIELD_RESPONSE   1          2                2         
+FIELD_OPERATIONS_ROOM OCCULT_RESPONSE         OCCULT_RESPONSE  0          1                2         
+TECHOPS_HUB           ELECTRONIC_SURVEILLANCE SIGNALS_ANALYSIS 1          2                2         
+TECHOPS_HUB           ELECTRONIC_SURVEILLANCE DATA_SYSTEMS     0          1                1
+
+=== Existing Override Rows ===
+(none; the CSV is intentionally header-only)

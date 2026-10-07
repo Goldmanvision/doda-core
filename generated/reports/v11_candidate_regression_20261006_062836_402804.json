@@ -1,0 +1,146 @@
+{
+  "testedAtLocal": "2026-10-06T06:28:36.402841-04:00",
+  "scope": "Editor CSV writers and candidate_valid methods; no GUI save handlers",
+  "valid": false,
+  "passedCount": 14,
+  "testCount": 18,
+  "liveSourcesUnchanged": true,
+  "results": [
+    {
+      "name": "Valid round trip: qualification_catalog",
+      "table": "qualification_catalog",
+      "expectedValid": true,
+      "actualValid": true,
+      "passed": true,
+      "validatorOutput": "========================================================================\nDoDA Content Workbench Validation\n========================================================================\nProject root: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-qualification-havxvo7g\n\nLoaded rows:\n  capabilities: 2\n  capability_staffing_rules: 4\n  department_tracks: 6\n  enum_catalog: 27\n  facilities: 6\n  facility_capabilities: 2\n  facility_capability_staffing_overrides: 3\n  flavor_text: 20\n  metric_tiers: 20\n  metrics: 5\n  qualification_catalog: 4\n  task_templates: 2\n\nValidation passed with zero errors.\n\nReport written to: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-qualification-havxvo7g\\generated\\reports\\content_validation_report.json\n========================================================================"
+    },
+    {
+      "name": "Valid round trip: capabilities",
+      "table": "capabilities",
+      "expectedValid": true,
+      "actualValid": true,
+      "passed": true,
+      "validatorOutput": "========================================================================\nDoDA Content Workbench Validation\n========================================================================\nProject root: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-capability-mmrmhvsh\n\nLoaded rows:\n  capabilities: 2\n  capability_staffing_rules: 4\n  department_tracks: 6\n  enum_catalog: 27\n  facilities: 6\n  facility_capabilities: 2\n  facility_capability_staffing_overrides: 3\n  flavor_text: 20\n  metric_tiers: 20\n  metrics: 5\n  qualification_catalog: 4\n  task_templates: 2\n\nValidation passed with zero errors.\n\nReport written to: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-capability-mmrmhvsh\\generated\\reports\\content_validation_report.json\n========================================================================"
+    },
+    {
+      "name": "Valid round trip: facility_capabilities",
+      "table": "facility_capabilities",
+      "expectedValid": true,
+      "actualValid": true,
+      "passed": true,
+      "validatorOutput": "========================================================================\nDoDA Content Workbench Validation\n========================================================================\nProject root: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-facility-capability-ag7x58r6\n\nLoaded rows:\n  capabilities: 2\n  capability_staffing_rules: 4\n  department_tracks: 6\n  enum_catalog: 27\n  facilities: 6\n  facility_capabilities: 2\n  facility_capability_staffing_overrides: 3\n  flavor_text: 20\n  metric_tiers: 20\n  metrics: 5\n  qualification_catalog: 4\n  task_templates: 2\n\nValidation passed with zero errors.\n\nReport written to: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-facility-capability-ag7x58r6\\generated\\reports\\content_validation_report.json\n========================================================================"
+    },
+    {
+      "name": "Valid round trip: capability_staffing_rules",
+      "table": "capability_staffing_rules",
+      "expectedValid": true,
+      "actualValid": true,
+      "passed": true,
+      "validatorOutput": "========================================================================\nDoDA Content Workbench Validation\n========================================================================\nProject root: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-capability-staffing-zmk6fp5f\n\nLoaded rows:\n  capabilities: 2\n  capability_staffing_rules: 4\n  department_tracks: 6\n  enum_catalog: 27\n  facilities: 6\n  facility_capabilities: 2\n  facility_capability_staffing_overrides: 3\n  flavor_text: 20\n  metric_tiers: 20\n  metrics: 5\n  qualification_catalog: 4\n  task_templates: 2\n\nValidation passed with zero errors.\n\nReport written to: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-capability-staffing-zmk6fp5f\\generated\\reports\\content_validation_report.json\n========================================================================"
+    },
+    {
+      "name": "Valid round trip: facility_capability_staffing_overrides",
+      "table": "facility_capability_staffing_overrides",
+      "expectedValid": true,
+      "actualValid": true,
+      "passed": true,
+      "validatorOutput": "========================================================================\nDoDA Content Workbench Validation\n========================================================================\nProject root: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-staffing-override-z5iwyh48\n\nLoaded rows:\n  capabilities: 2\n  capability_staffing_rules: 4\n  department_tracks: 6\n  enum_catalog: 27\n  facilities: 6\n  facility_capabilities: 2\n  facility_capability_staffing_overrides: 3\n  flavor_text: 20\n  metric_tiers: 20\n  metrics: 5\n  qualification_catalog: 4\n  task_templates: 2\n\nValidation passed with zero errors.\n\nReport written to: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-staffing-override-z5iwyh48\\generated\\reports\\content_validation_report.json\n========================================================================"
+    },
+    {
+      "name": "Valid round trip: task_templates",
+      "table": "task_templates",
+      "expectedValid": true,
+      "passed": false,
+      "exception": "AttributeError(\"'TaskTemplatesEditor' object has no attribute 'write'\")"
+    },
+    {
+      "name": "Reject duplicate task template ID",
+      "table": "task_templates",
+      "expectedValid": false,
+      "passed": false,
+      "exception": "AttributeError(\"'TaskTemplatesEditor' object has no attribute 'write'\")"
+    },
+    {
+      "name": "Reject zero task effort",
+      "table": "task_templates",
+      "expectedValid": false,
+      "passed": false,
+      "exception": "AttributeError(\"'TaskTemplatesEditor' object has no attribute 'write'\")"
+    },
+    {
+      "name": "Reject unknown task priority",
+      "table": "task_templates",
+      "expectedValid": false,
+      "passed": false,
+      "exception": "AttributeError(\"'TaskTemplatesEditor' object has no attribute 'write'\")"
+    },
+    {
+      "name": "Reject concurrency exceeding facility capacity",
+      "table": "facility_capabilities",
+      "expectedValid": false,
+      "actualValid": false,
+      "passed": true,
+      "validatorOutput": "========================================================================\nDoDA Content Workbench Validation\n========================================================================\nProject root: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-facility-capability-dyvl0mks\n\nLoaded rows:\n  capabilities: 2\n  capability_staffing_rules: 4\n  department_tracks: 6\n  enum_catalog: 27\n  facilities: 6\n  facility_capabilities: 2\n  facility_capability_staffing_overrides: 3\n  flavor_text: 20\n  metric_tiers: 20\n  metrics: 5\n  qualification_catalog: 4\n  task_templates: 2\n\nWarnings (1):\n  WARNING: [facility_capabilities] Active Facility Capability maximum concurrency totals 4 for 'TECHOPS_HUB', exceeding facility personnel_capacity 3. This is permitted as a strategic allocation tradeoff.\n\nValidation failed with 1 error(s):\n  ERROR: [facility_capabilities] Line 2: max_concurrent_personnel (4) exceeds facility personnel_capacity (3) for 'TECHOPS_HUB'\n\nReport written to: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-facility-capability-dyvl0mks\\generated\\reports\\content_validation_report.json\n========================================================================"
+    },
+    {
+      "name": "Reject inverted global contributor range",
+      "table": "capability_staffing_rules",
+      "expectedValid": false,
+      "actualValid": false,
+      "passed": true,
+      "validatorOutput": "========================================================================\nDoDA Content Workbench Validation\n========================================================================\nProject root: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-capability-staffing-x4urfih5\n\nLoaded rows:\n  capabilities: 2\n  capability_staffing_rules: 4\n  department_tracks: 6\n  enum_catalog: 27\n  facilities: 6\n  facility_capabilities: 2\n  facility_capability_staffing_overrides: 3\n  flavor_text: 20\n  metric_tiers: 20\n  metrics: 5\n  qualification_catalog: 4\n  task_templates: 2\n\nValidation failed with 1 error(s):\n  ERROR: [capability_staffing_rules] Line 2: contributor counts must satisfy 0 <= min_contributors <= preferred_contributors <= max_contributors\n\nReport written to: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-capability-staffing-x4urfih5\\generated\\reports\\content_validation_report.json\n========================================================================"
+    },
+    {
+      "name": "Reject inverted override contributor range",
+      "table": "facility_capability_staffing_overrides",
+      "expectedValid": false,
+      "actualValid": false,
+      "passed": true,
+      "validatorOutput": "========================================================================\nDoDA Content Workbench Validation\n========================================================================\nProject root: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-staffing-override-44mih_u_\n\nLoaded rows:\n  capabilities: 2\n  capability_staffing_rules: 4\n  department_tracks: 6\n  enum_catalog: 27\n  facilities: 6\n  facility_capabilities: 2\n  facility_capability_staffing_overrides: 3\n  flavor_text: 20\n  metric_tiers: 20\n  metrics: 5\n  qualification_catalog: 4\n  task_templates: 2\n\nValidation failed with 1 error(s):\n  ERROR: [facility_capability_staffing_overrides] Line 2: contributor counts must satisfy 0 <= min_contributors <= preferred_contributors <= max_contributors\n\nReport written to: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-staffing-override-44mih_u_\\generated\\reports\\content_validation_report.json\n========================================================================"
+    },
+    {
+      "name": "Reject unknown override installation",
+      "table": "facility_capability_staffing_overrides",
+      "expectedValid": false,
+      "actualValid": false,
+      "passed": true,
+      "validatorOutput": "========================================================================\nDoDA Content Workbench Validation\n========================================================================\nProject root: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-staffing-override-l9nw8bns\n\nLoaded rows:\n  capabilities: 2\n  capability_staffing_rules: 4\n  department_tracks: 6\n  enum_catalog: 27\n  facilities: 6\n  facility_capabilities: 2\n  facility_capability_staffing_overrides: 3\n  flavor_text: 20\n  metric_tiers: 20\n  metrics: 5\n  qualification_catalog: 4\n  task_templates: 2\n\nValidation failed with 1 error(s):\n  ERROR: [facility_capability_staffing_overrides] Line 2: facility_id/capability_id pair '__MISSING_FACILITY__/OCCULT_RESPONSE' does not exist in active facility_capabilities.csv\n\nReport written to: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-staffing-override-l9nw8bns\\generated\\reports\\content_validation_report.json\n========================================================================"
+    },
+    {
+      "name": "Block referenced qualification deletion",
+      "table": "qualification_catalog",
+      "expectedValid": false,
+      "actualValid": false,
+      "passed": true,
+      "validatorOutput": "========================================================================\nDoDA Content Workbench Validation\n========================================================================\nProject root: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-qualification-4lwy7je2\n\nLoaded rows:\n  capabilities: 2\n  capability_staffing_rules: 4\n  department_tracks: 6\n  enum_catalog: 27\n  facilities: 6\n  facility_capabilities: 2\n  facility_capability_staffing_overrides: 3\n  flavor_text: 20\n  metric_tiers: 20\n  metrics: 5\n  qualification_catalog: 3\n  task_templates: 2\n\nValidation failed with 2 error(s):\n  ERROR: [capability_staffing_rules] Line 2: qualification_id 'SIGNALS_ANALYSIS' does not exist in active qualification_catalog.csv\n  ERROR: [facility_capability_staffing_overrides] Line 3: qualification_id 'SIGNALS_ANALYSIS' does not exist in active qualification_catalog.csv\n\nReport written to: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-qualification-4lwy7je2\\generated\\reports\\content_validation_report.json\n========================================================================"
+    },
+    {
+      "name": "Block referenced capability deletion",
+      "table": "capabilities",
+      "expectedValid": false,
+      "actualValid": false,
+      "passed": true,
+      "validatorOutput": "========================================================================\nDoDA Content Workbench Validation\n========================================================================\nProject root: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-capability-k_q1yuqa\n\nLoaded rows:\n  capabilities: 1\n  capability_staffing_rules: 4\n  department_tracks: 6\n  enum_catalog: 27\n  facilities: 6\n  facility_capabilities: 2\n  facility_capability_staffing_overrides: 3\n  flavor_text: 20\n  metric_tiers: 20\n  metrics: 5\n  qualification_catalog: 4\n  task_templates: 2\n\nValidation failed with 4 error(s):\n  ERROR: [facility_capabilities] Line 2: capability_id 'ELECTRONIC_SURVEILLANCE' does not exist in active capabilities.csv\n  ERROR: [capability_staffing_rules] Line 2: capability_id 'ELECTRONIC_SURVEILLANCE' does not exist in active capabilities.csv\n  ERROR: [capability_staffing_rules] Line 3: capability_id 'ELECTRONIC_SURVEILLANCE' does not exist in active capabilities.csv\n  ERROR: [task_templates] Line 2: capability_id 'ELECTRONIC_SURVEILLANCE' does not exist in active capabilities.csv\n\nReport written to: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-capability-k_q1yuqa\\generated\\reports\\content_validation_report.json\n========================================================================"
+    },
+    {
+      "name": "Block deletion of required surveillance installation",
+      "table": "facility_capabilities",
+      "expectedValid": false,
+      "actualValid": false,
+      "passed": true,
+      "validatorOutput": "========================================================================\nDoDA Content Workbench Validation\n========================================================================\nProject root: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-facility-capability-ern76jyr\n\nLoaded rows:\n  capabilities: 2\n  capability_staffing_rules: 4\n  department_tracks: 6\n  enum_catalog: 27\n  facilities: 6\n  facility_capabilities: 1\n  facility_capability_staffing_overrides: 3\n  flavor_text: 20\n  metric_tiers: 20\n  metrics: 5\n  qualification_catalog: 4\n  task_templates: 2\n\nValidation failed with 3 error(s):\n  ERROR: [facility_capability_staffing_overrides] Line 3: facility_id/capability_id pair 'TECHOPS_HUB/ELECTRONIC_SURVEILLANCE' does not exist in active facility_capabilities.csv\n  ERROR: [facility_capability_staffing_overrides] Line 4: facility_id/capability_id pair 'TECHOPS_HUB/ELECTRONIC_SURVEILLANCE' does not exist in active facility_capabilities.csv\n  ERROR: [task_templates] Line 2: active capability 'ELECTRONIC_SURVEILLANCE' has no active Facility Capability installation\n\nReport written to: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-facility-capability-ern76jyr\\generated\\reports\\content_validation_report.json\n========================================================================"
+    },
+    {
+      "name": "Block deletion of all active surveillance staffing rules",
+      "table": "capability_staffing_rules",
+      "expectedValid": false,
+      "actualValid": false,
+      "passed": true,
+      "validatorOutput": "========================================================================\nDoDA Content Workbench Validation\n========================================================================\nProject root: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-capability-staffing-_tml697v\n\nLoaded rows:\n  capabilities: 2\n  capability_staffing_rules: 2\n  department_tracks: 6\n  enum_catalog: 27\n  facilities: 6\n  facility_capabilities: 2\n  facility_capability_staffing_overrides: 3\n  flavor_text: 20\n  metric_tiers: 20\n  metrics: 5\n  qualification_catalog: 4\n  task_templates: 2\n\nValidation failed with 3 error(s):\n  ERROR: [capability_staffing_rules] No active staffing rule exists for active capability 'ELECTRONIC_SURVEILLANCE'\n  ERROR: [facility_capability_staffing_overrides] Line 3: no active global staffing rule exists for 'ELECTRONIC_SURVEILLANCE/SIGNALS_ANALYSIS'\n  ERROR: [facility_capability_staffing_overrides] Line 4: no active global staffing rule exists for 'ELECTRONIC_SURVEILLANCE/DATA_SYSTEMS'\n\nReport written to: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-capability-staffing-_tml697v\\generated\\reports\\content_validation_report.json\n========================================================================"
+    },
+    {
+      "name": "Live source CSV hashes unchanged",
+      "passed": true
+    }
+  ]
+}

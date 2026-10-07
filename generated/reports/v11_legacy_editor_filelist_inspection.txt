@@ -1,0 +1,748 @@
+DoDA V1.1 Legacy Editor Candidate-Validation File-List Inspection
+Generated: 2026-10-01T12:59:05.7366405-04:00
+
+================================================================================
+MODULE: doda_track_editor.py
+PATH: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_track_editor.py
+================================================================================
+
+=== Anchor Matches ===
+
+LineNumber Line                                                                                                 
+---------- ----                                                                                                 
+        19 FILES = ("enum_catalog.csv", "department_tracks.csv", "metrics.csv", "metric_tiers.csv",             
+           "facilities.csv", "flavor_text.csv")                                                                 
+       104     def candidate_valid(self,candidate:Path)->tuple[bool,str]:                                       
+       107             for file in FILES:shutil.copy2(candidate if file=="department_tracks.csv" else           
+           self.app.source_directory/file,dst/file)                                                             
+       127             shutil.copy2(self.path(),backup);os.replace(tmp,self.path());self.editing=r["track_id"];s
+           elf.app.refresh_all(False)                                                                           
+       210             shutil.copy2(self.path(), backup)
+
+=== Source lines 15-43 ===
+  15: from uuid import uuid4
+  16: 
+  17: FIELDS = ("track_id", "display_name", "description", "sort_order", "active")
+  18: ID = re.compile(r"^[A-Z][A-Z0-9_]*$")
+  19: FILES = ("enum_catalog.csv", "department_tracks.csv", "metrics.csv", "metric_tiers.csv", "facilities.csv", "flavor_text.csv")
+  20: 
+  21: class TrackEditor:
+  22:     def __init__(self, app: Any) -> None:
+  23:         self.app, self.editing = app, None
+  24:         self.id = tk.StringVar(); self.name = tk.StringVar(); self.sort = tk.StringVar(); self.active = tk.BooleanVar(value=True)
+  25:         self.build()
+  26: 
+  27:     def path(self) -> Path: return self.app.source_directory / "department_tracks.csv"
+  28:     def backups(self) -> Path: return self.app.project_root / "data_authoring" / "backups" / "department_tracks"
+  29:     def rows(self) -> list[dict[str, str]]: return [dict(x) for x in self.app.tables.get("department_tracks", [])]
+  30: 
+  31:     def build(self) -> None:
+  32:         for child in self.app.tracks_tab.winfo_children(): child.destroy()
+  33:         tab = self.app.tracks_tab; tab.columnconfigure(0, weight=3); tab.columnconfigure(1, weight=2); tab.rowconfigure(0, weight=1)
+  34:         left = ttk.LabelFrame(tab, text="Department Tracks", padding=8); right = ttk.LabelFrame(tab, text="Track Editor", padding=10)
+  35:         left.grid(row=0, column=0, sticky=tk.NSEW, padx=(0,6)); right.grid(row=0, column=1, sticky=tk.NSEW)
+  36:         left.columnconfigure(0, weight=1); left.rowconfigure(0, weight=1); right.columnconfigure(1, weight=1)
+  37:         self.tree = ttk.Treeview(left, columns=("id","name","sort","active"), show="headings", selectmode="browse")
+  38:         for key, label, width in (("id","Track ID",200),("name","Display Name",240),("sort","Sort",60),("active","Active",70)):
+  39:             self.tree.heading(key,text=label); self.tree.column(key,width=width,anchor=tk.W)
+  40:         bar=ttk.Scrollbar(left,orient=tk.VERTICAL,command=self.tree.yview); self.tree.configure(yscrollcommand=bar.set)
+  41:         self.tree.grid(row=0,column=0,sticky=tk.NSEW); bar.grid(row=0,column=1,sticky=tk.NS); self.tree.bind("<<TreeviewSelect>>",self.select)
+  42:         def label(text,row): ttk.Label(right,text=text,style="Section.TLabel").grid(row=row,column=0,sticky=tk.NW,padx=(0,8),pady=(0,8))
+  43:         label("Track ID:",0); self.id_entry=ttk.Entry(right,textvariable=self.id); self.id_entry.grid(row=0,column=1,sticky=tk.EW,pady=(0,8))
+
+=== Source lines 100-151 ===
+ 100:         with path.open("w",encoding="utf-8",newline="") as f:
+ 101:             w=csv.DictWriter(f,fieldnames=FIELDS,lineterminator="\n");w.writeheader()
+ 102:             for row in rows:w.writerow({x:row.get(x,"") for x in FIELDS})
+ 103: 
+ 104:     def candidate_valid(self,candidate:Path)->tuple[bool,str]:
+ 105:         with tempfile.TemporaryDirectory(prefix="doda-track-") as temp:
+ 106:             root=Path(temp);dst=root/"data_authoring"/"source";dst.mkdir(parents=True)
+ 107:             for file in FILES:shutil.copy2(candidate if file=="department_tracks.csv" else self.app.source_directory/file,dst/file)
+ 108:             done=subprocess.run([sys.executable,str(self.app.validator_path),"--root",str(root),"validate"],cwd=root,text=True,encoding="utf-8",errors="replace",capture_output=True)
+ 109:             return done.returncode==0,(done.stdout+"\n"+done.stderr).strip()
+ 110: 
+ 111:     def save(self)->None:
+ 112:         r=self.record()
+ 113:         if not r:return
+ 114:         rows=self.rows()
+ 115:         if self.editing:
+ 116:             if r["track_id"]!=self.editing:messagebox.showerror("DoDA Content Workbench","Track ID cannot change after creation.");return
+ 117:             rows=[r if x.get("track_id")==self.editing else x for x in rows];action="updated"
+ 118:         else:
+ 119:             if any(x.get("track_id")==r["track_id"] for x in rows):messagebox.showerror("DoDA Content Workbench","Track ID already exists.");return
+ 120:             rows.append(r);action="added"
+ 121:         rows.sort(key=lambda x:(int(x["sort_order"]),x["track_id"]));tmp=self.app.source_directory/f".tracks-{uuid4().hex}.tmp.csv"
+ 122:         try:
+ 123:             self.write(tmp,rows);ok,output=self.candidate_valid(tmp)
+ 124:             self.app.log("Candidate validation output:");[self.app.log(" "+line) for line in output.splitlines()]
+ 125:             if not ok:messagebox.showerror("DoDA Content Workbench","Candidate validation failed; source CSV was unchanged. See Activity Log.");return
+ 126:             folder=self.backups();folder.mkdir(parents=True,exist_ok=True);backup=folder/f"department_tracks_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.csv"
+ 127:             shutil.copy2(self.path(),backup);os.replace(tmp,self.path());self.editing=r["track_id"];self.app.refresh_all(False)
+ 128:             done=subprocess.run([sys.executable,str(self.app.validator_path),"--root",str(self.app.project_root),"validate"],cwd=self.app.project_root,text=True,encoding="utf-8",errors="replace",capture_output=True)
+ 129:             [self.app.log(" "+line) for line in (done.stdout+"\n"+done.stderr).strip().splitlines()]
+ 130:             self.app.refresh_all(False)
+ 131:             if done.returncode==0:messagebox.showinfo("DoDA Content Workbench",f"Track '{r['track_id']}' {action}.\n\nBackup created:\n{backup}\n\nValidation passed.")
+ 132:             else:messagebox.showwarning("DoDA Content Workbench",f"Track {action}, but post-save validation failed.\nBackup: {backup}")
+ 133:         finally:
+ 134:             if tmp.exists():tmp.unlink()
+ 135: 
+ 136:     def remove(self)->None:
+ 137:         """Remove the selected track only after explicit confirmation and validation."""
+ 138: 
+ 139:         if not self.editing:
+ 140:             messagebox.showwarning(
+ 141:                 "DoDA Content Workbench",
+ 142:                 "Select an existing Department Track before using Remove Track.",
+ 143:             )
+ 144:             return
+ 145: 
+ 146:         track_id = self.editing
+ 147: 
+ 148:         confirmed = messagebox.askyesno(
+ 149:             "Remove Department Track?",
+ 150:             (
+ 151:                 f"ARE YOU SURE you want to remove '{track_id}'?\n\n"
+
+=== Source lines 206-234 ===
+ 206:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+ 207:                 + ".csv"
+ 208:             )
+ 209: 
+ 210:             shutil.copy2(self.path(), backup)
+ 211: 
+ 212:             os.replace(temporary, self.path())
+ 213: 
+ 214:             self.app.log(f"Created pre-removal backup: {backup}")
+ 215:             self.app.log(f"Removed Department Track: {track_id}")
+ 216: 
+ 217:             self.editing = None
+ 218:             self.app.refresh_all(False)
+ 219:             self.new()
+ 220: 
+ 221:             command = [
+ 222:                 sys.executable,
+ 223:                 str(self.app.validator_path),
+ 224:                 "--root",
+ 225:                 str(self.app.project_root),
+ 226:                 "validate",
+ 227:             ]
+ 228: 
+ 229:             completed = subprocess.run(
+ 230:                 command,
+ 231:                 cwd=self.app.project_root,
+ 232:                 text=True,
+ 233:                 encoding="utf-8",
+ 234:                 errors="replace",
+
+================================================================================
+MODULE: doda_metrics_editor.py
+PATH: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_metrics_editor.py
+================================================================================
+
+=== Anchor Matches ===
+
+LineNumber Line                                                               
+---------- ----                                                               
+        31 FILES = (                                                          
+       617     def candidate_valid(self, candidate: Path) -> tuple[bool, str]:
+       623             for filename in FILES:                                 
+       630                 shutil.copy2(source, destination / filename)       
+       756             shutil.copy2(self.source_path(), backup)               
+       880             shutil.copy2(self.source_path(), backup)
+
+=== Source lines 27-55 ===
+  27:     "update_notes",
+  28:     "active",
+  29: )
+  30: 
+  31: FILES = (
+  32:     "enum_catalog.csv",
+  33:     "department_tracks.csv",
+  34:     "metrics.csv",
+  35:     "metric_tiers.csv",
+  36:     "facilities.csv",
+  37:     "flavor_text.csv",
+  38: )
+  39: 
+  40: ID_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
+  41: 
+  42: 
+  43: class MetricsEditor:
+  44:     def __init__(self, app: Any) -> None:
+  45:         self.app = app
+  46:         self.editing_id: str | None = None
+  47: 
+  48:         self.metric_id = tk.StringVar()
+  49:         self.display_name = tk.StringVar()
+  50:         self.owner_system = tk.StringVar()
+  51:         self.internal_min = tk.StringVar()
+  52:         self.internal_max = tk.StringVar()
+  53:         self.default_value = tk.StringVar()
+  54:         self.polarity = tk.StringVar()
+  55:         self.display_mode = tk.StringVar()
+
+=== Source lines 613-654 ===
+ 613:                         for field in FIELDS
+ 614:                     }
+ 615:                 )
+ 616: 
+ 617:     def candidate_valid(self, candidate: Path) -> tuple[bool, str]:
+ 618:         with tempfile.TemporaryDirectory(prefix="doda-metric-") as temporary:
+ 619:             root = Path(temporary)
+ 620:             destination = root / "data_authoring" / "source"
+ 621:             destination.mkdir(parents=True)
+ 622: 
+ 623:             for filename in FILES:
+ 624:                 source = (
+ 625:                     candidate
+ 626:                     if filename == "metrics.csv"
+ 627:                     else self.app.source_directory / filename
+ 628:                 )
+ 629: 
+ 630:                 shutil.copy2(source, destination / filename)
+ 631: 
+ 632:             command = [
+ 633:                 sys.executable,
+ 634:                 str(self.app.validator_path),
+ 635:                 "--root",
+ 636:                 str(root),
+ 637:                 "validate",
+ 638:             ]
+ 639: 
+ 640:             completed = subprocess.run(
+ 641:                 command,
+ 642:                 cwd=root,
+ 643:                 text=True,
+ 644:                 encoding="utf-8",
+ 645:                 errors="replace",
+ 646:                 capture_output=True,
+ 647:             )
+ 648: 
+ 649:             output = (
+ 650:                 completed.stdout
+ 651:                 + ("\n" if completed.stdout and completed.stderr else "")
+ 652:                 + completed.stderr
+ 653:             ).strip()
+ 654: 
+
+=== Source lines 752-780 ===
+ 752:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+ 753:                 + ".csv"
+ 754:             )
+ 755: 
+ 756:             shutil.copy2(self.source_path(), backup)
+ 757:             os.replace(temporary, self.source_path())
+ 758: 
+ 759:             self.editing_id = row["metric_id"]
+ 760: 
+ 761:             self.app.log(f"Created metric backup: {backup}")
+ 762:             self.app.log(f"Metric {action}: {row['metric_id']}")
+ 763: 
+ 764:             self.app.refresh_all(False)
+ 765: 
+ 766:             valid, output = self.post_validate()
+ 767: 
+ 768:             self.app.log(
+ 769:                 f"Post-save metric validation exit code: {0 if valid else 1}"
+ 770:             )
+ 771: 
+ 772:             for line in output.splitlines():
+ 773:                 self.app.log(" " + line)
+ 774: 
+ 775:             self.app.refresh_all(False)
+ 776: 
+ 777:             if valid:
+ 778:                 messagebox.showinfo(
+ 779:                     "DoDA Content Workbench",
+ 780:                     (
+
+=== Source lines 876-904 ===
+ 876:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+ 877:                 + ".csv"
+ 878:             )
+ 879: 
+ 880:             shutil.copy2(self.source_path(), backup)
+ 881:             os.replace(temporary, self.source_path())
+ 882: 
+ 883:             self.editing_id = None
+ 884: 
+ 885:             self.app.log(f"Created metric pre-removal backup: {backup}")
+ 886:             self.app.log(f"Removed metric: {metric_id}")
+ 887: 
+ 888:             self.app.refresh_all(False)
+ 889:             self.new()
+ 890: 
+ 891:             valid, output = self.post_validate()
+ 892: 
+ 893:             for line in output.splitlines():
+ 894:                 self.app.log(" " + line)
+ 895: 
+ 896:             self.app.refresh_all(False)
+ 897: 
+ 898:             if valid:
+ 899:                 messagebox.showinfo(
+ 900:                     "DoDA Content Workbench",
+ 901:                     (
+ 902:                         f"Metric '{metric_id}' removed.\n\n"
+ 903:                         f"Backup created:\n{backup}\n\n"
+ 904:                         "Project validation passed."
+
+================================================================================
+MODULE: doda_metric_tiers_editor.py
+PATH: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_metric_tiers_editor.py
+================================================================================
+
+=== Anchor Matches ===
+
+LineNumber Line                                                               
+---------- ----                                                               
+        55 FILES = (                                                          
+       708     def candidate_valid(self, candidate: Path) -> tuple[bool, str]:
+       714             for filename in FILES:                                 
+       721                 shutil.copy2(source, destination / filename)       
+       856             shutil.copy2(self.source_path(), backup)               
+       987             shutil.copy2(self.source_path(), backup)
+
+=== Source lines 51-79 ===
+  51:     "flavor_text_id",
+  52:     "sort_order",
+  53: )
+  54: 
+  55: FILES = (
+  56:     "enum_catalog.csv",
+  57:     "department_tracks.csv",
+  58:     "metrics.csv",
+  59:     "metric_tiers.csv",
+  60:     "facilities.csv",
+  61:     "flavor_text.csv",
+  62: )
+  63: 
+  64: ID_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
+  65: 
+  66: 
+  67: class MetricTiersEditor:
+  68:     def __init__(self, app: Any) -> None:
+  69:         self.app = app
+  70:         self.editing_key: tuple[str, str] | None = None
+  71: 
+  72:         self.metric_id = tk.StringVar()
+  73:         self.tier_id = tk.StringVar()
+  74:         self.minimum = tk.StringVar()
+  75:         self.maximum = tk.StringVar()
+  76:         self.display_label = tk.StringVar()
+  77:         self.short_status = tk.StringVar()
+  78:         self.ui_color = tk.StringVar()
+  79:         self.flavor_text_id = tk.StringVar()
+
+=== Source lines 704-745 ===
+ 704:                         for field in FIELDS
+ 705:                     }
+ 706:                 )
+ 707: 
+ 708:     def candidate_valid(self, candidate: Path) -> tuple[bool, str]:
+ 709:         with tempfile.TemporaryDirectory(prefix="doda-tier-") as temporary:
+ 710:             root = Path(temporary)
+ 711:             destination = root / "data_authoring" / "source"
+ 712:             destination.mkdir(parents=True)
+ 713: 
+ 714:             for filename in FILES:
+ 715:                 source = (
+ 716:                     candidate
+ 717:                     if filename == "metric_tiers.csv"
+ 718:                     else self.app.source_directory / filename
+ 719:                 )
+ 720: 
+ 721:                 shutil.copy2(source, destination / filename)
+ 722: 
+ 723:             command = [
+ 724:                 sys.executable,
+ 725:                 str(self.app.validator_path),
+ 726:                 "--root",
+ 727:                 str(root),
+ 728:                 "validate",
+ 729:             ]
+ 730: 
+ 731:             completed = subprocess.run(
+ 732:                 command,
+ 733:                 cwd=root,
+ 734:                 text=True,
+ 735:                 encoding="utf-8",
+ 736:                 errors="replace",
+ 737:                 capture_output=True,
+ 738:             )
+ 739: 
+ 740:             output = (
+ 741:                 completed.stdout
+ 742:                 + ("\n" if completed.stdout and completed.stderr else "")
+ 743:                 + completed.stderr
+ 744:             ).strip()
+ 745: 
+
+=== Source lines 852-880 ===
+ 852:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+ 853:                 + ".csv"
+ 854:             )
+ 855: 
+ 856:             shutil.copy2(self.source_path(), backup)
+ 857:             os.replace(temporary, self.source_path())
+ 858: 
+ 859:             self.editing_key = (
+ 860:                 row["metric_id"],
+ 861:                 row["tier_id"],
+ 862:             )
+ 863: 
+ 864:             self.app.log(f"Created Metric Tier backup: {backup}")
+ 865:             self.app.log(
+ 866:                 f"Metric Tier {action}: "
+ 867:                 f"{row['metric_id']} / {row['tier_id']}"
+ 868:             )
+ 869: 
+ 870:             self.app.refresh_all(False)
+ 871: 
+ 872:             valid, output = self.post_validate()
+ 873: 
+ 874:             for line in output.splitlines():
+ 875:                 self.app.log(" " + line)
+ 876: 
+ 877:             self.app.refresh_all(False)
+ 878: 
+ 879:             if valid:
+ 880:                 messagebox.showinfo(
+
+=== Source lines 983-1011 ===
+ 983:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+ 984:                 + ".csv"
+ 985:             )
+ 986: 
+ 987:             shutil.copy2(self.source_path(), backup)
+ 988:             os.replace(temporary, self.source_path())
+ 989: 
+ 990:             self.editing_key = None
+ 991: 
+ 992:             self.app.log(f"Created pre-removal Metric Tier backup: {backup}")
+ 993:             self.app.log(
+ 994:                 f"Removed Metric Tier: {metric_id} / {tier_id}"
+ 995:             )
+ 996: 
+ 997:             self.app.refresh_all(False)
+ 998:             self.new()
+ 999: 
+1000:             valid, output = self.post_validate()
+1001: 
+1002:             for line in output.splitlines():
+1003:                 self.app.log(" " + line)
+1004: 
+1005:             self.app.refresh_all(False)
+1006: 
+1007:             if valid:
+1008:                 messagebox.showinfo(
+1009:                     "DoDA Content Workbench",
+1010:                     (
+1011:                         f"Metric Tier '{metric_id} / {tier_id}' removed.\n\n"
+
+================================================================================
+MODULE: doda_flavor_text_editor.py
+PATH: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_flavor_text_editor.py
+================================================================================
+
+=== Anchor Matches ===
+
+LineNumber Line                                                               
+---------- ----                                                               
+        25 FILES = (                                                          
+       418     def candidate_valid(self, candidate: Path) -> tuple[bool, str]:
+       424             for filename in FILES:                                 
+       431                 shutil.copy2(source, destination / filename)       
+       559             shutil.copy2(self.source_path(), backup)               
+       682             shutil.copy2(self.source_path(), backup)
+
+=== Source lines 21-49 ===
+  21:     "body",
+  22:     "active",
+  23: )
+  24: 
+  25: FILES = (
+  26:     "enum_catalog.csv",
+  27:     "department_tracks.csv",
+  28:     "metrics.csv",
+  29:     "metric_tiers.csv",
+  30:     "facilities.csv",
+  31:     "flavor_text.csv",
+  32: )
+  33: 
+  34: ID_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
+  35: 
+  36: 
+  37: class FlavorTextEditor:
+  38:     def __init__(self, app: Any) -> None:
+  39:         self.app = app
+  40:         self.editing_id: str | None = None
+  41: 
+  42:         self.flavor_id = tk.StringVar()
+  43:         self.category = tk.StringVar()
+  44:         self.title = tk.StringVar()
+  45:         self.active = tk.BooleanVar(value=True)
+  46: 
+  47:         self.build()
+  48: 
+  49:     def source_path(self) -> Path:
+
+=== Source lines 414-455 ===
+ 414:                         for field in FIELDS
+ 415:                     }
+ 416:                 )
+ 417: 
+ 418:     def candidate_valid(self, candidate: Path) -> tuple[bool, str]:
+ 419:         with tempfile.TemporaryDirectory(prefix="doda-flavor-") as temporary:
+ 420:             root = Path(temporary)
+ 421:             destination = root / "data_authoring" / "source"
+ 422:             destination.mkdir(parents=True)
+ 423: 
+ 424:             for filename in FILES:
+ 425:                 source = (
+ 426:                     candidate
+ 427:                     if filename == "flavor_text.csv"
+ 428:                     else self.app.source_directory / filename
+ 429:                 )
+ 430: 
+ 431:                 shutil.copy2(source, destination / filename)
+ 432: 
+ 433:             command = [
+ 434:                 sys.executable,
+ 435:                 str(self.app.validator_path),
+ 436:                 "--root",
+ 437:                 str(root),
+ 438:                 "validate",
+ 439:             ]
+ 440: 
+ 441:             completed = subprocess.run(
+ 442:                 command,
+ 443:                 cwd=root,
+ 444:                 text=True,
+ 445:                 encoding="utf-8",
+ 446:                 errors="replace",
+ 447:                 capture_output=True,
+ 448:             )
+ 449: 
+ 450:             output = (
+ 451:                 completed.stdout
+ 452:                 + ("\n" if completed.stdout and completed.stderr else "")
+ 453:                 + completed.stderr
+ 454:             ).strip()
+ 455: 
+
+=== Source lines 555-583 ===
+ 555:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+ 556:                 + ".csv"
+ 557:             )
+ 558: 
+ 559:             shutil.copy2(self.source_path(), backup)
+ 560:             os.replace(temporary, self.source_path())
+ 561: 
+ 562:             self.editing_id = row["flavor_text_id"]
+ 563: 
+ 564:             self.app.log(f"Created Flavor Text backup: {backup}")
+ 565:             self.app.log(
+ 566:                 f"Flavor Text {action}: {row['flavor_text_id']}"
+ 567:             )
+ 568: 
+ 569:             self.app.refresh_all(False)
+ 570: 
+ 571:             valid, output = self.post_validate()
+ 572: 
+ 573:             for line in output.splitlines():
+ 574:                 self.app.log(" " + line)
+ 575: 
+ 576:             self.app.refresh_all(False)
+ 577: 
+ 578:             if valid:
+ 579:                 messagebox.showinfo(
+ 580:                     "DoDA Content Workbench",
+ 581:                     (
+ 582:                         f"Flavor Text '{row['flavor_text_id']}' {action}.\n\n"
+ 583:                         f"Backup created:\n{backup}\n\n"
+
+=== Source lines 678-706 ===
+ 678:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+ 679:                 + ".csv"
+ 680:             )
+ 681: 
+ 682:             shutil.copy2(self.source_path(), backup)
+ 683:             os.replace(temporary, self.source_path())
+ 684: 
+ 685:             self.editing_id = None
+ 686: 
+ 687:             self.app.log(
+ 688:                 f"Created pre-removal Flavor Text backup: {backup}"
+ 689:             )
+ 690: 
+ 691:             self.app.log(f"Removed Flavor Text: {flavor_id}")
+ 692: 
+ 693:             self.app.refresh_all(False)
+ 694:             self.new()
+ 695: 
+ 696:             valid, output = self.post_validate()
+ 697: 
+ 698:             for line in output.splitlines():
+ 699:                 self.app.log(" " + line)
+ 700: 
+ 701:             self.app.refresh_all(False)
+ 702: 
+ 703:             if valid:
+ 704:                 messagebox.showinfo(
+ 705:                     "DoDA Content Workbench",
+ 706:                     (
+
+================================================================================
+MODULE: doda_enum_catalog_editor.py
+PATH: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_enum_catalog_editor.py
+================================================================================
+
+=== Anchor Matches ===
+
+LineNumber Line                                                               
+---------- ----                                                               
+        26 FILES = (                                                          
+       656     def candidate_valid(self, candidate: Path) -> tuple[bool, str]:
+       662             for filename in FILES:                                 
+       669                 shutil.copy2(source, destination / filename)       
+       804             shutil.copy2(self.source_path(), backup)               
+       935             shutil.copy2(self.source_path(), backup)
+
+=== Source lines 22-50 ===
+  22:     "sort_order",
+  23:     "active",
+  24: )
+  25: 
+  26: FILES = (
+  27:     "enum_catalog.csv",
+  28:     "department_tracks.csv",
+  29:     "metrics.csv",
+  30:     "metric_tiers.csv",
+  31:     "facilities.csv",
+  32:     "flavor_text.csv",
+  33: )
+  34: 
+  35: ID_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
+  36: 
+  37: 
+  38: class EnumCatalogEditor:
+  39:     def __init__(self, app: Any) -> None:
+  40:         self.app = app
+  41:         self.editing_key: tuple[str, str] | None = None
+  42: 
+  43:         self.catalog_group_filter = tk.StringVar(value="All Groups")
+  44: 
+  45:         self.enum_group = tk.StringVar()
+  46:         self.enum_value = tk.StringVar()
+  47:         self.display_label = tk.StringVar()
+  48:         self.sort_order = tk.StringVar()
+  49:         self.active = tk.BooleanVar(value=True)
+  50: 
+
+=== Source lines 652-693 ===
+ 652:                         for field in FIELDS
+ 653:                     }
+ 654:                 )
+ 655: 
+ 656:     def candidate_valid(self, candidate: Path) -> tuple[bool, str]:
+ 657:         with tempfile.TemporaryDirectory(prefix="doda-enum-") as temporary:
+ 658:             root = Path(temporary)
+ 659:             destination = root / "data_authoring" / "source"
+ 660:             destination.mkdir(parents=True)
+ 661: 
+ 662:             for filename in FILES:
+ 663:                 source = (
+ 664:                     candidate
+ 665:                     if filename == "enum_catalog.csv"
+ 666:                     else self.app.source_directory / filename
+ 667:                 )
+ 668: 
+ 669:                 shutil.copy2(source, destination / filename)
+ 670: 
+ 671:             command = [
+ 672:                 sys.executable,
+ 673:                 str(self.app.validator_path),
+ 674:                 "--root",
+ 675:                 str(root),
+ 676:                 "validate",
+ 677:             ]
+ 678: 
+ 679:             completed = subprocess.run(
+ 680:                 command,
+ 681:                 cwd=root,
+ 682:                 text=True,
+ 683:                 encoding="utf-8",
+ 684:                 errors="replace",
+ 685:                 capture_output=True,
+ 686:             )
+ 687: 
+ 688:             output = (
+ 689:                 completed.stdout
+ 690:                 + ("\n" if completed.stdout and completed.stderr else "")
+ 691:                 + completed.stderr
+ 692:             ).strip()
+ 693: 
+
+=== Source lines 800-828 ===
+ 800:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+ 801:                 + ".csv"
+ 802:             )
+ 803: 
+ 804:             shutil.copy2(self.source_path(), backup)
+ 805:             os.replace(temporary, self.source_path())
+ 806: 
+ 807:             self.editing_key = (
+ 808:                 row["enum_group"],
+ 809:                 row["enum_value"],
+ 810:             )
+ 811: 
+ 812:             self.app.log(f"Created Enum Catalog backup: {backup}")
+ 813:             self.app.log(
+ 814:                 f"Enum Catalog {action}: "
+ 815:                 f"{row['enum_group']} / {row['enum_value']}"
+ 816:             )
+ 817: 
+ 818:             self.app.refresh_all(False)
+ 819: 
+ 820:             valid, output = self.post_validate()
+ 821: 
+ 822:             for line in output.splitlines():
+ 823:                 self.app.log(" " + line)
+ 824: 
+ 825:             self.app.refresh_all(False)
+ 826: 
+ 827:             if valid:
+ 828:                 messagebox.showinfo(
+
+=== Source lines 931-959 ===
+ 931:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+ 932:                 + ".csv"
+ 933:             )
+ 934: 
+ 935:             shutil.copy2(self.source_path(), backup)
+ 936:             os.replace(temporary, self.source_path())
+ 937: 
+ 938:             self.editing_key = None
+ 939: 
+ 940:             self.app.log(
+ 941:                 f"Created pre-removal Enum Catalog backup: {backup}"
+ 942:             )
+ 943: 
+ 944:             self.app.log(f"Removed Enum Value: {group} / {value}")
+ 945: 
+ 946:             self.app.refresh_all(False)
+ 947:             self.new()
+ 948: 
+ 949:             valid, output = self.post_validate()
+ 950: 
+ 951:             for line in output.splitlines():
+ 952:                 self.app.log(" " + line)
+ 953: 
+ 954:             self.app.refresh_all(False)
+ 955: 
+ 956:             if valid:
+ 957:                 messagebox.showinfo(
+ 958:                     "DoDA Content Workbench",
+ 959:                     (

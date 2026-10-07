@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import csv
 import os
@@ -16,7 +16,20 @@ from uuid import uuid4
 
 FIELDS = ("track_id", "display_name", "description", "sort_order", "active")
 ID = re.compile(r"^[A-Z][A-Z0-9_]*$")
-FILES = ("enum_catalog.csv", "department_tracks.csv", "metrics.csv", "metric_tiers.csv", "facilities.csv", "flavor_text.csv")
+FILES = (
+    "enum_catalog.csv",
+    "department_tracks.csv",
+    "metrics.csv",
+    "metric_tiers.csv",
+    "facilities.csv",
+    "flavor_text.csv",
+    "qualification_catalog.csv",
+    "capabilities.csv",
+    "facility_capabilities.csv",
+    "capability_staffing_rules.csv",
+    "facility_capability_staffing_overrides.csv",
+    "task_templates.csv",
+)
 
 class TrackEditor:
     def __init__(self, app: Any) -> None:

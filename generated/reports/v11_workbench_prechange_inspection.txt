@@ -1,0 +1,1428 @@
+DoDA V1.1 Workbench Pre-Change Inspection
+Generated: 2026-10-01T12:51:02.7229064-04:00
+
+=== Python Syntax Check ===
+PASS
+
+=== Imports ===
+from __future__ import annotations
+import argparse
+import csv
+import json
+import sys
+from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+=== Constants ===
+TOOL_VERSION = "0.1.0"
+current = start.resolve()
+reader = csv.DictReader(source_file)
+actual_columns = [column.strip() for column in reader.fieldnames]
+missing_columns = [
+row = {
+line_number = row["_line_number"]
+key = tuple(row.get(column, "").strip() for column in key_columns)
+original_line = seen_keys[key]
+value = row.get("active", "").upper()
+value = row.get(column, "")
+value = row.get(column, "").upper()
+value = parse_int(table_name, row, "sort_order", result)
+key = tuple(row.get(column, "") for column in key_columns)
+allowed_polarity = enum_values.get("METRIC_POLARITY", set())
+allowed_display_modes = enum_values.get("METRIC_DISPLAY_MODE", set())
+metric_id = row["metric_id"]
+minimum = parse_int("metrics", row, "internal_min", result)
+maximum = parse_int("metrics", row, "internal_max", result)
+default_value = parse_int("metrics", row, "default_value", result)
+polarity = row["polarity"]
+display_mode = row["ui_display_mode"]
+metric_id = row["metric_id"]
+flavor_text_id = row["flavor_text_id"]
+minimum = parse_int("metric_tiers", row, "min_inclusive", result)
+maximum = parse_int("metric_tiers", row, "max_inclusive", result)
+metric_tiers = tiers_by_metric.get(metric_id, [])
+minimum = parse_int("metric_tiers", row, "min_inclusive", result)
+maximum = parse_int("metric_tiers", row, "max_inclusive", result)
+sort_order = parse_int("metric_tiers", row, "sort_order", result)
+metric_minimum = parse_int("metrics", metric_row, "internal_min", result)
+metric_maximum = parse_int("metrics", metric_row, "internal_max", result)
+first_minimum = parsed_tiers[0][0]
+expected_next_minimum = metric_minimum
+expected_next_minimum = max(expected_next_minimum, maximum + 1)
+final_maximum = parsed_tiers[-1][1]
+allowed_tiers = enum_values.get("FACILITY_TIER", set())
+facility_id = row["facility_id"]
+track_id = row["track_id"]
+tier_id = row["initial_tier_id"]
+personnel_capacity = parse_int("facilities", row, "personnel_capacity", result)
+minimum_allowed = 0 if table_name == "enum_catalog" else 1
+value = parse_int(table_name, row, "sort_order", result)
+allowed_tiers = enum_values.get("FACILITY_TIER", set())
+facility_id = row["facility_id"]
+capability_id = row["capability_id"]
+maximum = parse_int(
+parent = facility_by_id.get(facility_id)
+capacity = parse_int("facilities", parent, "personnel_capacity", result)
+minimum = parse_int(table_name, row, "min_contributors", result)
+preferred = parse_int(table_name, row, "preferred_contributors", result)
+maximum = parse_int(table_name, row, "max_contributors", result)
+capability_id = row["capability_id"]
+qualification_id = row["qualification_id"]
+facility_id = row["facility_id"]
+capability_id = row["capability_id"]
+qualification_id = row["qualification_id"]
+allowed_priorities = enum_values.get("TASK_PRIORITY", set())
+installed_capability_ids = {
+capability_id = row["capability_id"]
+priority = row["priority"]
+target_effort = parse_int(
+deadline = parse_int(
+capacity = parse_int("facilities", row, "personnel_capacity", result)
+maximum = parse_int(
+capacity = capacity_by_facility.get(facility_id)
+result = ValidationResult()
+source_directory = project_root / "data_authoring" / "source"
+path = source_directory / specification["filename"]
+rows = load_csv(
+enum_values = build_enum_index(
+active_only=True,
+track_ids = build_id_set(
+active_only=True,
+flavor_text_ids = build_id_set(
+active_only=True,
+active_facility_ids = build_id_set(
+active_only=True,
+active_qualification_ids = build_id_set(
+active_only=True,
+active_capability_ids = build_id_set(
+active_only=True,
+metrics_by_id = validate_metrics(
+facility_by_id = validate_facilities(
+active_facility_capabilities = validate_facility_capabilities(
+active_global_rules = validate_capability_staffing_rules(
+report_directory = project_root / "generated" / "reports"
+report_path = report_directory / "content_validation_report.json"
+report = {
+encoding="utf-8",
+parser = argparse.ArgumentParser(
+prog="doda_content_workbench",
+description="Validate DoDA authored content.",
+type=Path,
+default=None,
+help="Path to the doda-core project root. Defaults to auto-detection.",
+subparsers = parser.add_subparsers(dest="command", required=True)
+help="Validate authored CSV source data and write a JSON report.",
+parser = build_parser()
+arguments = parser.parse_args()
+project_root = (
+result = validate_project(project_root)
+report_path = write_report(project_root, result)
+
+=== Classes ===
+class ValidationResult:
+
+=== Function Headers ===
+def valid(self) -> bool:
+def error(self, message: str) -> None:
+def warning(self, message: str) -> None:
+def find_project_root(start: Path) -> Path:
+def load_csv(
+def validate_keys(
+def validate_active_values(
+def parse_int(
+def parse_bool(
+def validate_sort_order(
+def build_id_set(
+def build_row_index(
+def build_enum_index(
+def validate_metrics(
+def validate_metric_tiers(
+def validate_facilities(
+def validate_catalog_sort_orders(
+def validate_facility_capabilities(
+def validate_staffing_range(
+def validate_capability_staffing_rules(
+def validate_facility_capability_staffing_overrides(
+def validate_task_templates(
+def warn_on_facility_capacity_overcommit(
+def validate_project(project_root: Path) -> ValidationResult:
+def write_report(project_root: Path, result: ValidationResult) -> Path:
+def print_result(project_root: Path, result: ValidationResult, report_path: Path) -> None:
+def build_parser() -> argparse.ArgumentParser:
+def main() -> int:
+
+=== UI / Save / Load / CSV / Export References ===
+
+LineNumber Line                                                                                            
+---------- ----                                                                                            
+         5 Validates authored CSV source data before any content export, PK3 packaging,                    
+        12 import csv                                                                                      
+        42 TABLE_SPECS: dict[str, dict[str, Any]] = {                                                      
+        44         "filename": "enum_catalog.csv",                                                         
+        56         "filename": "department_tracks.csv",                                                    
+        67         "filename": "metrics.csv",                                                              
+        84         "filename": "metric_tiers.csv",                                                         
+        99         "filename": "facilities.csv",                                                           
+       115         "filename": "flavor_text.csv",                                                          
+       126         "filename": "qualification_catalog.csv",                                                
+       137         "filename": "capabilities.csv",                                                         
+       149         "filename": "facility_capabilities.csv",                                                
+       163         "filename": "capability_staffing_rules.csv",                                            
+       176         "filename": "facility_capability_staffing_overrides.csv",                               
+       190         "filename": "task_templates.csv",                                                       
+       225 def load_csv(                                                                                   
+       228     table_name: str,                                                                            
+       232         result.error(f"[{table_name}] Missing required source file: {path}")                    
+       237             reader = csv.DictReader(source_file)                                                
+       240                 result.error(f"[{table_name}] File has no CSV header row: {path.name}")         
+       250                     f"[{table_name}] Missing required columns in {path.name}: "                 
+       270             result.stats[table_name] = len(rows)                                                
+       273                 result.warning(f"[{table_name}] Source file contains no data rows: {path.name}")
+       278         result.error(f"[{table_name}] Could not read UTF-8 CSV {path.name}: {error}")           
+       280     except csv.Error as error:                                                                  
+       281         result.error(f"[{table_name}] CSV parsing error in {path.name}: {error}")               
+       285 def validate_keys(                                                                              
+       286     table_name: str,                                                                            
+       299                 f"[{table_name}] Line {line_number}: blank key value in "                       
+       307                 f"[{table_name}] Line {line_number}: duplicate key "                            
+       314 def validate_active_values(                                                                     
+       315     table_name: str,                                                                            
+       327                 f"[{table_name}] Line {row['_line_number']}: active must be TRUE "              
+       333     table_name: str,                                                                            
+       344             f"[{table_name}] Line {row['_line_number']}: {column} must be an "                  
+       351     table_name: str,                                                                            
+       365         f"[{table_name}] Line {row['_line_number']}: {column} must be TRUE "                    
+       371 def validate_sort_order(                                                                        
+       372     table_name: str,                                                                            
+       380         value = parse_int(table_name, row, "sort_order", result)                                
+       384                 f"[{table_name}] Line {row['_line_number']}: sort_order must be "               
+       436 def validate_metrics(                                                                           
+       489 def validate_metric_tiers(                                                                      
+       503                 "does not exist in metrics.csv"                                                 
+       510                 f"'{flavor_text_id}' does not exist in flavor_text.csv"                         
+       524     validate_sort_order("metric_tiers", tiers, result)                                          
+       557                 f"but metrics.csv defines internal_min {metric_minimum}"                        
+       582                 f"but metrics.csv defines internal_max {metric_maximum}"                        
+       586 def validate_facilities(                                                                        
+       606                 "does not exist in active department_tracks.csv"                                
+       624 def validate_catalog_sort_orders(                                                               
+       625     table_name: str,                                                                            
+       629     minimum_allowed = 0 if table_name == "enum_catalog" else 1                                  
+       632         value = parse_int(table_name, row, "sort_order", result)                                
+       636                 f"[{table_name}] Line {row['_line_number']}: sort_order must be "               
+       641 def validate_facility_capabilities(                                                             
+       665                 f"'{facility_id}' does not exist in active facilities.csv"                      
+       671                 f"'{capability_id}' does not exist in active capabilities.csv"                  
+       700     validate_sort_order("facility_capabilities", rows, result)                                  
+       704 def validate_staffing_range(                                                                    
+       705     table_name: str,                                                                            
+       709     minimum = parse_int(table_name, row, "min_contributors", result)                            
+       710     preferred = parse_int(table_name, row, "preferred_contributors", result)                    
+       711     maximum = parse_int(table_name, row, "max_contributors", result)                            
+       720             f"[{table_name}] Line {row['_line_number']}: contributor counts "                   
+       726 def validate_capability_staffing_rules(                                                         
+       742                 "capabilities.csv"                                                              
+       749                 "qualification_catalog.csv"                                                     
+       752         validate_staffing_range("capability_staffing_rules", row, result)                       
+       757     validate_sort_order("capability_staffing_rules", rows, result)                              
+       773 def validate_facility_capability_staffing_overrides(                                            
+       790                 "facility_capabilities.csv"                                                     
+       797                 "does not exist in active qualification_catalog.csv"                            
+       807         validate_staffing_range(                                                                
+       813     validate_sort_order(                                                                        
+       820 def validate_task_templates(                                                                    
+       840                 f"'{capability_id}' does not exist in active capabilities.csv"                  
+       886     validate_sort_order("task_templates", rows, result)                                         
+       930 def validate_project(project_root: Path) -> ValidationResult:                                   
+       933     loaded_tables: dict[str, list[dict[str, str]]] = {}                                         
+       935     for table_name, specification in TABLE_SPECS.items():                                       
+       937         rows = load_csv(                                                                        
+       940             table_name,                                                                         
+       943         loaded_tables[table_name] = rows                                                        
+       944         validate_keys(table_name, rows, specification["key_columns"], result)                   
+       945         validate_active_values(table_name, rows, result)                                        
+       947     for table_name in (                                                                         
+       953         validate_catalog_sort_orders(table_name, loaded_tables[table_name], result)             
+       956         loaded_tables["enum_catalog"],                                                          
+       960         loaded_tables["department_tracks"],                                                     
+       965         loaded_tables["flavor_text"],                                                           
+       970         loaded_tables["facilities"],                                                            
+       975         loaded_tables["qualification_catalog"],                                                 
+       980         loaded_tables["capabilities"],                                                          
+       985     metrics_by_id = validate_metrics(                                                           
+       986         loaded_tables["metrics"],                                                               
+       990     validate_metric_tiers(                                                                      
+       991         loaded_tables["metric_tiers"],                                                          
+       996     facility_by_id = validate_facilities(                                                       
+       997         loaded_tables["facilities"],                                                            
+      1002     active_facility_capabilities = validate_facility_capabilities(                              
+      1003         loaded_tables["facility_capabilities"],                                                 
+      1010     active_global_rules = validate_capability_staffing_rules(                                   
+      1011         loaded_tables["capability_staffing_rules"],                                             
+      1016     validate_facility_capability_staffing_overrides(                                            
+      1017         loaded_tables["facility_capability_staffing_overrides"],                                
+      1023     validate_task_templates(                                                                    
+      1024         loaded_tables["task_templates"],                                                        
+      1031         loaded_tables["facilities"],                                                            
+      1032         loaded_tables["facility_capabilities"],                                                 
+      1039 def write_report(project_root: Path, result: ValidationResult) -> Path:                         
+      1057     report_path.write_text(                                                                     
+      1073     print("Loaded rows:")                                                                       
+      1074     for table_name in sorted(result.stats):                                                     
+      1075         print(f"  {table_name}: {result.stats[table_name]}")                                    
+      1100         description="Validate DoDA authored content.",                                          
+      1113         "validate",                                                                             
+      1114         help="Validate authored CSV source data and write a JSON report.",                      
+      1134     if arguments.command == "validate":                                                         
+      1135         result = validate_project(project_root)                                                 
+      1136         report_path = write_report(project_root, result)
+
+=== Full Source with Line Numbers ===
+   1: #!/usr/bin/env python3
+   2: r"""
+   3: DoDA Content Workbench - CLI validator.
+   4: 
+   5: Validates authored CSV source data before any content export, PK3 packaging,
+   6: or game integration occurs.
+   7: """
+   8: 
+   9: from __future__ import annotations
+  10: 
+  11: import argparse
+  12: import csv
+  13: import json
+  14: import sys
+  15: from collections import defaultdict
+  16: from dataclasses import dataclass, field
+  17: from datetime import datetime, timezone
+  18: from pathlib import Path
+  19: from typing import Any
+  20: 
+  21: 
+  22: TOOL_VERSION = "0.1.0"
+  23: 
+  24: 
+  25: @dataclass
+  26: class ValidationResult:
+  27:     errors: list[str] = field(default_factory=list)
+  28:     warnings: list[str] = field(default_factory=list)
+  29:     stats: dict[str, int] = field(default_factory=dict)
+  30: 
+  31:     @property
+  32:     def valid(self) -> bool:
+  33:         return not self.errors
+  34: 
+  35:     def error(self, message: str) -> None:
+  36:         self.errors.append(message)
+  37: 
+  38:     def warning(self, message: str) -> None:
+  39:         self.warnings.append(message)
+  40: 
+  41: 
+  42: TABLE_SPECS: dict[str, dict[str, Any]] = {
+  43:     "enum_catalog": {
+  44:         "filename": "enum_catalog.csv",
+  45:         "required_columns": [
+  46:             "enum_group",
+  47:             "enum_value",
+  48:             "display_label",
+  49:             "description",
+  50:             "sort_order",
+  51:             "active",
+  52:         ],
+  53:         "key_columns": ["enum_group", "enum_value"],
+  54:     },
+  55:     "department_tracks": {
+  56:         "filename": "department_tracks.csv",
+  57:         "required_columns": [
+  58:             "track_id",
+  59:             "display_name",
+  60:             "description",
+  61:             "sort_order",
+  62:             "active",
+  63:         ],
+  64:         "key_columns": ["track_id"],
+  65:     },
+  66:     "metrics": {
+  67:         "filename": "metrics.csv",
+  68:         "required_columns": [
+  69:             "metric_id",
+  70:             "display_name",
+  71:             "description",
+  72:             "owner_system",
+  73:             "internal_min",
+  74:             "internal_max",
+  75:             "default_value",
+  76:             "polarity",
+  77:             "ui_display_mode",
+  78:             "update_notes",
+  79:             "active",
+  80:         ],
+  81:         "key_columns": ["metric_id"],
+  82:     },
+  83:     "metric_tiers": {
+  84:         "filename": "metric_tiers.csv",
+  85:         "required_columns": [
+  86:             "metric_id",
+  87:             "tier_id",
+  88:             "min_inclusive",
+  89:             "max_inclusive",
+  90:             "display_label",
+  91:             "short_status",
+  92:             "ui_color",
+  93:             "flavor_text_id",
+  94:             "sort_order",
+  95:         ],
+  96:         "key_columns": ["metric_id", "tier_id"],
+  97:     },
+  98:     "facilities": {
+  99:         "filename": "facilities.csv",
+ 100:         "required_columns": [
+ 101:             "facility_id",
+ 102:             "display_name",
+ 103:             "track_id",
+ 104:             "hq_zone_id",
+ 105:             "description",
+ 106:             "personnel_capacity",
+ 107:             "initial_tier_id",
+ 108:             "interaction_asset_id",
+ 109:             "foims_panel_id",
+ 110:             "active",
+ 111:         ],
+ 112:         "key_columns": ["facility_id"],
+ 113:     },
+ 114:     "flavor_text": {
+ 115:         "filename": "flavor_text.csv",
+ 116:         "required_columns": [
+ 117:             "flavor_text_id",
+ 118:             "category",
+ 119:             "title",
+ 120:             "body",
+ 121:             "active",
+ 122:         ],
+ 123:         "key_columns": ["flavor_text_id"],
+ 124:     },
+ 125:     "qualification_catalog": {
+ 126:         "filename": "qualification_catalog.csv",
+ 127:         "required_columns": [
+ 128:             "qualification_id",
+ 129:             "display_name",
+ 130:             "description",
+ 131:             "sort_order",
+ 132:             "active",
+ 133:         ],
+ 134:         "key_columns": ["qualification_id"],
+ 135:     },
+ 136:     "capabilities": {
+ 137:         "filename": "capabilities.csv",
+ 138:         "required_columns": [
+ 139:             "capability_id",
+ 140:             "display_name",
+ 141:             "description",
+ 142:             "standing_operation_label",
+ 143:             "sort_order",
+ 144:             "active",
+ 145:         ],
+ 146:         "key_columns": ["capability_id"],
+ 147:     },
+ 148:     "facility_capabilities": {
+ 149:         "filename": "facility_capabilities.csv",
+ 150:         "required_columns": [
+ 151:             "facility_id",
+ 152:             "capability_id",
+ 153:             "display_name_override",
+ 154:             "max_concurrent_personnel",
+ 155:             "initial_tier_id",
+ 156:             "foims_panel_id",
+ 157:             "sort_order",
+ 158:             "active",
+ 159:         ],
+ 160:         "key_columns": ["facility_id", "capability_id"],
+ 161:     },
+ 162:     "capability_staffing_rules": {
+ 163:         "filename": "capability_staffing_rules.csv",
+ 164:         "required_columns": [
+ 165:             "capability_id",
+ 166:             "qualification_id",
+ 167:             "min_contributors",
+ 168:             "preferred_contributors",
+ 169:             "max_contributors",
+ 170:             "sort_order",
+ 171:             "active",
+ 172:         ],
+ 173:         "key_columns": ["capability_id", "qualification_id"],
+ 174:     },
+ 175:     "facility_capability_staffing_overrides": {
+ 176:         "filename": "facility_capability_staffing_overrides.csv",
+ 177:         "required_columns": [
+ 178:             "facility_id",
+ 179:             "capability_id",
+ 180:             "qualification_id",
+ 181:             "min_contributors",
+ 182:             "preferred_contributors",
+ 183:             "max_contributors",
+ 184:             "sort_order",
+ 185:             "active",
+ 186:         ],
+ 187:         "key_columns": ["facility_id", "capability_id", "qualification_id"],
+ 188:     },
+ 189:     "task_templates": {
+ 190:         "filename": "task_templates.csv",
+ 191:         "required_columns": [
+ 192:             "task_template_id",
+ 193:             "display_name",
+ 194:             "description",
+ 195:             "capability_id",
+ 196:             "priority",
+ 197:             "default_target_effort_minutes",
+ 198:             "default_deadline_minutes",
+ 199:             "auto_allocate",
+ 200:             "sort_order",
+ 201:             "active",
+ 202:         ],
+ 203:         "key_columns": ["task_template_id"],
+ 204:     },
+ 205: }
+ 206: 
+ 207: 
+ 208: def find_project_root(start: Path) -> Path:
+ 209:     current = start.resolve()
+ 210: 
+ 211:     for candidate in (current, *current.parents):
+ 212:         if (
+ 213:             (candidate / "data_authoring").is_dir()
+ 214:             and (candidate / "tools").is_dir()
+ 215:             and (candidate / "DoDA").is_dir()
+ 216:         ):
+ 217:             return candidate
+ 218: 
+ 219:     raise FileNotFoundError(
+ 220:         "Unable to locate DoDA project root. Expected a folder containing "
+ 221:         "'data_authoring', 'tools', and 'DoDA'. Use --root to provide it explicitly."
+ 222:     )
+ 223: 
+ 224: 
+ 225: def load_csv(
+ 226:     path: Path,
+ 227:     required_columns: list[str],
+ 228:     table_name: str,
+ 229:     result: ValidationResult,
+ 230: ) -> list[dict[str, str]]:
+ 231:     if not path.is_file():
+ 232:         result.error(f"[{table_name}] Missing required source file: {path}")
+ 233:         return []
+ 234: 
+ 235:     try:
+ 236:         with path.open("r", encoding="utf-8-sig", newline="") as source_file:
+ 237:             reader = csv.DictReader(source_file)
+ 238: 
+ 239:             if reader.fieldnames is None:
+ 240:                 result.error(f"[{table_name}] File has no CSV header row: {path.name}")
+ 241:                 return []
+ 242: 
+ 243:             actual_columns = [column.strip() for column in reader.fieldnames]
+ 244:             missing_columns = [
+ 245:                 column for column in required_columns if column not in actual_columns
+ 246:             ]
+ 247: 
+ 248:             if missing_columns:
+ 249:                 result.error(
+ 250:                     f"[{table_name}] Missing required columns in {path.name}: "
+ 251:                     + ", ".join(missing_columns)
+ 252:                 )
+ 253:                 return []
+ 254: 
+ 255:             rows: list[dict[str, str]] = []
+ 256: 
+ 257:             for line_number, raw_row in enumerate(reader, start=2):
+ 258:                 row = {
+ 259:                     key.strip(): (value or "").strip()
+ 260:                     for key, value in raw_row.items()
+ 261:                     if key is not None
+ 262:                 }
+ 263: 
+ 264:                 if not any(row.values()):
+ 265:                     continue
+ 266: 
+ 267:                 row["_line_number"] = str(line_number)
+ 268:                 rows.append(row)
+ 269: 
+ 270:             result.stats[table_name] = len(rows)
+ 271: 
+ 272:             if not rows:
+ 273:                 result.warning(f"[{table_name}] Source file contains no data rows: {path.name}")
+ 274: 
+ 275:             return rows
+ 276: 
+ 277:     except UnicodeDecodeError as error:
+ 278:         result.error(f"[{table_name}] Could not read UTF-8 CSV {path.name}: {error}")
+ 279:         return []
+ 280:     except csv.Error as error:
+ 281:         result.error(f"[{table_name}] CSV parsing error in {path.name}: {error}")
+ 282:         return []
+ 283: 
+ 284: 
+ 285: def validate_keys(
+ 286:     table_name: str,
+ 287:     rows: list[dict[str, str]],
+ 288:     key_columns: list[str],
+ 289:     result: ValidationResult,
+ 290: ) -> None:
+ 291:     seen_keys: dict[tuple[str, ...], int] = {}
+ 292: 
+ 293:     for row in rows:
+ 294:         line_number = row["_line_number"]
+ 295:         key = tuple(row.get(column, "").strip() for column in key_columns)
+ 296: 
+ 297:         if any(not value for value in key):
+ 298:             result.error(
+ 299:                 f"[{table_name}] Line {line_number}: blank key value in "
+ 300:                 + ", ".join(key_columns)
+ 301:             )
+ 302:             continue
+ 303: 
+ 304:         if key in seen_keys:
+ 305:             original_line = seen_keys[key]
+ 306:             result.error(
+ 307:                 f"[{table_name}] Line {line_number}: duplicate key "
+ 308:                 f"{' / '.join(key)}; first defined on line {original_line}"
+ 309:             )
+ 310:         else:
+ 311:             seen_keys[key] = int(line_number)
+ 312: 
+ 313: 
+ 314: def validate_active_values(
+ 315:     table_name: str,
+ 316:     rows: list[dict[str, str]],
+ 317:     result: ValidationResult,
+ 318: ) -> None:
+ 319:     if not rows or "active" not in rows[0]:
+ 320:         return
+ 321: 
+ 322:     for row in rows:
+ 323:         value = row.get("active", "").upper()
+ 324: 
+ 325:         if value not in {"TRUE", "FALSE"}:
+ 326:             result.error(
+ 327:                 f"[{table_name}] Line {row['_line_number']}: active must be TRUE "
+ 328:                 f"or FALSE, found '{row.get('active', '')}'"
+ 329:             )
+ 330: 
+ 331: 
+ 332: def parse_int(
+ 333:     table_name: str,
+ 334:     row: dict[str, str],
+ 335:     column: str,
+ 336:     result: ValidationResult,
+ 337: ) -> int | None:
+ 338:     value = row.get(column, "")
+ 339: 
+ 340:     try:
+ 341:         return int(value)
+ 342:     except ValueError:
+ 343:         result.error(
+ 344:             f"[{table_name}] Line {row['_line_number']}: {column} must be an "
+ 345:             f"integer, found '{value}'"
+ 346:         )
+ 347:         return None
+ 348: 
+ 349: 
+ 350: def parse_bool(
+ 351:     table_name: str,
+ 352:     row: dict[str, str],
+ 353:     column: str,
+ 354:     result: ValidationResult,
+ 355: ) -> bool | None:
+ 356:     value = row.get(column, "").upper()
+ 357: 
+ 358:     if value == "TRUE":
+ 359:         return True
+ 360: 
+ 361:     if value == "FALSE":
+ 362:         return False
+ 363: 
+ 364:     result.error(
+ 365:         f"[{table_name}] Line {row['_line_number']}: {column} must be TRUE "
+ 366:         f"or FALSE, found '{row.get(column, '')}'"
+ 367:     )
+ 368:     return None
+ 369: 
+ 370: 
+ 371: def validate_sort_order(
+ 372:     table_name: str,
+ 373:     rows: list[dict[str, str]],
+ 374:     result: ValidationResult,
+ 375: ) -> None:
+ 376:     for row in rows:
+ 377:         if "sort_order" not in row:
+ 378:             continue
+ 379: 
+ 380:         value = parse_int(table_name, row, "sort_order", result)
+ 381: 
+ 382:         if value is not None and value < 1:
+ 383:             result.error(
+ 384:                 f"[{table_name}] Line {row['_line_number']}: sort_order must be "
+ 385:                 "at least 1"
+ 386:             )
+ 387: 
+ 388: 
+ 389: def build_id_set(
+ 390:     rows: list[dict[str, str]],
+ 391:     column: str,
+ 392:     active_only: bool = False,
+ 393: ) -> set[str]:
+ 394:     return {
+ 395:         row[column]
+ 396:         for row in rows
+ 397:         if row.get(column, "").strip()
+ 398:         and (not active_only or row.get("active", "").upper() == "TRUE")
+ 399:     }
+ 400: 
+ 401: 
+ 402: def build_row_index(
+ 403:     rows: list[dict[str, str]],
+ 404:     key_columns: list[str],
+ 405:     active_only: bool = False,
+ 406: ) -> dict[tuple[str, ...], dict[str, str]]:
+ 407:     index: dict[tuple[str, ...], dict[str, str]] = {}
+ 408: 
+ 409:     for row in rows:
+ 410:         if active_only and row.get("active", "").upper() != "TRUE":
+ 411:             continue
+ 412: 
+ 413:         key = tuple(row.get(column, "") for column in key_columns)
+ 414: 
+ 415:         if all(key):
+ 416:             index[key] = row
+ 417: 
+ 418:     return index
+ 419: 
+ 420: 
+ 421: def build_enum_index(
+ 422:     rows: list[dict[str, str]],
+ 423:     active_only: bool = False,
+ 424: ) -> dict[str, set[str]]:
+ 425:     enum_values: dict[str, set[str]] = defaultdict(set)
+ 426: 
+ 427:     for row in rows:
+ 428:         if active_only and row.get("active", "").upper() != "TRUE":
+ 429:             continue
+ 430: 
+ 431:         enum_values[row["enum_group"]].add(row["enum_value"])
+ 432: 
+ 433:     return dict(enum_values)
+ 434: 
+ 435: 
+ 436: def validate_metrics(
+ 437:     metrics: list[dict[str, str]],
+ 438:     enum_values: dict[str, set[str]],
+ 439:     result: ValidationResult,
+ 440: ) -> dict[str, dict[str, str]]:
+ 441:     metric_by_id: dict[str, dict[str, str]] = {}
+ 442: 
+ 443:     allowed_polarity = enum_values.get("METRIC_POLARITY", set())
+ 444:     allowed_display_modes = enum_values.get("METRIC_DISPLAY_MODE", set())
+ 445: 
+ 446:     for row in metrics:
+ 447:         metric_id = row["metric_id"]
+ 448:         metric_by_id[metric_id] = row
+ 449: 
+ 450:         minimum = parse_int("metrics", row, "internal_min", result)
+ 451:         maximum = parse_int("metrics", row, "internal_max", result)
+ 452:         default_value = parse_int("metrics", row, "default_value", result)
+ 453: 
+ 454:         if minimum is not None and maximum is not None and minimum > maximum:
+ 455:             result.error(
+ 456:                 f"[metrics] Line {row['_line_number']}: internal_min ({minimum}) "
+ 457:                 f"cannot exceed internal_max ({maximum}) for {metric_id}"
+ 458:             )
+ 459: 
+ 460:         if (
+ 461:             minimum is not None
+ 462:             and maximum is not None
+ 463:             and default_value is not None
+ 464:             and not minimum <= default_value <= maximum
+ 465:         ):
+ 466:             result.error(
+ 467:                 f"[metrics] Line {row['_line_number']}: default_value "
+ 468:                 f"({default_value}) is outside [{minimum}, {maximum}] for {metric_id}"
+ 469:             )
+ 470: 
+ 471:         polarity = row["polarity"]
+ 472:         if polarity not in allowed_polarity:
+ 473:             result.error(
+ 474:                 f"[metrics] Line {row['_line_number']}: polarity '{polarity}' "
+ 475:                 "does not exist in active enum_catalog METRIC_POLARITY"
+ 476:             )
+ 477: 
+ 478:         display_mode = row["ui_display_mode"]
+ 479:         if display_mode not in allowed_display_modes:
+ 480:             result.error(
+ 481:                 f"[metrics] Line {row['_line_number']}: ui_display_mode "
+ 482:                 f"'{display_mode}' does not exist in active enum_catalog "
+ 483:                 "METRIC_DISPLAY_MODE"
+ 484:             )
+ 485: 
+ 486:     return metric_by_id
+ 487: 
+ 488: 
+ 489: def validate_metric_tiers(
+ 490:     tiers: list[dict[str, str]],
+ 491:     metrics_by_id: dict[str, dict[str, str]],
+ 492:     flavor_text_ids: set[str],
+ 493:     result: ValidationResult,
+ 494: ) -> None:
+ 495:     tiers_by_metric: dict[str, list[dict[str, str]]] = defaultdict(list)
+ 496: 
+ 497:     for row in tiers:
+ 498:         metric_id = row["metric_id"]
+ 499: 
+ 500:         if metric_id not in metrics_by_id:
+ 501:             result.error(
+ 502:                 f"[metric_tiers] Line {row['_line_number']}: metric_id '{metric_id}' "
+ 503:                 "does not exist in metrics.csv"
+ 504:             )
+ 505: 
+ 506:         flavor_text_id = row["flavor_text_id"]
+ 507:         if flavor_text_id not in flavor_text_ids:
+ 508:             result.error(
+ 509:                 f"[metric_tiers] Line {row['_line_number']}: flavor_text_id "
+ 510:                 f"'{flavor_text_id}' does not exist in flavor_text.csv"
+ 511:             )
+ 512: 
+ 513:         minimum = parse_int("metric_tiers", row, "min_inclusive", result)
+ 514:         maximum = parse_int("metric_tiers", row, "max_inclusive", result)
+ 515: 
+ 516:         if minimum is not None and maximum is not None and minimum > maximum:
+ 517:             result.error(
+ 518:                 f"[metric_tiers] Line {row['_line_number']}: min_inclusive "
+ 519:                 f"({minimum}) cannot exceed max_inclusive ({maximum})"
+ 520:             )
+ 521: 
+ 522:         tiers_by_metric[metric_id].append(row)
+ 523: 
+ 524:     validate_sort_order("metric_tiers", tiers, result)
+ 525: 
+ 526:     for metric_id, metric_row in metrics_by_id.items():
+ 527:         metric_tiers = tiers_by_metric.get(metric_id, [])
+ 528: 
+ 529:         if not metric_tiers:
+ 530:             result.error(f"[metric_tiers] No tiers exist for metric '{metric_id}'")
+ 531:             continue
+ 532: 
+ 533:         parsed_tiers: list[tuple[int, int, int, dict[str, str]]] = []
+ 534: 
+ 535:         for row in metric_tiers:
+ 536:             minimum = parse_int("metric_tiers", row, "min_inclusive", result)
+ 537:             maximum = parse_int("metric_tiers", row, "max_inclusive", result)
+ 538:             sort_order = parse_int("metric_tiers", row, "sort_order", result)
+ 539: 
+ 540:             if minimum is None or maximum is None or sort_order is None:
+ 541:                 continue
+ 542: 
+ 543:             parsed_tiers.append((minimum, maximum, sort_order, row))
+ 544: 
+ 545:         parsed_tiers.sort(key=lambda item: (item[0], item[1], item[2]))
+ 546: 
+ 547:         metric_minimum = parse_int("metrics", metric_row, "internal_min", result)
+ 548:         metric_maximum = parse_int("metrics", metric_row, "internal_max", result)
+ 549: 
+ 550:         if metric_minimum is None or metric_maximum is None or not parsed_tiers:
+ 551:             continue
+ 552: 
+ 553:         first_minimum = parsed_tiers[0][0]
+ 554:         if first_minimum != metric_minimum:
+ 555:             result.error(
+ 556:                 f"[metric_tiers] Metric '{metric_id}' begins at {first_minimum}, "
+ 557:                 f"but metrics.csv defines internal_min {metric_minimum}"
+ 558:             )
+ 559: 
+ 560:         expected_next_minimum = metric_minimum
+ 561: 
+ 562:         for minimum, maximum, _, row in parsed_tiers:
+ 563:             if minimum < expected_next_minimum:
+ 564:                 result.error(
+ 565:                     f"[metric_tiers] Line {row['_line_number']}: tier range "
+ 566:                     f"[{minimum}, {maximum}] overlaps or starts before the "
+ 567:                     f"expected next value {expected_next_minimum} for {metric_id}"
+ 568:                 )
+ 569:             elif minimum > expected_next_minimum:
+ 570:                 result.error(
+ 571:                     f"[metric_tiers] Line {row['_line_number']}: tier range "
+ 572:                     f"[{minimum}, {maximum}] leaves a gap after "
+ 573:                     f"{expected_next_minimum - 1} for {metric_id}"
+ 574:                 )
+ 575: 
+ 576:             expected_next_minimum = max(expected_next_minimum, maximum + 1)
+ 577: 
+ 578:         final_maximum = parsed_tiers[-1][1]
+ 579:         if final_maximum != metric_maximum:
+ 580:             result.error(
+ 581:                 f"[metric_tiers] Metric '{metric_id}' ends at {final_maximum}, "
+ 582:                 f"but metrics.csv defines internal_max {metric_maximum}"
+ 583:             )
+ 584: 
+ 585: 
+ 586: def validate_facilities(
+ 587:     facilities: list[dict[str, str]],
+ 588:     track_ids: set[str],
+ 589:     enum_values: dict[str, set[str]],
+ 590:     result: ValidationResult,
+ 591: ) -> dict[str, dict[str, str]]:
+ 592:     facility_by_id: dict[str, dict[str, str]] = {}
+ 593:     allowed_tiers = enum_values.get("FACILITY_TIER", set())
+ 594: 
+ 595:     for row in facilities:
+ 596:         facility_id = row["facility_id"]
+ 597:         facility_by_id[facility_id] = row
+ 598: 
+ 599:         track_id = row["track_id"]
+ 600:         tier_id = row["initial_tier_id"]
+ 601:         personnel_capacity = parse_int("facilities", row, "personnel_capacity", result)
+ 602: 
+ 603:         if track_id not in track_ids:
+ 604:             result.error(
+ 605:                 f"[facilities] Line {row['_line_number']}: track_id '{track_id}' "
+ 606:                 "does not exist in active department_tracks.csv"
+ 607:             )
+ 608: 
+ 609:         if tier_id not in allowed_tiers:
+ 610:             result.error(
+ 611:                 f"[facilities] Line {row['_line_number']}: initial_tier_id "
+ 612:                 f"'{tier_id}' does not exist in active enum_catalog FACILITY_TIER"
+ 613:             )
+ 614: 
+ 615:         if personnel_capacity is not None and personnel_capacity < 1:
+ 616:             result.error(
+ 617:                 f"[facilities] Line {row['_line_number']}: personnel_capacity "
+ 618:                 "must be at least 1"
+ 619:             )
+ 620: 
+ 621:     return facility_by_id
+ 622: 
+ 623: 
+ 624: def validate_catalog_sort_orders(
+ 625:     table_name: str,
+ 626:     rows: list[dict[str, str]],
+ 627:     result: ValidationResult,
+ 628: ) -> None:
+ 629:     minimum_allowed = 0 if table_name == "enum_catalog" else 1
+ 630: 
+ 631:     for row in rows:
+ 632:         value = parse_int(table_name, row, "sort_order", result)
+ 633: 
+ 634:         if value is not None and value < minimum_allowed:
+ 635:             result.error(
+ 636:                 f"[{table_name}] Line {row['_line_number']}: sort_order must be "
+ 637:                 f"at least {minimum_allowed}"
+ 638:             )
+ 639: 
+ 640: 
+ 641: def validate_facility_capabilities(
+ 642:     rows: list[dict[str, str]],
+ 643:     active_facility_ids: set[str],
+ 644:     active_capability_ids: set[str],
+ 645:     facility_by_id: dict[str, dict[str, str]],
+ 646:     enum_values: dict[str, set[str]],
+ 647:     result: ValidationResult,
+ 648: ) -> dict[tuple[str, str], dict[str, str]]:
+ 649:     allowed_tiers = enum_values.get("FACILITY_TIER", set())
+ 650:     active_pairs: dict[tuple[str, str], dict[str, str]] = {}
+ 651: 
+ 652:     for row in rows:
+ 653:         facility_id = row["facility_id"]
+ 654:         capability_id = row["capability_id"]
+ 655:         maximum = parse_int(
+ 656:             "facility_capabilities",
+ 657:             row,
+ 658:             "max_concurrent_personnel",
+ 659:             result,
+ 660:         )
+ 661: 
+ 662:         if facility_id not in active_facility_ids:
+ 663:             result.error(
+ 664:                 f"[facility_capabilities] Line {row['_line_number']}: facility_id "
+ 665:                 f"'{facility_id}' does not exist in active facilities.csv"
+ 666:             )
+ 667: 
+ 668:         if capability_id not in active_capability_ids:
+ 669:             result.error(
+ 670:                 f"[facility_capabilities] Line {row['_line_number']}: capability_id "
+ 671:                 f"'{capability_id}' does not exist in active capabilities.csv"
+ 672:             )
+ 673: 
+ 674:         if row["initial_tier_id"] not in allowed_tiers:
+ 675:             result.error(
+ 676:                 f"[facility_capabilities] Line {row['_line_number']}: "
+ 677:                 f"initial_tier_id '{row['initial_tier_id']}' does not exist in "
+ 678:                 "active enum_catalog FACILITY_TIER"
+ 679:             )
+ 680: 
+ 681:         if maximum is not None and maximum < 1:
+ 682:             result.error(
+ 683:                 f"[facility_capabilities] Line {row['_line_number']}: "
+ 684:                 "max_concurrent_personnel must be at least 1"
+ 685:             )
+ 686: 
+ 687:         parent = facility_by_id.get(facility_id)
+ 688:         if parent is not None and maximum is not None:
+ 689:             capacity = parse_int("facilities", parent, "personnel_capacity", result)
+ 690:             if capacity is not None and maximum > capacity:
+ 691:                 result.error(
+ 692:                     f"[facility_capabilities] Line {row['_line_number']}: "
+ 693:                     f"max_concurrent_personnel ({maximum}) exceeds facility "
+ 694:                     f"personnel_capacity ({capacity}) for '{facility_id}'"
+ 695:                 )
+ 696: 
+ 697:         if row.get("active", "").upper() == "TRUE":
+ 698:             active_pairs[(facility_id, capability_id)] = row
+ 699: 
+ 700:     validate_sort_order("facility_capabilities", rows, result)
+ 701:     return active_pairs
+ 702: 
+ 703: 
+ 704: def validate_staffing_range(
+ 705:     table_name: str,
+ 706:     row: dict[str, str],
+ 707:     result: ValidationResult,
+ 708: ) -> None:
+ 709:     minimum = parse_int(table_name, row, "min_contributors", result)
+ 710:     preferred = parse_int(table_name, row, "preferred_contributors", result)
+ 711:     maximum = parse_int(table_name, row, "max_contributors", result)
+ 712: 
+ 713:     if (
+ 714:         minimum is not None
+ 715:         and preferred is not None
+ 716:         and maximum is not None
+ 717:         and not 0 <= minimum <= preferred <= maximum
+ 718:     ):
+ 719:         result.error(
+ 720:             f"[{table_name}] Line {row['_line_number']}: contributor counts "
+ 721:             "must satisfy 0 <= min_contributors <= preferred_contributors "
+ 722:             "<= max_contributors"
+ 723:         )
+ 724: 
+ 725: 
+ 726: def validate_capability_staffing_rules(
+ 727:     rows: list[dict[str, str]],
+ 728:     active_capability_ids: set[str],
+ 729:     active_qualification_ids: set[str],
+ 730:     result: ValidationResult,
+ 731: ) -> dict[tuple[str, str], dict[str, str]]:
+ 732:     active_rules: dict[tuple[str, str], dict[str, str]] = {}
+ 733: 
+ 734:     for row in rows:
+ 735:         capability_id = row["capability_id"]
+ 736:         qualification_id = row["qualification_id"]
+ 737: 
+ 738:         if capability_id not in active_capability_ids:
+ 739:             result.error(
+ 740:                 f"[capability_staffing_rules] Line {row['_line_number']}: "
+ 741:                 f"capability_id '{capability_id}' does not exist in active "
+ 742:                 "capabilities.csv"
+ 743:             )
+ 744: 
+ 745:         if qualification_id not in active_qualification_ids:
+ 746:             result.error(
+ 747:                 f"[capability_staffing_rules] Line {row['_line_number']}: "
+ 748:                 f"qualification_id '{qualification_id}' does not exist in active "
+ 749:                 "qualification_catalog.csv"
+ 750:             )
+ 751: 
+ 752:         validate_staffing_range("capability_staffing_rules", row, result)
+ 753: 
+ 754:         if row.get("active", "").upper() == "TRUE":
+ 755:             active_rules[(capability_id, qualification_id)] = row
+ 756: 
+ 757:     validate_sort_order("capability_staffing_rules", rows, result)
+ 758: 
+ 759:     active_rules_by_capability: dict[str, int] = defaultdict(int)
+ 760:     for capability_id, _ in active_rules:
+ 761:         active_rules_by_capability[capability_id] += 1
+ 762: 
+ 763:     for capability_id in active_capability_ids:
+ 764:         if active_rules_by_capability.get(capability_id, 0) == 0:
+ 765:             result.error(
+ 766:                 f"[capability_staffing_rules] No active staffing rule exists "
+ 767:                 f"for active capability '{capability_id}'"
+ 768:             )
+ 769: 
+ 770:     return active_rules
+ 771: 
+ 772: 
+ 773: def validate_facility_capability_staffing_overrides(
+ 774:     rows: list[dict[str, str]],
+ 775:     active_facility_capabilities: dict[tuple[str, str], dict[str, str]],
+ 776:     active_qualification_ids: set[str],
+ 777:     active_global_rules: dict[tuple[str, str], dict[str, str]],
+ 778:     result: ValidationResult,
+ 779: ) -> None:
+ 780:     for row in rows:
+ 781:         facility_id = row["facility_id"]
+ 782:         capability_id = row["capability_id"]
+ 783:         qualification_id = row["qualification_id"]
+ 784: 
+ 785:         if (facility_id, capability_id) not in active_facility_capabilities:
+ 786:             result.error(
+ 787:                 f"[facility_capability_staffing_overrides] Line "
+ 788:                 f"{row['_line_number']}: facility_id/capability_id pair "
+ 789:                 f"'{facility_id}/{capability_id}' does not exist in active "
+ 790:                 "facility_capabilities.csv"
+ 791:             )
+ 792: 
+ 793:         if qualification_id not in active_qualification_ids:
+ 794:             result.error(
+ 795:                 f"[facility_capability_staffing_overrides] Line "
+ 796:                 f"{row['_line_number']}: qualification_id '{qualification_id}' "
+ 797:                 "does not exist in active qualification_catalog.csv"
+ 798:             )
+ 799: 
+ 800:         if (capability_id, qualification_id) not in active_global_rules:
+ 801:             result.error(
+ 802:                 f"[facility_capability_staffing_overrides] Line "
+ 803:                 f"{row['_line_number']}: no active global staffing rule exists "
+ 804:                 f"for '{capability_id}/{qualification_id}'"
+ 805:             )
+ 806: 
+ 807:         validate_staffing_range(
+ 808:             "facility_capability_staffing_overrides",
+ 809:             row,
+ 810:             result,
+ 811:         )
+ 812: 
+ 813:     validate_sort_order(
+ 814:         "facility_capability_staffing_overrides",
+ 815:         rows,
+ 816:         result,
+ 817:     )
+ 818: 
+ 819: 
+ 820: def validate_task_templates(
+ 821:     rows: list[dict[str, str]],
+ 822:     active_capability_ids: set[str],
+ 823:     active_facility_capabilities: dict[tuple[str, str], dict[str, str]],
+ 824:     enum_values: dict[str, set[str]],
+ 825:     result: ValidationResult,
+ 826: ) -> None:
+ 827:     allowed_priorities = enum_values.get("TASK_PRIORITY", set())
+ 828:     installed_capability_ids = {
+ 829:         capability_id
+ 830:         for _, capability_id in active_facility_capabilities
+ 831:     }
+ 832: 
+ 833:     for row in rows:
+ 834:         capability_id = row["capability_id"]
+ 835:         priority = row["priority"]
+ 836: 
+ 837:         if capability_id not in active_capability_ids:
+ 838:             result.error(
+ 839:                 f"[task_templates] Line {row['_line_number']}: capability_id "
+ 840:                 f"'{capability_id}' does not exist in active capabilities.csv"
+ 841:             )
+ 842: 
+ 843:         if priority not in allowed_priorities:
+ 844:             result.error(
+ 845:                 f"[task_templates] Line {row['_line_number']}: priority "
+ 846:                 f"'{priority}' does not exist in active enum_catalog TASK_PRIORITY"
+ 847:             )
+ 848: 
+ 849:         target_effort = parse_int(
+ 850:             "task_templates",
+ 851:             row,
+ 852:             "default_target_effort_minutes",
+ 853:             result,
+ 854:         )
+ 855:         deadline = parse_int(
+ 856:             "task_templates",
+ 857:             row,
+ 858:             "default_deadline_minutes",
+ 859:             result,
+ 860:         )
+ 861: 
+ 862:         if target_effort is not None and target_effort <= 0:
+ 863:             result.error(
+ 864:                 f"[task_templates] Line {row['_line_number']}: "
+ 865:                 "default_target_effort_minutes must be greater than 0"
+ 866:             )
+ 867: 
+ 868:         if deadline is not None and deadline <= 0:
+ 869:             result.error(
+ 870:                 f"[task_templates] Line {row['_line_number']}: "
+ 871:                 "default_deadline_minutes must be greater than 0"
+ 872:             )
+ 873: 
+ 874:         parse_bool("task_templates", row, "auto_allocate", result)
+ 875: 
+ 876:         if (
+ 877:             row.get("active", "").upper() == "TRUE"
+ 878:             and capability_id in active_capability_ids
+ 879:             and capability_id not in installed_capability_ids
+ 880:         ):
+ 881:             result.error(
+ 882:                 f"[task_templates] Line {row['_line_number']}: active capability "
+ 883:                 f"'{capability_id}' has no active Facility Capability installation"
+ 884:             )
+ 885: 
+ 886:     validate_sort_order("task_templates", rows, result)
+ 887: 
+ 888: 
+ 889: def warn_on_facility_capacity_overcommit(
+ 890:     facilities: list[dict[str, str]],
+ 891:     facility_capabilities: list[dict[str, str]],
+ 892:     result: ValidationResult,
+ 893: ) -> None:
+ 894:     capacity_by_facility: dict[str, int] = {}
+ 895: 
+ 896:     for row in facilities:
+ 897:         if row.get("active", "").upper() != "TRUE":
+ 898:             continue
+ 899: 
+ 900:         capacity = parse_int("facilities", row, "personnel_capacity", result)
+ 901:         if capacity is not None:
+ 902:             capacity_by_facility[row["facility_id"]] = capacity
+ 903: 
+ 904:     concurrent_total: dict[str, int] = defaultdict(int)
+ 905: 
+ 906:     for row in facility_capabilities:
+ 907:         if row.get("active", "").upper() != "TRUE":
+ 908:             continue
+ 909: 
+ 910:         maximum = parse_int(
+ 911:             "facility_capabilities",
+ 912:             row,
+ 913:             "max_concurrent_personnel",
+ 914:             result,
+ 915:         )
+ 916:         if maximum is not None:
+ 917:             concurrent_total[row["facility_id"]] += maximum
+ 918: 
+ 919:     for facility_id, total in sorted(concurrent_total.items()):
+ 920:         capacity = capacity_by_facility.get(facility_id)
+ 921:         if capacity is not None and total > capacity:
+ 922:             result.warning(
+ 923:                 f"[facility_capabilities] Active Facility Capability maximum "
+ 924:                 f"concurrency totals {total} for '{facility_id}', exceeding "
+ 925:                 f"facility personnel_capacity {capacity}. This is permitted as "
+ 926:                 "a strategic allocation tradeoff."
+ 927:             )
+ 928: 
+ 929: 
+ 930: def validate_project(project_root: Path) -> ValidationResult:
+ 931:     result = ValidationResult()
+ 932:     source_directory = project_root / "data_authoring" / "source"
+ 933:     loaded_tables: dict[str, list[dict[str, str]]] = {}
+ 934: 
+ 935:     for table_name, specification in TABLE_SPECS.items():
+ 936:         path = source_directory / specification["filename"]
+ 937:         rows = load_csv(
+ 938:             path,
+ 939:             specification["required_columns"],
+ 940:             table_name,
+ 941:             result,
+ 942:         )
+ 943:         loaded_tables[table_name] = rows
+ 944:         validate_keys(table_name, rows, specification["key_columns"], result)
+ 945:         validate_active_values(table_name, rows, result)
+ 946: 
+ 947:     for table_name in (
+ 948:         "enum_catalog",
+ 949:         "department_tracks",
+ 950:         "qualification_catalog",
+ 951:         "capabilities",
+ 952:     ):
+ 953:         validate_catalog_sort_orders(table_name, loaded_tables[table_name], result)
+ 954: 
+ 955:     enum_values = build_enum_index(
+ 956:         loaded_tables["enum_catalog"],
+ 957:         active_only=True,
+ 958:     )
+ 959:     track_ids = build_id_set(
+ 960:         loaded_tables["department_tracks"],
+ 961:         "track_id",
+ 962:         active_only=True,
+ 963:     )
+ 964:     flavor_text_ids = build_id_set(
+ 965:         loaded_tables["flavor_text"],
+ 966:         "flavor_text_id",
+ 967:         active_only=True,
+ 968:     )
+ 969:     active_facility_ids = build_id_set(
+ 970:         loaded_tables["facilities"],
+ 971:         "facility_id",
+ 972:         active_only=True,
+ 973:     )
+ 974:     active_qualification_ids = build_id_set(
+ 975:         loaded_tables["qualification_catalog"],
+ 976:         "qualification_id",
+ 977:         active_only=True,
+ 978:     )
+ 979:     active_capability_ids = build_id_set(
+ 980:         loaded_tables["capabilities"],
+ 981:         "capability_id",
+ 982:         active_only=True,
+ 983:     )
+ 984: 
+ 985:     metrics_by_id = validate_metrics(
+ 986:         loaded_tables["metrics"],
+ 987:         enum_values,
+ 988:         result,
+ 989:     )
+ 990:     validate_metric_tiers(
+ 991:         loaded_tables["metric_tiers"],
+ 992:         metrics_by_id,
+ 993:         flavor_text_ids,
+ 994:         result,
+ 995:     )
+ 996:     facility_by_id = validate_facilities(
+ 997:         loaded_tables["facilities"],
+ 998:         track_ids,
+ 999:         enum_values,
+1000:         result,
+1001:     )
+1002:     active_facility_capabilities = validate_facility_capabilities(
+1003:         loaded_tables["facility_capabilities"],
+1004:         active_facility_ids,
+1005:         active_capability_ids,
+1006:         facility_by_id,
+1007:         enum_values,
+1008:         result,
+1009:     )
+1010:     active_global_rules = validate_capability_staffing_rules(
+1011:         loaded_tables["capability_staffing_rules"],
+1012:         active_capability_ids,
+1013:         active_qualification_ids,
+1014:         result,
+1015:     )
+1016:     validate_facility_capability_staffing_overrides(
+1017:         loaded_tables["facility_capability_staffing_overrides"],
+1018:         active_facility_capabilities,
+1019:         active_qualification_ids,
+1020:         active_global_rules,
+1021:         result,
+1022:     )
+1023:     validate_task_templates(
+1024:         loaded_tables["task_templates"],
+1025:         active_capability_ids,
+1026:         active_facility_capabilities,
+1027:         enum_values,
+1028:         result,
+1029:     )
+1030:     warn_on_facility_capacity_overcommit(
+1031:         loaded_tables["facilities"],
+1032:         loaded_tables["facility_capabilities"],
+1033:         result,
+1034:     )
+1035: 
+1036:     return result
+1037: 
+1038: 
+1039: def write_report(project_root: Path, result: ValidationResult) -> Path:
+1040:     report_directory = project_root / "generated" / "reports"
+1041:     report_directory.mkdir(parents=True, exist_ok=True)
+1042: 
+1043:     report_path = report_directory / "content_validation_report.json"
+1044: 
+1045:     report = {
+1046:         "toolVersion": TOOL_VERSION,
+1047:         "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
+1048:         "projectRoot": str(project_root),
+1049:         "valid": result.valid,
+1050:         "errorCount": len(result.errors),
+1051:         "warningCount": len(result.warnings),
+1052:         "stats": result.stats,
+1053:         "errors": result.errors,
+1054:         "warnings": result.warnings,
+1055:     }
+1056: 
+1057:     report_path.write_text(
+1058:         json.dumps(report, indent=2) + "\n",
+1059:         encoding="utf-8",
+1060:     )
+1061: 
+1062:     return report_path
+1063: 
+1064: 
+1065: def print_result(project_root: Path, result: ValidationResult, report_path: Path) -> None:
+1066:     print()
+1067:     print("=" * 72)
+1068:     print("DoDA Content Workbench Validation")
+1069:     print("=" * 72)
+1070:     print(f"Project root: {project_root}")
+1071:     print()
+1072: 
+1073:     print("Loaded rows:")
+1074:     for table_name in sorted(result.stats):
+1075:         print(f"  {table_name}: {result.stats[table_name]}")
+1076: 
+1077:     print()
+1078: 
+1079:     if result.warnings:
+1080:         print(f"Warnings ({len(result.warnings)}):")
+1081:         for warning in result.warnings:
+1082:             print(f"  WARNING: {warning}")
+1083:         print()
+1084: 
+1085:     if result.errors:
+1086:         print(f"Validation failed with {len(result.errors)} error(s):")
+1087:         for error in result.errors:
+1088:             print(f"  ERROR: {error}")
+1089:     else:
+1090:         print("Validation passed with zero errors.")
+1091: 
+1092:     print()
+1093:     print(f"Report written to: {report_path}")
+1094:     print("=" * 72)
+1095: 
+1096: 
+1097: def build_parser() -> argparse.ArgumentParser:
+1098:     parser = argparse.ArgumentParser(
+1099:         prog="doda_content_workbench",
+1100:         description="Validate DoDA authored content.",
+1101:     )
+1102: 
+1103:     parser.add_argument(
+1104:         "--root",
+1105:         type=Path,
+1106:         default=None,
+1107:         help="Path to the doda-core project root. Defaults to auto-detection.",
+1108:     )
+1109: 
+1110:     subparsers = parser.add_subparsers(dest="command", required=True)
+1111: 
+1112:     subparsers.add_parser(
+1113:         "validate",
+1114:         help="Validate authored CSV source data and write a JSON report.",
+1115:     )
+1116: 
+1117:     return parser
+1118: 
+1119: 
+1120: def main() -> int:
+1121:     parser = build_parser()
+1122:     arguments = parser.parse_args()
+1123: 
+1124:     try:
+1125:         project_root = (
+1126:             arguments.root.resolve()
+1127:             if arguments.root is not None
+1128:             else find_project_root(Path.cwd())
+1129:         )
+1130:     except FileNotFoundError as error:
+1131:         parser.error(str(error))
+1132:         return 2
+1133: 
+1134:     if arguments.command == "validate":
+1135:         result = validate_project(project_root)
+1136:         report_path = write_report(project_root, result)
+1137:         print_result(project_root, result, report_path)
+1138:         return 0 if result.valid else 1
+1139: 
+1140:     parser.error(f"Unsupported command: {arguments.command}")
+1141:     return 2
+1142: 
+1143: 
+1144: if __name__ == "__main__":
+1145:     sys.exit(main())

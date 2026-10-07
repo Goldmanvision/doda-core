@@ -1,0 +1,1070 @@
+DoDA V1.1 Metric Tiers Editor Reference
+Generated: 2026-10-01T12:57:09.3485524-04:00
+
+=== Launcher References ===
+
+LineNumber Line                                                                          
+---------- ----                                                                          
+        33 from doda_metric_tiers_editor import install_metric_tiers_editor              
+       224         install_metric_tiers_editor(self)                                     
+       866         self.metric_tiers_tab = ttk.Frame(self.notebook, padding=10)          
+       874         self.notebook.add(self.metric_tiers_tab, text="Metric Tiers — Editor")
+       881         self._build_metrics_tab()                                             
+       980     def _build_metrics_tab(self) -> None:                                     
+      1157             if hasattr(self, "metric_tiers_editor"):                          
+      1158                 self.metric_tiers_editor.update()
+
+=== Full Metric Tiers Editor Source ===
+   1: from __future__ import annotations
+   2: 
+   3: import csv
+   4: import os
+   5: import re
+   6: import shutil
+   7: import subprocess
+   8: import sys
+   9: import tempfile
+  10: import tkinter as tk
+  11: from tkinter import colorchooser
+  12: STATUS_COLOR_PRESETS = (
+  13:     ("Grey", "#8C939F"),
+  14:     ("Green", "#5CCB72"),
+  15:     ("Amber", "#F4B942"),
+  16:     ("Red", "#EF5B5B"),
+  17:     ("Blue", "#58A6FF"),
+  18:     ("Purple", "#B78CFF"),
+  19: )
+  20: 
+  21: STATUS_COLOR_ALIASES = {
+  22:     "GREY": "#8C939F",
+  23:     "GRAY": "#8C939F",
+  24:     "STATUS_GREY": "#8C939F",
+  25:     "STATUS_GRAY": "#8C939F",
+  26:     "GREEN": "#5CCB72",
+  27:     "STATUS_GREEN": "#5CCB72",
+  28:     "AMBER": "#F4B942",
+  29:     "STATUS_AMBER": "#F4B942",
+  30:     "RED": "#EF5B5B",
+  31:     "STATUS_RED": "#EF5B5B",
+  32:     "BLUE": "#58A6FF",
+  33:     "STATUS_BLUE": "#58A6FF",
+  34:     "PURPLE": "#B78CFF",
+  35:     "STATUS_PURPLE": "#B78CFF",
+  36: }
+  37: from datetime import datetime
+  38: from pathlib import Path
+  39: from tkinter import messagebox, ttk
+  40: from typing import Any
+  41: from uuid import uuid4
+  42: 
+  43: FIELDS = (
+  44:     "metric_id",
+  45:     "tier_id",
+  46:     "min_inclusive",
+  47:     "max_inclusive",
+  48:     "display_label",
+  49:     "short_status",
+  50:     "ui_color",
+  51:     "flavor_text_id",
+  52:     "sort_order",
+  53: )
+  54: 
+  55: FILES = (
+  56:     "enum_catalog.csv",
+  57:     "department_tracks.csv",
+  58:     "metrics.csv",
+  59:     "metric_tiers.csv",
+  60:     "facilities.csv",
+  61:     "flavor_text.csv",
+  62: )
+  63: 
+  64: ID_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
+  65: 
+  66: 
+  67: class MetricTiersEditor:
+  68:     def __init__(self, app: Any) -> None:
+  69:         self.app = app
+  70:         self.editing_key: tuple[str, str] | None = None
+  71: 
+  72:         self.metric_id = tk.StringVar()
+  73:         self.tier_id = tk.StringVar()
+  74:         self.minimum = tk.StringVar()
+  75:         self.maximum = tk.StringVar()
+  76:         self.display_label = tk.StringVar()
+  77:         self.short_status = tk.StringVar()
+  78:         self.ui_color = tk.StringVar()
+  79:         self.flavor_text_id = tk.StringVar()
+  80:         self.sort_order = tk.StringVar()
+  81: 
+  82:         self.build()
+  83: 
+  84:     def source_path(self) -> Path:
+  85:         return self.app.source_directory / "metric_tiers.csv"
+  86: 
+  87:     def backup_directory(self) -> Path:
+  88:         return self.app.project_root / "data_authoring" / "backups" / "metric_tiers"
+  89: 
+  90:     def rows(self) -> list[dict[str, str]]:
+  91:         return [dict(row) for row in self.app.tables.get("metric_tiers", [])]
+  92: 
+  93:     def metric_ids(self) -> list[str]:
+  94:         return sorted(
+  95:             row.get("metric_id", "")
+  96:             for row in self.app.tables.get("metrics", [])
+  97:             if row.get("metric_id", "")
+  98:         )
+  99: 
+ 100:     def flavor_ids(self) -> list[str]:
+ 101:         return sorted(
+ 102:             row.get("flavor_text_id", "")
+ 103:             for row in self.app.tables.get("flavor_text", [])
+ 104:             if row.get("flavor_text_id", "")
+ 105:         )
+ 106: 
+ 107:     @staticmethod
+ 108:     def normalized_ui_color(value: str) -> str:
+ 109:         color = value.strip().upper()
+ 110:         color = STATUS_COLOR_ALIASES.get(color, color)
+ 111: 
+ 112:         if not re.fullmatch(r"#[0-9A-F]{6}", color):
+ 113:             raise ValueError(
+ 114:                 "UI Color must be #RRGGBB or a standard status color "
+ 115:                 "(Grey, Green, Amber, Red, Blue, or Purple)."
+ 116:             )
+ 117: 
+ 118:         return color
+ 119: 
+ 120:     def refresh_ui_color_swatch(self, _event=None) -> None:
+ 121:         try:
+ 122:             color = self.normalized_ui_color(self.ui_color.get())
+ 123:         except ValueError:
+ 124:             self.ui_color_swatch.configure(background="#8C939F")
+ 125:             return
+ 126: 
+ 127:         self.ui_color.set(color)
+ 128:         self.ui_color_swatch.configure(background=color)
+ 129: 
+ 130:     def set_ui_color_preset(self, color: str) -> None:
+ 131:         self.ui_color.set(color)
+ 132:         self.refresh_ui_color_swatch()
+ 133: 
+ 134:     def choose_ui_color(self) -> None:
+ 135:         current = self.ui_color.get().strip().upper()
+ 136: 
+ 137:         if not re.fullmatch(r"#[0-9A-F]{6}", current):
+ 138:             current = "#8C939F"
+ 139: 
+ 140:         _rgb, selected = colorchooser.askcolor(
+ 141:             color=current,
+ 142:             title="Choose UI Color",
+ 143:             parent=self.app,
+ 144:         )
+ 145: 
+ 146:         if selected:
+ 147:             self.ui_color.set(selected.upper())
+ 148:             self.refresh_ui_color_swatch()
+ 149:     def build(self) -> None:
+ 150:         for child in self.app.metric_tiers_tab.winfo_children():
+ 151:             child.destroy()
+ 152: 
+ 153:         tab = self.app.metric_tiers_tab
+ 154:         tab.columnconfigure(0, weight=3)
+ 155:         tab.columnconfigure(1, weight=2)
+ 156:         tab.rowconfigure(0, weight=1)
+ 157: 
+ 158:         list_frame = ttk.LabelFrame(tab, text="Metric Tiers", padding=8)
+ 159:         editor_frame = ttk.LabelFrame(tab, text="Metric Tier Editor", padding=10)
+ 160: 
+ 161:         list_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=(0, 6))
+ 162:         editor_frame.grid(row=0, column=1, sticky=tk.NSEW)
+ 163: 
+ 164:         list_frame.columnconfigure(0, weight=1)
+ 165:         list_frame.rowconfigure(0, weight=1)
+ 166:         editor_frame.columnconfigure(1, weight=1)
+ 167: 
+ 168:         self.tree = ttk.Treeview(
+ 169:             list_frame,
+ 170:             columns=("metric", "tier", "range", "label", "sort"),
+ 171:             show="headings",
+ 172:             selectmode="browse",
+ 173:         )
+ 174: 
+ 175:         columns = (
+ 176:             ("metric", "Metric", 165),
+ 177:             ("tier", "Tier ID", 145),
+ 178:             ("range", "Inclusive Range", 130),
+ 179:             ("label", "Display Label", 190),
+ 180:             ("sort", "Sort", 55),
+ 181:         )
+ 182: 
+ 183:         for key, title, width in columns:
+ 184:             self.tree.heading(key, text=title)
+ 185:             self.tree.column(key, width=width, anchor=tk.W)
+ 186: 
+ 187:         scrollbar = ttk.Scrollbar(
+ 188:             list_frame,
+ 189:             orient=tk.VERTICAL,
+ 190:             command=self.tree.yview,
+ 191:         )
+ 192: 
+ 193:         self.tree.configure(yscrollcommand=scrollbar.set)
+ 194:         self.tree.grid(row=0, column=0, sticky=tk.NSEW)
+ 195:         scrollbar.grid(row=0, column=1, sticky=tk.NS)
+ 196: 
+ 197:         self.tree.bind("<<TreeviewSelect>>", self.on_select)
+ 198: 
+ 199:         def label(text: str, row: int) -> None:
+ 200:             ttk.Label(
+ 201:                 editor_frame,
+ 202:                 text=text,
+ 203:                 style="Section.TLabel",
+ 204:             ).grid(
+ 205:                 row=row,
+ 206:                 column=0,
+ 207:                 sticky=tk.NW,
+ 208:                 padx=(0, 8),
+ 209:                 pady=(0, 8),
+ 210:             )
+ 211: 
+ 212:         label("Metric:", 0)
+ 213: 
+ 214:         self.metric_combo = ttk.Combobox(
+ 215:             editor_frame,
+ 216:             textvariable=self.metric_id,
+ 217:             state="readonly",
+ 218:             values=self.metric_ids(),
+ 219:         )
+ 220: 
+ 221:         self.metric_combo.grid(
+ 222:             row=0,
+ 223:             column=1,
+ 224:             sticky=tk.EW,
+ 225:             pady=(0, 8),
+ 226:         )
+ 227: 
+ 228:         label("Tier ID:", 1)
+ 229: 
+ 230:         self.tier_entry = ttk.Entry(
+ 231:             editor_frame,
+ 232:             textvariable=self.tier_id,
+ 233:         )
+ 234: 
+ 235:         self.tier_entry.grid(
+ 236:             row=1,
+ 237:             column=1,
+ 238:             sticky=tk.EW,
+ 239:             pady=(0, 8),
+ 240:         )
+ 241: 
+ 242:         ttk.Label(
+ 243:             editor_frame,
+ 244:             text="Metric + Tier ID are immutable after creation.",
+ 245:             foreground="#9da7b3",
+ 246:         ).grid(
+ 247:             row=2,
+ 248:             column=1,
+ 249:             sticky=tk.W,
+ 250:             pady=(0, 10),
+ 251:         )
+ 252: 
+ 253:         label("Inclusive Range:", 3)
+ 254: 
+ 255:         range_frame = ttk.Frame(editor_frame)
+ 256:         range_frame.grid(
+ 257:             row=3,
+ 258:             column=1,
+ 259:             sticky=tk.W,
+ 260:             pady=(0, 8),
+ 261:         )
+ 262: 
+ 263:         ttk.Label(range_frame, text="Min").grid(row=0, column=0)
+ 264:         ttk.Entry(
+ 265:             range_frame,
+ 266:             textvariable=self.minimum,
+ 267:             width=10,
+ 268:         ).grid(row=0, column=1, padx=(4, 12))
+ 269: 
+ 270:         ttk.Label(range_frame, text="Max").grid(row=0, column=2)
+ 271:         ttk.Entry(
+ 272:             range_frame,
+ 273:             textvariable=self.maximum,
+ 274:             width=10,
+ 275:         ).grid(row=0, column=3, padx=(4, 0))
+ 276: 
+ 277:         label("Display Label:", 4)
+ 278: 
+ 279:         ttk.Entry(
+ 280:             editor_frame,
+ 281:             textvariable=self.display_label,
+ 282:         ).grid(
+ 283:             row=4,
+ 284:             column=1,
+ 285:             sticky=tk.EW,
+ 286:             pady=(0, 8),
+ 287:         )
+ 288: 
+ 289:         label("Short Status:", 5)
+ 290: 
+ 291:         self.short_status_text = tk.Text(
+ 292:             editor_frame,
+ 293:             height=3,
+ 294:             wrap=tk.WORD,
+ 295:             background="#0d1117",
+ 296:             foreground="#e6edf3",
+ 297:             insertbackground="#e6edf3",
+ 298:             highlightbackground="#3b4754",
+ 299:             highlightcolor="#58a6ff",
+ 300:         )
+ 301: 
+ 302:         self.short_status_text.grid(
+ 303:             row=5,
+ 304:             column=1,
+ 305:             sticky=tk.EW,
+ 306:             pady=(0, 8),
+ 307:         )
+ 308: 
+ 309:         label("UI Color:", 6)
+ 310: 
+ 311:         self.ui_color_entry = ttk.Entry(
+ 312:             editor_frame,
+ 313:             textvariable=self.ui_color,
+ 314:         )
+ 315:         self.ui_color_entry.grid(
+ 316:             row=6,
+ 317:             column=1,
+ 318:             sticky=tk.EW,
+ 319:             pady=(0, 8),
+ 320:         )
+ 321:         self.ui_color_entry.bind("<FocusOut>", self.refresh_ui_color_swatch)
+ 322:         self.ui_color_entry.bind("<Return>", self.refresh_ui_color_swatch)
+ 323: 
+ 324:         ttk.Button(
+ 325:             editor_frame,
+ 326:             text="Choose Color...",
+ 327:             command=self.choose_ui_color,
+ 328:         ).grid(
+ 329:             row=6,
+ 330:             column=2,
+ 331:             sticky=tk.W,
+ 332:             padx=(6, 0),
+ 333:             pady=(0, 8),
+ 334:         )
+ 335: 
+ 336:         self.ui_color_swatch = tk.Label(
+ 337:             editor_frame,
+ 338:             width=3,
+ 339:             relief=tk.SUNKEN,
+ 340:             borderwidth=1,
+ 341:             background="#8C939F",
+ 342:         )
+ 343:         self.ui_color_swatch.grid(
+ 344:             row=6,
+ 345:             column=3,
+ 346:             sticky=tk.W,
+ 347:             padx=(6, 0),
+ 348:             pady=(0, 8),
+ 349:         )
+ 350: 
+ 351:         preset_frame = ttk.Frame(editor_frame)
+ 352:         preset_frame.grid(
+ 353:             row=9,
+ 354:             column=1,
+ 355:             columnspan=3,
+ 356:             sticky=tk.W,
+ 357:             pady=(0, 8),
+ 358:         )
+ 359: 
+ 360:         ttk.Label(
+ 361:             preset_frame,
+ 362:             text="Presets:",
+ 363:         ).grid(
+ 364:             row=0,
+ 365:             column=0,
+ 366:             padx=(0, 6),
+ 367:         )
+ 368: 
+ 369:         for column, (label_text, color) in enumerate(
+ 370:             STATUS_COLOR_PRESETS,
+ 371:             start=1,
+ 372:         ):
+ 373:             tk.Button(
+ 374:                 preset_frame,
+ 375:                 text=label_text,
+ 376:                 command=lambda value=color: self.set_ui_color_preset(value),
+ 377:                 background=color,
+ 378:                 activebackground=color,
+ 379:                 foreground="#000000",
+ 380:                 activeforeground="#000000",
+ 381:                 relief=tk.RAISED,
+ 382:                 borderwidth=1,
+ 383:                 padx=6,
+ 384:                 pady=1,
+ 385:             ).grid(
+ 386:                 row=0,
+ 387:                 column=column,
+ 388:                 padx=(0, 4),
+ 389:             )
+ 390: 
+ 391:         label("Flavor Text:", 8)
+ 392: 
+ 393:         self.flavor_combo = ttk.Combobox(
+ 394:             editor_frame,
+ 395:             textvariable=self.flavor_text_id,
+ 396:             state="readonly",
+ 397:             values=self.flavor_ids(),
+ 398:         )
+ 399: 
+ 400:         self.flavor_combo.grid(
+ 401:             row=9,
+ 402:             column=1,
+ 403:             sticky=tk.EW,
+ 404:             pady=(0, 8),
+ 405:         )
+ 406: 
+ 407:         label("Sort Order:", 9)
+ 408: 
+ 409:         ttk.Entry(
+ 410:             editor_frame,
+ 411:             textvariable=self.sort_order,
+ 412:             width=10,
+ 413:         ).grid(
+ 414:             row=9,
+ 415:             column=1,
+ 416:             sticky=tk.W,
+ 417:             pady=(0, 8),
+ 418:         )
+ 419: 
+ 420:         buttons = ttk.Frame(editor_frame)
+ 421:         buttons.grid(
+ 422:             row=9,
+ 423:             column=0,
+ 424:             columnspan=2,
+ 425:             sticky=tk.EW,
+ 426:             pady=(8, 0),
+ 427:         )
+ 428: 
+ 429:         ttk.Button(
+ 430:             buttons,
+ 431:             text="Add Tier",
+ 432:             command=self.new,
+ 433:         ).pack(side=tk.LEFT)
+ 434: 
+ 435:         ttk.Button(
+ 436:             buttons,
+ 437:             text="Save Tier",
+ 438:             command=self.save,
+ 439:         ).pack(side=tk.LEFT, padx=6)
+ 440: 
+ 441:         ttk.Button(
+ 442:             buttons,
+ 443:             text="Remove Tier",
+ 444:             command=self.remove,
+ 445:         ).pack(side=tk.LEFT, padx=6)
+ 446: 
+ 447:         ttk.Button(
+ 448:             buttons,
+ 449:             text="Revert Form",
+ 450:             command=self.revert,
+ 451:         ).pack(side=tk.LEFT, padx=6)
+ 452: 
+ 453:         ttk.Button(
+ 454:             buttons,
+ 455:             text="Open Backups",
+ 456:             command=self.open_backups,
+ 457:         ).pack(side=tk.RIGHT)
+ 458: 
+ 459:         ttk.Label(
+ 460:             editor_frame,
+ 461:             text=(
+ 462:                 "Candidate validation enforces complete metric coverage, "
+ 463:                 "contiguous ranges, no gaps, and no overlaps."
+ 464:             ),
+ 465:             foreground="#9da7b3",
+ 466:             wraplength=390,
+ 467:         ).grid(
+ 468:             row=10,
+ 469:             column=0,
+ 470:             columnspan=2,
+ 471:             sticky=tk.EW,
+ 472:             pady=(12, 0),
+ 473:         )
+ 474: 
+ 475:         self.new()
+ 476: 
+ 477:     def update(self) -> None:
+ 478:         selected = self.editing_key
+ 479: 
+ 480:         self.metric_combo.configure(values=self.metric_ids())
+ 481:         self.flavor_combo.configure(values=self.flavor_ids())
+ 482: 
+ 483:         for item in self.tree.get_children():
+ 484:             self.tree.delete(item)
+ 485: 
+ 486:         rows = sorted(
+ 487:             self.rows(),
+ 488:             key=lambda row: (
+ 489:                 row.get("metric_id", ""),
+ 490:                 int(row.get("sort_order", "999999")),
+ 491:                 row.get("tier_id", ""),
+ 492:             ),
+ 493:         )
+ 494: 
+ 495:         for row in rows:
+ 496:             metric_id = row.get("metric_id", "")
+ 497:             tier_id = row.get("tier_id", "")
+ 498:             key = f"{metric_id}::{tier_id}"
+ 499: 
+ 500:             self.tree.insert(
+ 501:                 "",
+ 502:                 tk.END,
+ 503:                 iid=key,
+ 504:                 values=(
+ 505:                     metric_id,
+ 506:                     tier_id,
+ 507:                     (
+ 508:                         f"{row.get('min_inclusive', '')}"
+ 509:                         f" - {row.get('max_inclusive', '')}"
+ 510:                     ),
+ 511:                     row.get("display_label", ""),
+ 512:                     row.get("sort_order", ""),
+ 513:                 ),
+ 514:             )
+ 515: 
+ 516:         if selected:
+ 517:             key = f"{selected[0]}::{selected[1]}"
+ 518: 
+ 519:             if self.tree.exists(key):
+ 520:                 self.tree.selection_set(key)
+ 521:                 self.tree.focus(key)
+ 522: 
+ 523:     def next_sort_order(self, metric_id: str) -> int:
+ 524:         values: list[int] = []
+ 525: 
+ 526:         for row in self.rows():
+ 527:             if row.get("metric_id") != metric_id:
+ 528:                 continue
+ 529: 
+ 530:             try:
+ 531:                 values.append(int(row.get("sort_order", "")))
+ 532:             except ValueError:
+ 533:                 pass
+ 534: 
+ 535:         return max(values, default=0) + 1
+ 536: 
+ 537:     def new(self) -> None:
+ 538:         self.editing_key = None
+ 539: 
+ 540:         self.metric_combo.configure(state="readonly")
+ 541:         self.tier_entry.configure(state=tk.NORMAL)
+ 542: 
+ 543:         metric_ids = self.metric_ids()
+ 544: 
+ 545:         self.metric_id.set(metric_ids[0] if metric_ids else "")
+ 546:         self.tier_id.set("")
+ 547:         self.minimum.set("")
+ 548:         self.maximum.set("")
+ 549:         self.display_label.set("")
+ 550:         self.ui_color.set("#8C939F")
+ 551:         self.flavor_text_id.set("")
+ 552:         self.sort_order.set(
+ 553:             str(self.next_sort_order(self.metric_id.get()))
+ 554:             if self.metric_id.get()
+ 555:             else "1"
+ 556:         )
+ 557: 
+ 558:         self.short_status_text.delete("1.0", tk.END)
+ 559:         self.tier_entry.focus_set()
+ 560: 
+ 561:     def on_select(self, _event: Any = None) -> None:
+ 562:         selection = self.tree.selection()
+ 563: 
+ 564:         if not selection:
+ 565:             return
+ 566: 
+ 567:         metric_id, tier_id = selection[0].split("::", 1)
+ 568: 
+ 569:         row = next(
+ 570:             (
+ 571:                 item
+ 572:                 for item in self.rows()
+ 573:                 if item.get("metric_id") == metric_id
+ 574:                 and item.get("tier_id") == tier_id
+ 575:             ),
+ 576:             None,
+ 577:         )
+ 578: 
+ 579:         if row is None:
+ 580:             return
+ 581: 
+ 582:         self.editing_key = (metric_id, tier_id)
+ 583: 
+ 584:         self.metric_combo.configure(state=tk.DISABLED)
+ 585:         self.tier_entry.configure(state=tk.NORMAL)
+ 586: 
+ 587:         self.metric_id.set(metric_id)
+ 588:         self.tier_id.set(tier_id)
+ 589: 
+ 590:         self.tier_entry.configure(state=tk.DISABLED)
+ 591: 
+ 592:         self.minimum.set(row.get("min_inclusive", ""))
+ 593:         self.maximum.set(row.get("max_inclusive", ""))
+ 594:         self.display_label.set(row.get("display_label", ""))
+ 595:         self.ui_color.set(row.get("ui_color", ""))
+ 596:         self.flavor_text_id.set(row.get("flavor_text_id", ""))
+ 597:         self.sort_order.set(row.get("sort_order", ""))
+ 598: 
+ 599:         self.short_status_text.delete("1.0", tk.END)
+ 600:         self.short_status_text.insert(
+ 601:             "1.0",
+ 602:             row.get("short_status", ""),
+ 603:         )
+ 604: 
+ 605:     def revert(self) -> None:
+ 606:         if self.editing_key:
+ 607:             key = f"{self.editing_key[0]}::{self.editing_key[1]}"
+ 608: 
+ 609:             if self.tree.exists(key):
+ 610:                 self.tree.selection_set(key)
+ 611:                 self.on_select()
+ 612:                 return
+ 613: 
+ 614:         self.new()
+ 615: 
+ 616:     def record(self) -> dict[str, str] | None:
+ 617:         try:
+ 618:             normalized_ui_color = self.normalized_ui_color(self.ui_color.get())
+ 619:         except ValueError as error:
+ 620:             messagebox.showerror("Invalid UI Color", str(error))
+ 621:             return None
+ 622: 
+ 623:         self.ui_color.set(normalized_ui_color)
+ 624:         self.refresh_ui_color_swatch()
+ 625: 
+ 626:         row = {
+ 627:             "metric_id": self.metric_id.get().strip(),
+ 628:             "tier_id": self.tier_id.get().strip(),
+ 629:             "min_inclusive": self.minimum.get().strip(),
+ 630:             "max_inclusive": self.maximum.get().strip(),
+ 631:             "display_label": self.display_label.get().strip(),
+ 632:             "short_status": self.short_status_text.get("1.0", tk.END).strip(),
+ 633:             "ui_color": normalized_ui_color,
+ 634:             "flavor_text_id": self.flavor_text_id.get().strip(),
+ 635:             "sort_order": self.sort_order.get().strip(),
+ 636:         }
+ 637: 
+ 638:         errors: list[str] = []
+ 639: 
+ 640:         if row["metric_id"] not in self.metric_ids():
+ 641:             errors.append("Select a valid Metric.")
+ 642: 
+ 643:         if not ID_PATTERN.fullmatch(row["tier_id"]):
+ 644:             errors.append(
+ 645:                 "Tier ID must begin with an uppercase letter and use only "
+ 646:                 "uppercase letters, digits, or underscores."
+ 647:             )
+ 648: 
+ 649:         if not row["display_label"]:
+ 650:             errors.append("Display Label is required.")
+ 651: 
+ 652:         if not row["short_status"]:
+ 653:             errors.append("Short Status is required.")
+ 654: 
+ 655:         if not row["ui_color"]:
+ 656:             errors.append("UI Color is required.")
+ 657: 
+ 658:         if row["flavor_text_id"] not in self.flavor_ids():
+ 659:             errors.append("Select a valid Flavor Text ID.")
+ 660: 
+ 661:         try:
+ 662:             minimum = int(row["min_inclusive"])
+ 663:             maximum = int(row["max_inclusive"])
+ 664: 
+ 665:             if minimum > maximum:
+ 666:                 errors.append("Minimum cannot exceed Maximum.")
+ 667: 
+ 668:         except ValueError:
+ 669:             errors.append("Minimum and Maximum must be integers.")
+ 670: 
+ 671:         try:
+ 672:             sort_order = int(row["sort_order"])
+ 673: 
+ 674:             if sort_order < 1:
+ 675:                 errors.append("Sort Order must be at least 1.")
+ 676: 
+ 677:         except ValueError:
+ 678:             errors.append("Sort Order must be an integer.")
+ 679: 
+ 680:         if errors:
+ 681:             messagebox.showerror(
+ 682:                 "DoDA Content Workbench",
+ 683:                 "Correct before saving:\n\n- " + "\n- ".join(errors),
+ 684:             )
+ 685: 
+ 686:             return None
+ 687: 
+ 688:         return row
+ 689: 
+ 690:     def write(self, path: Path, rows: list[dict[str, str]]) -> None:
+ 691:         with path.open("w", encoding="utf-8", newline="") as handle:
+ 692:             writer = csv.DictWriter(
+ 693:                 handle,
+ 694:                 fieldnames=FIELDS,
+ 695:                 lineterminator="\n",
+ 696:             )
+ 697: 
+ 698:             writer.writeheader()
+ 699: 
+ 700:             for row in rows:
+ 701:                 writer.writerow(
+ 702:                     {
+ 703:                         field: row.get(field, "")
+ 704:                         for field in FIELDS
+ 705:                     }
+ 706:                 )
+ 707: 
+ 708:     def candidate_valid(self, candidate: Path) -> tuple[bool, str]:
+ 709:         with tempfile.TemporaryDirectory(prefix="doda-tier-") as temporary:
+ 710:             root = Path(temporary)
+ 711:             destination = root / "data_authoring" / "source"
+ 712:             destination.mkdir(parents=True)
+ 713: 
+ 714:             for filename in FILES:
+ 715:                 source = (
+ 716:                     candidate
+ 717:                     if filename == "metric_tiers.csv"
+ 718:                     else self.app.source_directory / filename
+ 719:                 )
+ 720: 
+ 721:                 shutil.copy2(source, destination / filename)
+ 722: 
+ 723:             command = [
+ 724:                 sys.executable,
+ 725:                 str(self.app.validator_path),
+ 726:                 "--root",
+ 727:                 str(root),
+ 728:                 "validate",
+ 729:             ]
+ 730: 
+ 731:             completed = subprocess.run(
+ 732:                 command,
+ 733:                 cwd=root,
+ 734:                 text=True,
+ 735:                 encoding="utf-8",
+ 736:                 errors="replace",
+ 737:                 capture_output=True,
+ 738:             )
+ 739: 
+ 740:             output = (
+ 741:                 completed.stdout
+ 742:                 + ("\n" if completed.stdout and completed.stderr else "")
+ 743:                 + completed.stderr
+ 744:             ).strip()
+ 745: 
+ 746:             return completed.returncode == 0, output
+ 747: 
+ 748:     def post_validate(self) -> tuple[bool, str]:
+ 749:         command = [
+ 750:             sys.executable,
+ 751:             str(self.app.validator_path),
+ 752:             "--root",
+ 753:             str(self.app.project_root),
+ 754:             "validate",
+ 755:         ]
+ 756: 
+ 757:         completed = subprocess.run(
+ 758:             command,
+ 759:             cwd=self.app.project_root,
+ 760:             text=True,
+ 761:             encoding="utf-8",
+ 762:             errors="replace",
+ 763:             capture_output=True,
+ 764:         )
+ 765: 
+ 766:         output = (
+ 767:             completed.stdout
+ 768:             + ("\n" if completed.stdout and completed.stderr else "")
+ 769:             + completed.stderr
+ 770:         ).strip()
+ 771: 
+ 772:         return completed.returncode == 0, output
+ 773: 
+ 774:     def save(self) -> None:
+ 775:         row = self.record()
+ 776: 
+ 777:         if row is None:
+ 778:             return
+ 779: 
+ 780:         rows = self.rows()
+ 781: 
+ 782:         if self.editing_key:
+ 783:             if (
+ 784:                 row["metric_id"] != self.editing_key[0]
+ 785:                 or row["tier_id"] != self.editing_key[1]
+ 786:             ):
+ 787:                 messagebox.showerror(
+ 788:                     "DoDA Content Workbench",
+ 789:                     "Metric ID and Tier ID cannot change after creation.",
+ 790:                 )
+ 791:                 return
+ 792: 
+ 793:             rows = [
+ 794:                 row
+ 795:                 if (
+ 796:                     item.get("metric_id") == self.editing_key[0]
+ 797:                     and item.get("tier_id") == self.editing_key[1]
+ 798:                 )
+ 799:                 else item
+ 800:                 for item in rows
+ 801:             ]
+ 802: 
+ 803:             action = "updated"
+ 804: 
+ 805:         else:
+ 806:             if any(
+ 807:                 item.get("metric_id") == row["metric_id"]
+ 808:                 and item.get("tier_id") == row["tier_id"]
+ 809:                 for item in rows
+ 810:             ):
+ 811:                 messagebox.showerror(
+ 812:                     "DoDA Content Workbench",
+ 813:                     "This Metric ID and Tier ID combination already exists.",
+ 814:                 )
+ 815:                 return
+ 816: 
+ 817:             rows.append(row)
+ 818:             action = "added"
+ 819: 
+ 820:         temporary = self.app.source_directory / (
+ 821:             f".metric-tiers-{uuid4().hex}.tmp.csv"
+ 822:         )
+ 823: 
+ 824:         self.app.config(cursor="watch")
+ 825:         self.app.update_idletasks()
+ 826: 
+ 827:         try:
+ 828:             self.write(temporary, rows)
+ 829: 
+ 830:             valid, output = self.candidate_valid(temporary)
+ 831: 
+ 832:             self.app.log("Metric Tier candidate validation output:")
+ 833: 
+ 834:             for line in output.splitlines():
+ 835:                 self.app.log(" " + line)
+ 836: 
+ 837:             if not valid:
+ 838:                 messagebox.showerror(
+ 839:                     "DoDA Content Workbench",
+ 840:                     (
+ 841:                         "Metric Tier candidate validation failed. Source CSV "
+ 842:                         "was unchanged.\n\nReview Activity Log for details."
+ 843:                     ),
+ 844:                 )
+ 845:                 return
+ 846: 
+ 847:             folder = self.backup_directory()
+ 848:             folder.mkdir(parents=True, exist_ok=True)
+ 849: 
+ 850:             backup = folder / (
+ 851:                 "metric_tiers_"
+ 852:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+ 853:                 + ".csv"
+ 854:             )
+ 855: 
+ 856:             shutil.copy2(self.source_path(), backup)
+ 857:             os.replace(temporary, self.source_path())
+ 858: 
+ 859:             self.editing_key = (
+ 860:                 row["metric_id"],
+ 861:                 row["tier_id"],
+ 862:             )
+ 863: 
+ 864:             self.app.log(f"Created Metric Tier backup: {backup}")
+ 865:             self.app.log(
+ 866:                 f"Metric Tier {action}: "
+ 867:                 f"{row['metric_id']} / {row['tier_id']}"
+ 868:             )
+ 869: 
+ 870:             self.app.refresh_all(False)
+ 871: 
+ 872:             valid, output = self.post_validate()
+ 873: 
+ 874:             for line in output.splitlines():
+ 875:                 self.app.log(" " + line)
+ 876: 
+ 877:             self.app.refresh_all(False)
+ 878: 
+ 879:             if valid:
+ 880:                 messagebox.showinfo(
+ 881:                     "DoDA Content Workbench",
+ 882:                     (
+ 883:                         f"Metric Tier '{row['metric_id']} / {row['tier_id']}' "
+ 884:                         f"{action}.\n\nBackup created:\n{backup}\n\n"
+ 885:                         "Project validation passed."
+ 886:                     ),
+ 887:                 )
+ 888:             else:
+ 889:                 messagebox.showwarning(
+ 890:                     "DoDA Content Workbench",
+ 891:                     (
+ 892:                         f"Metric Tier {action}, but post-save validation failed.\n\n"
+ 893:                         f"Backup:\n{backup}"
+ 894:                     ),
+ 895:                 )
+ 896: 
+ 897:         except (OSError, ValueError) as error:
+ 898:             self.app.log(f"METRIC TIER SAVE ERROR: {error}")
+ 899: 
+ 900:             messagebox.showerror(
+ 901:                 "DoDA Content Workbench",
+ 902:                 f"Unable to save Metric Tier.\n\n{error}",
+ 903:             )
+ 904: 
+ 905:         finally:
+ 906:             if temporary.exists():
+ 907:                 temporary.unlink()
+ 908: 
+ 909:             self.app.config(cursor="")
+ 910:             self.app.update_idletasks()
+ 911: 
+ 912:     def remove(self) -> None:
+ 913:         if not self.editing_key:
+ 914:             messagebox.showwarning(
+ 915:                 "DoDA Content Workbench",
+ 916:                 "Select an existing Metric Tier before using Remove Tier.",
+ 917:             )
+ 918:             return
+ 919: 
+ 920:         metric_id, tier_id = self.editing_key
+ 921: 
+ 922:         confirmed = messagebox.askyesno(
+ 923:             "Remove Metric Tier?",
+ 924:             (
+ 925:                 f"ARE YOU SURE you want to remove '{metric_id} / {tier_id}'?\n\n"
+ 926:                 "Removal will be blocked if it leaves incomplete metric coverage."
+ 927:             ),
+ 928:             icon="warning",
+ 929:             default=messagebox.NO,
+ 930:         )
+ 931: 
+ 932:         if not confirmed:
+ 933:             self.app.log(
+ 934:                 f"Remove Metric Tier cancelled for '{metric_id} / {tier_id}'."
+ 935:             )
+ 936:             return
+ 937: 
+ 938:         rows = [
+ 939:             row
+ 940:             for row in self.rows()
+ 941:             if not (
+ 942:                 row.get("metric_id") == metric_id
+ 943:                 and row.get("tier_id") == tier_id
+ 944:             )
+ 945:         ]
+ 946: 
+ 947:         temporary = self.app.source_directory / (
+ 948:             f".metric-tiers-remove-{uuid4().hex}.tmp.csv"
+ 949:         )
+ 950: 
+ 951:         self.app.config(cursor="watch")
+ 952:         self.app.update_idletasks()
+ 953: 
+ 954:         try:
+ 955:             self.write(temporary, rows)
+ 956: 
+ 957:             valid, output = self.candidate_valid(temporary)
+ 958: 
+ 959:             self.app.log(
+ 960:                 "Metric Tier removal candidate validation output "
+ 961:                 f"for '{metric_id} / {tier_id}':"
+ 962:             )
+ 963: 
+ 964:             for line in output.splitlines():
+ 965:                 self.app.log(" " + line)
+ 966: 
+ 967:             if not valid:
+ 968:                 messagebox.showerror(
+ 969:                     "DoDA Content Workbench",
+ 970:                     (
+ 971:                         "Removal was blocked by validation.\n\n"
+ 972:                         "A metric must retain complete contiguous tier coverage. "
+ 973:                         "Source CSV was unchanged."
+ 974:                     ),
+ 975:                 )
+ 976:                 return
+ 977: 
+ 978:             folder = self.backup_directory()
+ 979:             folder.mkdir(parents=True, exist_ok=True)
+ 980: 
+ 981:             backup = folder / (
+ 982:                 "metric_tiers_before_remove_"
+ 983:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+ 984:                 + ".csv"
+ 985:             )
+ 986: 
+ 987:             shutil.copy2(self.source_path(), backup)
+ 988:             os.replace(temporary, self.source_path())
+ 989: 
+ 990:             self.editing_key = None
+ 991: 
+ 992:             self.app.log(f"Created pre-removal Metric Tier backup: {backup}")
+ 993:             self.app.log(
+ 994:                 f"Removed Metric Tier: {metric_id} / {tier_id}"
+ 995:             )
+ 996: 
+ 997:             self.app.refresh_all(False)
+ 998:             self.new()
+ 999: 
+1000:             valid, output = self.post_validate()
+1001: 
+1002:             for line in output.splitlines():
+1003:                 self.app.log(" " + line)
+1004: 
+1005:             self.app.refresh_all(False)
+1006: 
+1007:             if valid:
+1008:                 messagebox.showinfo(
+1009:                     "DoDA Content Workbench",
+1010:                     (
+1011:                         f"Metric Tier '{metric_id} / {tier_id}' removed.\n\n"
+1012:                         f"Backup created:\n{backup}\n\n"
+1013:                         "Project validation passed."
+1014:                     ),
+1015:                 )
+1016:             else:
+1017:                 messagebox.showwarning(
+1018:                     "DoDA Content Workbench",
+1019:                     (
+1020:                         "Metric Tier removed, but post-save validation failed.\n\n"
+1021:                         f"Backup:\n{backup}"
+1022:                     ),
+1023:                 )
+1024: 
+1025:         except (OSError, ValueError) as error:
+1026:             self.app.log(f"METRIC TIER REMOVE ERROR: {error}")
+1027: 
+1028:             messagebox.showerror(
+1029:                 "DoDA Content Workbench",
+1030:                 f"Unable to remove Metric Tier.\n\n{error}",
+1031:             )
+1032: 
+1033:         finally:
+1034:             if temporary.exists():
+1035:                 temporary.unlink()
+1036: 
+1037:             self.app.config(cursor="")
+1038:             self.app.update_idletasks()
+1039: 
+1040:     def open_backups(self) -> None:
+1041:         self.backup_directory().mkdir(parents=True, exist_ok=True)
+1042:         self.app.open_folder(self.backup_directory())
+1043: 
+1044: 
+1045: def install_metric_tiers_editor(app: Any) -> None:
+1046:     editor = MetricTiersEditor(app)
+1047: 
+1048:     app.metric_tiers_editor = editor
+1049:     app.update_metrics = editor.update
+1050: 
+1051: 
+1052: 
+1053: 

@@ -1,0 +1,578 @@
+DoDA V1.1 Exporter Pre-Change Inspection
+Generated: 2026-10-01T12:47:26.0788377-04:00
+
+=== Exporter Constants ===
+TOOL_VERSION = "0.1.0"
+SCHEMA_VERSION = 1
+TABLE_FILES = {
+INTEGER_COLUMNS = {
+BOOLEAN_COLUMNS = {
+current = start.resolve()
+digest = hashlib.sha256()
+validator_path = (
+command = [
+completed = subprocess.run(command, cwd=project_root)
+normalized = value.strip()
+path = project_root / "data_authoring" / "source" / filename
+reader = csv.DictReader(source_file)
+safe_key = re.sub(r"[^A-Za-z0-9_]", "_", flavor_text_id.upper())
+lines = [
+base_key = language_key_from_flavor_id(str(row["flavor_text_id"]))
+title = escape_language_text(str(row["title"]))
+body = escape_language_text(str(row["body"]))
+encoding="utf-8",
+archive_entries = {
+package_readme = (
+temporary_path = pk3_path.with_suffix(".pk3.tmp")
+mode="w",
+compression=zipfile.ZIP_DEFLATED,
+compresslevel=9,
+table_rows = load_table(project_root, table_name, filename)
+generated_at = datetime.now(timezone.utc).isoformat()
+department_payload = {
+generated_directory = project_root / "generated"
+department_json_path = generated_directory / "data" / "department_content.json"
+language_path = (
+manifest_path = (
+pk3_path = project_root / "build" / "doda-generated-content.pk3"
+language_fragment = build_language_fragment(tables["flavor_text"])
+source_hashes = {
+output_hashes = {
+manifest_payload = {
+archive_entries = build_pk3(
+outputs = {
+parser = argparse.ArgumentParser(
+prog="doda_content_export",
+description="Export validated DoDA authoring content and build a PK3 overlay.",
+type=Path,
+default=None,
+help="Path to doda-core. Defaults to automatic project-root discovery.",
+parser = build_parser()
+arguments = parser.parse_args()
+project_root = (
+
+=== Exporter Function Headers ===
+def find_project_root(start: Path) -> Path:
+def sha256_file(path: Path) -> str:
+def run_validator(project_root: Path) -> None:
+def normalize_value(table_name: str, column_name: str, value: str) -> Any:
+def load_table(
+def escape_language_text(value: str) -> str:
+def language_key_from_flavor_id(flavor_text_id: str) -> str:
+def build_language_fragment(flavor_rows: list[dict[str, Any]]) -> str:
+def write_json(path: Path, payload: dict[str, Any]) -> None:
+def write_text(path: Path, content: str) -> None:
+def build_pk3(
+def export_content(project_root: Path) -> tuple[dict[str, Path], list[str]]:
+def print_export_result(
+def build_parser() -> argparse.ArgumentParser:
+def main() -> int:
+
+=== Current department_content.json Top-Level Keys ===
+generatedAtUtc
+schemaVersion
+tables
+toolVersion
+
+=== Current department_content.json Value Summary ===
+
+Key            Type           Count
+---            ----           -----
+schemaVersion  Int32              1
+toolVersion    String             1
+generatedAtUtc String             1
+tables         PSCustomObject     1
+
+=== Current content_manifest.json Top-Level Keys ===
+generatedAtUtc
+outputFiles
+projectRoot
+runtimeStatus
+schemaVersion
+sourceFiles
+tableRowCounts
+toolVersion
+
+=== Current Manifest ===
+{
+    "schemaVersion":  1,
+    "toolVersion":  "0.1.0",
+    "generatedAtUtc":  "2026-10-01T10:16:04.681368+00:00",
+    "projectRoot":  "E:\\Dev\\uzdoom_src\\doda-core",
+    "sourceFiles":  {
+                        "enum_catalog.csv":  "36125c42667d5a267a6c2d1a8ca93381f04ff1a3025acb645da682e0b379114a",
+                        "department_tracks.csv":  "19d3e67c58c6a7ccf21eb77db057333bb380d9c260779636580f8bf06c5b0e73",
+                        "metrics.csv":  "09bdc0a244bbfd238710328cb7d9a9e1140042ceeeec1f984383251ac6e8b7bc",
+                        "metric_tiers.csv":  "c70036f74e1b3e9161e0fba1697c6ab0ed27f9a2f74de6e4f98a3b716fc9da26",
+                        "facilities.csv":  "8b229fef31855318f9cf2c5fc30e48e2626f1e8edbb7d9926a3f6f01f7819e77",
+                        "flavor_text.csv":  "89d1684320406ecf2de93f58b02fbd71f125c808152cac9d3a2fa1f55b6c4b68"
+                    },
+    "outputFiles":  {
+                        "generated/data/department_content.json":  "29b208c4300b4c92af57da9bff08e295d7c150eda7f510c6e68f9c004bf1406e",
+                        "generated/language/DODA_GENERATED_LANGUAGE.txt":  "a23e4e7790b0a6901012ebe89ea328b202d7f1d48767c0a84e75411f75c20441"
+                    },
+    "tableRowCounts":  {
+                           "enum_catalog":  18,
+                           "department_tracks":  6,
+                           "metrics":  5,
+                           "metric_tiers":  20,
+                           "facilities":  6,
+                           "flavor_text":  20
+                       },
+    "runtimeStatus":  {
+                          "nativeLoaderAvailable":  false,
+                          "mapinfoIntegrationEnabled":  false,
+                          "languageIntegrationEnabled":  false,
+                          "zscriptIntegrationEnabled":  false,
+                          "notes":  [
+                                        "This is a generated content overlay proof.",
+                                        "The PK3 is not yet active runtime data.",
+                                        "Do not manually edit generated output files."
+                                    ]
+                      }
+}
+
+=== Current PK3 Entries ===
+
+FullName                             Length CompressedLength
+--------                             ------ ----------------
+data/department_content.json          26688             5058
+language/DODA_GENERATED_LANGUAGE.txt   5095             1909
+manifest/content_manifest.json         1548              824
+README.txt                              412              255
+
+=== Exporter Lines 1-430 ===
+   1: #!/usr/bin/env python3
+   2: r"""
+   3: DoDA Content Workbench - content exporter and PK3 builder.
+   4: 
+   5: This script performs a safe, data-only export pipeline:
+   6: 
+   7: 1. Runs the CSV validator.
+   8: 2. Loads validated authoring CSV files.
+   9: 3. Creates normalized JSON content data.
+  10: 4. Creates a future UZDoom LANGUAGE fragment.
+  11: 5. Creates a source/output hash manifest.
+  12: 6. Builds a standalone PK3 overlay archive.
+  13: 
+  14: This version deliberately does not edit MAPINFO, GAMEINFO, LANGUAGE, zscript.txt,
+  15: maps, native C++, ZScript, or the doda-core package.
+  16: 
+  17: Usage:
+  18:     python tools/doda_content_workbench/doda_content_export.py
+  19:     python tools/doda_content_workbench/doda_content_export.py --root C:/Dev/uzdoom_src/doda-core
+  20: """
+  21: 
+  22: from __future__ import annotations
+  23: 
+  24: import argparse
+  25: import csv
+  26: import hashlib
+  27: import json
+  28: import re
+  29: import subprocess
+  30: import sys
+  31: import zipfile
+  32: from datetime import datetime, timezone
+  33: from pathlib import Path
+  34: from typing import Any
+  35: 
+  36: 
+  37: TOOL_VERSION = "0.1.0"
+  38: SCHEMA_VERSION = 1
+  39: 
+  40: TABLE_FILES = {
+  41:     "enum_catalog": "enum_catalog.csv",
+  42:     "department_tracks": "department_tracks.csv",
+  43:     "metrics": "metrics.csv",
+  44:     "metric_tiers": "metric_tiers.csv",
+  45:     "facilities": "facilities.csv",
+  46:     "flavor_text": "flavor_text.csv",
+  47: }
+  48: 
+  49: INTEGER_COLUMNS = {
+  50:     "enum_catalog": {"sort_order"},
+  51:     "department_tracks": {"sort_order"},
+  52:     "metrics": {"internal_min", "internal_max", "default_value"},
+  53:     "metric_tiers": {"min_inclusive", "max_inclusive", "sort_order"},
+  54: }
+  55: 
+  56: BOOLEAN_COLUMNS = {
+  57:     "enum_catalog": {"active"},
+  58:     "department_tracks": {"active"},
+  59:     "metrics": {"active"},
+  60:     "facilities": {"active"},
+  61:     "flavor_text": {"active"},
+  62: }
+  63: 
+  64: 
+  65: def find_project_root(start: Path) -> Path:
+  66:     current = start.resolve()
+  67: 
+  68:     for candidate in (current, *current.parents):
+  69:         if (
+  70:             (candidate / "data_authoring").is_dir()
+  71:             and (candidate / "tools").is_dir()
+  72:             and (candidate / "DoDA").is_dir()
+  73:         ):
+  74:             return candidate
+  75: 
+  76:     raise FileNotFoundError(
+  77:         "Unable to locate the DoDA project root. Use --root to provide it explicitly."
+  78:     )
+  79: 
+  80: 
+  81: def sha256_file(path: Path) -> str:
+  82:     digest = hashlib.sha256()
+  83: 
+  84:     with path.open("rb") as source_file:
+  85:         for chunk in iter(lambda: source_file.read(65536), b""):
+  86:             digest.update(chunk)
+  87: 
+  88:     return digest.hexdigest()
+  89: 
+  90: 
+  91: def run_validator(project_root: Path) -> None:
+  92:     validator_path = (
+  93:         project_root
+  94:         / "tools"
+  95:         / "doda_content_workbench"
+  96:         / "doda_content_workbench.py"
+  97:     )
+  98: 
+  99:     if not validator_path.is_file():
+ 100:         raise FileNotFoundError(
+ 101:             f"Validator script was not found: {validator_path}"
+ 102:         )
+ 103: 
+ 104:     command = [
+ 105:         sys.executable,
+ 106:         str(validator_path),
+ 107:         "--root",
+ 108:         str(project_root),
+ 109:         "validate",
+ 110:     ]
+ 111: 
+ 112:     print("Running source-data validation...")
+ 113:     completed = subprocess.run(command, cwd=project_root)
+ 114: 
+ 115:     if completed.returncode != 0:
+ 116:         raise RuntimeError(
+ 117:             "Source-data validation failed. Export was not attempted. "
+ 118:             "Correct CSV source data first, then run export again."
+ 119:         )
+ 120: 
+ 121: 
+ 122: def normalize_value(table_name: str, column_name: str, value: str) -> Any:
+ 123:     normalized = value.strip()
+ 124: 
+ 125:     if column_name in INTEGER_COLUMNS.get(table_name, set()):
+ 126:         return int(normalized)
+ 127: 
+ 128:     if column_name in BOOLEAN_COLUMNS.get(table_name, set()):
+ 129:         return normalized.upper() == "TRUE"
+ 130: 
+ 131:     return normalized
+ 132: 
+ 133: 
+ 134: def load_table(
+ 135:     project_root: Path,
+ 136:     table_name: str,
+ 137:     filename: str,
+ 138: ) -> list[dict[str, Any]]:
+ 139:     path = project_root / "data_authoring" / "source" / filename
+ 140: 
+ 141:     with path.open("r", encoding="utf-8-sig", newline="") as source_file:
+ 142:         reader = csv.DictReader(source_file)
+ 143:         rows: list[dict[str, Any]] = []
+ 144: 
+ 145:         for raw_row in reader:
+ 146:             if raw_row is None:
+ 147:                 continue
+ 148: 
+ 149:             if not any((value or "").strip() for value in raw_row.values()):
+ 150:                 continue
+ 151: 
+ 152:             row: dict[str, Any] = {}
+ 153: 
+ 154:             for column_name, raw_value in raw_row.items():
+ 155:                 if column_name is None:
+ 156:                     continue
+ 157: 
+ 158:                 row[column_name.strip()] = normalize_value(
+ 159:                     table_name,
+ 160:                     column_name.strip(),
+ 161:                     raw_value or "",
+ 162:                 )
+ 163: 
+ 164:             rows.append(row)
+ 165: 
+ 166:         return rows
+ 167: 
+ 168: 
+ 169: def escape_language_text(value: str) -> str:
+ 170:     return (
+ 171:         value.replace("\\", "\\\\")
+ 172:         .replace('"', '\\"')
+ 173:         .replace("\r\n", "\\n")
+ 174:         .replace("\n", "\\n")
+ 175:         .replace("\r", "\\n")
+ 176:     )
+ 177: 
+ 178: 
+ 179: def language_key_from_flavor_id(flavor_text_id: str) -> str:
+ 180:     safe_key = re.sub(r"[^A-Za-z0-9_]", "_", flavor_text_id.upper())
+ 181:     return f"DODA_{safe_key}"
+ 182: 
+ 183: 
+ 184: def build_language_fragment(flavor_rows: list[dict[str, Any]]) -> str:
+ 185:     lines = [
+ 186:         "// GENERATED FILE - DO NOT EDIT BY HAND",
+ 187:         "// Source: data_authoring/source/flavor_text.csv",
+ 188:         "// Generated by DoDA Content Workbench.",
+ 189:         "",
+ 190:         "[default]",
+ 191:         "",
+ 192:     ]
+ 193: 
+ 194:     for row in sorted(flavor_rows, key=lambda item: item["flavor_text_id"]):
+ 195:         base_key = language_key_from_flavor_id(str(row["flavor_text_id"]))
+ 196:         title = escape_language_text(str(row["title"]))
+ 197:         body = escape_language_text(str(row["body"]))
+ 198: 
+ 199:         lines.append(f'{base_key}_TITLE = "{title}";')
+ 200:         lines.append(f'{base_key}_BODY = "{body}";')
+ 201:         lines.append("")
+ 202: 
+ 203:     return "\n".join(lines).rstrip() + "\n"
+ 204: 
+ 205: 
+ 206: def write_json(path: Path, payload: dict[str, Any]) -> None:
+ 207:     path.parent.mkdir(parents=True, exist_ok=True)
+ 208:     path.write_text(
+ 209:         json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+ 210:         encoding="utf-8",
+ 211:     )
+ 212: 
+ 213: 
+ 214: def write_text(path: Path, content: str) -> None:
+ 215:     path.parent.mkdir(parents=True, exist_ok=True)
+ 216:     path.write_text(content, encoding="utf-8")
+ 217: 
+ 218: 
+ 219: def build_pk3(
+ 220:     pk3_path: Path,
+ 221:     department_json_path: Path,
+ 222:     language_path: Path,
+ 223:     manifest_path: Path,
+ 224: ) -> list[str]:
+ 225:     pk3_path.parent.mkdir(parents=True, exist_ok=True)
+ 226: 
+ 227:     archive_entries = {
+ 228:         "data/department_content.json": department_json_path,
+ 229:         "language/DODA_GENERATED_LANGUAGE.txt": language_path,
+ 230:         "manifest/content_manifest.json": manifest_path,
+ 231:     }
+ 232: 
+ 233:     package_readme = (
+ 234:         "DoDA Generated Content Overlay\n"
+ 235:         "==============================\n"
+ 236:         "\n"
+ 237:         "This PK3 was generated by DoDA Content Workbench.\n"
+ 238:         "\n"
+ 239:         "It is currently a data-packaging proof. The archive contains generated\n"
+ 240:         "department data, a future LANGUAGE fragment, and a build manifest.\n"
+ 241:         "It does not yet add active runtime behavior because doda-core has not\n"
+ 242:         "yet been given a native data loader or static include seam for these\n"
+ 243:         "generated resources.\n"
+ 244:     )
+ 245: 
+ 246:     temporary_path = pk3_path.with_suffix(".pk3.tmp")
+ 247: 
+ 248:     if temporary_path.exists():
+ 249:         temporary_path.unlink()
+ 250: 
+ 251:     with zipfile.ZipFile(
+ 252:         temporary_path,
+ 253:         mode="w",
+ 254:         compression=zipfile.ZIP_DEFLATED,
+ 255:         compresslevel=9,
+ 256:     ) as archive:
+ 257:         archive.writestr("README.txt", package_readme)
+ 258: 
+ 259:         for archive_name, source_path in archive_entries.items():
+ 260:             archive.write(source_path, archive_name)
+ 261: 
+ 262:     if pk3_path.exists():
+ 263:         pk3_path.unlink()
+ 264: 
+ 265:     temporary_path.replace(pk3_path)
+ 266: 
+ 267:     with zipfile.ZipFile(pk3_path, mode="r") as archive:
+ 268:         return sorted(archive.namelist())
+ 269: 
+ 270: 
+ 271: def export_content(project_root: Path) -> tuple[dict[str, Path], list[str]]:
+ 272:     run_validator(project_root)
+ 273: 
+ 274:     print()
+ 275:     print("Loading validated authoring CSV files...")
+ 276: 
+ 277:     tables: dict[str, list[dict[str, Any]]] = {}
+ 278: 
+ 279:     for table_name, filename in TABLE_FILES.items():
+ 280:         table_rows = load_table(project_root, table_name, filename)
+ 281:         tables[table_name] = table_rows
+ 282:         print(f"  {table_name}: {len(table_rows)} row(s)")
+ 283: 
+ 284:     generated_at = datetime.now(timezone.utc).isoformat()
+ 285: 
+ 286:     department_payload = {
+ 287:         "schemaVersion": SCHEMA_VERSION,
+ 288:         "toolVersion": TOOL_VERSION,
+ 289:         "generatedAtUtc": generated_at,
+ 290:         "tables": tables,
+ 291:     }
+ 292: 
+ 293:     generated_directory = project_root / "generated"
+ 294:     department_json_path = generated_directory / "data" / "department_content.json"
+ 295:     language_path = (
+ 296:         generated_directory
+ 297:         / "language"
+ 298:         / "DODA_GENERATED_LANGUAGE.txt"
+ 299:     )
+ 300:     manifest_path = (
+ 301:         generated_directory
+ 302:         / "manifest"
+ 303:         / "content_manifest.json"
+ 304:     )
+ 305:     pk3_path = project_root / "build" / "doda-generated-content.pk3"
+ 306: 
+ 307:     write_json(department_json_path, department_payload)
+ 308: 
+ 309:     language_fragment = build_language_fragment(tables["flavor_text"])
+ 310:     write_text(language_path, language_fragment)
+ 311: 
+ 312:     source_hashes = {
+ 313:         filename: sha256_file(
+ 314:             project_root / "data_authoring" / "source" / filename
+ 315:         )
+ 316:         for filename in TABLE_FILES.values()
+ 317:     }
+ 318: 
+ 319:     output_hashes = {
+ 320:         "generated/data/department_content.json": sha256_file(department_json_path),
+ 321:         "generated/language/DODA_GENERATED_LANGUAGE.txt": sha256_file(language_path),
+ 322:     }
+ 323: 
+ 324:     manifest_payload = {
+ 325:         "schemaVersion": SCHEMA_VERSION,
+ 326:         "toolVersion": TOOL_VERSION,
+ 327:         "generatedAtUtc": generated_at,
+ 328:         "projectRoot": str(project_root),
+ 329:         "sourceFiles": source_hashes,
+ 330:         "outputFiles": output_hashes,
+ 331:         "tableRowCounts": {
+ 332:             table_name: len(rows)
+ 333:             for table_name, rows in tables.items()
+ 334:         },
+ 335:         "runtimeStatus": {
+ 336:             "nativeLoaderAvailable": False,
+ 337:             "mapinfoIntegrationEnabled": False,
+ 338:             "languageIntegrationEnabled": False,
+ 339:             "zscriptIntegrationEnabled": False,
+ 340:             "notes": [
+ 341:                 "This is a generated content overlay proof.",
+ 342:                 "The PK3 is not yet active runtime data.",
+ 343:                 "Do not manually edit generated output files.",
+ 344:             ],
+ 345:         },
+ 346:     }
+ 347: 
+ 348:     write_json(manifest_path, manifest_payload)
+ 349: 
+ 350:     archive_entries = build_pk3(
+ 351:         pk3_path,
+ 352:         department_json_path,
+ 353:         language_path,
+ 354:         manifest_path,
+ 355:     )
+ 356: 
+ 357:     outputs = {
+ 358:         "department_json": department_json_path,
+ 359:         "language_fragment": language_path,
+ 360:         "manifest": manifest_path,
+ 361:         "pk3_overlay": pk3_path,
+ 362:     }
+ 363: 
+ 364:     return outputs, archive_entries
+ 365: 
+ 366: 
+ 367: def print_export_result(
+ 368:     project_root: Path,
+ 369:     outputs: dict[str, Path],
+ 370:     archive_entries: list[str],
+ 371: ) -> None:
+ 372:     print()
+ 373:     print("=" * 72)
+ 374:     print("DoDA Content Workbench Export")
+ 375:     print("=" * 72)
+ 376:     print(f"Project root: {project_root}")
+ 377:     print()
+ 378: 
+ 379:     print("Generated outputs:")
+ 380:     for output_name, output_path in outputs.items():
+ 381:         print(f"  {output_name}: {output_path}")
+ 382: 
+ 383:     print()
+ 384:     print("PK3 archive entries:")
+ 385:     for entry in archive_entries:
+ 386:         print(f"  {entry}")
+ 387: 
+ 388:     print()
+ 389:     print(
+ 390:         "Export completed successfully. This PK3 is a safe data overlay proof "
+ 391:         "and does not yet alter live UZDoom behavior."
+ 392:     )
+ 393:     print("=" * 72)
+ 394: 
+ 395: 
+ 396: def build_parser() -> argparse.ArgumentParser:
+ 397:     parser = argparse.ArgumentParser(
+ 398:         prog="doda_content_export",
+ 399:         description="Export validated DoDA authoring content and build a PK3 overlay.",
+ 400:     )
+ 401: 
+ 402:     parser.add_argument(
+ 403:         "--root",
+ 404:         type=Path,
+ 405:         default=None,
+ 406:         help="Path to doda-core. Defaults to automatic project-root discovery.",
+ 407:     )
+ 408: 
+ 409:     return parser
+ 410: 
+ 411: 
+ 412: def main() -> int:
+ 413:     parser = build_parser()
+ 414:     arguments = parser.parse_args()
+ 415: 
+ 416:     try:
+ 417:         project_root = (
+ 418:             arguments.root.resolve()
+ 419:             if arguments.root is not None
+ 420:             else find_project_root(Path.cwd())
+ 421:         )
+ 422: 
+ 423:         outputs, archive_entries = export_content(project_root)
+ 424:         print_export_result(project_root, outputs, archive_entries)
+ 425:         return 0
+ 426: 
+ 427:     except (FileNotFoundError, RuntimeError, ValueError, OSError, zipfile.BadZipFile) as error:
+ 428:         print()
+ 429:         print(f"EXPORT FAILED: {error}", file=sys.stderr)
+ 430:         return 1
+ 431: 
+ 432: 
+ 433: if __name__ == "__main__":
+ 434:     sys.exit(main())

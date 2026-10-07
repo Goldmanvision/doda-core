@@ -1,0 +1,60 @@
+DoDA V1.1 Facility Capabilities Schema Inspection
+Generated: 2026-10-01T13:11:40.3229535-04:00
+
+=== Summary ===
+
+
+Facilities                : 6
+Capabilities              : 2
+FacilityCapabilities      : 2
+FacilityCapabilityHeaders : "facility_id","capability_id","display_name_override","max_concurrent_personnel","in
+                            itial_tier_id","foims_panel_id","sort_order","active"
+
+=== Active Facilities ===
+
+facility_id           display_name             personnel_capacity initial_tier_id
+-----------           ------------             ------------------ ---------------
+EVIDENCE_LAB          Evidence Laboratory      2                  UNBUILT        
+FIELD_OPERATIONS_ROOM Field Operations Room    2                  OPERATIONAL    
+INTELLIGENCE_CELL     Intelligence Cell        2                  UNBUILT        
+PUBLIC_LIAISON_OFFICE Public Liaison Office    2                  UNBUILT        
+OVERSIGHT_WING        Oversight Wing           2                  UNBUILT        
+TECHOPS_HUB           Technical Operations Hub 3                  OPERATIONAL
+
+=== Active Capabilities ===
+
+capability_id           display_name            standing_operation_label sort_order
+-------------           ------------            ------------------------ ----------
+ELECTRONIC_SURVEILLANCE Electronic Surveillance Signal Monitoring        10        
+OCCULT_RESPONSE         Occult Response         Response Readiness       20
+
+=== Active Facility Tiers ===
+
+enum_value   display_label sort_order description                                                 
+----------   ------------- ---------- -----------                                                 
+UNBUILT      Unbuilt       0          No dedicated facility exists                                
+OPERATIONAL  Operational   1          Basic staffed capability is available                       
+MODERNIZED   Modernized    2          Improved capacity reliability and workflow                  
+CUTTING_EDGE Cutting-Edge  3          Advanced capability with additional institutional complexity
+OUTDATED     Outdated      10         Legacy facility infrastructure with reduced effectiveness.
+
+=== Facility Capabilities Rows ===
+
+
+facility_id              : TECHOPS_HUB
+capability_id            : ELECTRONIC_SURVEILLANCE
+display_name_override    : 
+max_concurrent_personnel : 2
+initial_tier_id          : OPERATIONAL
+foims_panel_id           : FOIMS_TECHOPS_SURVEILLANCE
+sort_order               : 10
+active                   : TRUE
+
+facility_id              : FIELD_OPERATIONS_ROOM
+capability_id            : OCCULT_RESPONSE
+display_name_override    : Occult Task Force
+max_concurrent_personnel : 2
+initial_tier_id          : UNBUILT
+foims_panel_id           : FOIMS_FIELD_OCCULT_RESPONSE
+sort_order               : 10
+active                   : TRUE

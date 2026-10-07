@@ -1,0 +1,536 @@
+DoDA V1.1 GUI Launcher Tab Inspection
+Generated: 2026-10-01T12:55:55.8031839-04:00
+
+=== Imports and table configuration (lines 1-110) ===
+   1: #!/usr/bin/env python3
+   2: r"""
+   3: DoDA Content Workbench GUI v0.1.
+   4: 
+   5: Read-only content browser and safe CLI launcher for the DoDA authoring pipeline.
+   6: 
+   7: This version can:
+   8: - Show project and authoring-data status.
+   9: - Browse tracks, metrics, facilities, and flavor text.
+  10: - Run the validator.
+  11: - Run the content exporter.
+  12: - Open source, generated, report, and build folders.
+  13: - Display validation/export process output.
+  14: 
+  15: This version intentionally cannot edit CSV source data.
+  16: """
+  17: 
+  18: from __future__ import annotations
+  19: 
+  20: import argparse
+  21: import csv
+  22: import json
+  23: import os
+  24: import subprocess
+  25: import sys
+  26: import tkinter as tk
+  27: from datetime import datetime
+  28: from pathlib import Path
+  29: from tkinter import filedialog, messagebox, ttk
+  30: from typing import Any
+  31: from doda_track_editor import install_track_editor
+  32: from doda_metrics_editor import install_metrics_editor
+  33: from doda_metric_tiers_editor import install_metric_tiers_editor
+  34: from doda_facilities_editor import install_facilities_editor
+  35: from doda_flavor_text_editor import install_flavor_text_editor
+  36: from doda_enum_catalog_editor import install_enum_catalog_editor
+  37: from doda_foims_x_preview import FoimsXPreview
+  38: 
+  39: 
+  40: APP_TITLE = "DoDA Content Workbench"
+  41: APP_VERSION = "0.8.0"
+  42: 
+  43: SOURCE_FILES = {
+  44:     "enum_catalog": "enum_catalog.csv",
+  45:     "department_tracks": "department_tracks.csv",
+  46:     "metrics": "metrics.csv",
+  47:     "metric_tiers": "metric_tiers.csv",
+  48:     "facilities": "facilities.csv",
+  49:     "flavor_text": "flavor_text.csv",
+  50: }
+  51: 
+  52: 
+  53: def enable_windows_dark_title_bar(window: tk.Tk) -> None:
+  54:     """Request a dark native Windows title bar for the top-level app frame."""
+  55: 
+  56:     if sys.platform != "win32":
+  57:         return
+  58: 
+  59:     try:
+  60:         import ctypes
+  61: 
+  62:         window.update_idletasks()
+  63: 
+  64:         user32 = ctypes.windll.user32
+  65:         dwm_api = ctypes.windll.dwmapi.DwmSetWindowAttribute
+  66: 
+  67:         user32.GetAncestor.argtypes = [
+  68:             ctypes.c_void_p,
+  69:             ctypes.c_uint,
+  70:         ]
+  71:         user32.GetAncestor.restype = ctypes.c_void_p
+  72: 
+  73:         dwm_api.argtypes = [
+  74:             ctypes.c_void_p,
+  75:             ctypes.c_uint,
+  76:             ctypes.c_void_p,
+  77:             ctypes.c_uint,
+  78:         ]
+  79:         dwm_api.restype = ctypes.c_long
+  80: 
+  81:         # Tk exposes a client-area handle. DWM title-bar settings must target
+  82:         # the top-level frame window instead.
+  83:         GA_ROOT = 2
+  84:         client_handle = window.winfo_id()
+  85:         top_level_handle = user32.GetAncestor(
+  86:             ctypes.c_void_p(client_handle),
+  87:             GA_ROOT,
+  88:         )
+  89: 
+  90:         hwnd = top_level_handle or client_handle
+  91:         enabled = ctypes.c_int(1)
+  92: 
+  93:         # Attribute 20 is used by current Windows 10/11 releases.
+  94:         result = dwm_api(
+  95:             ctypes.c_void_p(hwnd),
+  96:             20,
+  97:             ctypes.byref(enabled),
+  98:             ctypes.sizeof(enabled),
+  99:         )
+ 100: 
+ 101:         if result != 0:
+ 102:             # Attribute 19 is the Windows 10 1809–1909 compatibility value.
+ 103:             dwm_api(
+ 104:                 ctypes.c_void_p(hwnd),
+ 105:                 19,
+ 106:                 ctypes.byref(enabled),
+ 107:                 ctypes.sizeof(enabled),
+ 108:             )
+ 109: 
+ 110:     except (AttributeError, OSError, tk.TclError):
+
+=== App initialization and editor installation (lines 150-245) ===
+ 150:         return rows
+ 151: 
+ 152: 
+ 153: def truncate_text(value: str, maximum_length: int = 120) -> str:
+ 154:     normalized = " ".join((value or "").split())
+ 155: 
+ 156:     if len(normalized) <= maximum_length:
+ 157:         return normalized
+ 158: 
+ 159:     return normalized[: maximum_length - 3] + "..."
+ 160: 
+ 161: 
+ 162: class ContentWorkbenchApp(tk.Tk):
+ 163:     def __init__(self, project_root: Path) -> None:
+ 164:         super().__init__()
+ 165: 
+ 166:         self.project_root = project_root.resolve()
+ 167:         self.workbench_directory = (
+ 168:             self.project_root / "tools" / "doda_content_workbench"
+ 169:         )
+ 170:         self.validator_path = (
+ 171:             self.workbench_directory / "doda_content_workbench.py"
+ 172:         )
+ 173:         self.exporter_path = (
+ 174:             self.workbench_directory / "doda_content_export.py"
+ 175:         )
+ 176: 
+ 177:         self.source_directory = self.project_root / "data_authoring" / "source"
+ 178:         self.generated_directory = self.project_root / "generated"
+ 179:         self.report_directory = self.generated_directory / "reports"
+ 180:         self.build_directory = self.project_root / "build"
+ 181:         self.validation_report_path = (
+ 182:             self.report_directory / "content_validation_report.json"
+ 183:         )
+ 184: 
+ 185:         self.tables: dict[str, list[dict[str, str]]] = {}
+ 186:         self.validation_report: dict[str, Any] = {}
+ 187:         self.foims_preview: FoimsXPreview | None = None
+ 188: 
+ 189:         self.status_text = tk.StringVar(value="Ready.")
+ 190:         self.project_text = tk.StringVar(value=str(self.project_root))
+ 191:         self.validation_text = tk.StringVar(value="Validation status: unknown")
+ 192:         self.export_text = tk.StringVar(value="Export status: unknown")
+ 193: 
+ 194:         self.title(f"{APP_TITLE} v{APP_VERSION}")
+ 195:         self.geometry("1280x800")
+ 196:         self.minsize(1040, 650)
+ 197: 
+ 198:         self._configure_styles()
+ 199: 
+ 200:         self.after(250, lambda: enable_windows_dark_title_bar(self))
+ 201:         self._build_menu()
+ 202: 
+ 203:         self.bind("<F11>", self.toggle_fullscreen)
+ 204:         self.bind_all(
+ 205:             "<Control-o>",
+ 206:             self.open_foims_preview_from_shortcut,
+ 207:         )
+ 208:         self.bind_all(
+ 209:             "<Control-O>",
+ 210:             self.open_foims_preview_from_shortcut,
+ 211:         )
+ 212: 
+ 213:         self._build_layout()
+ 214:         install_track_editor(self)
+ 215:         install_metrics_editor(self)
+ 216:         install_metric_tiers_editor(self)
+ 217:         install_facilities_editor(self)
+ 218:         install_flavor_text_editor(self)
+ 219:         install_enum_catalog_editor(self)
+ 220:         self.refresh_all(show_message=False)
+ 221: 
+ 222:     def _configure_styles(self) -> None:
+ 223:         """Apply the standard DoDA dark desktop theme."""
+ 224: 
+ 225:         palette = {
+ 226:             "window": "#161b22",
+ 227:             "surface": "#1f2933",
+ 228:             "surface_alt": "#273340",
+ 229:             "input": "#0d1117",
+ 230:             "border": "#3b4754",
+ 231:             "text": "#e6edf3",
+ 232:             "muted": "#9da7b3",
+ 233:             "accent": "#58a6ff",
+ 234:             "accent_active": "#79c0ff",
+ 235:             "selected": "#264f78",
+ 236:             "selected_inactive": "#33475b",
+ 237:         }
+ 238: 
+ 239:         self.configure(background=palette["window"])
+ 240: 
+ 241:         style = ttk.Style(self)
+ 242: 
+ 243:         try:
+ 244:             style.theme_use("clam")
+ 245:         except tk.TclError:
+
+=== Layout and notebook tabs (lines 810-930) ===
+ 810:             pady=(4, 0),
+ 811:         )
+ 812: 
+ 813:         ttk.Label(
+ 814:             status_frame,
+ 815:             textvariable=self.export_text,
+ 816:             style="Status.TLabel",
+ 817:         ).grid(row=1, column=1, sticky=tk.W, pady=(4, 0))
+ 818: 
+ 819:         tab_navigation = ttk.Frame(outer)
+ 820:         tab_navigation.pack(fill=tk.X, pady=(0, 4))
+ 821: 
+ 822:         ttk.Label(
+ 823:             tab_navigation,
+ 824:             text="Editor Tabs:",
+ 825:             style="Section.TLabel",
+ 826:         ).pack(side=tk.LEFT)
+ 827: 
+ 828:         ttk.Button(
+ 829:             tab_navigation,
+ 830:             text="◀ Previous Tab",
+ 831:             command=self.select_previous_notebook_tab,
+ 832:         ).pack(side=tk.RIGHT)
+ 833: 
+ 834:         ttk.Button(
+ 835:             tab_navigation,
+ 836:             text="Next Tab ▶",
+ 837:             command=self.select_next_notebook_tab,
+ 838:         ).pack(side=tk.RIGHT, padx=(0, 6))
+ 839: 
+ 840:         self.notebook = ttk.Notebook(outer)
+ 841:         self.notebook.pack(fill=tk.BOTH, expand=True)
+ 842: 
+ 843:         self.bind_all(
+ 844:             "<Control-Prior>",
+ 845:             self.select_previous_notebook_tab,
+ 846:             add="+",
+ 847:         )
+ 848: 
+ 849:         self.bind_all(
+ 850:             "<Control-Next>",
+ 851:             self.select_next_notebook_tab,
+ 852:             add="+",
+ 853:         )
+ 854: 
+ 855:         self.dashboard_tab = ttk.Frame(self.notebook, padding=10)
+ 856:         self.tracks_tab = ttk.Frame(self.notebook, padding=10)
+ 857:         self.metrics_tab = ttk.Frame(self.notebook, padding=10)
+ 858:         self.metric_tiers_tab = ttk.Frame(self.notebook, padding=10)
+ 859:         self.facilities_tab = ttk.Frame(self.notebook, padding=10)
+ 860:         self.flavor_tab = ttk.Frame(self.notebook, padding=10)
+ 861:         self.activity_tab = ttk.Frame(self.notebook, padding=10)
+ 862: 
+ 863:         self.notebook.add(self.dashboard_tab, text="Dashboard")
+ 864:         self.notebook.add(self.tracks_tab, text="Department Tracks — Editor")
+ 865:         self.notebook.add(self.metrics_tab, text="Metrics — Editor")
+ 866:         self.notebook.add(self.metric_tiers_tab, text="Metric Tiers — Editor")
+ 867:         self.notebook.add(self.facilities_tab, text="Facilities — Editor")
+ 868:         self.notebook.add(self.flavor_tab, text="Flavor Text — Editor")
+ 869:         self.notebook.add(self.activity_tab, text="Activity Log")
+ 870: 
+ 871:         self._build_dashboard_tab()
+ 872:         self._build_tracks_tab()
+ 873:         self._build_metrics_tab()
+ 874:         self._build_facilities_tab()
+ 875:         self._build_flavor_tab()
+ 876:         self._build_activity_tab()
+ 877: 
+ 878:         footer = ttk.Frame(outer)
+ 879:         footer.pack(fill=tk.X, pady=(10, 0))
+ 880: 
+ 881:         ttk.Label(
+ 882:             footer,
+ 883:             textvariable=self.status_text,
+ 884:             style="Status.TLabel",
+ 885:         ).pack(side=tk.LEFT)
+ 886: 
+ 887:         ttk.Label(
+ 888:             footer,
+ 889:             text="v0.8 — All authoring tables have dedicated editors; Enum Catalog is administrative.",
+ 890:             foreground="#9da7b3",
+ 891:         ).pack(side=tk.RIGHT)
+ 892: 
+ 893:     def _build_dashboard_tab(self) -> None:
+ 894:         self.dashboard_tab.columnconfigure(0, weight=1)
+ 895:         self.dashboard_tab.rowconfigure(1, weight=1)
+ 896: 
+ 897:         summary_frame = ttk.Frame(self.dashboard_tab)
+ 898:         summary_frame.grid(row=0, column=0, sticky=tk.EW, pady=(0, 10))
+ 899: 
+ 900:         self.dashboard_summary = ttk.Label(
+ 901:             summary_frame,
+ 902:             text="Loading project summary...",
+ 903:             justify=tk.LEFT,
+ 904:         )
+ 905:         self.dashboard_summary.pack(anchor=tk.W)
+ 906: 
+ 907:         source_frame = ttk.LabelFrame(
+ 908:             self.dashboard_tab,
+ 909:             text="Authored Source Files",
+ 910:             padding=8,
+ 911:         )
+ 912:         source_frame.grid(row=1, column=0, sticky=tk.NSEW)
+ 913: 
+ 914:         source_frame.columnconfigure(0, weight=1)
+ 915:         source_frame.rowconfigure(0, weight=1)
+ 916: 
+ 917:         columns = ("table", "filename", "rows", "status", "modified")
+ 918:         self.dashboard_tree = ttk.Treeview(
+ 919:             source_frame,
+ 920:             columns=columns,
+ 921:             show="headings",
+ 922:             selectmode="browse",
+ 923:         )
+ 924: 
+ 925:         headings = {
+ 926:             "table": "Table",
+ 927:             "filename": "Source File",
+ 928:             "rows": "Rows",
+ 929:             "status": "Status",
+ 930:             "modified": "Last Modified",
+
+=== Refresh orchestration (lines 1120-1185) ===
+1120:         timestamp = datetime.now().strftime("%H:%M:%S")
+1121:         self.activity_log.insert(tk.END, f"[{timestamp}] {message}\n")
+1122:         self.activity_log.see(tk.END)
+1123: 
+1124:     def clear_activity_log(self) -> None:
+1125:         self.activity_log.delete("1.0", tk.END)
+1126: 
+1127:     def set_detail(self, detail_widget: tk.Text, record: dict[str, str]) -> None:
+1128:         lines: list[str] = []
+1129: 
+1130:         for key, value in record.items():
+1131:             lines.append(f"{key}:")
+1132:             lines.append(f"  {value}")
+1133:             lines.append("")
+1134: 
+1135:         detail_widget.configure(state=tk.NORMAL)
+1136:         detail_widget.delete("1.0", tk.END)
+1137:         detail_widget.insert("1.0", "\n".join(lines).rstrip() + "\n")
+1138:         detail_widget.configure(state=tk.DISABLED)
+1139: 
+1140:     def refresh_all(self, show_message: bool = False) -> None:
+1141:         try:
+1142:             self.tables = {
+1143:                 table_name: read_csv(self.source_directory / filename)
+1144:                 for table_name, filename in SOURCE_FILES.items()
+1145:             }
+1146:             if hasattr(self, "metrics_editor"):
+1147:                 self.metrics_editor.update()
+1148: 
+1149:             if hasattr(self, "metric_tiers_editor"):
+1150:                 self.metric_tiers_editor.update()
+1151: 
+1152:             if hasattr(self, "facilities_editor"):
+1153:                 self.facilities_editor.update()
+1154: 
+1155:             if hasattr(self, "enum_catalog_editor"):
+1156:                 self.enum_catalog_editor.update()
+1157: 
+1158:             self.load_validation_report()
+1159:             self.update_dashboard()
+1160:             self.update_tracks()
+1161:             self.update_metrics()
+1162:             self.update_facilities()
+1163:             self.update_flavor_text()
+1164:             self.update_status_labels()
+1165: 
+1166:             self.status_text.set("Source data refreshed successfully.")
+1167:             self.log("Source data refreshed.")
+1168: 
+1169:             if show_message:
+1170:                 messagebox.showinfo(
+1171:                     APP_TITLE,
+1172:                     "Source data was refreshed successfully.",
+1173:                 )
+1174: 
+1175:         except Exception as error:
+1176:             self.status_text.set("Refresh failed.")
+1177:             self.log(f"REFRESH ERROR: {error}")
+1178:             messagebox.showerror(
+1179:                 APP_TITLE,
+1180:                 f"Unable to refresh source data.\n\n{error}",
+1181:             )
+1182: 
+1183:     def load_validation_report(self) -> None:
+1184:         self.validation_report = {}
+1185: 
+
+=== Browser refresh functions (lines 1260-1390) ===
+1260:                 values=(
+1261:                     table_name,
+1262:                     filename,
+1263:                     len(rows),
+1264:                     status,
+1265:                     modified,
+1266:                 ),
+1267:             )
+1268: 
+1269:         validation_state = "unknown"
+1270: 
+1271:         if self.validation_report:
+1272:             validation_state = (
+1273:                 "passed"
+1274:                 if self.validation_report.get("valid", False)
+1275:                 else "failed"
+1276:             )
+1277: 
+1278:         self.dashboard_summary.configure(
+1279:             text=(
+1280:                 f"Authoring tables: {source_files_present}/{len(SOURCE_FILES)} "
+1281:                 f"available\n"
+1282:                 f"Total authored records: {total_rows}\n"
+1283:                 f"Latest validation state: {validation_state}\n"
+1284:                 f"Current mode: all authored tables have editors; Enum Catalog is administrative."
+1285:             )
+1286:         )
+1287: 
+1288:     def update_tracks(self) -> None:
+1289:         for item in self.tracks_tree.get_children():
+1290:             self.tracks_tree.delete(item)
+1291: 
+1292:         for row in self.tables.get("department_tracks", []):
+1293:             track_id = row.get("track_id", "")
+1294:             self.tracks_tree.insert(
+1295:                 "",
+1296:                 tk.END,
+1297:                 iid=track_id,
+1298:                 values=(
+1299:                     track_id,
+1300:                     row.get("display_name", ""),
+1301:                     row.get("active", ""),
+1302:                 ),
+1303:             )
+1304: 
+1305:         self.clear_detail(self.tracks_detail)
+1306: 
+1307:     def update_metrics(self) -> None:
+1308:         for item in self.metrics_tree.get_children():
+1309:             self.metrics_tree.delete(item)
+1310: 
+1311:         for row in self.tables.get("metrics", []):
+1312:             metric_id = row.get("metric_id", "")
+1313:             self.metrics_tree.insert(
+1314:                 "",
+1315:                 tk.END,
+1316:                 iid=metric_id,
+1317:                 values=(
+1318:                     metric_id,
+1319:                     row.get("display_name", ""),
+1320:                     row.get("default_value", ""),
+1321:                     row.get("polarity", ""),
+1322:                 ),
+1323:             )
+1324: 
+1325:         self.clear_detail(self.metrics_detail)
+1326: 
+1327:     def update_facilities(self) -> None:
+1328:         for item in self.facilities_tree.get_children():
+1329:             self.facilities_tree.delete(item)
+1330: 
+1331:         for row in self.tables.get("facilities", []):
+1332:             facility_id = row.get("facility_id", "")
+1333:             self.facilities_tree.insert(
+1334:                 "",
+1335:                 tk.END,
+1336:                 iid=facility_id,
+1337:                 values=(
+1338:                     facility_id,
+1339:                     row.get("display_name", ""),
+1340:                     row.get("track_id", ""),
+1341:                     row.get("initial_tier_id", ""),
+1342:                 ),
+1343:             )
+1344: 
+1345:         self.clear_detail(self.facilities_detail)
+1346: 
+1347:     def update_flavor_text(self) -> None:
+1348:         for item in self.flavor_tree.get_children():
+1349:             self.flavor_tree.delete(item)
+1350: 
+1351:         for row in self.tables.get("flavor_text", []):
+1352:             flavor_id = row.get("flavor_text_id", "")
+1353:             self.flavor_tree.insert(
+1354:                 "",
+1355:                 tk.END,
+1356:                 iid=flavor_id,
+1357:                 values=(
+1358:                     flavor_id,
+1359:                     row.get("category", ""),
+1360:                     truncate_text(row.get("title", ""), 80),
+1361:                 ),
+1362:             )
+1363: 
+1364:         self.clear_detail(self.flavor_detail)
+1365: 
+1366:     def clear_detail(self, detail_widget: tk.Text) -> None:
+1367:         detail_widget.configure(state=tk.NORMAL)
+1368:         detail_widget.delete("1.0", tk.END)
+1369:         detail_widget.insert(
+1370:             "1.0",
+1371:             "Select a record from the list to inspect its authored fields.\n",
+1372:         )
+1373:         detail_widget.configure(state=tk.DISABLED)
+1374: 
+1375:     def find_row(
+1376:         self,
+1377:         table_name: str,
+1378:         key_name: str,
+1379:         key_value: str,
+1380:     ) -> dict[str, str] | None:
+1381:         for row in self.tables.get(table_name, []):
+1382:             if row.get(key_name) == key_value:
+1383:                 return row
+1384: 
+1385:         return None
+1386: 
+1387:     def on_dashboard_selection(self, _event: Any) -> None:
+1388:         selection = self.dashboard_tree.selection()
+1389: 
+1390:         if not selection:

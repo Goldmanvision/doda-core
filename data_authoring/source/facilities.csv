@@ -1,7 +1,7 @@
-﻿facility_id,display_name,track_id,hq_zone_id,description,initial_tier_id,interaction_asset_id,foims_panel_id,active
-EVIDENCE_LAB,Evidence Laboratory,EVIDENCE_HANDLING,HQ_LAB,Processes physical and digital evidence through documented custody procedures,UNBUILT,HQ_ASSET_EVIDENCE_CONSOLE,FOIMS_FACILITY_EVIDENCE_LAB,TRUE
-FIELD_OPERATIONS_ROOM,Field Operations Room,FIELD_OPERATIONS,HQ_OPERATIONS,Coordinates deployments readiness and field support,OPERATIONAL,HQ_ASSET_OPERATIONS_TABLE,FOIMS_FACILITY_FIELD_OPERATIONS,TRUE
-INTELLIGENCE_CELL,Intelligence Cell,INTELLIGENCE,HQ_ANALYSIS,Links case records field reports signals and leads,UNBUILT,HQ_ASSET_INTELLIGENCE_TERMINAL,FOIMS_FACILITY_INTELLIGENCE_CELL,TRUE
-PUBLIC_LIAISON_OFFICE,Public Liaison Office,PUBLIC_COMMUNICATION,HQ_LIAISON,Coordinates witness care disclosure and public-facing institutional work,UNBUILT,HQ_ASSET_LIAISON_DESK,FOIMS_FACILITY_PUBLIC_LIAISON,TRUE
-OVERSIGHT_WING,Oversight Wing,INTERNAL_AFFAIRS,HQ_OVERSIGHT,Reviews conduct risk patterns compromise and accountability failures,UNBUILT,HQ_ASSET_OVERSIGHT_ARCHIVE,FOIMS_FACILITY_OVERSIGHT,TRUE
-TECHOPS_HUB,Technical Operations Hub,TECHNICAL_INFRASTRUCTURE,HQ_TECHOPS,Maintains secure information systems specialized tools and FOIMS-X infrastructure,OPERATIONAL,HQ_ASSET_TECHOPS_CONSOLE,FOIMS_FACILITY_TECHOPS,TRUE
+"facility_id","display_name","track_id","hq_zone_id","description","personnel_capacity","initial_tier_id","interaction_asset_id","foims_panel_id","active"
+"EVIDENCE_LAB","Evidence Laboratory","EVIDENCE_HANDLING","HQ_LAB","Processes physical and digital evidence through documented custody procedures","2","UNBUILT","HQ_ASSET_EVIDENCE_CONSOLE","FOIMS_FACILITY_EVIDENCE_LAB","TRUE"
+"FIELD_OPERATIONS_ROOM","Field Operations Room","FIELD_OPERATIONS","HQ_OPERATIONS","Coordinates deployments readiness and field support","2","OPERATIONAL","HQ_ASSET_OPERATIONS_TABLE","FOIMS_FACILITY_FIELD_OPERATIONS","TRUE"
+"INTELLIGENCE_CELL","Intelligence Cell","INTELLIGENCE","HQ_ANALYSIS","Links case records field reports signals and leads","2","UNBUILT","HQ_ASSET_INTELLIGENCE_TERMINAL","FOIMS_FACILITY_INTELLIGENCE_CELL","TRUE"
+"PUBLIC_LIAISON_OFFICE","Public Liaison Office","PUBLIC_COMMUNICATION","HQ_LIAISON","Coordinates witness care disclosure and public-facing institutional work","2","UNBUILT","HQ_ASSET_LIAISON_DESK","FOIMS_FACILITY_PUBLIC_LIAISON","TRUE"
+"OVERSIGHT_WING","Oversight Wing","INTERNAL_AFFAIRS","HQ_OVERSIGHT","Reviews conduct risk patterns compromise and accountability failures","2","UNBUILT","HQ_ASSET_OVERSIGHT_ARCHIVE","FOIMS_FACILITY_OVERSIGHT","TRUE"
+"TECHOPS_HUB","Technical Operations Hub","TECHNICAL_INFRASTRUCTURE","HQ_TECHOPS","Maintains secure information systems specialized tools and FOIMS-X infrastructure","3","OPERATIONAL","HQ_ASSET_TECHOPS_CONSOLE","FOIMS_FACILITY_TECHOPS","TRUE"

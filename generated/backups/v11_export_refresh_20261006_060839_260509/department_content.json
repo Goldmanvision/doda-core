@@ -1,0 +1,909 @@
+{
+  "schemaVersion": 2,
+  "toolVersion": "0.1.1",
+  "generatedAtUtc": "2026-10-01T16:49:56.759707+00:00",
+  "tables": {
+    "enum_catalog": [
+      {
+        "enum_group": "FACILITY_TIER",
+        "enum_value": "UNBUILT",
+        "display_label": "Unbuilt",
+        "description": "No dedicated facility exists",
+        "sort_order": 0,
+        "active": true
+      },
+      {
+        "enum_group": "FACILITY_TIER",
+        "enum_value": "OPERATIONAL",
+        "display_label": "Operational",
+        "description": "Basic staffed capability is available",
+        "sort_order": 1,
+        "active": true
+      },
+      {
+        "enum_group": "FACILITY_TIER",
+        "enum_value": "MODERNIZED",
+        "display_label": "Modernized",
+        "description": "Improved capacity reliability and workflow",
+        "sort_order": 2,
+        "active": true
+      },
+      {
+        "enum_group": "FACILITY_TIER",
+        "enum_value": "CUTTING_EDGE",
+        "display_label": "Cutting-Edge",
+        "description": "Advanced capability with additional institutional complexity",
+        "sort_order": 3,
+        "active": true
+      },
+      {
+        "enum_group": "METRIC_POLARITY",
+        "enum_value": "HIGHER_IS_BETTER",
+        "display_label": "Higher Is Better",
+        "description": "Improvement increases the metric",
+        "sort_order": 1,
+        "active": true
+      },
+      {
+        "enum_group": "METRIC_POLARITY",
+        "enum_value": "LOWER_IS_BETTER",
+        "display_label": "Lower Is Better",
+        "description": "Improvement decreases the metric",
+        "sort_order": 2,
+        "active": true
+      },
+      {
+        "enum_group": "METRIC_DISPLAY_MODE",
+        "enum_value": "TIERED_BAR",
+        "display_label": "Tiered Bar",
+        "description": "Show a tier label and normalized progress bar",
+        "sort_order": 1,
+        "active": true
+      },
+      {
+        "enum_group": "TRACK_ID",
+        "enum_value": "EVIDENCE_HANDLING",
+        "display_label": "Evidence Handling",
+        "description": "Chain of custody laboratory processing and evidence storage",
+        "sort_order": 1,
+        "active": true
+      },
+      {
+        "enum_group": "TRACK_ID",
+        "enum_value": "FIELD_OPERATIONS",
+        "display_label": "Field Operations",
+        "description": "Deployment doctrine logistics and field readiness",
+        "sort_order": 2,
+        "active": true
+      },
+      {
+        "enum_group": "TRACK_ID",
+        "enum_value": "INTELLIGENCE",
+        "display_label": "Intelligence and Analysis",
+        "description": "Lead correlation signal analysis and case linkage",
+        "sort_order": 3,
+        "active": true
+      },
+      {
+        "enum_group": "TRACK_ID",
+        "enum_value": "PUBLIC_COMMUNICATION",
+        "display_label": "Public Communication and Liaison",
+        "description": "Witness care public trust and institutional communication",
+        "sort_order": 4,
+        "active": true
+      },
+      {
+        "enum_group": "TRACK_ID",
+        "enum_value": "INTERNAL_AFFAIRS",
+        "display_label": "Internal Affairs and Ethics",
+        "description": "Accountability oversight and corruption prevention",
+        "sort_order": 5,
+        "active": true
+      },
+      {
+        "enum_group": "TRACK_ID",
+        "enum_value": "TECHNICAL_INFRASTRUCTURE",
+        "display_label": "Technical Infrastructure",
+        "description": "FOIMS-X technical systems data security and specialized tools",
+        "sort_order": 6,
+        "active": true
+      },
+      {
+        "enum_group": "METRIC_POLARITY",
+        "enum_value": "MIDDLE_IS_BETTER",
+        "display_label": "Media Attention",
+        "description": "The Fifth Estate is on a need to know basis.",
+        "sort_order": 0,
+        "active": true
+      },
+      {
+        "enum_group": "FACILITY_TIER",
+        "enum_value": "OUTDATED",
+        "display_label": "Outdated",
+        "description": "Legacy facility infrastructure with reduced effectiveness.",
+        "sort_order": 10,
+        "active": true
+      },
+      {
+        "enum_group": "METRIC_DISPLAY_MODE",
+        "enum_value": "NUMERIC",
+        "display_label": "Numeric",
+        "description": "Metric displays numerically",
+        "sort_order": 10,
+        "active": true
+      },
+      {
+        "enum_group": "METRIC_DISPLAY_MODE",
+        "enum_value": "PERCENTAGE",
+        "display_label": "Perrcent",
+        "description": "Metric is displayed in a percentage.",
+        "sort_order": 20,
+        "active": true
+      },
+      {
+        "enum_group": "METRIC_DISPLAY_MODE",
+        "enum_value": "HIDDEN",
+        "display_label": "Hidden",
+        "description": "Metric is NOT displayed.",
+        "sort_order": 30,
+        "active": true
+      },
+      {
+        "enum_group": "TASK_PRIORITY",
+        "enum_value": "LOW",
+        "display_label": "Low",
+        "description": "Routine work with limited urgency.",
+        "sort_order": 10,
+        "active": true
+      },
+      {
+        "enum_group": "TASK_PRIORITY",
+        "enum_value": "NORMAL",
+        "display_label": "Normal",
+        "description": "Standard Department work priority.",
+        "sort_order": 20,
+        "active": true
+      },
+      {
+        "enum_group": "TASK_PRIORITY",
+        "enum_value": "HIGH",
+        "display_label": "High",
+        "description": "Urgent work requiring timely attention.",
+        "sort_order": 30,
+        "active": true
+      },
+      {
+        "enum_group": "TASK_PRIORITY",
+        "enum_value": "CRITICAL",
+        "display_label": "Critical",
+        "description": "Immediate high-consequence work.",
+        "sort_order": 40,
+        "active": true
+      },
+      {
+        "enum_group": "ALLOCATION_POLICY",
+        "enum_value": "AUTO",
+        "display_label": "Automatic",
+        "description": "Normal scheduler control.",
+        "sort_order": 10,
+        "active": true
+      },
+      {
+        "enum_group": "ALLOCATION_POLICY",
+        "enum_value": "PREFER",
+        "display_label": "Preferred",
+        "description": "Use aggressively when qualified.",
+        "sort_order": 20,
+        "active": true
+      },
+      {
+        "enum_group": "ALLOCATION_POLICY",
+        "enum_value": "PROTECT",
+        "display_label": "Protected",
+        "description": "Preserve where practical; use only when necessary.",
+        "sort_order": 30,
+        "active": true
+      },
+      {
+        "enum_group": "ALLOCATION_POLICY",
+        "enum_value": "RESERVE",
+        "display_label": "Reserve",
+        "description": "Hold for player-directed contingency use.",
+        "sort_order": 40,
+        "active": true
+      },
+      {
+        "enum_group": "ALLOCATION_POLICY",
+        "enum_value": "MANUAL_ONLY",
+        "display_label": "Manual Only",
+        "description": "Never allocate automatically.",
+        "sort_order": 50,
+        "active": true
+      }
+    ],
+    "department_tracks": [
+      {
+        "track_id": "EVIDENCE_HANDLING",
+        "display_name": "Evidence Handling",
+        "description": "Maintains chain of custody processes evidence and converts field findings into reliable institutional knowledge",
+        "sort_order": 1,
+        "active": true
+      },
+      {
+        "track_id": "FIELD_OPERATIONS",
+        "display_name": "Field Operations",
+        "description": "Maintains readiness training logistics and operational doctrine for field personnel",
+        "sort_order": 2,
+        "active": true
+      },
+      {
+        "track_id": "INTELLIGENCE",
+        "display_name": "Intelligence and Analysis",
+        "description": "Correlates leads signals cases and historical records into actionable understanding",
+        "sort_order": 3,
+        "active": true
+      },
+      {
+        "track_id": "PUBLIC_COMMUNICATION",
+        "display_name": "Public Communication and Liaison",
+        "description": "Maintains witnesses public confidence disclosure standards and interagency relationships",
+        "sort_order": 4,
+        "active": true
+      },
+      {
+        "track_id": "INTERNAL_AFFAIRS",
+        "display_name": "Internal Affairs and Ethics",
+        "description": "Detects misconduct reduces compromise and protects the Department from its own blind spots",
+        "sort_order": 5,
+        "active": true
+      },
+      {
+        "track_id": "TECHNICAL_INFRASTRUCTURE",
+        "display_name": "Technical Infrastructure",
+        "description": "Maintains FOIMS-X data systems secure links specialized tools and technical continuity",
+        "sort_order": 6,
+        "active": true
+      }
+    ],
+    "metrics": [
+      {
+        "metric_id": "PREPAREDNESS",
+        "display_name": "Department Preparedness",
+        "description": "The Department's ability to respond to known and emerging operational demands",
+        "owner_system": "NativeStrategicCore",
+        "internal_min": 0,
+        "internal_max": 1000,
+        "default_value": 300,
+        "polarity": "HIGHER_IS_BETTER",
+        "ui_display_mode": "TIERED_BAR",
+        "update_notes": "Affected by facilities staff capacity mission readiness and unresolved workload",
+        "active": true
+      },
+      {
+        "metric_id": "INTEL_QUALITY",
+        "display_name": "Intelligence Quality",
+        "description": "The reliability usefulness and correlation depth of the Department's working knowledge",
+        "owner_system": "NativeStrategicCore",
+        "internal_min": 0,
+        "internal_max": 1000,
+        "default_value": 200,
+        "polarity": "HIGHER_IS_BETTER",
+        "ui_display_mode": "TIERED_BAR",
+        "update_notes": "Affected by evidence quality analysis capacity leads and case linkage",
+        "active": true
+      },
+      {
+        "metric_id": "PUBLIC_TRUST",
+        "display_name": "Public Trust",
+        "description": "The public's confidence in Department conduct legitimacy and accountability",
+        "owner_system": "NativeStrategicCore",
+        "internal_min": 0,
+        "internal_max": 1000,
+        "default_value": 500,
+        "polarity": "HIGHER_IS_BETTER",
+        "ui_display_mode": "TIERED_BAR",
+        "update_notes": "Affected by mission conduct disclosure witness handling and evidence integrity",
+        "active": true
+      },
+      {
+        "metric_id": "CORRUPTION_PRESSURE",
+        "display_name": "Corruption Pressure",
+        "description": "Institutional vulnerability to compromise concealment misconduct and coercive outside influence",
+        "owner_system": "NativeStrategicCore",
+        "internal_min": 0,
+        "internal_max": 1000,
+        "default_value": 150,
+        "polarity": "LOWER_IS_BETTER",
+        "ui_display_mode": "TIERED_BAR",
+        "update_notes": "Affected by unresolved incidents weak oversight field-procured materials and reporting failures",
+        "active": true
+      },
+      {
+        "metric_id": "STAFF_STRESS",
+        "display_name": "Staff Stress",
+        "description": "Aggregate psychological and operational strain across Department personnel",
+        "owner_system": "NativeStrategicCore",
+        "internal_min": 0,
+        "internal_max": 1000,
+        "default_value": 200,
+        "polarity": "LOWER_IS_BETTER",
+        "ui_display_mode": "TIERED_BAR",
+        "update_notes": "Affected by mission intensity casualties workload recovery and sustained emergency conditions",
+        "active": true
+      }
+    ],
+    "metric_tiers": [
+      {
+        "metric_id": "PREPAREDNESS",
+        "tier_id": "FRAGILE",
+        "min_inclusive": 0,
+        "max_inclusive": 200,
+        "display_label": "Fragile",
+        "short_status": "Capacity is thin and commitments exceed certainty",
+        "ui_color": "#EF5B5B",
+        "flavor_text_id": "FLV_METRIC_PREPAREDNESS_FRAGILE",
+        "sort_order": 1
+      },
+      {
+        "metric_id": "PREPAREDNESS",
+        "tier_id": "OPERATIONAL",
+        "min_inclusive": 201,
+        "max_inclusive": 500,
+        "display_label": "Operational",
+        "short_status": "The Department can meet ordinary demands",
+        "ui_color": "#58A6FF",
+        "flavor_text_id": "FLV_METRIC_PREPAREDNESS_OPERATIONAL",
+        "sort_order": 2
+      },
+      {
+        "metric_id": "PREPAREDNESS",
+        "tier_id": "HARDENED",
+        "min_inclusive": 501,
+        "max_inclusive": 800,
+        "display_label": "Hardened",
+        "short_status": "Core systems can absorb sustained pressure",
+        "ui_color": "#5CCB72",
+        "flavor_text_id": "FLV_METRIC_PREPAREDNESS_HARDENED",
+        "sort_order": 3
+      },
+      {
+        "metric_id": "PREPAREDNESS",
+        "tier_id": "OVEREXTENDED",
+        "min_inclusive": 801,
+        "max_inclusive": 1000,
+        "display_label": "Overextended",
+        "short_status": "Capability is high but the institution is carrying too much",
+        "ui_color": "#F4B942",
+        "flavor_text_id": "FLV_METRIC_PREPAREDNESS_OVEREXTENDED",
+        "sort_order": 4
+      },
+      {
+        "metric_id": "INTEL_QUALITY",
+        "tier_id": "ANECDOTAL",
+        "min_inclusive": 0,
+        "max_inclusive": 249,
+        "display_label": "Anecdotal",
+        "short_status": "Fragments reports and unverified accounts",
+        "ui_color": "#8C939F",
+        "flavor_text_id": "FLV_METRIC_INTEL_ANECDOTAL",
+        "sort_order": 1
+      },
+      {
+        "metric_id": "INTEL_QUALITY",
+        "tier_id": "STRUCTURED",
+        "min_inclusive": 250,
+        "max_inclusive": 599,
+        "display_label": "Structured",
+        "short_status": "Patterns are beginning to hold",
+        "ui_color": "#58A6FF",
+        "flavor_text_id": "FLV_METRIC_INTEL_STRUCTURED",
+        "sort_order": 2
+      },
+      {
+        "metric_id": "INTEL_QUALITY",
+        "tier_id": "CORRELATED",
+        "min_inclusive": 600,
+        "max_inclusive": 849,
+        "display_label": "Correlated",
+        "short_status": "Independent sources reinforce one another",
+        "ui_color": "#5CCB72",
+        "flavor_text_id": "FLV_METRIC_INTEL_CORRELATED",
+        "sort_order": 3
+      },
+      {
+        "metric_id": "INTEL_QUALITY",
+        "tier_id": "PREDICTIVE",
+        "min_inclusive": 850,
+        "max_inclusive": 1000,
+        "display_label": "Predictive",
+        "short_status": "The Department sees movement before it understands it",
+        "ui_color": "#F4B942",
+        "flavor_text_id": "FLV_METRIC_INTEL_PREDICTIVE",
+        "sort_order": 4
+      },
+      {
+        "metric_id": "PUBLIC_TRUST",
+        "tier_id": "CONTESTED",
+        "min_inclusive": 0,
+        "max_inclusive": 249,
+        "display_label": "Contested",
+        "short_status": "The Department's mandate is openly questioned",
+        "ui_color": "#EF5B5B",
+        "flavor_text_id": "FLV_METRIC_TRUST_CONTESTED",
+        "sort_order": 1
+      },
+      {
+        "metric_id": "PUBLIC_TRUST",
+        "tier_id": "TOLERATED",
+        "min_inclusive": 250,
+        "max_inclusive": 499,
+        "display_label": "Tolerated",
+        "short_status": "The Department is accepted when it remains useful",
+        "ui_color": "#F4B942",
+        "flavor_text_id": "FLV_METRIC_TRUST_TOLERATED",
+        "sort_order": 2
+      },
+      {
+        "metric_id": "PUBLIC_TRUST",
+        "tier_id": "ESTABLISHED",
+        "min_inclusive": 500,
+        "max_inclusive": 749,
+        "display_label": "Established",
+        "short_status": "The public broadly accepts Department authority",
+        "ui_color": "#58A6FF",
+        "flavor_text_id": "FLV_METRIC_TRUST_ESTABLISHED",
+        "sort_order": 3
+      },
+      {
+        "metric_id": "PUBLIC_TRUST",
+        "tier_id": "RESILIENT",
+        "min_inclusive": 750,
+        "max_inclusive": 1000,
+        "display_label": "Resilient",
+        "short_status": "Public confidence survives difficult disclosures",
+        "ui_color": "#5CCB72",
+        "flavor_text_id": "FLV_METRIC_TRUST_RESILIENT",
+        "sort_order": 4
+      },
+      {
+        "metric_id": "CORRUPTION_PRESSURE",
+        "tier_id": "CONTAINED",
+        "min_inclusive": 0,
+        "max_inclusive": 249,
+        "display_label": "Contained",
+        "short_status": "Controls are holding and scrutiny is active",
+        "ui_color": "#5CCB72",
+        "flavor_text_id": "FLV_METRIC_CORRUPTION_CONTAINED",
+        "sort_order": 1
+      },
+      {
+        "metric_id": "CORRUPTION_PRESSURE",
+        "tier_id": "LATENT",
+        "min_inclusive": 250,
+        "max_inclusive": 499,
+        "display_label": "Latent",
+        "short_status": "Warning signs exist but remain manageable",
+        "ui_color": "#FF80FF",
+        "flavor_text_id": "FLV_METRIC_CORRUPTION_LATENT",
+        "sort_order": 2
+      },
+      {
+        "metric_id": "CORRUPTION_PRESSURE",
+        "tier_id": "ENTRENCHED",
+        "min_inclusive": 500,
+        "max_inclusive": 749,
+        "display_label": "Entrenched",
+        "short_status": "Compromise is shaping institutional choices",
+        "ui_color": "#F4B942",
+        "flavor_text_id": "FLV_METRIC_CORRUPTION_ENTRENCHED",
+        "sort_order": 3
+      },
+      {
+        "metric_id": "CORRUPTION_PRESSURE",
+        "tier_id": "CRITICAL",
+        "min_inclusive": 750,
+        "max_inclusive": 1000,
+        "display_label": "Critical",
+        "short_status": "The Department may be unable to investigate itself",
+        "ui_color": "#EF5B5B",
+        "flavor_text_id": "FLV_METRIC_CORRUPTION_CRITICAL",
+        "sort_order": 4
+      },
+      {
+        "metric_id": "STAFF_STRESS",
+        "tier_id": "STEADY",
+        "min_inclusive": 0,
+        "max_inclusive": 249,
+        "display_label": "Steady",
+        "short_status": "Personnel can absorb routine operational strain",
+        "ui_color": "#5CCB72",
+        "flavor_text_id": "FLV_METRIC_STRESS_STEADY",
+        "sort_order": 1
+      },
+      {
+        "metric_id": "STAFF_STRESS",
+        "tier_id": "STRAINED",
+        "min_inclusive": 250,
+        "max_inclusive": 499,
+        "display_label": "Strained",
+        "short_status": "Recovery is becoming a planning requirement",
+        "ui_color": "#58A6FF",
+        "flavor_text_id": "FLV_METRIC_STRESS_STRAINED",
+        "sort_order": 2
+      },
+      {
+        "metric_id": "STAFF_STRESS",
+        "tier_id": "EXHAUSTED",
+        "min_inclusive": 500,
+        "max_inclusive": 749,
+        "display_label": "Exhausted",
+        "short_status": "The Department is functioning through accumulated fatigue",
+        "ui_color": "#F4B942",
+        "flavor_text_id": "FLV_METRIC_STRESS_EXHAUSTED",
+        "sort_order": 3
+      },
+      {
+        "metric_id": "STAFF_STRESS",
+        "tier_id": "BREAKING",
+        "min_inclusive": 750,
+        "max_inclusive": 1000,
+        "display_label": "Breaking",
+        "short_status": "Personnel systems are approaching failure",
+        "ui_color": "#EF5B5B",
+        "flavor_text_id": "FLV_METRIC_STRESS_BREAKING",
+        "sort_order": 4
+      }
+    ],
+    "facilities": [
+      {
+        "facility_id": "EVIDENCE_LAB",
+        "display_name": "Evidence Laboratory",
+        "track_id": "EVIDENCE_HANDLING",
+        "hq_zone_id": "HQ_LAB",
+        "description": "Processes physical and digital evidence through documented custody procedures",
+        "personnel_capacity": 2,
+        "initial_tier_id": "UNBUILT",
+        "interaction_asset_id": "HQ_ASSET_EVIDENCE_CONSOLE",
+        "foims_panel_id": "FOIMS_FACILITY_EVIDENCE_LAB",
+        "active": true
+      },
+      {
+        "facility_id": "FIELD_OPERATIONS_ROOM",
+        "display_name": "Field Operations Room",
+        "track_id": "FIELD_OPERATIONS",
+        "hq_zone_id": "HQ_OPERATIONS",
+        "description": "Coordinates deployments readiness and field support",
+        "personnel_capacity": 2,
+        "initial_tier_id": "OPERATIONAL",
+        "interaction_asset_id": "HQ_ASSET_OPERATIONS_TABLE",
+        "foims_panel_id": "FOIMS_FACILITY_FIELD_OPERATIONS",
+        "active": true
+      },
+      {
+        "facility_id": "INTELLIGENCE_CELL",
+        "display_name": "Intelligence Cell",
+        "track_id": "INTELLIGENCE",
+        "hq_zone_id": "HQ_ANALYSIS",
+        "description": "Links case records field reports signals and leads",
+        "personnel_capacity": 2,
+        "initial_tier_id": "UNBUILT",
+        "interaction_asset_id": "HQ_ASSET_INTELLIGENCE_TERMINAL",
+        "foims_panel_id": "FOIMS_FACILITY_INTELLIGENCE_CELL",
+        "active": true
+      },
+      {
+        "facility_id": "PUBLIC_LIAISON_OFFICE",
+        "display_name": "Public Liaison Office",
+        "track_id": "PUBLIC_COMMUNICATION",
+        "hq_zone_id": "HQ_LIAISON",
+        "description": "Coordinates witness care disclosure and public-facing institutional work",
+        "personnel_capacity": 2,
+        "initial_tier_id": "UNBUILT",
+        "interaction_asset_id": "HQ_ASSET_LIAISON_DESK",
+        "foims_panel_id": "FOIMS_FACILITY_PUBLIC_LIAISON",
+        "active": true
+      },
+      {
+        "facility_id": "OVERSIGHT_WING",
+        "display_name": "Oversight Wing",
+        "track_id": "INTERNAL_AFFAIRS",
+        "hq_zone_id": "HQ_OVERSIGHT",
+        "description": "Reviews conduct risk patterns compromise and accountability failures",
+        "personnel_capacity": 2,
+        "initial_tier_id": "UNBUILT",
+        "interaction_asset_id": "HQ_ASSET_OVERSIGHT_ARCHIVE",
+        "foims_panel_id": "FOIMS_FACILITY_OVERSIGHT",
+        "active": true
+      },
+      {
+        "facility_id": "TECHOPS_HUB",
+        "display_name": "Technical Operations Hub",
+        "track_id": "TECHNICAL_INFRASTRUCTURE",
+        "hq_zone_id": "HQ_TECHOPS",
+        "description": "Maintains secure information systems specialized tools and FOIMS-X infrastructure",
+        "personnel_capacity": 3,
+        "initial_tier_id": "OPERATIONAL",
+        "interaction_asset_id": "HQ_ASSET_TECHOPS_CONSOLE",
+        "foims_panel_id": "FOIMS_FACILITY_TECHOPS",
+        "active": true
+      }
+    ],
+    "flavor_text": [
+      {
+        "flavor_text_id": "FLV_METRIC_PREPAREDNESS_FRAGILE",
+        "category": "METRIC",
+        "title": "Preparedness: Fragile",
+        "body": "The Department has people, rooms, and procedures. It does not yet have margin. Every new demand is solved by borrowing attention from another problem.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_PREPAREDNESS_OPERATIONAL",
+        "category": "METRIC",
+        "title": "Preparedness: Operational",
+        "body": "Routine demands can be met without improvising every response. The distinction between routine and exceptional remains under active review.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_PREPAREDNESS_HARDENED",
+        "category": "METRIC",
+        "title": "Preparedness: Hardened",
+        "body": "The Department can sustain pressure now. Some senior staff privately question whether this is resilience or simply a better-organized form of overwork.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_PREPAREDNESS_OVEREXTENDED",
+        "category": "METRIC",
+        "title": "Preparedness: Overextended",
+        "body": "The Department can respond almost anywhere. It has begun to discover that capability attracts obligations faster than it creates relief.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_INTEL_ANECDOTAL",
+        "category": "METRIC",
+        "title": "Intelligence Quality: Anecdotal",
+        "body": "The records contain names, claims, coordinates, and warnings. They do not yet agree on what any of them mean.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_INTEL_STRUCTURED",
+        "category": "METRIC",
+        "title": "Intelligence Quality: Structured",
+        "body": "Patterns are beginning to survive contact with additional evidence. Analysts have started pinning fewer questions to the walls and drawing more lines between them.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_INTEL_CORRELATED",
+        "category": "METRIC",
+        "title": "Intelligence Quality: Correlated",
+        "body": "Independent sources reinforce one another. The most troubling connections are the ones that recur without being requested.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_INTEL_PREDICTIVE",
+        "category": "METRIC",
+        "title": "Intelligence Quality: Predictive",
+        "body": "The Department sees movement before it understands it. This has improved response time and made some personnel uncomfortable with the implications.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_TRUST_CONTESTED",
+        "category": "METRIC",
+        "title": "Public Trust: Contested",
+        "body": "The Department is visible enough to be blamed and obscure enough to be distrusted. Both conditions are operationally expensive.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_TRUST_TOLERATED",
+        "category": "METRIC",
+        "title": "Public Trust: Tolerated",
+        "body": "Most people accept the Department when it remains useful, distant, and difficult to describe.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_TRUST_ESTABLISHED",
+        "category": "METRIC",
+        "title": "Public Trust: Established",
+        "body": "The Department's authority is broadly accepted. The communications office reminds everyone that acceptance is not the same thing as understanding.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_TRUST_RESILIENT",
+        "category": "METRIC",
+        "title": "Public Trust: Resilient",
+        "body": "Confidence survives difficult disclosures. The Department has earned room to explain itself, which may be more dangerous than having none.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_CORRUPTION_CONTAINED",
+        "category": "METRIC",
+        "title": "Corruption Pressure: Contained",
+        "body": "Controls are holding. The Oversight archive is quiet, though no one calls that reassuring.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_CORRUPTION_LATENT",
+        "category": "METRIC",
+        "title": "Corruption Pressure: Latent",
+        "body": "Small exceptions are accumulating. Each one has a justification. Together, they are beginning to resemble policy.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_CORRUPTION_ENTRENCHED",
+        "category": "METRIC",
+        "title": "Corruption Pressure: Entrenched",
+        "body": "Compromise is shaping decisions before those decisions are written down. The Department is still documenting the difference between adaptation and surrender.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_CORRUPTION_CRITICAL",
+        "category": "METRIC",
+        "title": "Corruption Pressure: Critical",
+        "body": "The Department may no longer be able to investigate itself without assistance from the systems it was created to monitor.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_STRESS_STEADY",
+        "category": "METRIC",
+        "title": "Staff Stress: Steady",
+        "body": "Personnel are tired in ordinary ways. Recovery remains possible between cases.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_STRESS_STRAINED",
+        "category": "METRIC",
+        "title": "Staff Stress: Strained",
+        "body": "Recovery has become a scheduling problem. Staff are beginning to measure time off by what it fails to repair.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_STRESS_EXHAUSTED",
+        "category": "METRIC",
+        "title": "Staff Stress: Exhausted",
+        "body": "The Department is functioning through accumulated fatigue. Errors are still individual; patterns are not.",
+        "active": true
+      },
+      {
+        "flavor_text_id": "FLV_METRIC_STRESS_BREAKING",
+        "category": "METRIC",
+        "title": "Staff Stress: Breaking",
+        "body": "Personnel systems are approaching failure. The reports remain professionally written, which is part of the problem.",
+        "active": true
+      }
+    ],
+    "qualification_catalog": [
+      {
+        "qualification_id": "SIGNALS_ANALYSIS",
+        "display_name": "Signals Analysis",
+        "description": "Interprets and validates electronic signal intelligence.",
+        "sort_order": 10,
+        "active": true
+      },
+      {
+        "qualification_id": "DATA_SYSTEMS",
+        "display_name": "Data Systems",
+        "description": "Operates Department information and monitoring systems.",
+        "sort_order": 20,
+        "active": true
+      },
+      {
+        "qualification_id": "FIELD_RESPONSE",
+        "display_name": "Field Response",
+        "description": "Conducts routine Department field operations.",
+        "sort_order": 30,
+        "active": true
+      },
+      {
+        "qualification_id": "OCCULT_RESPONSE",
+        "display_name": "Occult Response",
+        "description": "Operates safely during anomalous field incidents.",
+        "sort_order": 40,
+        "active": true
+      }
+    ],
+    "capabilities": [
+      {
+        "capability_id": "ELECTRONIC_SURVEILLANCE",
+        "display_name": "Electronic Surveillance",
+        "description": "Authorized collection and analysis of electronic signals.",
+        "standing_operation_label": "Signal Monitoring",
+        "sort_order": 10,
+        "active": true
+      },
+      {
+        "capability_id": "OCCULT_RESPONSE",
+        "display_name": "Occult Response",
+        "description": "Specialized investigation and containment of anomalous threats.",
+        "standing_operation_label": "Response Readiness",
+        "sort_order": 20,
+        "active": true
+      }
+    ],
+    "facility_capabilities": [
+      {
+        "facility_id": "TECHOPS_HUB",
+        "capability_id": "ELECTRONIC_SURVEILLANCE",
+        "display_name_override": "",
+        "max_concurrent_personnel": 2,
+        "initial_tier_id": "OPERATIONAL",
+        "foims_panel_id": "FOIMS_TECHOPS_SURVEILLANCE",
+        "sort_order": 10,
+        "active": true
+      },
+      {
+        "facility_id": "FIELD_OPERATIONS_ROOM",
+        "capability_id": "OCCULT_RESPONSE",
+        "display_name_override": "Occult Task Force",
+        "max_concurrent_personnel": 2,
+        "initial_tier_id": "UNBUILT",
+        "foims_panel_id": "FOIMS_FIELD_OCCULT_RESPONSE",
+        "sort_order": 10,
+        "active": true
+      }
+    ],
+    "capability_staffing_rules": [
+      {
+        "capability_id": "ELECTRONIC_SURVEILLANCE",
+        "qualification_id": "SIGNALS_ANALYSIS",
+        "min_contributors": 1,
+        "preferred_contributors": 2,
+        "max_contributors": 2,
+        "sort_order": 10,
+        "active": true
+      },
+      {
+        "capability_id": "ELECTRONIC_SURVEILLANCE",
+        "qualification_id": "DATA_SYSTEMS",
+        "min_contributors": 0,
+        "preferred_contributors": 1,
+        "max_contributors": 1,
+        "sort_order": 20,
+        "active": true
+      },
+      {
+        "capability_id": "OCCULT_RESPONSE",
+        "qualification_id": "FIELD_RESPONSE",
+        "min_contributors": 1,
+        "preferred_contributors": 2,
+        "max_contributors": 2,
+        "sort_order": 10,
+        "active": true
+      },
+      {
+        "capability_id": "OCCULT_RESPONSE",
+        "qualification_id": "OCCULT_RESPONSE",
+        "min_contributors": 0,
+        "preferred_contributors": 1,
+        "max_contributors": 2,
+        "sort_order": 20,
+        "active": true
+      }
+    ],
+    "facility_capability_staffing_overrides": [],
+    "task_templates": [
+      {
+        "task_template_id": "SIGNAL_REVIEW",
+        "display_name": "Priority Signal Review",
+        "description": "Analyze and classify urgent signal interference.",
+        "capability_id": "ELECTRONIC_SURVEILLANCE",
+        "priority": "HIGH",
+        "default_target_effort_minutes": 240,
+        "default_deadline_minutes": 120,
+        "auto_allocate": true,
+        "sort_order": 10,
+        "active": true
+      },
+      {
+        "task_template_id": "OCCULT_INCIDENT_RESPONSE",
+        "display_name": "Occult Incident Response",
+        "description": "Coordinate specialized response to an anomalous field incident.",
+        "capability_id": "OCCULT_RESPONSE",
+        "priority": "CRITICAL",
+        "default_target_effort_minutes": 360,
+        "default_deadline_minutes": 180,
+        "auto_allocate": true,
+        "sort_order": 20,
+        "active": true
+      }
+    ]
+  }
+}

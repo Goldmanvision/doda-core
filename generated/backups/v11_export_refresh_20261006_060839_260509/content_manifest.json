@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 2,
+  "toolVersion": "0.1.1",
+  "generatedAtUtc": "2026-10-01T16:49:56.759707+00:00",
+  "projectRoot": "E:\\Dev\\uzdoom_src\\doda-core",
+  "sourceFiles": {
+    "enum_catalog.csv": "e981a5243ee973c9f6c3e2fcdbca7dd017f06ca84c0c3b2374c11e131532e6ad",
+    "department_tracks.csv": "19d3e67c58c6a7ccf21eb77db057333bb380d9c260779636580f8bf06c5b0e73",
+    "metrics.csv": "09bdc0a244bbfd238710328cb7d9a9e1140042ceeeec1f984383251ac6e8b7bc",
+    "metric_tiers.csv": "c70036f74e1b3e9161e0fba1697c6ab0ed27f9a2f74de6e4f98a3b716fc9da26",
+    "facilities.csv": "73ddc9aede7d8060557f3391384e20de674a0395fb436e5b12a88e8d3a0605ae",
+    "flavor_text.csv": "89d1684320406ecf2de93f58b02fbd71f125c808152cac9d3a2fa1f55b6c4b68",
+    "qualification_catalog.csv": "4310980996e37628c20f94b54b5888147da250b99879ba21861c63a9f6c55dd3",
+    "capabilities.csv": "b9d802784b37568e9841250806200e3acf9104ba0911bd5ca315157ff73e36a3",
+    "facility_capabilities.csv": "4cf65d236d3a889296733677f269a0f5fd64a4e63a721bab8ea451da5f189b1f",
+    "capability_staffing_rules.csv": "0d3ac032a1ee3f8177e38579e3cb14067c5fca2e6971e86d5eb9a630a077c581",
+    "facility_capability_staffing_overrides.csv": "28b38b427cc0dd710464cddcb67773fa08f85ec24a09e0f63e472a6639e44a31",
+    "task_templates.csv": "375188ac210100ea92df2637188270c81ee11dcf3c2b4a47a0e80344a79fe638"
+  },
+  "outputFiles": {
+    "generated/data/department_content.json": "d98e9cf50ed52c5553739c91032b3323786743a4f9a133f4fe35263be1ff2071",
+    "generated/language/DODA_GENERATED_LANGUAGE.txt": "a23e4e7790b0a6901012ebe89ea328b202d7f1d48767c0a84e75411f75c20441"
+  },
+  "tableRowCounts": {
+    "enum_catalog": 27,
+    "department_tracks": 6,
+    "metrics": 5,
+    "metric_tiers": 20,
+    "facilities": 6,
+    "flavor_text": 20,
+    "qualification_catalog": 4,
+    "capabilities": 2,
+    "facility_capabilities": 2,
+    "capability_staffing_rules": 4,
+    "facility_capability_staffing_overrides": 0,
+    "task_templates": 2
+  },
+  "runtimeStatus": {
+    "nativeLoaderAvailable": false,
+    "mapinfoIntegrationEnabled": false,
+    "languageIntegrationEnabled": false,
+    "zscriptIntegrationEnabled": false,
+    "notes": [
+      "This is a generated content overlay proof.",
+      "The PK3 is not yet active runtime data.",
+      "Do not manually edit generated output files."
+    ]
+  }
+}

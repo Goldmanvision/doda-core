@@ -1,0 +1,50 @@
+{
+  "testedAtLocal": "2026-10-06T07:43:56.258118-04:00",
+  "scope": "Temporary-project service tests using real validator; injected caught replacement failure; not power-loss recovery testing",
+  "valid": true,
+  "passedCount": 10,
+  "testCount": 10,
+  "liveSourcesUnchanged": true,
+  "results": [
+    {
+      "name": "Create metric and complete tiers; verify both backups",
+      "passed": true
+    },
+    {
+      "name": "Change metric bounds and tier coverage together",
+      "passed": true
+    },
+    {
+      "name": "Reject tier gap without source changes",
+      "passed": true
+    },
+    {
+      "name": "Reject tier overlap without source changes",
+      "passed": true
+    },
+    {
+      "name": "Reject stale full-project snapshot",
+      "passed": true
+    },
+    {
+      "name": "Preserve external change made during validation",
+      "passed": true
+    },
+    {
+      "name": "Second replacement failure rolls back byte-for-byte",
+      "passed": true
+    },
+    {
+      "name": "Block unfinished transaction",
+      "passed": true
+    },
+    {
+      "name": "Block and preserve existing lock",
+      "passed": true
+    },
+    {
+      "name": "Live source CSV hashes unchanged",
+      "passed": true
+    }
+  ]
+}

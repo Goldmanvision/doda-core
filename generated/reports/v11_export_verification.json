@@ -1,0 +1,34 @@
+{
+  "verifiedAtLocal": "2026-10-06T06:08:39.549426-04:00",
+  "valid": true,
+  "schemaVersion": 2,
+  "toolVersion": "0.1.1",
+  "tableRowCounts": {
+    "enum_catalog": 27,
+    "department_tracks": 6,
+    "metrics": 5,
+    "metric_tiers": 20,
+    "facilities": 6,
+    "flavor_text": 20,
+    "qualification_catalog": 4,
+    "capabilities": 2,
+    "facility_capabilities": 2,
+    "capability_staffing_rules": 4,
+    "facility_capability_staffing_overrides": 3,
+    "task_templates": 2
+  },
+  "sourceHashesVerified": 12,
+  "pk3Entries": [
+    "README.txt",
+    "data/department_content.json",
+    "language/DODA_GENERATED_LANGUAGE.txt",
+    "manifest/content_manifest.json"
+  ],
+  "artifactBackup": "E:\\Dev\\uzdoom_src\\doda-core\\generated\\backups\\v11_export_refresh_20261006_060839_260509",
+  "artifactHashes": {
+    "department_json": "0d209dad68e9a163e42e2d0b5ce0f90b1b2f64b44b269748fb5588fffee105b2",
+    "language": "a23e4e7790b0a6901012ebe89ea328b202d7f1d48767c0a84e75411f75c20441",
+    "manifest": "8b548a42df31fe24026fc2784fd4b47c496055529e149ec85120f10f389b6200",
+    "pk3": "a2302ba2cfd4a1de36198b72a38bcd7db4448cb3869457449b3d73b65a31260b"
+  }
+}

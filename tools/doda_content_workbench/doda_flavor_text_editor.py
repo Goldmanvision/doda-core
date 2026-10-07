@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import csv
 import os
@@ -29,6 +29,12 @@ FILES = (
     "metric_tiers.csv",
     "facilities.csv",
     "flavor_text.csv",
+    "qualification_catalog.csv",
+    "capabilities.csv",
+    "facility_capabilities.csv",
+    "capability_staffing_rules.csv",
+    "facility_capability_staffing_overrides.csv",
+    "task_templates.csv",
 )
 
 ID_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")

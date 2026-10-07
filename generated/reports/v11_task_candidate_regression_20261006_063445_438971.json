@@ -1,0 +1,42 @@
+{
+  "testedAtLocal": "2026-10-06T06:34:45.439003-04:00",
+  "scope": "TaskTemplatesEditor.candidate_valid with test-generated CSVs; does not test commit(), save(), backups, or GUI controls",
+  "valid": true,
+  "passedCount": 5,
+  "testCount": 5,
+  "liveSourcesUnchanged": true,
+  "results": [
+    {
+      "name": "Valid Task Templates candidate",
+      "expectedValid": true,
+      "actualValid": true,
+      "passed": true,
+      "validatorOutput": "\n========================================================================\nDoDA Content Workbench Validation\n========================================================================\nProject root: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-task-t_lnsf9g\n\nLoaded rows:\n  capabilities: 2\n  capability_staffing_rules: 4\n  department_tracks: 6\n  enum_catalog: 27\n  facilities: 6\n  facility_capabilities: 2\n  facility_capability_staffing_overrides: 3\n  flavor_text: 20\n  metric_tiers: 20\n  metrics: 5\n  qualification_catalog: 4\n  task_templates: 2\n\nValidation passed with zero errors.\n\nReport written to: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-task-t_lnsf9g\\generated\\reports\\content_validation_report.json\n========================================================================\n\n"
+    },
+    {
+      "name": "Reject duplicate task template ID",
+      "expectedValid": false,
+      "actualValid": false,
+      "passed": true,
+      "validatorOutput": "\n========================================================================\nDoDA Content Workbench Validation\n========================================================================\nProject root: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-task-m73g6oxb\n\nLoaded rows:\n  capabilities: 2\n  capability_staffing_rules: 4\n  department_tracks: 6\n  enum_catalog: 27\n  facilities: 6\n  facility_capabilities: 2\n  facility_capability_staffing_overrides: 3\n  flavor_text: 20\n  metric_tiers: 20\n  metrics: 5\n  qualification_catalog: 4\n  task_templates: 3\n\nValidation failed with 1 error(s):\n  ERROR: [task_templates] Line 4: duplicate key SIGNAL_REVIEW; first defined on line 2\n\nReport written to: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-task-m73g6oxb\\generated\\reports\\content_validation_report.json\n========================================================================\n\n"
+    },
+    {
+      "name": "Reject zero task effort",
+      "expectedValid": false,
+      "actualValid": false,
+      "passed": true,
+      "validatorOutput": "\n========================================================================\nDoDA Content Workbench Validation\n========================================================================\nProject root: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-task-5_c9uqvv\n\nLoaded rows:\n  capabilities: 2\n  capability_staffing_rules: 4\n  department_tracks: 6\n  enum_catalog: 27\n  facilities: 6\n  facility_capabilities: 2\n  facility_capability_staffing_overrides: 3\n  flavor_text: 20\n  metric_tiers: 20\n  metrics: 5\n  qualification_catalog: 4\n  task_templates: 2\n\nValidation failed with 1 error(s):\n  ERROR: [task_templates] Line 2: default_target_effort_minutes must be greater than 0\n\nReport written to: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-task-5_c9uqvv\\generated\\reports\\content_validation_report.json\n========================================================================\n\n"
+    },
+    {
+      "name": "Reject unknown task priority",
+      "expectedValid": false,
+      "actualValid": false,
+      "passed": true,
+      "validatorOutput": "\n========================================================================\nDoDA Content Workbench Validation\n========================================================================\nProject root: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-task-p0bjsufp\n\nLoaded rows:\n  capabilities: 2\n  capability_staffing_rules: 4\n  department_tracks: 6\n  enum_catalog: 27\n  facilities: 6\n  facility_capabilities: 2\n  facility_capability_staffing_overrides: 3\n  flavor_text: 20\n  metric_tiers: 20\n  metrics: 5\n  qualification_catalog: 4\n  task_templates: 2\n\nValidation failed with 1 error(s):\n  ERROR: [task_templates] Line 2: priority '__INVALID_PRIORITY__' does not exist in active enum_catalog TASK_PRIORITY\n\nReport written to: C:\\Users\\nicka\\AppData\\Local\\Temp\\doda-task-p0bjsufp\\generated\\reports\\content_validation_report.json\n========================================================================\n\n"
+    },
+    {
+      "name": "Live source CSV hashes unchanged",
+      "passed": true
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import csv
 import os
@@ -20,6 +20,7 @@ FIELDS = (
     "track_id",
     "hq_zone_id",
     "description",
+    "personnel_capacity",
     "initial_tier_id",
     "interaction_asset_id",
     "foims_panel_id",
@@ -33,6 +34,12 @@ FILES = (
     "metric_tiers.csv",
     "facilities.csv",
     "flavor_text.csv",
+    "qualification_catalog.csv",
+    "capabilities.csv",
+    "facility_capabilities.csv",
+    "capability_staffing_rules.csv",
+    "facility_capability_staffing_overrides.csv",
+    "task_templates.csv",
 )
 
 ID_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
@@ -47,6 +54,7 @@ class FacilitiesEditor:
         self.display_name = tk.StringVar()
         self.track_id = tk.StringVar()
         self.hq_zone_id = tk.StringVar()
+        self.personnel_capacity = tk.StringVar()
         self.initial_tier_id = tk.StringVar()
         self.interaction_asset_id = tk.StringVar()
         self.foims_panel_id = tk.StringVar()
@@ -265,7 +273,30 @@ class FacilitiesEditor:
             pady=(0, 8),
         )
 
-        label("Initial Tier:", 6)
+        label("Personnel Capacity:", 6)
+
+        ttk.Entry(
+            editor_frame,
+            textvariable=self.personnel_capacity,
+        ).grid(
+            row=6,
+            column=1,
+            sticky=tk.EW,
+            pady=(0, 8),
+        )
+
+        ttk.Label(
+            editor_frame,
+            text="Whole number of personnel assigned to this facility.",
+            foreground="#9da7b3",
+        ).grid(
+            row=7,
+            column=1,
+            sticky=tk.W,
+            pady=(0, 10),
+        )
+
+        label("Initial Tier:", 8)
 
         self.tier_combo = ttk.Combobox(
             editor_frame,
@@ -275,44 +306,44 @@ class FacilitiesEditor:
         )
 
         self.tier_combo.grid(
-            row=6,
-            column=1,
-            sticky=tk.EW,
-            pady=(0, 8),
-        )
-
-        label("Interaction Asset ID:", 7)
-
-        ttk.Entry(
-            editor_frame,
-            textvariable=self.interaction_asset_id,
-        ).grid(
-            row=7,
-            column=1,
-            sticky=tk.EW,
-            pady=(0, 8),
-        )
-
-        label("FOIMS Panel ID:", 8)
-
-        ttk.Entry(
-            editor_frame,
-            textvariable=self.foims_panel_id,
-        ).grid(
             row=8,
             column=1,
             sticky=tk.EW,
             pady=(0, 8),
         )
 
-        label("Active:", 9)
+        label("Interaction Asset ID:", 9)
+
+        ttk.Entry(
+            editor_frame,
+            textvariable=self.interaction_asset_id,
+        ).grid(
+            row=9,
+            column=1,
+            sticky=tk.EW,
+            pady=(0, 8),
+        )
+
+        label("FOIMS Panel ID:", 10)
+
+        ttk.Entry(
+            editor_frame,
+            textvariable=self.foims_panel_id,
+        ).grid(
+            row=10,
+            column=1,
+            sticky=tk.EW,
+            pady=(0, 8),
+        )
+
+        label("Active:", 11)
 
         ttk.Checkbutton(
             editor_frame,
             text="This facility is active",
             variable=self.active,
         ).grid(
-            row=9,
+            row=11,
             column=1,
             sticky=tk.W,
             pady=(0, 8),
@@ -320,7 +351,7 @@ class FacilitiesEditor:
 
         buttons = ttk.Frame(editor_frame)
         buttons.grid(
-            row=10,
+            row=12,
             column=0,
             columnspan=2,
             sticky=tk.EW,
@@ -366,7 +397,7 @@ class FacilitiesEditor:
             foreground="#9da7b3",
             wraplength=390,
         ).grid(
-            row=11,
+            row=13,
             column=0,
             columnspan=2,
             sticky=tk.EW,
@@ -416,6 +447,7 @@ class FacilitiesEditor:
         self.display_name.set("")
         self.track_id.set(tracks[0] if tracks else "")
         self.hq_zone_id.set("")
+        self.personnel_capacity.set("1")
         self.initial_tier_id.set(
             "UNBUILT" if "UNBUILT" in tiers else (tiers[0] if tiers else "")
         )
@@ -453,6 +485,7 @@ class FacilitiesEditor:
         self.display_name.set(row.get("display_name", ""))
         self.track_id.set(row.get("track_id", ""))
         self.hq_zone_id.set(row.get("hq_zone_id", ""))
+        self.personnel_capacity.set(row.get("personnel_capacity", ""))
         self.initial_tier_id.set(row.get("initial_tier_id", ""))
         self.interaction_asset_id.set(row.get("interaction_asset_id", ""))
         self.foims_panel_id.set(row.get("foims_panel_id", ""))
@@ -475,6 +508,7 @@ class FacilitiesEditor:
             "track_id": self.track_id.get().strip(),
             "hq_zone_id": self.hq_zone_id.get().strip(),
             "description": self.description.get("1.0", tk.END).strip(),
+            "personnel_capacity": self.personnel_capacity.get().strip(),
             "initial_tier_id": self.initial_tier_id.get().strip(),
             "interaction_asset_id": self.interaction_asset_id.get().strip(),
             "foims_panel_id": self.foims_panel_id.get().strip(),
@@ -500,6 +534,18 @@ class FacilitiesEditor:
 
         if not row["description"]:
             errors.append("Description is required.")
+
+        try:
+            personnel_capacity = int(row["personnel_capacity"])
+        except ValueError:
+            personnel_capacity = 0
+            errors.append("Personnel Capacity must be a whole number of at least 1.")
+
+        if personnel_capacity < 1 and not any(
+            "Personnel Capacity must be" in error
+            for error in errors
+        ):
+            errors.append("Personnel Capacity must be a whole number of at least 1.")
 
         if row["initial_tier_id"] not in self.facility_tiers():
             errors.append("Select a valid Initial Tier.")

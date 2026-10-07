@@ -1,0 +1,62 @@
+DoDA V1.1 Capability Staffing Rules Schema Inspection
+Generated: 2026-10-01T13:20:27.8776157-04:00
+
+=== Summary ===
+
+
+Capabilities                  : 2
+Qualifications                : 4
+CapabilityStaffingRules       : 4
+CapabilityStaffingRuleHeaders : "capability_id","qualification_id","min_contributors","preferred_contributors","
+                                max_contributors","sort_order","active"
+
+=== Active Capabilities ===
+
+capability_id           display_name            standing_operation_label sort_order
+-------------           ------------            ------------------------ ----------
+ELECTRONIC_SURVEILLANCE Electronic Surveillance Signal Monitoring        10        
+OCCULT_RESPONSE         Occult Response         Response Readiness       20
+
+=== Active Qualifications ===
+
+qualification_id display_name     sort_order
+---------------- ------------     ----------
+SIGNALS_ANALYSIS Signals Analysis 10        
+DATA_SYSTEMS     Data Systems     20        
+FIELD_RESPONSE   Field Response   30        
+OCCULT_RESPONSE  Occult Response  40
+
+=== Capability Staffing Rules ===
+
+
+capability_id          : ELECTRONIC_SURVEILLANCE
+qualification_id       : SIGNALS_ANALYSIS
+min_contributors       : 1
+preferred_contributors : 2
+max_contributors       : 2
+sort_order             : 10
+active                 : TRUE
+
+capability_id          : ELECTRONIC_SURVEILLANCE
+qualification_id       : DATA_SYSTEMS
+min_contributors       : 0
+preferred_contributors : 1
+max_contributors       : 1
+sort_order             : 20
+active                 : TRUE
+
+capability_id          : OCCULT_RESPONSE
+qualification_id       : FIELD_RESPONSE
+min_contributors       : 1
+preferred_contributors : 2
+max_contributors       : 2
+sort_order             : 10
+active                 : TRUE
+
+capability_id          : OCCULT_RESPONSE
+qualification_id       : OCCULT_RESPONSE
+min_contributors       : 0
+preferred_contributors : 1
+max_contributors       : 2
+sort_order             : 20
+active                 : TRUE

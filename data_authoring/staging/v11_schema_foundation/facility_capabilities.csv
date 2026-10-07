@@ -1,0 +1,3 @@
+"facility_id","capability_id","display_name_override","max_concurrent_personnel","initial_tier_id","foims_panel_id","sort_order","active"
+"TECHOPS_HUB","ELECTRONIC_SURVEILLANCE","","2","OPERATIONAL","FOIMS_TECHOPS_SURVEILLANCE","10","TRUE"
+"FIELD_OPERATIONS_ROOM","OCCULT_RESPONSE","Occult Task Force","2","UNBUILT","FOIMS_FIELD_OCCULT_RESPONSE","10","TRUE"

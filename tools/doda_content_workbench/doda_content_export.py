@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 r"""
 DoDA Content Workbench - content exporter and PK3 builder.
 
@@ -34,8 +34,8 @@ from pathlib import Path
 from typing import Any
 
 
-TOOL_VERSION = "0.1.0"
-SCHEMA_VERSION = 1
+TOOL_VERSION = "0.1.1"
+SCHEMA_VERSION = 2
 
 TABLE_FILES = {
     "enum_catalog": "enum_catalog.csv",
@@ -44,6 +44,14 @@ TABLE_FILES = {
     "metric_tiers": "metric_tiers.csv",
     "facilities": "facilities.csv",
     "flavor_text": "flavor_text.csv",
+    "qualification_catalog": "qualification_catalog.csv",
+    "capabilities": "capabilities.csv",
+    "facility_capabilities": "facility_capabilities.csv",
+    "capability_staffing_rules": "capability_staffing_rules.csv",
+    "facility_capability_staffing_overrides": (
+        "facility_capability_staffing_overrides.csv"
+    ),
+    "task_templates": "task_templates.csv",
 }
 
 INTEGER_COLUMNS = {
@@ -51,6 +59,30 @@ INTEGER_COLUMNS = {
     "department_tracks": {"sort_order"},
     "metrics": {"internal_min", "internal_max", "default_value"},
     "metric_tiers": {"min_inclusive", "max_inclusive", "sort_order"},
+    "facilities": {"personnel_capacity"},
+    "qualification_catalog": {"sort_order"},
+    "capabilities": {"sort_order"},
+    "facility_capabilities": {
+        "max_concurrent_personnel",
+        "sort_order",
+    },
+    "capability_staffing_rules": {
+        "min_contributors",
+        "preferred_contributors",
+        "max_contributors",
+        "sort_order",
+    },
+    "facility_capability_staffing_overrides": {
+        "min_contributors",
+        "preferred_contributors",
+        "max_contributors",
+        "sort_order",
+    },
+    "task_templates": {
+        "default_target_effort_minutes",
+        "default_deadline_minutes",
+        "sort_order",
+    },
 }
 
 BOOLEAN_COLUMNS = {
@@ -59,6 +91,12 @@ BOOLEAN_COLUMNS = {
     "metrics": {"active"},
     "facilities": {"active"},
     "flavor_text": {"active"},
+    "qualification_catalog": {"active"},
+    "capabilities": {"active"},
+    "facility_capabilities": {"active"},
+    "capability_staffing_rules": {"active"},
+    "facility_capability_staffing_overrides": {"active"},
+    "task_templates": {"auto_allocate", "active"},
 }
 
 
@@ -424,7 +462,13 @@ def main() -> int:
         print_export_result(project_root, outputs, archive_entries)
         return 0
 
-    except (FileNotFoundError, RuntimeError, ValueError, OSError, zipfile.BadZipFile) as error:
+    except (
+        FileNotFoundError,
+        RuntimeError,
+        ValueError,
+        OSError,
+        zipfile.BadZipFile,
+    ) as error:
         print()
         print(f"EXPORT FAILED: {error}", file=sys.stderr)
         return 1

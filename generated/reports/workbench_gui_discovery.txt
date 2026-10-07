@@ -1,0 +1,43 @@
+DoDA Workbench GUI Discovery
+Generated: 2026-10-01T12:51:52.4000479-04:00
+
+=== GUI Library / Widget Matches ===
+
+Name Value 
+---- ----- 
+0    editor
+
+=== Likely Workbench / Editor / Tool Python Files ===
+
+FullName                                                                             Length LastWriteTime       
+--------                                                                             ------ -------------       
+E:\Dev\uzdoom_src\doda-core\tools\authoring\audit_doda_keyconf.py                      9680 9/2/2026 10:29:07 PM
+E:\Dev\uzdoom_src\doda-core\tools\authoring\build_doda_authoring_report.py            17717 9/2/2026 10:18:33 PM
+E:\Dev\uzdoom_src\doda-core\tools\authoring\validate_doda_authoring.py                23006 9/2/2026 10:12:04 PM
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_content_export.py       14019 10/1/2026 12:48:51  
+                                                                                            PM                  
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_content_gui.py          53386 9/17/2026 7:30:20 AM
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_content_workbench.py    36868 10/1/2026 12:34:13  
+                                                                                            PM                  
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_enum_catalog_editor.py  29245 9/17/2026 4:04:38 AM
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_facilities_editor.py    25166 9/17/2026 2:33:31 AM
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_flavor_text_editor.py   21236 9/17/2026 2:35:15 AM
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_foims_x_preview.py      39292 9/17/2026 8:49:29 PM
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_metric_tiers_editor.py  30573 9/17/2026 4:30:13 AM
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_metrics_editor.py       28294 9/17/2026 4:06:21 AM
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_track_editor.py         14802 9/17/2026 1:55:25 AM
+
+=== All Non-Virtualenv Python Files ===
+E:\Dev\uzdoom_src\doda-core\tools\authoring\audit_doda_keyconf.py
+E:\Dev\uzdoom_src\doda-core\tools\authoring\build_doda_authoring_report.py
+E:\Dev\uzdoom_src\doda-core\tools\authoring\validate_doda_authoring.py
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_content_export.py
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_content_gui.py
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_content_workbench.py
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_enum_catalog_editor.py
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_facilities_editor.py
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_flavor_text_editor.py
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_foims_x_preview.py
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_metric_tiers_editor.py
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_metrics_editor.py
+E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_track_editor.py

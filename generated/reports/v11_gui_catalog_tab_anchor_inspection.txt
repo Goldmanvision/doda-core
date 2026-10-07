@@ -1,0 +1,138 @@
+DoDA V1.1 GUI Catalog Tab Anchor Inspection
+Generated: 2026-10-01T13:04:04.9873517-04:00
+
+=== Anchor Matches ===
+
+LineNumber Line                                                                                   
+---------- ----                                                                                   
+        31 from doda_track_editor import install_track_editor                                     
+        32 from doda_metrics_editor import install_metrics_editor                                 
+        33 from doda_metric_tiers_editor import install_metric_tiers_editor                       
+        34 from doda_facilities_editor import install_facilities_editor                           
+        35 from doda_flavor_text_editor import install_flavor_text_editor                         
+        36 from doda_enum_catalog_editor import install_enum_catalog_editor                       
+        37 from doda_foims_x_preview import FoimsXPreview                                         
+       222         install_track_editor(self)                                                     
+       223         install_metrics_editor(self)                                                   
+       224         install_metric_tiers_editor(self)                                              
+       225         install_facilities_editor(self)                                                
+       226         install_flavor_text_editor(self)                                               
+       227         install_enum_catalog_editor(self)                                              
+       863         self.dashboard_tab = ttk.Frame(self.notebook, padding=10)                      
+       864         self.tracks_tab = ttk.Frame(self.notebook, padding=10)                         
+       865         self.metrics_tab = ttk.Frame(self.notebook, padding=10)                        
+       866         self.metric_tiers_tab = ttk.Frame(self.notebook, padding=10)                   
+       867         self.facilities_tab = ttk.Frame(self.notebook, padding=10)                     
+       868         self.flavor_tab = ttk.Frame(self.notebook, padding=10)                         
+       869         self.activity_tab = ttk.Frame(self.notebook, padding=10)                       
+       871         self.notebook.add(self.dashboard_tab, text="Dashboard")                        
+       872         self.notebook.add(self.tracks_tab, text="Department Tracks — Editor")          
+       873         self.notebook.add(self.metrics_tab, text="Metrics — Editor")                   
+       874         self.notebook.add(self.metric_tiers_tab, text="Metric Tiers — Editor")         
+       875         self.notebook.add(self.facilities_tab, text="Facilities — Editor")             
+       876         self.notebook.add(self.flavor_tab, text="Flavor Text — Editor")                
+       877         self.notebook.add(self.activity_tab, text="Activity Log")                      
+       897             text="v0.9 — V1.1 authoring data loaded; dedicated editors are expanding.",
+      1154             if hasattr(self, "metrics_editor"):                                        
+      1157             if hasattr(self, "metric_tiers_editor"):                                   
+      1160             if hasattr(self, "facilities_editor"):                                     
+      1163             if hasattr(self, "enum_catalog_editor"):
+
+=== Source lines 27-43 ===
+  27: from datetime import datetime
+  28: from pathlib import Path
+  29: from tkinter import filedialog, messagebox, ttk
+  30: from typing import Any
+  31: from doda_track_editor import install_track_editor
+  32: from doda_metrics_editor import install_metrics_editor
+  33: from doda_metric_tiers_editor import install_metric_tiers_editor
+  34: from doda_facilities_editor import install_facilities_editor
+  35: from doda_flavor_text_editor import install_flavor_text_editor
+  36: from doda_enum_catalog_editor import install_enum_catalog_editor
+  37: from doda_foims_x_preview import FoimsXPreview
+  38: 
+  39: 
+  40: APP_TITLE = "DoDA Content Workbench"
+  41: APP_VERSION = "0.9.0"
+  42: 
+  43: SOURCE_FILES = {
+
+=== Source lines 218-233 ===
+ 218:             self.open_foims_preview_from_shortcut,
+ 219:         )
+ 220: 
+ 221:         self._build_layout()
+ 222:         install_track_editor(self)
+ 223:         install_metrics_editor(self)
+ 224:         install_metric_tiers_editor(self)
+ 225:         install_facilities_editor(self)
+ 226:         install_flavor_text_editor(self)
+ 227:         install_enum_catalog_editor(self)
+ 228:         self.refresh_all(show_message=False)
+ 229: 
+ 230:     def _configure_styles(self) -> None:
+ 231:         """Apply the standard DoDA dark desktop theme."""
+ 232: 
+ 233:         palette = {
+
+=== Source lines 859-883 ===
+ 859:             self.select_next_notebook_tab,
+ 860:             add="+",
+ 861:         )
+ 862: 
+ 863:         self.dashboard_tab = ttk.Frame(self.notebook, padding=10)
+ 864:         self.tracks_tab = ttk.Frame(self.notebook, padding=10)
+ 865:         self.metrics_tab = ttk.Frame(self.notebook, padding=10)
+ 866:         self.metric_tiers_tab = ttk.Frame(self.notebook, padding=10)
+ 867:         self.facilities_tab = ttk.Frame(self.notebook, padding=10)
+ 868:         self.flavor_tab = ttk.Frame(self.notebook, padding=10)
+ 869:         self.activity_tab = ttk.Frame(self.notebook, padding=10)
+ 870: 
+ 871:         self.notebook.add(self.dashboard_tab, text="Dashboard")
+ 872:         self.notebook.add(self.tracks_tab, text="Department Tracks — Editor")
+ 873:         self.notebook.add(self.metrics_tab, text="Metrics — Editor")
+ 874:         self.notebook.add(self.metric_tiers_tab, text="Metric Tiers — Editor")
+ 875:         self.notebook.add(self.facilities_tab, text="Facilities — Editor")
+ 876:         self.notebook.add(self.flavor_tab, text="Flavor Text — Editor")
+ 877:         self.notebook.add(self.activity_tab, text="Activity Log")
+ 878: 
+ 879:         self._build_dashboard_tab()
+ 880:         self._build_tracks_tab()
+ 881:         self._build_metrics_tab()
+ 882:         self._build_facilities_tab()
+ 883:         self._build_flavor_tab()
+
+=== Source lines 893-903 ===
+ 893:         ).pack(side=tk.LEFT)
+ 894: 
+ 895:         ttk.Label(
+ 896:             footer,
+ 897:             text="v0.9 — V1.1 authoring data loaded; dedicated editors are expanding.",
+ 898:             foreground="#9da7b3",
+ 899:         ).pack(side=tk.RIGHT)
+ 900: 
+ 901:     def _build_dashboard_tab(self) -> None:
+ 902:         self.dashboard_tab.columnconfigure(0, weight=1)
+ 903:         self.dashboard_tab.rowconfigure(1, weight=1)
+
+=== Source lines 1150-1169 ===
+1150:             self.tables = {
+1151:                 table_name: read_csv(self.source_directory / filename)
+1152:                 for table_name, filename in SOURCE_FILES.items()
+1153:             }
+1154:             if hasattr(self, "metrics_editor"):
+1155:                 self.metrics_editor.update()
+1156: 
+1157:             if hasattr(self, "metric_tiers_editor"):
+1158:                 self.metric_tiers_editor.update()
+1159: 
+1160:             if hasattr(self, "facilities_editor"):
+1161:                 self.facilities_editor.update()
+1162: 
+1163:             if hasattr(self, "enum_catalog_editor"):
+1164:                 self.enum_catalog_editor.update()
+1165: 
+1166:             self.load_validation_report()
+1167:             self.update_dashboard()
+1168:             self.update_tracks()
+1169:             self.update_metrics()

@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 r"""
 DoDA Content Workbench GUI v0.1.
 
@@ -31,14 +31,24 @@ from typing import Any
 from doda_track_editor import install_track_editor
 from doda_metrics_editor import install_metrics_editor
 from doda_metric_tiers_editor import install_metric_tiers_editor
+from doda_metric_bundle_editor import open_metric_bundle_editor
 from doda_facilities_editor import install_facilities_editor
 from doda_flavor_text_editor import install_flavor_text_editor
 from doda_enum_catalog_editor import install_enum_catalog_editor
+from doda_qualification_catalog_editor import install_qualification_catalog_editor
+from doda_capabilities_editor import install_capabilities_editor
+from doda_facility_capabilities_editor import install_facility_capabilities_editor
+from doda_capability_staffing_rules_editor import install_capability_staffing_rules_editor
+from doda_facility_capability_staffing_overrides_editor import install_facility_capability_staffing_overrides_editor
+from doda_task_templates_editor import install_task_templates_editor
 from doda_foims_x_preview import FoimsXPreview
+from doda_network_editor import install_network_editor, network_editors_dirty
+from doda_navigation import install_grouped_navigation
+import doda_network_rules
 
 
 APP_TITLE = "DoDA Content Workbench"
-APP_VERSION = "0.8.0"
+APP_VERSION = "0.10.0"
 
 SOURCE_FILES = {
     "enum_catalog": "enum_catalog.csv",
@@ -47,6 +57,14 @@ SOURCE_FILES = {
     "metric_tiers": "metric_tiers.csv",
     "facilities": "facilities.csv",
     "flavor_text": "flavor_text.csv",
+    "qualification_catalog": "qualification_catalog.csv",
+    "capabilities": "capabilities.csv",
+    "facility_capabilities": "facility_capabilities.csv",
+    "capability_staffing_rules": "capability_staffing_rules.csv",
+    "facility_capability_staffing_overrides": (
+        "facility_capability_staffing_overrides.csv"
+    ),
+    "task_templates": "task_templates.csv",
 }
 
 
@@ -217,6 +235,14 @@ class ContentWorkbenchApp(tk.Tk):
         install_facilities_editor(self)
         install_flavor_text_editor(self)
         install_enum_catalog_editor(self)
+        install_qualification_catalog_editor(self)
+        install_capabilities_editor(self)
+        install_facility_capabilities_editor(self)
+        install_capability_staffing_rules_editor(self)
+        install_facility_capability_staffing_overrides_editor(self)
+        install_task_templates_editor(self)
+        install_network_editor(self)
+        install_grouped_navigation(self)
         self.refresh_all(show_message=False)
 
     def _configure_styles(self) -> None:
@@ -503,7 +529,7 @@ class ContentWorkbenchApp(tk.Tk):
             command=self.choose_project_root,
         )
         self.file_menu.add_separator()
-        self.file_menu.add_command(label="Exit", command=self.destroy)
+        self.file_menu.add_command(label="Exit", command=self.request_close)
 
         self.actions_menu = tk.Menu(self, **menu_options)
         self.actions_menu.add_command(
@@ -515,8 +541,21 @@ class ContentWorkbenchApp(tk.Tk):
             command=self.run_validation,
         )
         self.actions_menu.add_command(
+            label="Edit Metric and Tiers...",
+            command=lambda: open_metric_bundle_editor(self),
+        )
+        self.actions_menu.add_command(
             label="Export Generated Content",
             command=self.run_export,
+        )
+        self.actions_menu.add_separator()
+        self.actions_menu.add_command(
+            label="Validate Network and Transfer Rules",
+            command=lambda: self.run_network_rules("validate", announce=True),
+        )
+        self.actions_menu.add_command(
+            label="Export Network and Transfer Rules",
+            command=lambda: self.run_network_rules("export", announce=True),
         )
 
         self.folders_menu = tk.Menu(self, **menu_options)
@@ -858,6 +897,12 @@ class ContentWorkbenchApp(tk.Tk):
         self.metric_tiers_tab = ttk.Frame(self.notebook, padding=10)
         self.facilities_tab = ttk.Frame(self.notebook, padding=10)
         self.flavor_tab = ttk.Frame(self.notebook, padding=10)
+        self.qualifications_tab = ttk.Frame(self.notebook, padding=10)
+        self.capabilities_tab = ttk.Frame(self.notebook, padding=10)
+        self.facility_capabilities_tab = ttk.Frame(self.notebook, padding=10)
+        self.capability_staffing_rules_tab = ttk.Frame(self.notebook, padding=10)
+        self.staffing_overrides_tab = ttk.Frame(self.notebook, padding=10)
+        self.task_templates_tab = ttk.Frame(self.notebook, padding=10)
         self.activity_tab = ttk.Frame(self.notebook, padding=10)
 
         self.notebook.add(self.dashboard_tab, text="Dashboard")
@@ -866,6 +911,12 @@ class ContentWorkbenchApp(tk.Tk):
         self.notebook.add(self.metric_tiers_tab, text="Metric Tiers — Editor")
         self.notebook.add(self.facilities_tab, text="Facilities — Editor")
         self.notebook.add(self.flavor_tab, text="Flavor Text — Editor")
+        self.notebook.add(self.qualifications_tab, text="Qualifications — Editor")
+        self.notebook.add(self.capabilities_tab, text="Capabilities — Editor")
+        self.notebook.add(self.facility_capabilities_tab, text="Facility Capabilities — Editor")
+        self.notebook.add(self.capability_staffing_rules_tab, text="Capability Staffing Rules — Editor")
+        self.notebook.add(self.staffing_overrides_tab, text="Facility Staffing Overrides — Editor")
+        self.notebook.add(self.task_templates_tab, text="Task Templates — Editor")
         self.notebook.add(self.activity_tab, text="Activity Log")
 
         self._build_dashboard_tab()
@@ -886,7 +937,7 @@ class ContentWorkbenchApp(tk.Tk):
 
         ttk.Label(
             footer,
-            text="v0.8 — All authoring tables have dedicated editors; Enum Catalog is administrative.",
+            text="v0.10 — Grouped navigation and network/transfer authoring added; runtime integration remains deferred.",
             foreground="#9da7b3",
         ).pack(side=tk.RIGHT)
 
@@ -1155,6 +1206,30 @@ class ContentWorkbenchApp(tk.Tk):
             if hasattr(self, "enum_catalog_editor"):
                 self.enum_catalog_editor.update()
 
+            if hasattr(self, "qualification_catalog_editor"):
+                self.qualification_catalog_editor.update()
+
+            if hasattr(self, "capabilities_editor"):
+                self.capabilities_editor.update()
+
+            if hasattr(self, "facility_capabilities_editor"):
+                self.facility_capabilities_editor.update()
+
+            if hasattr(self, "capability_staffing_rules_editor"):
+                self.capability_staffing_rules_editor.update()
+
+            if hasattr(self, "facility_capability_staffing_overrides_editor"):
+                self.facility_capability_staffing_overrides_editor.update()
+
+            if hasattr(self, "task_templates_editor"):
+                self.task_templates_editor.update()
+
+            for network_editor in getattr(self, "network_editors", []):
+                network_editor.update()
+
+            if hasattr(self, "transfer_rules_view"):
+                self.transfer_rules_view.update()
+
             self.load_validation_report()
             self.update_dashboard()
             self.update_tracks()
@@ -1281,7 +1356,7 @@ class ContentWorkbenchApp(tk.Tk):
                 f"available\n"
                 f"Total authored records: {total_rows}\n"
                 f"Latest validation state: {validation_state}\n"
-                f"Current mode: all authored tables have editors; Enum Catalog is administrative."
+                f"Current mode: V1.1 authoring data is loaded; editor coverage is expanding."
             )
         )
 
@@ -1481,6 +1556,7 @@ class ContentWorkbenchApp(tk.Tk):
             command=command,
             success_message="Validation completed successfully.",
         )
+        self.run_network_rules("validate", announce=False)
 
     def run_export(self) -> None:
         if not self.exporter_path.is_file():
@@ -1502,6 +1578,49 @@ class ContentWorkbenchApp(tk.Tk):
             command=command,
             success_message="Export and PK3 build completed successfully.",
         )
+        self.run_network_rules("export", announce=False)
+
+    def run_network_rules(self, mode: str, announce: bool) -> bool:
+        """Validate or export network/transfer rules in-process and log the result.
+
+        announce=False only raises a dialog on failure (used after the main
+        validation/export so the user does not get two success dialogs).
+        """
+        dirty = network_editors_dirty(self)
+        if dirty:
+            self.log("Network rules note: unsaved drafts are not included: " + ", ".join(dirty))
+        try:
+            if mode == "export":
+                result, out_path = doda_network_rules.export(self.project_root)
+            else:
+                result = doda_network_rules.Result()
+                doda_network_rules.validate_contract(result)
+                doda_network_rules.validate_network(self.project_root, result)
+                out_path = None
+        except Exception as error:
+            self.log(f"Network rules {mode} error: {error}")
+            messagebox.showerror(APP_TITLE, f"Network rules {mode} could not run.\n\n{error}")
+            return False
+        for line in result.warnings:
+            self.log(f"  NETWORK WARNING: {line}")
+        for line in result.errors:
+            self.log(f"  NETWORK ERROR: {line}")
+        if out_path is not None:
+            self.log(f"Network rules exported: {out_path}")
+        verdict = "PASS" if result.valid else "FAIL"
+        self.log(f"Network rules {mode}: {verdict} ({len(result.errors)} errors, {len(result.warnings)} warnings)")
+        if not result.valid:
+            messagebox.showerror(APP_TITLE, f"Network rules {mode} failed. See the Activity Log.")
+        elif announce:
+            messagebox.showinfo(APP_TITLE, f"Network rules {mode} passed ({len(result.warnings)} warnings).")
+        return result.valid
+
+    def request_close(self) -> None:
+        handler = getattr(self, "_network_close_handler", None)
+        if handler is not None:
+            handler()
+        else:
+            self.destroy()
 
     def run_command(
         self,

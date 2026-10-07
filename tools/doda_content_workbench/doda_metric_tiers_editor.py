@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import csv
 import os
@@ -59,6 +59,12 @@ FILES = (
     "metric_tiers.csv",
     "facilities.csv",
     "flavor_text.csv",
+    "qualification_catalog.csv",
+    "capabilities.csv",
+    "facility_capabilities.csv",
+    "capability_staffing_rules.csv",
+    "facility_capability_staffing_overrides.csv",
+    "task_templates.csv",
 )
 
 ID_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
@@ -350,7 +356,7 @@ class MetricTiersEditor:
 
         preset_frame = ttk.Frame(editor_frame)
         preset_frame.grid(
-            row=9,
+            row=7,
             column=1,
             columnspan=3,
             sticky=tk.W,
@@ -398,7 +404,7 @@ class MetricTiersEditor:
         )
 
         self.flavor_combo.grid(
-            row=9,
+            row=8,
             column=1,
             sticky=tk.EW,
             pady=(0, 8),
@@ -419,7 +425,7 @@ class MetricTiersEditor:
 
         buttons = ttk.Frame(editor_frame)
         buttons.grid(
-            row=9,
+            row=10,
             column=0,
             columnspan=2,
             sticky=tk.EW,
@@ -465,7 +471,7 @@ class MetricTiersEditor:
             foreground="#9da7b3",
             wraplength=390,
         ).grid(
-            row=10,
+            row=11,
             column=0,
             columnspan=2,
             sticky=tk.EW,

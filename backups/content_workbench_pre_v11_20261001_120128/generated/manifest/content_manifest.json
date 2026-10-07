@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-01T10:16:04.681368+00:00",
+  "projectRoot": "E:\\Dev\\uzdoom_src\\doda-core",
+  "sourceFiles": {
+    "enum_catalog.csv": "36125c42667d5a267a6c2d1a8ca93381f04ff1a3025acb645da682e0b379114a",
+    "department_tracks.csv": "19d3e67c58c6a7ccf21eb77db057333bb380d9c260779636580f8bf06c5b0e73",
+    "metrics.csv": "09bdc0a244bbfd238710328cb7d9a9e1140042ceeeec1f984383251ac6e8b7bc",
+    "metric_tiers.csv": "c70036f74e1b3e9161e0fba1697c6ab0ed27f9a2f74de6e4f98a3b716fc9da26",
+    "facilities.csv": "8b229fef31855318f9cf2c5fc30e48e2626f1e8edbb7d9926a3f6f01f7819e77",
+    "flavor_text.csv": "89d1684320406ecf2de93f58b02fbd71f125c808152cac9d3a2fa1f55b6c4b68"
+  },
+  "outputFiles": {
+    "generated/data/department_content.json": "29b208c4300b4c92af57da9bff08e295d7c150eda7f510c6e68f9c004bf1406e",
+    "generated/language/DODA_GENERATED_LANGUAGE.txt": "a23e4e7790b0a6901012ebe89ea328b202d7f1d48767c0a84e75411f75c20441"
+  },
+  "tableRowCounts": {
+    "enum_catalog": 18,
+    "department_tracks": 6,
+    "metrics": 5,
+    "metric_tiers": 20,
+    "facilities": 6,
+    "flavor_text": 20
+  },
+  "runtimeStatus": {
+    "nativeLoaderAvailable": false,
+    "mapinfoIntegrationEnabled": false,
+    "languageIntegrationEnabled": false,
+    "zscriptIntegrationEnabled": false,
+    "notes": [
+      "This is a generated content overlay proof.",
+      "The PK3 is not yet active runtime data.",
+      "Do not manually edit generated output files."
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "testedAtLocal": "2026-10-06T06:38:09.566134-04:00",
+  "scope": "Real TaskTemplatesEditor.commit and validator on temporary copies; GUI notification mocked; refresh callback recorded, not executed",
+  "valid": true,
+  "passedCount": 5,
+  "testCount": 5,
+  "liveSourcesUnchanged": true,
+  "results": [
+    {
+      "name": "Valid commit, sorted CSV, exact backup, and refresh",
+      "passed": true
+    },
+    {
+      "name": "Invalid candidate leaves source unchanged and creates no backup",
+      "passed": true
+    },
+    {
+      "name": "External change before commit is preserved",
+      "passed": true
+    },
+    {
+      "name": "External change during validation is preserved",
+      "passed": true
+    },
+    {
+      "name": "Live source CSV hashes unchanged",
+      "passed": true
+    }
+  ]
+}

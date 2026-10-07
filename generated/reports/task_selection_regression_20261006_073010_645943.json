@@ -1,0 +1,30 @@
+{
+  "testedAtLocal": "2026-10-06T07:30:10.645965-04:00",
+  "scope": "Real hidden GUI in temporary project; no saves; dialogs mocked",
+  "valid": true,
+  "passedCount": 5,
+  "testCount": 5,
+  "liveSourcesUnchanged": true,
+  "results": [
+    {
+      "name": "Repeated refresh preserves existing unsaved form",
+      "passed": true
+    },
+    {
+      "name": "Revert Form reloads saved values",
+      "passed": true
+    },
+    {
+      "name": "Different-record selection loads that record",
+      "passed": true
+    },
+    {
+      "name": "Refresh preserves unsaved new-record form",
+      "passed": true
+    },
+    {
+      "name": "Live source CSV hashes unchanged",
+      "passed": true
+    }
+  ]
+}

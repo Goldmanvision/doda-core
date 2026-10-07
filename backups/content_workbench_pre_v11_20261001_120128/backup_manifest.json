@@ -1,0 +1,12 @@
+﻿{
+    "backup_created_local":  "2026-10-01T12:01:29.2557230-04:00",
+    "backup_reason":  "Pre-V1.1 Workbench schema expansion: facilities, qualifications, capabilities, staffing rules, overrides, and task templates",
+    "project_root":  "E:\\Dev\\uzdoom_src\\doda-core",
+    "schema_baseline":  "Pre-V1.1",
+    "included":  [
+                     "data_authoring\\source",
+                     "tools\\doda_content_workbench",
+                     "generated",
+                     "build"
+                 ]
+}

@@ -1,0 +1,35 @@
+{
+  "testedAtLocal": "2026-10-06T07:27:41.835150-04:00",
+  "scope": "Real hidden GUI and enum save/refresh in a temporary project; dialogs mocked; no export; selected Task Templates name preservation only",
+  "valid": false,
+  "passedCount": 5,
+  "testCount": 6,
+  "liveSourcesUnchanged": true,
+  "results": [
+    {
+      "name": "Create enum through real save; exact backup",
+      "passed": true
+    },
+    {
+      "name": "Real refresh updates task choices and table cache",
+      "passed": true
+    },
+    {
+      "name": "Unsaved selected-task display name survives enum save",
+      "passed": false,
+      "exception": "AssertionError('Refresh replaced the unsaved Task Templates name.')"
+    },
+    {
+      "name": "Repeat enum edit succeeds with pre-edit backup",
+      "passed": true
+    },
+    {
+      "name": "Referenced priority deactivation rejected without changes",
+      "passed": true
+    },
+    {
+      "name": "Live source CSV hashes unchanged",
+      "passed": true
+    }
+  ]
+}
