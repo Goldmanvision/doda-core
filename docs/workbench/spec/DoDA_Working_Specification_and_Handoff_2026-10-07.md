@@ -355,6 +355,18 @@ Authoring/validation/export slice only; no runtime behaviour.
 - Added TASK_INTERRUPTION and permanent-unavailability causes to the exported contract.
 - Existing modules (validator, exporter, GUI, coordinated metric service/editor, Actions menu) were not modified. GUI page and main-validator integration are deferred to the grouped-navigation/shared-metadata step.
 
+## Equipment families (2026-10-07)
+- EQ-FAM-01: Fax machines are Department/office/location equipment with no single personal owner; outside the eight-device personal limit.
+- EQ-FAM-02: Landline order oldest to newest: rotary, touch-tone, cordless phone system, multi-line phone system. Mobile phones are phones (calls and touch-tone hotlines). Cellular devices are mobile-internet-connected PDA devices, not phones.
+- EQ-NET-01: Phones and fax machines use phone lines and are not network connected. Desktop, laptop, and PDA models need a network tier with exact modem matching.
+- EQ-SCOPE-01: First pass is name, family, phone line kind, network tier, and generation order only. Later: stats, abilities, prices, unlock thresholds, manufacturer, model number, flavor text, and more.
+- EQ-CELL-01 RESOLVED: Cellular devices (PDA family) use a separate mobile-internet connection locked at 14k (14.4KB/s); no location modem or network tier. Encoded as connection_override = MOBILE_INTERNET on the model.
+- EQ-SYS-01 RESOLVED: Cordless and multi-line phone systems are personal phones and count toward a person's two phones.
+
+## Workbench v0.11 record (2026-10-07)
+- Added doda_equipment_rules.py with equipment_families.csv and equipment_models.csv; Equipment group in navigation with two editors; Validate/Export include equipment (generated/data/equipment_catalog.json). 24 tests pass locally.
+- Seeded five families (DESKTOP, LAPTOP, PDA, PHONE, FAX) and six models (four landlines, mobile phone, fax machine). Desktop, laptop, and PDA models not yet authored.
+
 ## Workbench v0.10 record (2026-10-07)
 - Grouped, resizable, collapsible navigation sidebar (doda_navigation.py) with View > Navigation menu; built from existing notebook tabs, no editors reinstalled.
 - Central page registry and shared table metadata (doda_page_registry.py); network tables migrated, older editors not yet.

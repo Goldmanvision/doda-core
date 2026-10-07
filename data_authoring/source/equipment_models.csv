@@ -1,0 +1,8 @@
+model_id,display_name,family_id,phone_line_kind,network_tier_id,connection_override,generation_order,description,sort_order,active
+PHONE_ROTARY,Rotary Phone,PHONE,LANDLINE,,,1,Diagram: ROTARY PHONE. Starting equipment.,10,true
+PHONE_TOUCH_TONE,Touch Tone Phone,PHONE,LANDLINE,,,2,Diagram: TOUCH TONE PHONE.,20,true
+PHONE_CORDLESS_SYSTEM,Cordless Phone System,PHONE,LANDLINE,,,3,Diagram: CORDLESS PHONE SYSTEM.,30,true
+PHONE_MULTI_LINE_SYSTEM,Multi-Line Phone System,PHONE,LANDLINE,,,4,Diagram: MULTI-LINE PHONE SYSTEM.,40,true
+PHONE_MOBILE,Mobile Phone,PHONE,MOBILE,,,1,Diagram: MOBILE PHONES. Calls and touch-tone hotlines.,50,true
+FAX_MACHINE,Fax Machine,FAX,,,,1,Diagram: FAX MACHINES. Location equipment.,60,true
+PDA_CELLULAR,Cellular Device,PDA,,,MOBILE_INTERNET,1,Diagram: CELLULAR DEVICES. Mobile-internet PDA; locked at 14.4KB/s.,70,true

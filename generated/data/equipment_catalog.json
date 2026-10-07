@@ -1,0 +1,161 @@
+{
+  "schema": "doda.equipment_catalog",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-07T05:23:55.347838+00:00",
+  "totalPersonalDeviceLimit": 8,
+  "families": [
+    {
+      "familyId": "DESKTOP",
+      "displayName": "Desktop Computers",
+      "ownership": "PERSONAL",
+      "perTaskLimit": 2,
+      "storageKind": "HDD",
+      "connectionKind": "NETWORK",
+      "description": "Heavy laboratory processing. Shares HDD storage with laptops.",
+      "sortOrder": 10,
+      "active": true
+    },
+    {
+      "familyId": "LAPTOP",
+      "displayName": "Laptop Computers",
+      "ownership": "PERSONAL",
+      "perTaskLimit": 2,
+      "storageKind": "HDD",
+      "connectionKind": "NETWORK",
+      "description": "Light, mobile field processing. Shares HDD storage with desktops.",
+      "sortOrder": 20,
+      "active": true
+    },
+    {
+      "familyId": "PDA",
+      "displayName": "PDA Devices",
+      "ownership": "PERSONAL",
+      "perTaskLimit": 2,
+      "storageKind": "SC",
+      "connectionKind": "NETWORK",
+      "description": "Communication and text/photo gathering; mobile. SC storage only.",
+      "sortOrder": 30,
+      "active": true
+    },
+    {
+      "familyId": "PHONE",
+      "displayName": "Phones",
+      "ownership": "PERSONAL",
+      "perTaskLimit": 2,
+      "storageKind": "NONE",
+      "connectionKind": "PHONE_LINE",
+      "description": "Any landline/mobile combination. One number per phone.",
+      "sortOrder": 40,
+      "active": true
+    },
+    {
+      "familyId": "FAX",
+      "displayName": "Fax Machines",
+      "ownership": "LOCATION",
+      "perTaskLimit": null,
+      "storageKind": "NONE",
+      "connectionKind": "PHONE_LINE",
+      "description": "Department/location equipment; no personal owner; outside the eight-device limit.",
+      "sortOrder": 50,
+      "active": true
+    }
+  ],
+  "models": [
+    {
+      "modelId": "PHONE_ROTARY",
+      "displayName": "Rotary Phone",
+      "familyId": "PHONE",
+      "phoneLineKind": "LANDLINE",
+      "networkTierId": null,
+      "connectionOverride": null,
+      "mobileInternetSpeedLabel": null,
+      "generationOrder": 1,
+      "description": "Diagram: ROTARY PHONE. Starting equipment.",
+      "sortOrder": 10,
+      "active": true
+    },
+    {
+      "modelId": "PHONE_TOUCH_TONE",
+      "displayName": "Touch Tone Phone",
+      "familyId": "PHONE",
+      "phoneLineKind": "LANDLINE",
+      "networkTierId": null,
+      "connectionOverride": null,
+      "mobileInternetSpeedLabel": null,
+      "generationOrder": 2,
+      "description": "Diagram: TOUCH TONE PHONE.",
+      "sortOrder": 20,
+      "active": true
+    },
+    {
+      "modelId": "PHONE_CORDLESS_SYSTEM",
+      "displayName": "Cordless Phone System",
+      "familyId": "PHONE",
+      "phoneLineKind": "LANDLINE",
+      "networkTierId": null,
+      "connectionOverride": null,
+      "mobileInternetSpeedLabel": null,
+      "generationOrder": 3,
+      "description": "Diagram: CORDLESS PHONE SYSTEM.",
+      "sortOrder": 30,
+      "active": true
+    },
+    {
+      "modelId": "PHONE_MULTI_LINE_SYSTEM",
+      "displayName": "Multi-Line Phone System",
+      "familyId": "PHONE",
+      "phoneLineKind": "LANDLINE",
+      "networkTierId": null,
+      "connectionOverride": null,
+      "mobileInternetSpeedLabel": null,
+      "generationOrder": 4,
+      "description": "Diagram: MULTI-LINE PHONE SYSTEM.",
+      "sortOrder": 40,
+      "active": true
+    },
+    {
+      "modelId": "PHONE_MOBILE",
+      "displayName": "Mobile Phone",
+      "familyId": "PHONE",
+      "phoneLineKind": "MOBILE",
+      "networkTierId": null,
+      "connectionOverride": null,
+      "mobileInternetSpeedLabel": null,
+      "generationOrder": 1,
+      "description": "Diagram: MOBILE PHONES. Calls and touch-tone hotlines.",
+      "sortOrder": 50,
+      "active": true
+    },
+    {
+      "modelId": "FAX_MACHINE",
+      "displayName": "Fax Machine",
+      "familyId": "FAX",
+      "phoneLineKind": null,
+      "networkTierId": null,
+      "connectionOverride": null,
+      "mobileInternetSpeedLabel": null,
+      "generationOrder": 1,
+      "description": "Diagram: FAX MACHINES. Location equipment.",
+      "sortOrder": 60,
+      "active": true
+    },
+    {
+      "modelId": "PDA_CELLULAR",
+      "displayName": "Cellular Device",
+      "familyId": "PDA",
+      "phoneLineKind": null,
+      "networkTierId": null,
+      "connectionOverride": "MOBILE_INTERNET",
+      "mobileInternetSpeedLabel": "14.4KB/s",
+      "generationOrder": 1,
+      "description": "Diagram: CELLULAR DEVICES. Mobile-internet PDA; locked at 14.4KB/s.",
+      "sortOrder": 70,
+      "active": true
+    }
+  ],
+  "openItems": {
+    "EQ-SCOPE-01": "Model stats, abilities, prices, and unlock thresholds (deferred balancing).",
+    "EQ-01": "Cross-family replacement during reassignment."
+  },
+  "runtimeImplemented": false
+}

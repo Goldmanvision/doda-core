@@ -26,6 +26,7 @@ from tkinter import messagebox, ttk
 from typing import Any
 
 import doda_network_rules as network_rules
+import doda_equipment_rules as equipment_rules
 from doda_page_registry import TABLE_METADATA, TableSpec
 
 
@@ -72,6 +73,7 @@ def validate_candidate(project_root: Path, table: str, rows: list[dict[str, str]
         res = network_rules.Result()
         network_rules.validate_contract(res)
         network_rules.validate_network(tmp_root, res)
+        equipment_rules.validate_equipment(tmp_root, res)
         return res
     finally:
         shutil.rmtree(tmp_root, ignore_errors=True)
@@ -162,6 +164,8 @@ class NetworkTableEditor:
             if f.kind == "ref":
                 ref = TABLE_METADATA[f.ref_table]
                 keys = [r[ref.key] for r in read_rows(self.app.source_directory / ref.filename, ref)]
+                if not f.required:
+                    keys = [""] + keys
                 self.widgets[f.name].configure(values=keys)
 
     def load(self) -> None:
@@ -356,6 +360,15 @@ def install_network_editor(app: Any) -> None:
     hw = NetworkTableEditor(app, hw_tab, "network_hardware_models", "Modems and Routers")
     app.network_editors = [tiers, hw]
     app.transfer_rules_view = TransferRulesView(app, rules_tab)
+    fam_tab = ttk.Frame(app.notebook, padding=10)
+    mod_tab = ttk.Frame(app.notebook, padding=10)
+    app.notebook.add(fam_tab, text="Equipment Families — Editor")
+    app.notebook.add(mod_tab, text="Equipment Models — Editor")
+    app.equipment_families_tab, app.equipment_models_tab = fam_tab, mod_tab
+    app.network_editors += [
+        NetworkTableEditor(app, fam_tab, "equipment_families", "Equipment Families"),
+        NetworkTableEditor(app, mod_tab, "equipment_models", "Equipment Models"),
+    ]
     for e in app.network_editors:
         e.load()
 

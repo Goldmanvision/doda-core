@@ -1,7 +1,7 @@
 # DoDA Design Decisions Addendum - 2026-10-07 (continued)
 
 CONFIRMED user decisions recorded after the handoff's Part Five. Merge into
-E:\Dev\tools\Workbench_Docs\DoDA_Working_Specification_and_Handoff_2026-10-07.md
+docs\workbench\spec\DoDA_Working_Specification_and_Handoff_2026-10-07.md
 (Part Five) when that folder is attached. Encoded in doda_network_rules.py (TASK_INTERRUPTION).
 
 ## Processing-task interruption (resolves TASK-01 and TASK-02)
@@ -26,4 +26,4 @@ E:\Dev\tools\Workbench_Docs\DoDA_Working_Specification_and_Handoff_2026-10-07.md
 - NET-CONTENT-02: One placeholder router per tier confirmed (diagram shows no routers).
 - NET-06 PARTIAL: diagram speed labels kept verbatim; file sizes are deliberately exaggerated for gamification. Numeric units for timing remain open.
 
-Status: merged into the handoff document (shared in thread 2026-10-07); copy it over the Workbench_Docs version.
+Status: fully merged into docs\workbench\spec\DoDA_Working_Specification_and_Handoff_2026-10-07.md (Part Five).

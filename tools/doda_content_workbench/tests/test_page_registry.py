@@ -9,7 +9,7 @@ TAB_TEXTS = ["Dashboard", "Department Tracks — Editor", "Metrics — Editor", 
              "Facility Capabilities — Editor", "Capability Staffing Rules — Editor",
              "Facility Staffing Overrides — Editor", "Task Templates — Editor", "Activity Log",
              "Enum Catalog — Admin", "Network Tiers — Editor", "Modems and Routers — Editor",
-             "Transfer and Interruption Rules — Reference"]
+             "Transfer and Interruption Rules — Reference", "Equipment Families — Editor", "Equipment Models — Editor"]
 
 class T(unittest.TestCase):
     def test_registry_consistent(self):

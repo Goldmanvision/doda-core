@@ -14,6 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import doda_network_rules as network_rules
+import doda_equipment_rules as equipment_rules
 
 
 @dataclass(frozen=True)
@@ -30,6 +31,7 @@ GROUP_ORDER = (
     "Department",
     "Facilities and Staffing",
     "Tasks",
+    "Equipment",
     "Network and Transfers",
     "Content",
     "Administration",
@@ -51,6 +53,9 @@ PAGES: tuple[PageSpec, ...] = (
     PageSpec("qualifications", "Facilities and Staffing", "Qualifications", "Qualifications",
              ("qualification_catalog",)),
     PageSpec("task_templates", "Tasks", "Task Templates", "Task Templates", ("task_templates",)),
+    PageSpec("equipment_families", "Equipment", "Equipment Families", "Equipment Families",
+             ("equipment_families",)),
+    PageSpec("equipment_models", "Equipment", "Equipment Models", "Equipment Models", ("equipment_models",)),
     PageSpec("network_tiers", "Network and Transfers", "Network Tiers", "Network Tiers", ("network_tiers",)),
     PageSpec("network_hardware", "Network and Transfers", "Modems and Routers", "Modems and Routers",
              ("network_hardware_models",)),
@@ -107,6 +112,33 @@ TABLE_METADATA: dict[str, TableSpec] = {
             FieldSpec("sort_order", "Sort Order", kind="int"),
             FieldSpec("active", "Active", kind="bool"),
         )),
+    "equipment_families": TableSpec(
+        "equipment_families", equipment_rules.FAMILIES_FILE, "family_id", (
+            FieldSpec("family_id", "Family ID"),
+            FieldSpec("display_name", "Display Name"),
+            FieldSpec("ownership", "Ownership", kind="choice", choices=equipment_rules.OWNERSHIP),
+            FieldSpec("per_task_limit", "Per-Task Limit (personal only)", required=False),
+            FieldSpec("storage_kind", "Storage", kind="choice", choices=equipment_rules.STORAGE_KINDS),
+            FieldSpec("connection_kind", "Connection", kind="choice", choices=equipment_rules.CONNECTION_KINDS),
+            FieldSpec("description", "Description", required=False, multiline=True),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
+    "equipment_models": TableSpec(
+        "equipment_models", equipment_rules.MODELS_FILE, "model_id", (
+            FieldSpec("model_id", "Model ID"),
+            FieldSpec("display_name", "Display Name"),
+            FieldSpec("family_id", "Family", kind="ref", ref_table="equipment_families"),
+            FieldSpec("phone_line_kind", "Phone Line Kind", kind="choice", required=False,
+                      choices=("",) + equipment_rules.PHONE_LINE_KINDS),
+            FieldSpec("network_tier_id", "Network Tier", kind="ref", required=False, ref_table="network_tiers"),
+            FieldSpec("connection_override", "Connection Override", kind="choice", required=False,
+                      choices=("",) + equipment_rules.CONNECTION_OVERRIDES),
+            FieldSpec("generation_order", "Generation Order", kind="int"),
+            FieldSpec("description", "Description", required=False, multiline=True),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
 }
 
 
@@ -133,4 +165,8 @@ def check_registry() -> list[str]:
         problems.append("network_tiers metadata columns differ from validator")
     if TABLE_METADATA["network_hardware_models"].columns != network_rules.HARDWARE_COLUMNS:
         problems.append("network_hardware_models metadata columns differ from validator")
+    if TABLE_METADATA["equipment_families"].columns != equipment_rules.FAMILY_COLUMNS:
+        problems.append("equipment_families metadata columns differ from validator")
+    if TABLE_METADATA["equipment_models"].columns != equipment_rules.MODEL_COLUMNS:
+        problems.append("equipment_models metadata columns differ from validator")
     return problems

@@ -45,10 +45,11 @@ from doda_foims_x_preview import FoimsXPreview
 from doda_network_editor import install_network_editor, network_editors_dirty
 from doda_navigation import install_grouped_navigation
 import doda_network_rules
+import doda_equipment_rules
 
 
 APP_TITLE = "DoDA Content Workbench"
-APP_VERSION = "0.10.0"
+APP_VERSION = "0.11.0"
 
 SOURCE_FILES = {
     "enum_catalog": "enum_catalog.csv",
@@ -550,11 +551,11 @@ class ContentWorkbenchApp(tk.Tk):
         )
         self.actions_menu.add_separator()
         self.actions_menu.add_command(
-            label="Validate Network and Transfer Rules",
+            label="Validate Network, Transfer, and Equipment Rules",
             command=lambda: self.run_network_rules("validate", announce=True),
         )
         self.actions_menu.add_command(
-            label="Export Network and Transfer Rules",
+            label="Export Network, Transfer, and Equipment Rules",
             command=lambda: self.run_network_rules("export", announce=True),
         )
 
@@ -937,7 +938,7 @@ class ContentWorkbenchApp(tk.Tk):
 
         ttk.Label(
             footer,
-            text="v0.10 — Grouped navigation and network/transfer authoring added; runtime integration remains deferred.",
+            text="v0.11 — Grouped navigation, network/transfer and equipment authoring; runtime integration remains deferred.",
             foreground="#9da7b3",
         ).pack(side=tk.RIGHT)
 
@@ -1592,10 +1593,17 @@ class ContentWorkbenchApp(tk.Tk):
         try:
             if mode == "export":
                 result, out_path = doda_network_rules.export(self.project_root)
+                if result.valid:
+                    equipment_result, equipment_path = doda_equipment_rules.export(self.project_root)
+                    result.errors += equipment_result.errors
+                    result.warnings += equipment_result.warnings
+                    if equipment_path is not None:
+                        self.log(f"Equipment catalog exported: {equipment_path}")
             else:
                 result = doda_network_rules.Result()
                 doda_network_rules.validate_contract(result)
                 doda_network_rules.validate_network(self.project_root, result)
+                doda_equipment_rules.validate_equipment(self.project_root, result)
                 out_path = None
         except Exception as error:
             self.log(f"Network rules {mode} error: {error}")
