@@ -6,7 +6,7 @@ gameinfo
 {
     PlayerClasses = "FieldAgent"
     StatusBarClass = "DoDAHUD"
-    AddEventHandlers = "DoDAMissionDirector", "DoDAAimInput", "MP5ModeHandler", "DoDABackgroundSimPOC", "DoDAFOIMSXSessionController", "DoDAFOIMSXDirectoryRenderer", "DoDALocationMaterializationProof", "DoDAAkimboInputHandler"
+    AddEventHandlers = "DoDAMissionDirector", "DoDAAimInput", "MP5ModeHandler", "DoDABackgroundSimPOC", "DoDAFOIMSXSessionController", "DoDAFOIMSXDirectoryRenderer", "DoDALocationMaterializationProof", "DoDAAkimboInputHandler", "DoDAWorkbenchCatalogProbe"
     TitlePage = "DODABG3"
     CreditPage = "DODABG1"
 }

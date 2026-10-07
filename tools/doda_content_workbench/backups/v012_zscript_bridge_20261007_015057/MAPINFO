@@ -1,0 +1,56 @@
+/*//////////////////////////|
+// root/MAPINFO
+*///////////////////////////|
+
+gameinfo
+{
+    PlayerClasses = "FieldAgent"
+    StatusBarClass = "DoDAHUD"
+    AddEventHandlers = "DoDAMissionDirector", "DoDAAimInput", "MP5ModeHandler", "DoDABackgroundSimPOC", "DoDAFOIMSXSessionController", "DoDAFOIMSXDirectoryRenderer", "DoDALocationMaterializationProof", "DoDAAkimboInputHandler"
+    TitlePage = "DODABG3"
+    CreditPage = "DODABG1"
+}
+
+DoomEdNums
+{
+    9301 = "DoDAMissionInteractable"
+    9302 = "DoDAExtractionInteractable"
+    9303 = "DoDADeployMissionInteractable"
+    9304 = "DoDAMissionPickup"
+    9305 = "DoDAMissionTerminal"
+    9306 = "DoDAMissionObjectivePickup"
+    9307 = "DoDAB92Right"
+    9308 = "DoDAB92Left"
+    9309 = "DoDAShotgun"
+    9401 = "DoDAMP5KSD"
+}
+
+map MAP01 "FBI:DDA GARAGE - NYC"
+{
+    Sky1 = "SKY1"
+    next = "MAP02"
+}
+
+map MAP02 "FBI:DDA OFFICES - NYC"
+{
+    Sky1 = "SKY1"
+    next = "MAP03"
+}
+
+map MAP03 "TULPA LOBBT"
+{
+    Sky1 = "SKY1"
+    next = "MAP04"
+}
+
+map MAP04 "TULPA AMBUSH"
+{
+    Sky1 = "SKY1"
+    next = "MAP05"
+}
+
+map MAP05 "ON-SITE FORENSICS"
+{
+    Sky1 = "SKY1"
+    next = "MAP01"
+}

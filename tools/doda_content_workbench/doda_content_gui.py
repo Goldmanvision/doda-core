@@ -46,10 +46,11 @@ from doda_network_editor import install_network_editor, network_editors_dirty
 from doda_navigation import install_grouped_navigation
 import doda_network_rules
 import doda_equipment_rules
+import doda_zscript_catalog
 
 
 APP_TITLE = "DoDA Content Workbench"
-APP_VERSION = "0.11.0"
+APP_VERSION = "0.12.0"
 
 SOURCE_FILES = {
     "enum_catalog": "enum_catalog.csv",
@@ -538,7 +539,7 @@ class ContentWorkbenchApp(tk.Tk):
             command=lambda: self.refresh_all(show_message=True),
         )
         self.actions_menu.add_command(
-            label="Run Validation",
+            label="Validate All",
             command=self.run_validation,
         )
         self.actions_menu.add_command(
@@ -546,18 +547,20 @@ class ContentWorkbenchApp(tk.Tk):
             command=lambda: open_metric_bundle_editor(self),
         )
         self.actions_menu.add_command(
-            label="Export Generated Content",
+            label="Export All (Content, Rules, ZScript Catalog, PK3)",
             command=self.run_export,
         )
         self.actions_menu.add_separator()
-        self.actions_menu.add_command(
-            label="Validate Network, Transfer, and Equipment Rules",
+        self.rules_only_menu = tk.Menu(self.actions_menu, **menu_options)
+        self.rules_only_menu.add_command(
+            label="Validate Network, Transfer, and Equipment Only",
             command=lambda: self.run_network_rules("validate", announce=True),
         )
-        self.actions_menu.add_command(
-            label="Export Network, Transfer, and Equipment Rules",
+        self.rules_only_menu.add_command(
+            label="Export Network, Transfer, Equipment, and ZScript Catalog Only",
             command=lambda: self.run_network_rules("export", announce=True),
         )
+        self.actions_menu.add_cascade(label="Rules Only (No PK3)", menu=self.rules_only_menu)
 
         self.folders_menu = tk.Menu(self, **menu_options)
         self.folders_menu.add_command(
@@ -810,13 +813,13 @@ class ContentWorkbenchApp(tk.Tk):
 
         ttk.Button(
             action_frame,
-            text="Validate",
+            text="Validate All",
             command=self.run_validation,
         ).grid(row=0, column=1, padx=(0, 6))
 
         ttk.Button(
             action_frame,
-            text="Export PK3",
+            text="Export All",
             command=self.run_export,
         ).grid(row=0, column=2)
 
@@ -938,7 +941,7 @@ class ContentWorkbenchApp(tk.Tk):
 
         ttk.Label(
             footer,
-            text="v0.11 — Grouped navigation, network/transfer and equipment authoring; runtime integration remains deferred.",
+            text="v0.12 — Grouped navigation, network/transfer and equipment authoring; network export also regenerates the read-only ZScript catalog.",
             foreground="#9da7b3",
         ).pack(side=tk.RIGHT)
 
@@ -1599,11 +1602,18 @@ class ContentWorkbenchApp(tk.Tk):
                     result.warnings += equipment_result.warnings
                     if equipment_path is not None:
                         self.log(f"Equipment catalog exported: {equipment_path}")
+                    if equipment_result.valid:
+                        catalog_path, catalog_sha, included = doda_zscript_catalog.generate(self.project_root)
+                        self.log(f"ZScript catalog regenerated: {catalog_path} sha256 {catalog_sha[:16]}")
+                        if not included:
+                            result.warnings.append("zscript.txt does not include DoDA/Generated/WorkbenchCatalog.zs")
             else:
                 result = doda_network_rules.Result()
                 doda_network_rules.validate_contract(result)
                 doda_network_rules.validate_network(self.project_root, result)
                 doda_equipment_rules.validate_equipment(self.project_root, result)
+                if result.valid and not doda_zscript_catalog.is_current(self.project_root):
+                    result.warnings.append("ZScript catalog is stale; export network rules to regenerate it")
                 out_path = None
         except Exception as error:
             self.log(f"Network rules {mode} error: {error}")

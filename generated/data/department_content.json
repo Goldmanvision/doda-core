@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "toolVersion": "0.1.1",
-  "generatedAtUtc": "2026-10-06T10:08:39.503297+00:00",
+  "generatedAtUtc": "2026-10-07T06:09:11.348765+00:00",
   "tables": {
     "enum_catalog": [
       {
@@ -820,22 +820,22 @@
     ],
     "facility_capabilities": [
       {
-        "facility_id": "TECHOPS_HUB",
-        "capability_id": "ELECTRONIC_SURVEILLANCE",
-        "display_name_override": "",
-        "max_concurrent_personnel": 2,
-        "initial_tier_id": "OPERATIONAL",
-        "foims_panel_id": "FOIMS_TECHOPS_SURVEILLANCE",
-        "sort_order": 10,
-        "active": true
-      },
-      {
         "facility_id": "FIELD_OPERATIONS_ROOM",
         "capability_id": "OCCULT_RESPONSE",
         "display_name_override": "Occult Task Force",
         "max_concurrent_personnel": 2,
         "initial_tier_id": "UNBUILT",
         "foims_panel_id": "FOIMS_FIELD_OCCULT_RESPONSE",
+        "sort_order": 10,
+        "active": true
+      },
+      {
+        "facility_id": "TECHOPS_HUB",
+        "capability_id": "ELECTRONIC_SURVEILLANCE",
+        "display_name_override": "",
+        "max_concurrent_personnel": 2,
+        "initial_tier_id": "UNBUILT",
+        "foims_panel_id": "FOIMS_TECHOPS_SURVEILLANCE",
         "sort_order": 10,
         "active": true
       }

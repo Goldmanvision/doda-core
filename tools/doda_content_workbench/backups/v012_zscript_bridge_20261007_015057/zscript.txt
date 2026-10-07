@@ -1,0 +1,125 @@
+/*//////////////////////////|
+// root/zscript.txt
+*///////////////////////////|
+
+version "2.4"
+
+#region NativeBridge
+#include "DoDA/Native/DoDA.zs"
+#endregion
+
+#region ProofsAndPOC // Temporary runtime proofs (BackgroundSimPOC, LocationMaterializationProof) & archived experiment (AkimboProofTest)
+#include "DoDA/POC/BackgroundSimPOC.zs"
+#include "DoDA/POC/LocationMaterializationProof.zs"
+#include "DoDA/POC/AkimboProofTest.zs"
+#endregion
+
+#region Aim
+#include "DoDA/Aim/InputUtility.zs"
+#include "DoDA/Aim/AimInput.zs"
+#endregion
+
+#region CharacterClasses
+#include "DoDA/CharacterClasses/DoDAPlayerBase.zs"
+#include "DoDA/CharacterClasses/FieldAgent.zs"
+#include "DoDA/CharacterClasses/Analyst.zs"
+#include "DoDA/CharacterClasses/SAC.zs"
+#endregion
+
+
+#region UserInterface
+#include "DoDA/UI/FieldAgent/HUDTapline.zs"
+#include "DoDA/UI/FieldAgent/HUDDeadzone.zs"
+#include "DoDA/UI/FieldAgent/HUDWeaponBridge.zs"
+#include "DoDA/UI/FieldAgent/HUDWeapon.zs"
+#include "DoDA/UI/FieldAgent/HUDDeadzoneBridge.zs"
+#include "DoDA/UI/FieldAgent/HUD.zs"
+#endregion
+
+
+#region FOIMSXShared
+#include "DoDA/UI/FOIMSX/FOIMSXDrawingHelpers.zs"
+#include "DoDA/UI/FOIMSX/FOIMSXSnapshotAcquireStatus.zs"
+#include "DoDA/UI/FOIMSX/FOIMSXSnapshotRefreshState.zs"
+#endregion
+
+
+#region FOIMSXPersonnelV1
+#include "DoDA/UI/FOIMSX/PersonnelV1/PersonnelSnapshotV1Model.zs"
+#include "DoDA/UI/FOIMSX/PersonnelV1/PersonnelSnapshotV1Adapter.zs"
+#include "DoDA/UI/FOIMSX/PersonnelV1/PersonnelSnapshotV1ViewState.zs"
+#endregion
+
+#region FOIMSXAssignmentV1
+#include "DoDA/UI/FOIMSX/AssignmentV1/AssignmentSnapshotV1Model.zs"
+#include "DoDA/UI/FOIMSX/AssignmentV1/AssignmentSnapshotV1Adapter.zs"
+#include "DoDA/UI/FOIMSX/AssignmentV1/AssignmentSnapshotV1ViewState.zs"
+#endregion
+
+
+#region FOIMSXSessionController
+#include "DoDA/UI/FOIMSX/FOIMSXSessionController.zs"
+#endregion
+
+
+#region GlobalInputCapture // Developer diagnostic (quarantined / disabled by default)
+#include "DoDA/Debug/DoDAGlobalInputCapture.zs"
+#endregion
+
+
+
+#region FOIMSXRenderer
+#include "DoDA/UI/FOIMSX/PersonnelV1/PersonnelSnapshotV1Renderer.zs"
+#include "DoDA/UI/FOIMSX/FOIMSXCampaignClock.zs"
+#include "DoDA/UI/FOIMSX/AssignmentV1/AssignmentSnapshotV1Renderer.zs"
+#endregion
+
+
+#region Abilities
+#include "DoDA/Abilities/Lean/LeanInput.zs"
+#include "DoDA/Abilities/Lean/LeanController.zs"
+#endregion
+
+#region WeaponSystem
+#include "DoDA/WeaponSystem/HandState.zs"
+#include "DoDA/WeaponSystem/DetachableMagazineState.zs"
+#include "DoDA/WeaponSystem/HandSwapController.zs"
+#include "DoDA/WeaponSystem/SpriteAnimator.zs"
+#include "DoDA/WeaponSystem/WeaponBase.zs"
+#include "DoDA/WeaponSystem/AkimboInputHandler.zs"
+#include "DoDA/WeaponSystem/Casing.zs"
+#include "DoDA/WeaponSystem/Tracer.zs"
+#include "DoDA/WeaponSystem/Weapons/Holster.zs"
+#include "DoDA/WeaponSystem/Weapons/Pistols/PistolBase.zs"
+#include "DoDA/WeaponSystem/Weapons/Pistols/B92Left.zs"
+#include "DoDA/WeaponSystem/Weapons/Pistols/B92Right.zs"
+#include "DoDA/WeaponSystem/Weapons/Shotguns/Shotgun.zs"
+#include "DoDA/WeaponSystem/Weapons/SMGs/MP5KSD.zs"
+#include "DoDA/WeaponSystem/Weapons/SMGs/MP5ModeHandler.zs"
+#include "DoDA/WeaponSystem/Ammo/AmmoDispenser.zs"
+#include "DoDA/Debug/WeaponTestHarness.zs"
+#endregion
+
+#region MissionSystem
+#include "DoDA/MissionSystem/MissionIds.zs"
+#include "DoDA/MissionSystem/ObjectiveIds.zs"
+#include "DoDA/MissionSystem/MissionDefs.zs"
+#include "DoDA/MissionSystem/MissionState.zs"
+#include "DoDA/MissionSystem/CampaignState.zs"
+#include "DoDA/MissionSystem/Evidence/EvidenceLedger.zs"
+#include "DoDA/MissionSystem/LastMissionReport.zs"
+#include "DoDA/MissionSystem/MissionManager.zs"
+#include "DoDA/MissionSystem/MissionDirector.zs"
+#include "DoDA/MissionSystem/DebugTrigger.zs"
+#endregion
+
+#region MissionSystem-Things
+#include "DoDA/MissionSystem/Things/MissionPickupMarkers.zs"
+#include "DoDA/MissionSystem/Things/MissionPickupBase.zs"
+#include "DoDA/MissionSystem/Things/ObjectivePickup.zs"
+#include "DoDA/MissionSystem/Things/MissionPickup.zs"
+#include "DoDA/MissionSystem/Things/MissionInteractable.zs"
+#include "DoDA/MissionSystem/Things/MissionTerminal.zs"
+#include "DoDA/MissionSystem/Things/ExtractionInteractable.zs"
+#include "DoDA/MissionSystem/Things/DeployMissionInteractable.zs"
+#endregion

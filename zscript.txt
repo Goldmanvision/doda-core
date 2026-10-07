@@ -123,3 +123,7 @@ version "2.4"
 #include "DoDA/MissionSystem/Things/ExtractionInteractable.zs"
 #include "DoDA/MissionSystem/Things/DeployMissionInteractable.zs"
 #endregion
+
+#region WorkbenchCatalog // GENERATED read-only catalog (Option B stopgap); regenerate with tools/doda_content_workbench/doda_zscript_catalog.py
+#include "DoDA/Generated/WorkbenchCatalog.zs"
+#endregion
