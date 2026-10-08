@@ -32,6 +32,7 @@ import doda_condition_rules as condition_rules
 import doda_agent_attribute_rules as attribute_rules
 import doda_personal_care_rules as personal_care_rules
 import doda_time_rules as time_rules
+import doda_recreation_content_rules as rc_rules
 from doda_page_registry import TABLE_METADATA, TableSpec
 
 
@@ -84,6 +85,7 @@ def validate_candidate(project_root: Path, table: str, rows: list[dict[str, str]
         attribute_rules.validate_attributes(tmp_root, res)
         personal_care_rules.validate_personal_care(tmp_root, res)
         time_rules.validate_time_settings(tmp_root, res)
+        rc_rules.validate_recreation_content(tmp_root, res)
         return res
     finally:
         shutil.rmtree(tmp_root, ignore_errors=True)
@@ -399,7 +401,9 @@ def install_network_editor(app: Any) -> None:
                          ("personal_care_place_type_features", "Place Type Features"),
                          ("recreation_activities", "Recreation Activities"),
                          ("personal_care_during_care", "Personal Care During Care"),
-                         ("time_settings", "Time Settings")):
+                         ("time_settings", "Time Settings"),
+                         ("effect_levels", "Effect Levels"),
+                         ("book_titles", "Book Titles")):
         extra_tab = ttk.Frame(app.notebook, padding=10)
         app.notebook.add(extra_tab, text=f"{title} — Editor")
         app.network_editors.append(NetworkTableEditor(app, extra_tab, table, title))

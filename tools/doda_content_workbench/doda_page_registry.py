@@ -20,6 +20,7 @@ import doda_condition_rules as condition_rules
 import doda_agent_attribute_rules as attribute_rules
 import doda_personal_care_rules as personal_care_rules
 import doda_time_rules as time_rules
+import doda_recreation_content_rules as rc_rules
 
 
 @dataclass(frozen=True)
@@ -89,6 +90,10 @@ PAGES: tuple[PageSpec, ...] = (
              "Personal Care During Care", ("personal_care_during_care",)),
     PageSpec("time_settings", "Administration", "Time Settings", "Time Settings",
              ("time_settings",)),
+    PageSpec("effect_levels", "Personnel and Care", "Effect Levels", "Effect Levels",
+             ("effect_levels",)),
+    PageSpec("book_titles", "Personnel and Care", "Book Titles", "Book Titles",
+             ("book_titles",)),
     PageSpec("equipment_families", "Equipment", "Equipment Families", "Equipment Families",
              ("equipment_families",)),
     PageSpec("equipment_models", "Equipment", "Equipment Models", "Equipment Models", ("equipment_models",)),
@@ -303,6 +308,27 @@ TABLE_METADATA: dict[str, TableSpec] = {
             FieldSpec("sort_order", "Sort Order", kind="int"),
             FieldSpec("active", "Active", kind="bool"),
         )),
+    "effect_levels": TableSpec(
+        "effect_levels", rc_rules.LEVELS_FILE, "scale_id+level_id", (
+            FieldSpec("scale_id", "Scale", kind="choice", choices=rc_rules.SCALES),
+            FieldSpec("level_id", "Level ID"),
+            FieldSpec("display_name", "Display Name"),
+            FieldSpec("value", "Value (blank = not set)", required=False),
+            FieldSpec("unit", "Unit", kind="choice", choices=rc_rules.UNITS),
+            FieldSpec("source_reference", "Source Reference", required=False),
+            FieldSpec("description", "Description", required=False, multiline=True),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
+    "book_titles": TableSpec(
+        "book_titles", rc_rules.BOOKS_FILE, "book_id", (
+            FieldSpec("book_id", "Book ID"),
+            FieldSpec("title", "Title"),
+            FieldSpec("author", "Author"),
+            FieldSpec("notes", "Notes", required=False, multiline=True),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
     "time_settings": TableSpec(
         "time_settings", time_rules.SETTINGS_FILE, "setting_id", (
             FieldSpec("setting_id", "Setting ID"),
@@ -401,6 +427,26 @@ TABLE_METADATA: dict[str, TableSpec] = {
 }
 
 
+import dataclasses as _dc
+
+TABLE_METADATA["recreation_activities"] = _dc.replace(
+    TABLE_METADATA["recreation_activities"],
+    fields=TABLE_METADATA["recreation_activities"].fields + (
+        FieldSpec("duration_step_minutes", "Duration Step (minutes, variable length)", kind="int", required=False),
+        FieldSpec("duration_max_minutes", "Duration Maximum (minutes, variable length)", kind="int", required=False),
+        FieldSpec("stress_reduction_level_id", "Stress Reduction Level", required=False),
+        FieldSpec("fatigue_cost_level_id", "Fatigue Cost Level", required=False),
+        FieldSpec("fatigue_cost_level_id_cafe", "Fatigue Cost Level (with cafe)", required=False),
+        FieldSpec("hunger_restore_level_id", "Hunger Restore Level (on finish)", required=False),
+        FieldSpec("hunger_restore_level_id_cafe", "Hunger Restore Level (with cafe)", required=False),
+    ))
+TABLE_METADATA["personal_care_place_types"] = _dc.replace(
+    TABLE_METADATA["personal_care_place_types"],
+    fields=TABLE_METADATA["personal_care_place_types"].fields + (
+        FieldSpec("cafe_possible", "Cafe Possible", kind="bool"),
+    ))
+
+
 def page_for_tab_text(text: str) -> PageSpec | None:
     """Longest matching prefix wins, so 'Facility Capabilities' beats 'Facilities'."""
     best: PageSpec | None = None
@@ -452,6 +498,10 @@ def check_registry() -> list[str]:
                        ("personal_care_during_care", personal_care_rules.DURING_CARE_COLUMNS)):
         if TABLE_METADATA[name].columns != cols:
             problems.append(f"{name} metadata columns differ from validator")
+    if TABLE_METADATA["effect_levels"].columns != rc_rules.LEVEL_COLUMNS:
+        problems.append("effect_levels metadata columns differ from validator")
+    if TABLE_METADATA["book_titles"].columns != rc_rules.BOOK_COLUMNS:
+        problems.append("book_titles metadata columns differ from validator")
     if TABLE_METADATA["time_settings"].columns != time_rules.SETTING_COLUMNS:
         problems.append("time_settings metadata columns differ from validator")
     for spec in TABLE_METADATA.values():

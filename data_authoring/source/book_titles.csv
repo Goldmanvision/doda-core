@@ -1,0 +1,24 @@
+book_id,title,author,notes,sort_order,active
+BOOK_001,The Apple Pie Hubbub,Gern Blanston,,10,false
+BOOK_002,Indigo Man: The Jeffrey 'Tio Jeffe' Gonzalez Story,Lewis White,,20,false
+BOOK_003,The History of Animal Shaped Crackers,Ulysses Thompson,,30,false
+BOOK_004,Where Eye Crumbs Come From,Dr. Maria Trish Bontaine,,40,false
+BOOK_005,Baseball: Why It's Pretty Good,Jack Clifton,,50,false
+BOOK_006,Why I Lost the Election,Jack Mehnoffalo,,60,false
+BOOK_007,Fly Fishing for Federal Agents,Eric 'Minnow' Lee,,70,false
+BOOK_008,Spooky Car,Keaton Sting,,80,false
+BOOK_009,Scary Clown Man from Space,Keaton Sting,,90,false
+BOOK_010,Creepy Ass Town Goes Apeshit,Keaton Sting,,100,false
+BOOK_011,Big Mean Dog,Keaton Sting,,110,false
+BOOK_012,An Evening with Keaton Sting,Lewis White,,120,false
+BOOK_013,Dante's Smokehouse,Chef Dante Manicetti,,130,false
+BOOK_014,"Jules, I Think My Leg is On Fire",Hector Rinaldo,,140,false
+BOOK_015,SERPENTINE EDGE: a Mike Toughman Novel,Tanya Fescano,,150,false
+BOOK_016,DANGER BANANA: a Mike Toughman Novel,Tanya Fescano,,160,false
+BOOK_017,DECEPTION VECTOR: a Mike Toughman Novel,Tanya Fescano,,170,false
+BOOK_018,HERBAL RECKONING: a Mike Toughman Novel,Tanya Fescano,,180,false
+BOOK_019,Cryptic Walkers of the REM Cycle,Dr. Reyna Khan,,190,false
+BOOK_020,Lucid Dreamers: Enriching Your Life Through Slumber,Dr. Reyna Khan,,200,false
+BOOK_021,The Dream Cycle: The Ancient Art of Collective Lucid Dreaming,Dr. Reyna Khan,,210,false
+BOOK_022,The Life and Times of Lester Brinks,Lewis White,,220,false
+BOOK_023,An Interview with Charles Dexter Ward,Thomas Brown,Foreword by Keaton Sting,230,false

@@ -69,7 +69,7 @@ from typing import Any
 import doda_network_rules as net
 import doda_agent_attribute_rules as attribute_rules
 
-TOOL_VERSION = "0.5.0"
+TOOL_VERSION = "0.6.0"
 
 ACTIONS_FILE = "personal_care_actions.csv"
 FEATURES_FILE = "personal_care_features.csv"
@@ -89,11 +89,16 @@ TRAINING_LINK_COLUMNS = ["action_id", "training_id", "sort_order", "active"]
 
 PLACE_TYPE_COLUMNS = ["place_type_id", "display_name", "serves_as_home", "agent_owned", "occupancy_rule",
                       "source_reference", "description", "sort_order", "active"]
+PLACE_TYPE_COLUMNS = PLACE_TYPE_COLUMNS + ["cafe_possible"]
 PLACE_TYPE_FEATURE_COLUMNS = ["place_type_id", "feature_id", "sort_order", "active"]
 ACTIVITY_COLUMNS = ["activity_id", "place_type_id", "display_name", "description", "duration_minutes",
                     "duration_label", "company_options", "stress_reduction_per_tick", "fatigue_cost_per_tick",
                     "energy_required_to_start", "hunger_reduction_per_tick",
                     "source_reference", "sort_order", "active"]
+ACTIVITY_COLUMNS = ACTIVITY_COLUMNS + ["duration_step_minutes", "duration_max_minutes",
+                                       "stress_reduction_level_id", "fatigue_cost_level_id",
+                                       "fatigue_cost_level_id_cafe", "hunger_restore_level_id",
+                                       "hunger_restore_level_id_cafe"]
 DURING_CARE_COLUMNS = ["care_service_id", "action_id", "sort_order", "active"]
 
 INITIATIONS = ("AGENT_INITIATED", "PLAYER_SCHEDULED")
@@ -282,10 +287,11 @@ def _validate_place_types(src: Path, features: dict[str, dict[str, Any]], res: n
         if owned and not home:
             res.errors.append(f"{ctx}: only a home can be agent-owned")
         occ = r["occupancy_rule"].upper()
+        cafe = net._bool(r["cafe_possible"], ctx, res) if r["cafe_possible"] else False
         if occ not in OCCUPANCY_RULES:
             res.errors.append(f"{ctx}: occupancy_rule must be one of {', '.join(OCCUPANCY_RULES)}")
         types[pid] = {"placeTypeId": pid, "displayName": r["display_name"], "servesAsHome": home,
-                      "agentOwned": owned, "occupancyRule": occ,
+                      "agentOwned": owned, "occupancyRule": occ, "cafePossible": cafe,
                       "sourceReference": r["source_reference"] or None, "description": r["description"],
                       "sortOrder": net._int(r["sort_order"], ctx, "sort_order", res),
                       "active": net._bool(r["active"], ctx, res), "_ctx": ctx}
@@ -318,11 +324,100 @@ def _validate_place_types(src: Path, features: dict[str, dict[str, Any]], res: n
     return types, sorted(links, key=lambda x: (x["sortOrder"] or 0, x["placeTypeId"]))
 
 
+def _sim_tick_minutes(src: Path) -> int:
+    """Sim tick length in strategic minutes from time_settings.csv (1 when absent)."""
+    path = src / "time_settings.csv"
+    if path.exists():
+        with path.open(encoding="utf-8-sig", newline="") as f:
+            for r in csv.DictReader(f):
+                if (r.get("setting_id") or "").strip() == "SIM_TICK_STRATEGIC_MINUTES":
+                    try:
+                        value = int(float(r.get("value") or 1))
+                    except ValueError:
+                        break
+                    return value if value > 0 else 1
+    return 1
+
+
+def _read_levels(src: Path) -> dict[str, set[str]] | None:
+    """Level IDs per scale from effect_levels.csv, or None when the file is absent."""
+    path = src / "effect_levels.csv"
+    if not path.exists():
+        return None
+    out: dict[str, set[str]] = {}
+    with path.open(encoding="utf-8-sig", newline="") as f:
+        for r in csv.DictReader(f):
+            scale = (r.get("scale_id") or "").strip().upper()
+            level = (r.get("level_id") or "").strip()
+            if scale and level:
+                out.setdefault(scale, set()).add(level)
+    return out
+
+
+def _opt_int(raw: str, ctx: str, field: str, res: net.Result) -> int | None:
+    if not raw:
+        return None
+    try:
+        return int(raw)
+    except ValueError:
+        res.errors.append(f"{ctx}: {field} must be a whole number")
+        return None
+
+
+EXTENDED_LEVEL_FIELDS = (
+    ("stress_reduction_level_id", "stressReductionLevelId", "STRESS_REDUCTION"),
+    ("fatigue_cost_level_id", "fatigueCostLevelId", "FATIGUE_COST"),
+    ("fatigue_cost_level_id_cafe", "fatigueCostLevelIdCafe", "FATIGUE_COST"),
+    ("hunger_restore_level_id", "hungerRestoreLevelId", "HUNGER_RESTORE"),
+    ("hunger_restore_level_id_cafe", "hungerRestoreLevelIdCafe", "HUNGER_RESTORE"),
+)
+
+
+def _check_extended(r: dict[str, str], ctx: str, minutes: int | None, pid: str,
+                    types: dict[str, dict[str, Any]], levels: dict[str, set[str]] | None,
+                    tick_minutes: int, res: net.Result) -> dict[str, Any]:
+    step = _opt_int(r["duration_step_minutes"], ctx, "duration_step_minutes", res)
+    maximum = _opt_int(r["duration_max_minutes"], ctx, "duration_max_minutes", res)
+    if (step is not None) != (maximum is not None):
+        res.errors.append(f"{ctx}: duration_step_minutes and duration_max_minutes must be set together")
+    elif step is not None and maximum is not None:
+        if step <= 0:
+            res.errors.append(f"{ctx}: duration_step_minutes must be above 0")
+        elif minutes is None:
+            res.errors.append(f"{ctx}: a variable duration needs duration_minutes (the minimum)")
+        elif maximum < minutes:
+            res.errors.append(f"{ctx}: duration_max_minutes must be at least duration_minutes (the minimum)")
+        elif (maximum - minutes) % step != 0:
+            res.errors.append(f"{ctx}: (duration_max_minutes - duration_minutes) must be a multiple of the step")
+    for label, value in (("duration_minutes", minutes), ("duration_step_minutes", step),
+                         ("duration_max_minutes", maximum)):
+        if value is not None and value > 0 and tick_minutes > 0 and value % tick_minutes != 0:
+            res.errors.append(f"{ctx}: {label} must be a multiple of the sim tick ({tick_minutes} minutes)")
+    out: dict[str, Any] = {"durationStepMinutes": step, "durationMaxMinutes": maximum}
+    for field, key, scale in EXTENDED_LEVEL_FIELDS:
+        value = r[field]
+        out[key] = value or None
+        if not value:
+            continue
+        if levels is None:
+            res.errors.append(f"{ctx}: {field} is set but effect_levels.csv is missing")
+        elif value not in levels.get(scale, set()):
+            res.errors.append(f"{ctx}: {field} '{value}' is not a level of scale {scale}")
+    if any(r[f] for f in ("fatigue_cost_level_id_cafe", "hunger_restore_level_id_cafe")):
+        ptype = types.get(pid)
+        if ptype is not None and not ptype.get("cafePossible"):
+            res.warnings.append(f"{ctx}: a cafe-adjusted level is set but place type '{pid}' is not cafe_possible")
+    return out
+
+
 def _validate_activities(src: Path, types: dict[str, dict[str, Any]], type_links: list[dict[str, Any]],
                          res: net.Result) -> list[dict[str, Any]]:
     rows = net.read_table(src / ACTIVITIES_FILE, ACTIVITY_COLUMNS, "recreation_activities", res) or []
     recreational = {l["placeTypeId"] for l in type_links if l["featureId"] == RECREATION_FEATURE}
     fatigue_max = _fatigue_max(src)
+    tick_minutes = _sim_tick_minutes(src)
+    levels = _read_levels(src)
+    extended_map: dict[str, dict[str, Any]] = {}
     out: dict[str, dict[str, Any]] = {}
     for r in rows:
         ctx = f"[recreation_activities] Line {r['_line']}"
@@ -350,6 +445,7 @@ def _validate_activities(src: Path, types: dict[str, dict[str, Any]], type_links
         energy = _number(r["energy_required_to_start"], ctx, "energy_required_to_start", res)
         if energy is not None and not 0 <= energy <= fatigue_max:
             res.errors.append(f"{ctx}: energy_required_to_start must be 0 to {fatigue_max} (the Fatigue range)")
+        extended_map[aid] = _check_extended(r, ctx, minutes, pid, types, levels, tick_minutes, res)
         company = [c.upper() for c in _split(r["company_options"])]
         bad = [c for c in company if c not in COMPANY_OPTIONS]
         if bad:
@@ -365,6 +461,9 @@ def _validate_activities(src: Path, types: dict[str, dict[str, Any]], type_links
                     "hungerReductionPerTick": rates["hunger_reduction_per_tick"],
                     "sourceReference": r["source_reference"] or None,
                     "sortOrder": net._int(r["sort_order"], ctx, "sort_order", res), "active": active}
+    for _aid, _ext in extended_map.items():
+        if _aid in out:
+            out[_aid].update(_ext)
     return sorted(out.values(), key=lambda x: (x["sortOrder"] or 0, x["activityId"]))
 
 

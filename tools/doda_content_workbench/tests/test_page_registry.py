@@ -17,7 +17,9 @@ TAB_TEXTS = ["Dashboard", "Department Tracks — Editor", "Metrics — Editor", 
              "Personal Care Place Links — Editor", "Personal Care Trainings — Editor",
              "Place Types — Editor", "Place Type Features — Editor", "Recreation Activities — Editor",
              "Personal Care During Care — Editor",
-             "Time Settings — Editor"]
+             "Time Settings — Editor",
+             "Effect Levels — Editor",
+             "Book Titles — Editor"]
 
 class T(unittest.TestCase):
     def test_registry_consistent(self):

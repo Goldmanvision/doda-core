@@ -173,3 +173,137 @@ Working branch: feature/workbench-data-bridge (user, 2026-10-07). The local E: d
 - PROPOSED validator rule: each ejecting band needs at least two active message variants so the no-repeat rule (TIME-17) can work.
 - Which bands carry the ejection flag (user to choose when reviewing bands).
 - Reconcile TIME-04 metrics sampling with the sim tick.
+
+## Time settings catalog implemented (2026-10-08, 12:42 AM)
+
+Authoring, validation, and export only. No runtime behaviour. Working branch: feature/workbench-data-bridge.
+
+### Implemented
+- data_authoring/source/time_settings.csv: 7 inactive draft rows (engine tics per second, strategic minutes per sim tick, Doom tics per sim tick at FOIMS-X 1x, strategic seconds per real second outside FOIMS-X, and FOIMS-X speed multipliers 1x, 2x, 3x).
+- tools/doda_content_workbench/doda_time_rules.py (0.1.0): validator and exporter with CLI. Exports generated/data/time_settings_catalog.json with runtimeImplemented false, scaled integers (value x 10000), and derived pacing values.
+- Workbench page: Time Settings (group: Administration), editor tab, Validate All and Export All integration, catalog regeneration gated on the new result.
+- tests/test_time_rules.py (9 tests); Time Settings tab added to the page-registry test.
+
+### Verified (2026-10-08 12:42 AM, user-run)
+- 144 tests OK; Validation passed with zero errors; five exports PASS (care, conditions, attributes, personal care, time); ZScript catalog current; REGISTRY OK.
+
+### Source facts confirmed locally
+- TICRATE is 35 (uzdoom-official/src/doomdef.h).
+- Native bridge: GetStrategicMinutes() returns an integer; AdvanceStrategicMinutes(int deltaMinutes) advances only when called. The proof-of-concept idle stepping (strategic minutes every 5 real seconds) is a proof artifact and does not match TIME-06 pacing. Aligning it is native or ZScript work, not part of this batch.
+
+### Backups in this period
+- v038_time_settings: pre-edit copies of the four edited files.
+- v039a_pcare_open07 (from another thread): doda_personal_care_rules.py only; PCARE-OPEN-07 settled note.
+- v040_docs_time_catalog: this record.
+
+### Deferred or open
+- Check that activity durations are multiples of the sim tick (cross-table rule).
+- Ejection flag on condition bands plus per-band message variants; reconcile with the existing foims_warning field (TIME-13).
+- Native fractional-tick accumulator and save-schema impact (TIME-OPEN-03).
+- Whether the chosen FOIMS-X speed is remembered; release handling of pausefoimsx.
+- Reconcile metrics sampling with the sim tick (TIME-04).
+- Page group for Time Settings may move later.
+
+## Recreation and bookstore decisions (2026-10-08, 1:01 AM)
+
+Decisions only. No schema or data changes in this entry. No balancing values were invented.
+
+### CONFIRMED (user)
+- REC-01: Variable-length activities are supported through optional minimum, step, and maximum duration fields instead of one row per duration. Bookstore: 20-minute steps up to 4 hours.
+- REC-02: Effect strength uses a named scale (levels) kept in one small lookup table. The user sets the per-tick numbers per level once; activities choose a level. Level values stay blank until set.
+- REC-03: Cafe is a boolean randomized when recreation places are generated in an operation territory. Any recreation place can potentially have a cafe, and a cafe supports eating. There is no separate bookstore-with-cafe place type. Territory generation is deferred territory authoring.
+- REC-04: Coffee can be obtained anywhere food is available, and it restores some energy.
+- REC-05: An agent holds at most one book. Any bookstore trip, of any length, gives the agent a new book if they have none. A book has a random total reading time of 3 to 18 hours. Reading can be done anywhere while off duty, at a lower benefit than reading at the bookstore. When a book is finished it is destroyed, with in-game text that the agent finished the book and placed it on a dusty bookshelf, unlikely to ever be read again.
+- REC-06: Buying books is covered by visiting; there is no separate buy activity.
+- REC-07: Bookstore activities require 20 energy to start (0 to 100 scale; tired but not fainting or drowsy).
+- REC-08 (bookstore intent, qualitative): company alone; stress reduction moderate; fatigue cost very low, lower with a cafe; hunger reduction none without a cafe and small with one; a cafe allows coffee for energy.
+
+### PROPOSED (not confirmed)
+- REC-09: Add optional duration step and maximum fields; the existing duration_minutes becomes the minimum. Validator: maximum minus minimum is a multiple of the step, and all values are multiples of the sim tick.
+- REC-10: A lookup table of effect levels (working name effect_levels) with blank per-tick values for stress reduction, fatigue cost, hunger reduction, and energy restored. Activities pick levels, with separate cafe-adjusted levels for fatigue cost and hunger reduction. Existing numeric per-tick columns stay as optional overrides.
+- REC-11: Place types gain a boolean (working name cafe_possible), true for recreation types. The per-place has-cafe value is generated at territory generation and belongs to territory authoring and native state, not to the catalog.
+- REC-12: Reading anywhere is a place-independent activity requiring that the agent holds a book, with a randomized total length of 180 to 1080 minutes stored as minimum and maximum fields.
+- REC-13: Coffee is an energy-restoring drink available at any food place; its catalog home is undecided.
+- REC-14: The Buy Books row is deprecated (kept inactive for history), not renamed or deleted.
+
+### OPEN
+- Energy required to read anywhere (the user's reading-before-sleeping idea suggests lower or none).
+- Names of the effect levels and their per-tick values.
+- Cafe probability at territory generation (blank).
+- What the X in the finished-book text refers to (book type or genre) and whether lines vary.
+- Any benefit on finishing a book.
+- Coffee model and energy amount.
+
+## Recreation catalogs implemented (2026-10-08, 1:53 AM)
+
+Authoring, validation, and export only. No runtime behaviour. Working branch: feature/workbench-data-bridge.
+
+### CONFIRMED (user, 2026-10-08)
+- REC-15: Reading anywhere while off duty needs the same 20 energy as the bookstore, with a smaller stress reduction.
+- REC-16: Hunger restore is a one-time percentage of the full Nutrition range, applied when a meal finishes. It replaces per-tick hunger reduction. Hunger induction (getting hungrier) still ticks per sim tick.
+- REC-17: Effect levels use separate scales per effect (stress reduction, fatigue cost, hunger restore) for now. They may be mapped to one global scale later.
+- REC-18: Hunger restore levels are 5, 10, 20, 35, 50, 80, and 100 percent.
+- REC-19: A bookstore cafe gives a Low hunger restore (20 percent).
+- REC-20: The X in the finished-book text is the book title. The user supplied 23 fictional titles with authors.
+
+### Implemented
+- data_authoring/source/effect_levels.csv: 21 inactive rows (three scales, seven levels each). Only the hunger restore values are set; stress reduction and fatigue cost values are blank, and their level names (Minimal, Very Low, Low, Moderate, High, Very High, Full) are placeholders.
+- data_authoring/source/book_titles.csv: 23 inactive rows, IDs BOOK_001 to BOOK_023 in the user's list order. The foreword credit on the last title is in the notes column.
+- tools/doda_content_workbench/doda_recreation_content_rules.py (0.1.0): validator and exporter; exports generated/data/recreation_content_catalog.json with runtimeImplemented false.
+- Workbench pages Effect Levels and Book Titles (Personnel and Care), editor tabs, Validate All and Export All integration; tests/test_recreation_content_rules.py (10 tests).
+
+### Verified (2026-10-08 1:53 AM, user-run)
+- 154 tests OK; Validation passed with zero errors; six exports PASS; ZScript catalog current; REGISTRY OK.
+
+### Backups in this period
+- v042b_test_fix: pre-edit copy of the new recreation test file (helper parameter rename).
+- v042c_wiring: pre-edit copies of the registry, network editor, GUI, and registry test.
+- v043a_docs_recreation_catalogs: this record.
+
+### Deferred or open
+- Recreation activity columns: duration step and maximum, level choices (with cafe-adjusted fatigue and hunger levels), retiring per-tick hunger, cafe_possible on place types (next slice, v043b).
+- Bookstore rows, the Buy Books deprecation, and the place-independent reading activity with the one-book rule.
+- Values for the stress reduction and fatigue cost levels; energy-restore scale and the coffee model.
+- Finished-book text placement (flavor text or its own entry) and any finish benefit.
+- Cafe probability at territory generation.
+
+## Recreation schema extended and bookstore draft (2026-10-08, 1:59 AM)
+
+Authoring only. No runtime behaviour. Working branch: feature/workbench-data-bridge.
+
+### Implemented
+- recreation_activities gained seven optional columns: duration_step_minutes, duration_max_minutes, stress_reduction_level_id, fatigue_cost_level_id, fatigue_cost_level_id_cafe, hunger_restore_level_id, hunger_restore_level_id_cafe. duration_minutes remains the minimum.
+- personal_care_place_types gained cafe_possible (true for the 12 recreation place types, false otherwise). The real has-cafe value is randomized at territory generation (REC-03) and is not stored in the catalog.
+- Validator (doda_personal_care_rules 0.6.0): step and maximum must be set together; maximum at least the minimum; the gap a multiple of the step; every duration a multiple of the sim tick; each level ID must exist in its own scale in effect_levels; a cafe-adjusted level on a place type that is not cafe_possible gives a warning.
+- hunger_reduction_per_tick is retired by REC-16 (hunger restore is a one-time percent on finish). The column remains for history; a validator warning is deferred.
+
+### Bookstore draft rows (all inactive)
+- REC_READ_BOOKS: 20-minute minimum, 20-minute step, 240-minute maximum; company alone; energy to start 20; stress reduction level MODERATE; fatigue cost level VERY_LOW, MINIMAL with a cafe; hunger restore none without a cafe and LOW (20 percent) with one.
+- REC_BUY_BOOKS: deprecated per REC-06; kept inactive with the same ID.
+- REC_BOOKSTORE_RESEARCH: unchanged; its values are not yet decided.
+- PROPOSED mapping: "less fatigue with a cafe" is the MINIMAL level.
+
+### Verified (user-run)
+- 157 tests OK; Validation passed with zero errors; six exports PASS; ZScript catalog current; REGISTRY OK (after the schema change).
+
+### Backups
+- v043b_recreation_schema (six files) and v044_bookstore_rows (recreation_activities.csv and DESIGN_DECISIONS).
+
+### Open
+- Do Research values; reading-anywhere activity and the one-book rule (place-independent, needs the book prerequisite).
+- Values for the stress and fatigue levels; energy-restore scale and coffee model.
+- Finished-book text placement and any finish benefit; cafe probability at territory generation.
+
+## Research moved out of recreation (2026-10-08, 2:11 AM)
+
+Decision and one data edit. No schema change. Working branch: feature/workbench-data-bridge.
+
+### CONFIRMED (user)
+- REC-23: Research is a mid-game, on-duty analyst task. It works like evidence processing, but for occult items, magic texts, and ancient rituals. It is not a recreation activity.
+
+### Applied
+- REC_BOOKSTORE_RESEARCH stays in recreation_activities.csv as an inactive row with the same ID, and its description now says it is deprecated (same treatment as REC_BUY_BOOKS). Nothing was deleted or renamed.
+
+### Open
+- Where occult research lives: task templates and the evidence-processing design (a later slice). Whether the bookstore is a location for it is undecided.
+- Recreation template: the user fills in the bowling alley, gym, and national park first, then the remaining places.

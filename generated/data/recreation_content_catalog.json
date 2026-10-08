@@ -1,0 +1,467 @@
+{
+  "schema": "doda.recreation_content",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-08T06:13:17.078080+00:00",
+  "decimalPlaces": 4,
+  "scale": 10000,
+  "effectLevels": [
+    {
+      "scaleId": "FATIGUE_COST",
+      "levelId": "MINIMAL",
+      "displayName": "Minimal",
+      "unit": "PER_TICK",
+      "sourceReference": "Level name proposed; value not set",
+      "description": "Fatigue cost per sim tick (value not set).",
+      "sortOrder": 10,
+      "active": false,
+      "value": null,
+      "valueScaled": null
+    },
+    {
+      "scaleId": "FATIGUE_COST",
+      "levelId": "VERY_LOW",
+      "displayName": "Very Low",
+      "unit": "PER_TICK",
+      "sourceReference": "Level name proposed; value not set",
+      "description": "Fatigue cost per sim tick (value not set).",
+      "sortOrder": 20,
+      "active": false,
+      "value": null,
+      "valueScaled": null
+    },
+    {
+      "scaleId": "FATIGUE_COST",
+      "levelId": "LOW",
+      "displayName": "Low",
+      "unit": "PER_TICK",
+      "sourceReference": "Level name proposed; value not set",
+      "description": "Fatigue cost per sim tick (value not set).",
+      "sortOrder": 30,
+      "active": false,
+      "value": null,
+      "valueScaled": null
+    },
+    {
+      "scaleId": "FATIGUE_COST",
+      "levelId": "MODERATE",
+      "displayName": "Moderate",
+      "unit": "PER_TICK",
+      "sourceReference": "Level name proposed; value not set",
+      "description": "Fatigue cost per sim tick (value not set).",
+      "sortOrder": 40,
+      "active": false,
+      "value": null,
+      "valueScaled": null
+    },
+    {
+      "scaleId": "FATIGUE_COST",
+      "levelId": "HIGH",
+      "displayName": "High",
+      "unit": "PER_TICK",
+      "sourceReference": "Level name proposed; value not set",
+      "description": "Fatigue cost per sim tick (value not set).",
+      "sortOrder": 50,
+      "active": false,
+      "value": null,
+      "valueScaled": null
+    },
+    {
+      "scaleId": "FATIGUE_COST",
+      "levelId": "VERY_HIGH",
+      "displayName": "Very High",
+      "unit": "PER_TICK",
+      "sourceReference": "Level name proposed; value not set",
+      "description": "Fatigue cost per sim tick (value not set).",
+      "sortOrder": 60,
+      "active": false,
+      "value": null,
+      "valueScaled": null
+    },
+    {
+      "scaleId": "FATIGUE_COST",
+      "levelId": "FULL",
+      "displayName": "Full",
+      "unit": "PER_TICK",
+      "sourceReference": "Level name proposed; value not set",
+      "description": "Fatigue cost per sim tick (value not set).",
+      "sortOrder": 70,
+      "active": false,
+      "value": null,
+      "valueScaled": null
+    },
+    {
+      "scaleId": "HUNGER_RESTORE",
+      "levelId": "MINIMAL",
+      "displayName": "Minimal",
+      "unit": "PERCENT_OF_NUTRITION_RANGE",
+      "sourceReference": "User decision 2026-10-08 (REC-02)",
+      "description": "Percent of the full Nutrition range restored when the meal finishes.",
+      "sortOrder": 10,
+      "active": false,
+      "value": "5",
+      "valueScaled": 50000
+    },
+    {
+      "scaleId": "HUNGER_RESTORE",
+      "levelId": "VERY_LOW",
+      "displayName": "Very Low",
+      "unit": "PERCENT_OF_NUTRITION_RANGE",
+      "sourceReference": "User decision 2026-10-08 (REC-02)",
+      "description": "Percent of the full Nutrition range restored when the meal finishes.",
+      "sortOrder": 20,
+      "active": false,
+      "value": "10",
+      "valueScaled": 100000
+    },
+    {
+      "scaleId": "HUNGER_RESTORE",
+      "levelId": "LOW",
+      "displayName": "Low",
+      "unit": "PERCENT_OF_NUTRITION_RANGE",
+      "sourceReference": "User decision 2026-10-08 (REC-02)",
+      "description": "Percent of the full Nutrition range restored when the meal finishes.",
+      "sortOrder": 30,
+      "active": false,
+      "value": "20",
+      "valueScaled": 200000
+    },
+    {
+      "scaleId": "HUNGER_RESTORE",
+      "levelId": "MODERATE",
+      "displayName": "Moderate",
+      "unit": "PERCENT_OF_NUTRITION_RANGE",
+      "sourceReference": "User decision 2026-10-08 (REC-02)",
+      "description": "Percent of the full Nutrition range restored when the meal finishes.",
+      "sortOrder": 40,
+      "active": false,
+      "value": "35",
+      "valueScaled": 350000
+    },
+    {
+      "scaleId": "HUNGER_RESTORE",
+      "levelId": "HIGH",
+      "displayName": "High",
+      "unit": "PERCENT_OF_NUTRITION_RANGE",
+      "sourceReference": "User decision 2026-10-08 (REC-02)",
+      "description": "Percent of the full Nutrition range restored when the meal finishes.",
+      "sortOrder": 50,
+      "active": false,
+      "value": "50",
+      "valueScaled": 500000
+    },
+    {
+      "scaleId": "HUNGER_RESTORE",
+      "levelId": "VERY_HIGH",
+      "displayName": "Very High",
+      "unit": "PERCENT_OF_NUTRITION_RANGE",
+      "sourceReference": "User decision 2026-10-08 (REC-02)",
+      "description": "Percent of the full Nutrition range restored when the meal finishes.",
+      "sortOrder": 60,
+      "active": false,
+      "value": "80",
+      "valueScaled": 800000
+    },
+    {
+      "scaleId": "HUNGER_RESTORE",
+      "levelId": "FULL",
+      "displayName": "Full",
+      "unit": "PERCENT_OF_NUTRITION_RANGE",
+      "sourceReference": "User decision 2026-10-08 (REC-02)",
+      "description": "Percent of the full Nutrition range restored when the meal finishes.",
+      "sortOrder": 70,
+      "active": false,
+      "value": "100",
+      "valueScaled": 1000000
+    },
+    {
+      "scaleId": "STRESS_REDUCTION",
+      "levelId": "MINIMAL",
+      "displayName": "Minimal",
+      "unit": "PER_TICK",
+      "sourceReference": "Level name proposed; value not set",
+      "description": "Stress reduction per sim tick (value not set).",
+      "sortOrder": 10,
+      "active": false,
+      "value": null,
+      "valueScaled": null
+    },
+    {
+      "scaleId": "STRESS_REDUCTION",
+      "levelId": "VERY_LOW",
+      "displayName": "Very Low",
+      "unit": "PER_TICK",
+      "sourceReference": "Level name proposed; value not set",
+      "description": "Stress reduction per sim tick (value not set).",
+      "sortOrder": 20,
+      "active": false,
+      "value": null,
+      "valueScaled": null
+    },
+    {
+      "scaleId": "STRESS_REDUCTION",
+      "levelId": "LOW",
+      "displayName": "Low",
+      "unit": "PER_TICK",
+      "sourceReference": "Level name proposed; value not set",
+      "description": "Stress reduction per sim tick (value not set).",
+      "sortOrder": 30,
+      "active": false,
+      "value": null,
+      "valueScaled": null
+    },
+    {
+      "scaleId": "STRESS_REDUCTION",
+      "levelId": "MODERATE",
+      "displayName": "Moderate",
+      "unit": "PER_TICK",
+      "sourceReference": "Level name proposed; value not set",
+      "description": "Stress reduction per sim tick (value not set).",
+      "sortOrder": 40,
+      "active": false,
+      "value": null,
+      "valueScaled": null
+    },
+    {
+      "scaleId": "STRESS_REDUCTION",
+      "levelId": "HIGH",
+      "displayName": "High",
+      "unit": "PER_TICK",
+      "sourceReference": "Level name proposed; value not set",
+      "description": "Stress reduction per sim tick (value not set).",
+      "sortOrder": 50,
+      "active": false,
+      "value": null,
+      "valueScaled": null
+    },
+    {
+      "scaleId": "STRESS_REDUCTION",
+      "levelId": "VERY_HIGH",
+      "displayName": "Very High",
+      "unit": "PER_TICK",
+      "sourceReference": "Level name proposed; value not set",
+      "description": "Stress reduction per sim tick (value not set).",
+      "sortOrder": 60,
+      "active": false,
+      "value": null,
+      "valueScaled": null
+    },
+    {
+      "scaleId": "STRESS_REDUCTION",
+      "levelId": "FULL",
+      "displayName": "Full",
+      "unit": "PER_TICK",
+      "sourceReference": "Level name proposed; value not set",
+      "description": "Stress reduction per sim tick (value not set).",
+      "sortOrder": 70,
+      "active": false,
+      "value": null,
+      "valueScaled": null
+    }
+  ],
+  "bookTitles": [
+    {
+      "bookId": "BOOK_001",
+      "title": "The Apple Pie Hubbub",
+      "author": "Gern Blanston",
+      "notes": null,
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_002",
+      "title": "Indigo Man: The Jeffrey 'Tio Jeffe' Gonzalez Story",
+      "author": "Lewis White",
+      "notes": null,
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_003",
+      "title": "The History of Animal Shaped Crackers",
+      "author": "Ulysses Thompson",
+      "notes": null,
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_004",
+      "title": "Where Eye Crumbs Come From",
+      "author": "Dr. Maria Trish Bontaine",
+      "notes": null,
+      "sortOrder": 40,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_005",
+      "title": "Baseball: Why It's Pretty Good",
+      "author": "Jack Clifton",
+      "notes": null,
+      "sortOrder": 50,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_006",
+      "title": "Why I Lost the Election",
+      "author": "Jack Mehnoffalo",
+      "notes": null,
+      "sortOrder": 60,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_007",
+      "title": "Fly Fishing for Federal Agents",
+      "author": "Eric 'Minnow' Lee",
+      "notes": null,
+      "sortOrder": 70,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_008",
+      "title": "Spooky Car",
+      "author": "Keaton Sting",
+      "notes": null,
+      "sortOrder": 80,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_009",
+      "title": "Scary Clown Man from Space",
+      "author": "Keaton Sting",
+      "notes": null,
+      "sortOrder": 90,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_010",
+      "title": "Creepy Ass Town Goes Apeshit",
+      "author": "Keaton Sting",
+      "notes": null,
+      "sortOrder": 100,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_011",
+      "title": "Big Mean Dog",
+      "author": "Keaton Sting",
+      "notes": null,
+      "sortOrder": 110,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_012",
+      "title": "An Evening with Keaton Sting",
+      "author": "Lewis White",
+      "notes": null,
+      "sortOrder": 120,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_013",
+      "title": "Dante's Smokehouse",
+      "author": "Chef Dante Manicetti",
+      "notes": null,
+      "sortOrder": 130,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_014",
+      "title": "Jules, I Think My Leg is On Fire",
+      "author": "Hector Rinaldo",
+      "notes": null,
+      "sortOrder": 140,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_015",
+      "title": "SERPENTINE EDGE: a Mike Toughman Novel",
+      "author": "Tanya Fescano",
+      "notes": null,
+      "sortOrder": 150,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_016",
+      "title": "DANGER BANANA: a Mike Toughman Novel",
+      "author": "Tanya Fescano",
+      "notes": null,
+      "sortOrder": 160,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_017",
+      "title": "DECEPTION VECTOR: a Mike Toughman Novel",
+      "author": "Tanya Fescano",
+      "notes": null,
+      "sortOrder": 170,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_018",
+      "title": "HERBAL RECKONING: a Mike Toughman Novel",
+      "author": "Tanya Fescano",
+      "notes": null,
+      "sortOrder": 180,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_019",
+      "title": "Cryptic Walkers of the REM Cycle",
+      "author": "Dr. Reyna Khan",
+      "notes": null,
+      "sortOrder": 190,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_020",
+      "title": "Lucid Dreamers: Enriching Your Life Through Slumber",
+      "author": "Dr. Reyna Khan",
+      "notes": null,
+      "sortOrder": 200,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_021",
+      "title": "The Dream Cycle: The Ancient Art of Collective Lucid Dreaming",
+      "author": "Dr. Reyna Khan",
+      "notes": null,
+      "sortOrder": 210,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_022",
+      "title": "The Life and Times of Lester Brinks",
+      "author": "Lewis White",
+      "notes": null,
+      "sortOrder": 220,
+      "active": false
+    },
+    {
+      "bookId": "BOOK_023",
+      "title": "An Interview with Charles Dexter Ward",
+      "author": "Thomas Brown",
+      "notes": "Foreword by Keaton Sting",
+      "sortOrder": 230,
+      "active": false
+    }
+  ],
+  "rules": {
+    "hunger": {
+      "restoreTiming": "ON_FINISH",
+      "inductionTiming": "PER_TICK",
+      "restoreBasis": "FULL_RANGE_OF_NUTRITION_STAT"
+    },
+    "books": {
+      "maxBooksPerAgent": 1,
+      "destroyedWhenFinished": true,
+      "grantedOnAnyBookstoreVisitIfNone": true,
+      "readAnywhereOffDuty": true
+    }
+  },
+  "openItems": {
+    "REC-OPEN-01": "Per-tick values for the stress reduction and fatigue cost levels, and final level names for those scales.",
+    "REC-OPEN-02": "Energy-restore scale and the coffee model.",
+    "REC-OPEN-03": "Finished-book text lives in flavor text or a separate entry; template wording and any finish benefit.",
+    "REC-OPEN-04": "Cafe probability when recreation places are generated."
+  },
+  "runtimeImplemented": false
+}

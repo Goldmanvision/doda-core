@@ -187,6 +187,47 @@ class T(unittest.TestCase):
         r, _ = self.run_rows(activities=SWIM + SWIM)
         self.assertTrue(self.has(r, "duplicate activity_id"))
 
+    def ext_row(self, tail):
+        return SWIM.rstrip("\n") + tail + "\n"
+
+    def test_variable_duration_and_levels(self):
+        lv = ("scale_id,level_id,display_name,value,unit,source_reference,description,sort_order,active\n"
+              "HUNGER_RESTORE,LOW,Low,20,PERCENT_OF_NUTRITION_RANGE,,,30,false\n")
+        levels = {"effect_levels.csv": lv}
+        r, data = self.run_rows(activities=self.ext_row(",20,240,,,,LOW,"), extra=levels)
+        self.assertTrue(r.valid, r.errors)
+        act = data["recreationActivities"][0]
+        self.assertEqual((act["durationStepMinutes"], act["durationMaxMinutes"], act["hungerRestoreLevelId"]),
+                         (20, 240, "LOW"))
+        r, _ = self.run_rows(activities=self.ext_row(",20,,,,,,"), extra=levels)
+        self.assertTrue(self.has(r, "must be set together"))
+        r, _ = self.run_rows(activities=self.ext_row(",20,30,,,,,"), extra=levels)
+        self.assertTrue(self.has(r, "must be at least duration_minutes"))
+        r, _ = self.run_rows(activities=self.ext_row(",25,240,,,,,"), extra=levels)
+        self.assertTrue(self.has(r, "multiple of the step"))
+        r, _ = self.run_rows(activities=self.ext_row(",,,,,,NOPE,"), extra=levels)
+        self.assertTrue(self.has(r, "is not a level of scale HUNGER_RESTORE"))
+        r, _ = self.run_rows(activities=self.ext_row(",,,,,,LOW,"))
+        self.assertTrue(self.has(r, "effect_levels.csv"))
+
+    def test_sim_tick_multiple(self):
+        r, _ = self.run_rows(extra={"time_settings.csv": "setting_id,value\nSIM_TICK_STRATEGIC_MINUTES,7\n"})
+        self.assertTrue(self.has(r, "multiple of the sim tick"))
+
+    def test_cafe_possible(self):
+        lv = ("scale_id,level_id,display_name,value,unit,source_reference,description,sort_order,active\n"
+              "HUNGER_RESTORE,LOW,Low,20,PERCENT_OF_NUTRITION_RANGE,,,30,false\n")
+        levels = {"effect_levels.csv": lv}
+        r, _ = self.run_rows(activities=self.ext_row(",,,,,,,LOW"), extra=levels)
+        self.assertTrue(r.valid, r.errors)
+        self.assertTrue(any("not cafe_possible" in w for w in r.warnings))
+        gym_cafe = GYM.rstrip("\n") + ",true\n"
+        r, data = self.run_rows(place_types=HOME + gym_cafe, activities=self.ext_row(",,,,,,,LOW"), extra=levels)
+        self.assertTrue(r.valid, r.errors)
+        self.assertFalse(r.warnings, r.warnings)
+        gym = [p for p in data["placeTypes"] if p["placeTypeId"] == "PLACE_GYM"][0]
+        self.assertTrue(gym["cafePossible"])
+
     def test_during_care(self):
         r, _ = self.run_rows(care="care_service_id\nREMED_CHECKUP\n")
         self.assertTrue(self.has(r, "unknown care_service_id 'REMED_RECOVERY'"))

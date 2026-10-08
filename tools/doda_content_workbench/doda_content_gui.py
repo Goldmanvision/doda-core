@@ -51,6 +51,7 @@ import doda_condition_rules
 import doda_agent_attribute_rules
 import doda_personal_care_rules
 import doda_time_rules
+import doda_recreation_content_rules
 import doda_zscript_catalog
 
 
@@ -1647,8 +1648,13 @@ class ContentWorkbenchApp(tk.Tk):
                     result.warnings += time_result.warnings
                     if time_path is not None:
                         self.log(f"Time settings catalog exported: {time_path}")
+                    rc_result, rc_path = doda_recreation_content_rules.export(self.project_root)
+                    result.errors += rc_result.errors
+                    result.warnings += rc_result.warnings
+                    if rc_path is not None:
+                        self.log(f"Recreation content catalog exported: {rc_path}")
                     if (equipment_result.valid and care_result.valid and condition_result.valid
-                            and attribute_result.valid and pcare_result.valid and time_result.valid):
+                            and attribute_result.valid and pcare_result.valid and time_result.valid and rc_result.valid):
                         catalog_path, catalog_sha, included = doda_zscript_catalog.generate(self.project_root)
                         self.log(f"ZScript catalog regenerated: {catalog_path} sha256 {catalog_sha[:16]}")
                         if not included:
@@ -1663,6 +1669,7 @@ class ContentWorkbenchApp(tk.Tk):
                 doda_agent_attribute_rules.validate_attributes(self.project_root, result)
                 doda_personal_care_rules.validate_personal_care(self.project_root, result)
                 doda_time_rules.validate_time_settings(self.project_root, result)
+                doda_recreation_content_rules.validate_recreation_content(self.project_root, result)
                 if result.valid and not doda_zscript_catalog.is_current(self.project_root):
                     result.warnings.append("ZScript catalog is stale; export network rules to regenerate it")
                 out_path = None

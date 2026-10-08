@@ -1,0 +1,92 @@
+Below are the open questions, logic gaps and missing formulas I can see from what we've built so far. They're grouped by area, and the most urgent ones come first in each group.
+
+## Time pacing logic
+
+1. **Player stat drain rate.** One sim tick passes per real second inside FOIMS-X at 1x, but only once per 60 real seconds outside, because the clock counts whole minutes. If player stat drain is set per sim tick, stats drain 60 times faster inside FOIMS-X. Is that intended, or should drain be set per real second? This decides whether TIME-08 works as you designed it.
+2. **What runs during the outside-FOIMS-X minute.** Outside FOIMS-X, do per-tick effects (HP drain, care and training progress) fire once per real minute, or smoothly every second? Smooth progress needs the fractional accumulator (TIME-OPEN-03). Firing once a minute doesn't.
+3. **3x is not a whole number of tics.** At 3x, a sim tick falls every 11.6667 Doom tics. Runtime needs a rule for this:
+   - Option A: an accumulator that adds the multiplier every tic and fires a sim tick at each 35.
+   - Option B: rounding to 12 tics, which drifts.
+   - Recommendation: Option A, with the formula `acc += multiplier; while acc >= 35: acc -= 35; simTick()`.
+4. **Changing mode mid-tick.** When the player enters, exits or is ejected partway through a tick, is the partial progress kept, dropped or rounded? This affects TIME-16.
+5. **Changing speed mid-tick.** The same question applies when the speed changes within one FOIMS-X session.
+6. **Do agent activities speed up inside FOIMS-X?** TIME-19 only covers outside FOIMS-X. Confirm that agent activities, care and training all run at the FOIMS-X rate while the player is inside.
+7. **What else pauses time?** Main Menu pause is settled. Do these also pause or keep time running: the console, Doom's own pause key, the save and load screens, intermissions and alt-tab or window focus loss?
+8. **Saving mid-tick.** If the player saves partway through a tick, is the partial progress saved? Saving it is part of the save-format change for TIME-OPEN-03.
+9. **How the ejection gate works.** TIME-10 needs:
+   - The stat and the value that ends the lockout.
+   - Whether there's a buffer above the ejection threshold, so the player isn't ejected again straight after re-entering.
+   - Whether the lockout is driven by the stat value or by a timer.
+10. **FOIMS-X speed after ejection.** Is the speed reset after an ejection, and does it tie into TIME-OPEN-01 (remembering the chosen speed)?
+
+## The time settings catalog
+
+11. **What `active` means.** All seven rows are inactive, but the validator doesn't check `active`. What does inactive mean for a required row? Should a required row be forced active once runtime uses it?
+12. **Should 1x be locked at 1?** The validator only checks that the speeds ascend. Should `FOIMSX_SPEED_1X` be required to equal exactly 1?
+13. **Should the outside ratio be locked at 1?** TIME-06 says outside FOIMS-X is real time, so a value other than 1 contradicts it. Should the field be locked, or kept as a debug or tuning setting?
+14. **Should FOIMS-X 1x tics be a whole number?** `DOOM_TICS_PER_SIM_TICK_FOIMSX_1X` currently allows decimals. Should it be a whole number of tics?
+15. **What if the sim tick changes?** If `SIM_TICK_STRATEGIC_MINUTES` ever becomes something other than 1, every per-tick rate in other catalogs needs rescaling. Either author rates per minute or per hour and convert on export, or freeze the sim tick at 1.
+16. **Engine row editability in the GUI.** The validator rejects `editable=true` on engine rows, but the GUI may still let you edit the value cell. Should the GUI lock it?
+17. **Speed count: warning or error?** Having a number of speeds other than 3 only raises a warning. Should it be an error?
+18. **Rounding mode.** Derived values are rounded to four decimal places with Python's default, which rounds halves to even. Runtime should use the same mode on purpose rather than by accident.
+19. **Page placement.** The Time Settings page sits under Administration for now. Should it get its own group?
+
+## Integer and overflow risks
+
+20. **ZScript overflow in scaled values.** If runtime holds strategic minutes in scaled form (×10,000) in a 32-bit integer, it overflows after about 214,748 minutes, roughly 149 days of game time. Either keep scaled values for rates only, or use split or 64-bit storage natively.
+21. **Clock range.** The integer minute clock lasts about 4,000 years, which is fine. Confirm the campaign has no need for a negative or pre-start time.
+22. **Is `time_settings` in the ZScript catalog?** It isn't, so the "catalog current" check doesn't cover it. When runtime wiring starts, decide whether time constants come from the generated ZScript or from JSON.
+
+## Calendar and day structure (not yet designed)
+
+23. **Campaign start.** Is there a start date and time, and which date format does FOIMS-X display?
+24. **Day structure.** Do day and night, shifts, weekdays or holidays affect agents, care, training or contracts?
+25. **Daily resets.** Which systems reset daily (care sessions, training slots, allowances), and at what strategic time?
+26. **Time display.** Does FOIMS-X show seconds, given the clock counts whole minutes?
+
+## Metrics (TIME-OPEN-04)
+
+27. **What the sampling window covers.** Sampling every 10 ticks with 50 samples covers 500 strategic minutes, about 8.3 hours. Is that the intended trend window, or should it be daily or weekly?
+28. **Does sampling speed up inside FOIMS-X?** If sampling counts sim ticks, it does. If it counts real time, it doesn't.
+
+## Personnel, conditions and care
+
+29. **HP drain formula (PERS-11).** It needs the drain per tick, the stats and conditions that change it, and the floor behaviour at zero.
+30. **Band boundaries.** In `condition_bands`, are the minimum and maximum values inclusive or exclusive? The validator should reject gaps and overlaps for each stat.
+31. **`foims_warning` versus message variants.** Either:
+    - Option A: keep `foims_warning` as the default message, with the variants table added on top.
+    - Option B: move `foims_warning` into the variants table and remove the column.
+    - Either way you need a selection rule (random, in order, or no repeats) and a decision on whether variants depend on severity.
+32. **Ejection versus forced off duty.** Is ejecting the player a separate flag, or does it follow from `forced_off_duty` or from severity?
+33. **Recovery formulas.** Care services need recovery per tick, the effect of the care location, stacking with personal care, and interruption penalties.
+34. **Training formulas.** Training needs progress per tick, how traits change it, completion thresholds, and the effect of an interruption (lose progress, pause or decay).
+35. **Recreation and place-type effects.** How do recreation activities and place-type features combine: added, multiplied, capped, or only the best one counted?
+36. **Personal care during care.** Can personal care and care services run in the same tick, and in what order are their effects applied?
+37. **Duration units.** Are durations authored in minutes, hours or ticks? The planned sim-tick multiple check (next step 1) is trivial while the tick is 1 minute, unless durations are allowed to have fractions.
+
+## Progression and tasks
+
+38. **Contract timing.** Do contracts have deadlines on the strategic clock, and do they run faster inside FOIMS-X?
+39. **Evidence handling.** Does evidence decay or expire with time, and at what rate?
+40. **Equipment access.** Is equipment access checked per tick or per task start, and do interruptions release equipment?
+
+## Tooling gaps
+
+41. **CLI validation may skip time settings.** I didn't add `doda_time_rules` to `doda_content_workbench.py validate`, so its "Validation passed" may not include time settings. The GUI and network-rules paths do include it. Please verify this. It's a likely gap.
+42. **Export button naming.** "Network rules export" now exports every catalog. The button name and log text are misleading, and the separate Export All path may not include time settings.
+43. **`openItems` changed in the JSON.** `PCARE-OPEN-07` disappeared from the personal care JSON's `openItems`. Check whether any consumer expects it.
+44. **Decision records are inconsistent.** Personal care records decisions in its docstring, while time settings uses a `DECISIONS` dictionary. Consider one convention.
+45. **Line endings.** The GUI file may have mixed CRLF and LF endings normalized, so expect noise in the diff.
+46. **Backups folder.** It keeps growing. Check that it's git-ignored and plan pruning.
+47. **History doc format.** The v039 history doc may not match the format of your other history files.
+48. **Proof-of-concept clock script.** It still steps time every 5 real seconds, which contradicts TIME-06. Mark it as deprecated or replace it.
+
+## Formulas still needed
+
+- **Inside FOIMS-X:** sim ticks per real second = `multiplier × 35 / DOOM_TICS_PER_SIM_TICK_FOIMSX_1X`.
+- **Outside FOIMS-X:** strategic seconds per real second = `STRATEGIC_SECONDS_PER_REAL_SECOND_OUTSIDE`. A sim tick fires every `60 × SIM_TICK / ratio` real seconds.
+- **Accumulator:** `acc += multiplier per tic; fire a sim tick when acc >= ticsPerSimTick1x`. Outside FOIMS-X, `acc` counts seconds toward 60.
+- **Rate conversion:** `rate_per_tick = rate_per_minute × SIM_TICK_STRATEGIC_MINUTES`.
+- **Still undefined:** HP drain, condition-band recovery, training progress, care recovery, recreation stacking, ejection lockout recovery and evidence decay.
+
+If you take only one thing into the next thread, make it item 1. Its answer decides how most of the other rates get defined.
