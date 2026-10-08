@@ -27,6 +27,11 @@ from typing import Any
 
 import doda_network_rules as network_rules
 import doda_equipment_rules as equipment_rules
+import doda_care_rules as care_rules
+import doda_condition_rules as condition_rules
+import doda_agent_attribute_rules as attribute_rules
+import doda_personal_care_rules as personal_care_rules
+import doda_time_rules as time_rules
 from doda_page_registry import TABLE_METADATA, TableSpec
 
 
@@ -74,6 +79,11 @@ def validate_candidate(project_root: Path, table: str, rows: list[dict[str, str]
         network_rules.validate_contract(res)
         network_rules.validate_network(tmp_root, res)
         equipment_rules.validate_equipment(tmp_root, res)
+        care_rules.validate_care(tmp_root, res)
+        condition_rules.validate_conditions(tmp_root, res)
+        attribute_rules.validate_attributes(tmp_root, res)
+        personal_care_rules.validate_personal_care(tmp_root, res)
+        time_rules.validate_time_settings(tmp_root, res)
         return res
     finally:
         shutil.rmtree(tmp_root, ignore_errors=True)
@@ -141,7 +151,9 @@ class NetworkTableEditor:
             if f.kind == "bool":
                 w = ttk.Combobox(form, textvariable=var, values=("true", "false"), state="readonly")
             elif f.kind in ("choice", "ref"):
-                w = ttk.Combobox(form, textvariable=var, values=f.choices, state="readonly")
+                # Optional dropdowns get a blank entry so a value can be cleared.
+                values = tuple(f.choices) if f.required else ("",) + tuple(f.choices)
+                w = ttk.Combobox(form, textvariable=var, values=values, state="readonly")
             else:
                 w = ttk.Entry(form, textvariable=var)
             w.grid(row=i, column=1, sticky=tk.EW, pady=2)
@@ -223,16 +235,16 @@ class NetworkTableEditor:
             messagebox.showwarning(self.title, "Required fields are blank:\n" + "\n".join(missing))
             return None
         for f in self.spec.fields:
-            if f.kind == "int":
+            if f.kind == "int" and (f.required or row[f.name]):
                 try:
                     int(row[f.name])
                 except ValueError:
                     messagebox.showwarning(self.title, f"{f.label} must be a whole number.")
                     return None
-        key = row[self.spec.key]
+        key = tuple(row[k] for k in self.spec.key_columns)
         for i, r in enumerate(self.rows):
-            if r[self.spec.key] == key and i != self.selected_index:
-                messagebox.showwarning(self.title, f"{key} already exists.")
+            if tuple(r[k] for k in self.spec.key_columns) == key and i != self.selected_index:
+                messagebox.showwarning(self.title, f"{' / '.join(key)} already exists.")
                 return None
         return row
 
@@ -252,7 +264,7 @@ class NetworkTableEditor:
     def delete_record(self) -> None:
         if self.selected_index is None:
             return
-        key = self.rows[self.selected_index][self.spec.key]
+        key = " / ".join(self.rows[self.selected_index][k] for k in self.spec.key_columns)
         if not messagebox.askyesno(self.title, f"Remove {key} from the draft? (Not saved until Save to Source.)"):
             return
         del self.rows[self.selected_index]
@@ -369,6 +381,28 @@ def install_network_editor(app: Any) -> None:
         NetworkTableEditor(app, fam_tab, "equipment_families", "Equipment Families"),
         NetworkTableEditor(app, mod_tab, "equipment_models", "Equipment Models"),
     ]
+    care_tab = ttk.Frame(app.notebook, padding=10)
+    app.notebook.add(care_tab, text="Care Services — Editor")
+    app.care_services_tab = care_tab
+    app.network_editors.append(NetworkTableEditor(app, care_tab, "care_services", "Care Services"))
+    for table, title in (("care_location_features", "Care Locations"),
+                         ("care_service_locations", "Care Service Locations"),
+                         ("condition_stats", "Condition Stats"),
+                         ("condition_bands", "Condition Bands"),
+                         ("personnel_traits", "Traits"),
+                         ("training_catalog", "Training"),
+                         ("personal_care_actions", "Personal Care"),
+                         ("personal_care_features", "Personal Care Places"),
+                         ("personal_care_locations", "Personal Care Place Links"),
+                         ("personal_care_trainings", "Personal Care Trainings"),
+                         ("personal_care_place_types", "Place Types"),
+                         ("personal_care_place_type_features", "Place Type Features"),
+                         ("recreation_activities", "Recreation Activities"),
+                         ("personal_care_during_care", "Personal Care During Care"),
+                         ("time_settings", "Time Settings")):
+        extra_tab = ttk.Frame(app.notebook, padding=10)
+        app.notebook.add(extra_tab, text=f"{title} — Editor")
+        app.network_editors.append(NetworkTableEditor(app, extra_tab, table, title))
     for e in app.network_editors:
         e.load()
 

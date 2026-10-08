@@ -1,0 +1,11 @@
+activity_id,place_type_id,display_name,company_options,duration_options,source_reference,description,sort_order,active
+REC_BOWL,PLACE_BOWLING_ALLEY,Bowl,ALONE;FRIENDS;STRANGERS,,User decision 2026-10-07 (PCARE-07),Various intervals of time (not yet specified).,10,false
+REC_BUY_BOOKS,PLACE_BOOKSTORE,Buy Books,,,User decision 2026-10-07 (PCARE-07),,20,false
+REC_READ_BOOKS,PLACE_BOOKSTORE,Read Books,,,User decision 2026-10-07 (PCARE-07),,30,false
+REC_BOOKSTORE_RESEARCH,PLACE_BOOKSTORE,Do Research,,,User decision 2026-10-07 (PCARE-07),,40,false
+REC_WORKOUT,PLACE_GYM,Work Out,,,User decision 2026-10-07 (PCARE-07),,50,false
+REC_PLAY_BASKETBALL,PLACE_GYM,Play Basketball,,,User decision 2026-10-07 (PCARE-07),,60,false
+REC_SWIM,PLACE_GYM,Swim,,,User decision 2026-10-07 (PCARE-07),,70,false
+REC_HIKE,PLACE_NATIONAL_PARK,Hike,,,User decision 2026-10-07 (PCARE-07),,80,false
+REC_CAMP,PLACE_NATIONAL_PARK,Camp,,Overnight;Three days;One week,User decision 2026-10-07 (PCARE-07),,90,false
+REC_FISH,PLACE_NATIONAL_PARK,Go Fishing,,One hour;Two hours;All day,User decision 2026-10-07 (PCARE-07),,100,false

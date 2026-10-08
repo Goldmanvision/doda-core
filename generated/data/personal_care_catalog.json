@@ -1,0 +1,812 @@
+{
+  "schema": "doda.personal_care_catalog",
+  "toolVersion": "0.5.0",
+  "generatedAtUtc": "2026-10-08T04:30:52.959066+00:00",
+  "placeTypes": [
+    {
+      "placeTypeId": "PLACE_AGENT_HOME",
+      "displayName": "Agent's Home",
+      "servesAsHome": true,
+      "agentOwned": true,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-03)",
+      "description": "An agent's or analyst's own home.",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_SAFE_HOUSE",
+      "displayName": "FBI Safe House",
+      "servesAsHome": true,
+      "agentOwned": false,
+      "occupancyRule": "BEDS",
+      "sourceReference": "User decision 2026-10-07 (PCARE-03, PCARE-04)",
+      "description": "Serves as a home but belongs to no agent. Occupancy depends on the number of beds. Agents can rest and eat there (confirmed).",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_HOTEL",
+      "displayName": "Hotel",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-03)",
+      "description": "Rest and food location.",
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_VEHICLE",
+      "displayName": "Car or Van",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-03)",
+      "description": "Rest location. Workbook MOTOR_VEHICLE accommodation.",
+      "sortOrder": 40,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_RESTAURANT",
+      "displayName": "Restaurant",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-03)",
+      "description": "Food location.",
+      "sortOrder": 50,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_OFFICE_KITCHEN",
+      "displayName": "Office Kitchen",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-03)",
+      "description": "Food location.",
+      "sortOrder": 60,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_CULT_MESS_HALL",
+      "displayName": "Cult Mess Hall",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-03)",
+      "description": "Food location.",
+      "sortOrder": 70,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_GAS_STATION",
+      "displayName": "Gas Station",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-03)",
+      "description": "Food location.",
+      "sortOrder": 80,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_MOVIE_THEATER",
+      "displayName": "Movie Theater",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-06)",
+      "description": "Recreation place. Randomized throughout operational territory.",
+      "sortOrder": 90,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_SHOPPING_MALL",
+      "displayName": "Shopping Mall",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-06)",
+      "description": "Recreation place. Randomized throughout operational territory.",
+      "sortOrder": 100,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_VIDEO_ARCADE",
+      "displayName": "Video Arcade",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-06)",
+      "description": "Recreation place. Randomized throughout operational territory.",
+      "sortOrder": 110,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_AMUSEMENT_PARK",
+      "displayName": "Amusement Park",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-06)",
+      "description": "Recreation place. Randomized throughout operational territory.",
+      "sortOrder": 120,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_VACATION_RESORT",
+      "displayName": "Vacation Resort",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-06)",
+      "description": "Recreation place. Randomized throughout operational territory.",
+      "sortOrder": 130,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_LUXURY_CRUISE",
+      "displayName": "Luxury Cruise",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-06)",
+      "description": "Recreation place. Randomized throughout operational territory.",
+      "sortOrder": 140,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_NATIONAL_PARK",
+      "displayName": "National Park",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-06)",
+      "description": "Recreation place. Randomized throughout operational territory.",
+      "sortOrder": 150,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_VIDEO_RENTAL_STORE",
+      "displayName": "Video Rental Store",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-06)",
+      "description": "Recreation place. Randomized throughout operational territory.",
+      "sortOrder": 160,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_BOOKSTORE",
+      "displayName": "Bookstore",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-06)",
+      "description": "Recreation place. Randomized throughout operational territory.",
+      "sortOrder": 170,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_BOWLING_ALLEY",
+      "displayName": "Bowling Alley",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-06)",
+      "description": "Recreation place. Randomized throughout operational territory.",
+      "sortOrder": 180,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_GYM",
+      "displayName": "Gym",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-06)",
+      "description": "Recreation place. Randomized throughout operational territory.",
+      "sortOrder": 190,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_BAR_LOUNGE",
+      "displayName": "Bar or Lounge",
+      "servesAsHome": false,
+      "agentOwned": false,
+      "occupancyRule": "UNSPECIFIED",
+      "sourceReference": "User decision 2026-10-07 (PCARE-06)",
+      "description": "Recreation place. Randomized throughout operational territory.",
+      "sortOrder": 200,
+      "active": false
+    }
+  ],
+  "placeTypeFeatures": [
+    {
+      "placeTypeId": "PLACE_AGENT_HOME",
+      "featureId": "CAP_FOOD",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_AGENT_HOME",
+      "featureId": "CAP_REST",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_SAFE_HOUSE",
+      "featureId": "CAP_FOOD",
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_HOTEL",
+      "featureId": "CAP_FOOD",
+      "sortOrder": 35,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_SAFE_HOUSE",
+      "featureId": "CAP_REST",
+      "sortOrder": 40,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_HOTEL",
+      "featureId": "CAP_REST",
+      "sortOrder": 50,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_VEHICLE",
+      "featureId": "CAP_REST",
+      "sortOrder": 60,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_RESTAURANT",
+      "featureId": "CAP_FOOD",
+      "sortOrder": 70,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_OFFICE_KITCHEN",
+      "featureId": "CAP_FOOD",
+      "sortOrder": 80,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_CULT_MESS_HALL",
+      "featureId": "CAP_FOOD",
+      "sortOrder": 90,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_GAS_STATION",
+      "featureId": "CAP_FOOD",
+      "sortOrder": 100,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_MOVIE_THEATER",
+      "featureId": "CAP_RECREATION",
+      "sortOrder": 110,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_SHOPPING_MALL",
+      "featureId": "CAP_RECREATION",
+      "sortOrder": 120,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_VIDEO_ARCADE",
+      "featureId": "CAP_RECREATION",
+      "sortOrder": 130,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_AMUSEMENT_PARK",
+      "featureId": "CAP_RECREATION",
+      "sortOrder": 140,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_VACATION_RESORT",
+      "featureId": "CAP_RECREATION",
+      "sortOrder": 150,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_LUXURY_CRUISE",
+      "featureId": "CAP_RECREATION",
+      "sortOrder": 160,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_NATIONAL_PARK",
+      "featureId": "CAP_RECREATION",
+      "sortOrder": 170,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_VIDEO_RENTAL_STORE",
+      "featureId": "CAP_RECREATION",
+      "sortOrder": 180,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_BOOKSTORE",
+      "featureId": "CAP_RECREATION",
+      "sortOrder": 190,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_BOWLING_ALLEY",
+      "featureId": "CAP_RECREATION",
+      "sortOrder": 200,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_GYM",
+      "featureId": "CAP_RECREATION",
+      "sortOrder": 210,
+      "active": false
+    },
+    {
+      "placeTypeId": "PLACE_BAR_LOUNGE",
+      "featureId": "CAP_RECREATION",
+      "sortOrder": 220,
+      "active": false
+    }
+  ],
+  "recreationActivities": [
+    {
+      "activityId": "REC_BOWL",
+      "placeTypeId": "PLACE_BOWLING_ALLEY",
+      "displayName": "Bowl",
+      "description": "Bowl alone, with friends, or with strangers.",
+      "durationMinutes": null,
+      "durationLabel": null,
+      "companyOptions": [
+        "ALONE",
+        "FRIENDS",
+        "STRANGERS"
+      ],
+      "stressReductionPerTick": null,
+      "fatigueCostPerTick": null,
+      "energyRequiredToStart": null,
+      "hungerReductionPerTick": null,
+      "sourceReference": "User decision 2026-10-07 (PCARE-07)",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "activityId": "REC_BUY_BOOKS",
+      "placeTypeId": "PLACE_BOOKSTORE",
+      "displayName": "Buy Books",
+      "description": "",
+      "durationMinutes": null,
+      "durationLabel": null,
+      "companyOptions": [],
+      "stressReductionPerTick": null,
+      "fatigueCostPerTick": null,
+      "energyRequiredToStart": null,
+      "hungerReductionPerTick": null,
+      "sourceReference": "User decision 2026-10-07 (PCARE-07)",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "activityId": "REC_READ_BOOKS",
+      "placeTypeId": "PLACE_BOOKSTORE",
+      "displayName": "Read Books",
+      "description": "",
+      "durationMinutes": null,
+      "durationLabel": null,
+      "companyOptions": [],
+      "stressReductionPerTick": null,
+      "fatigueCostPerTick": null,
+      "energyRequiredToStart": null,
+      "hungerReductionPerTick": null,
+      "sourceReference": "User decision 2026-10-07 (PCARE-07)",
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "activityId": "REC_BOOKSTORE_RESEARCH",
+      "placeTypeId": "PLACE_BOOKSTORE",
+      "displayName": "Do Research",
+      "description": "",
+      "durationMinutes": null,
+      "durationLabel": null,
+      "companyOptions": [],
+      "stressReductionPerTick": null,
+      "fatigueCostPerTick": null,
+      "energyRequiredToStart": null,
+      "hungerReductionPerTick": null,
+      "sourceReference": "User decision 2026-10-07 (PCARE-07)",
+      "sortOrder": 40,
+      "active": false
+    },
+    {
+      "activityId": "REC_WORKOUT",
+      "placeTypeId": "PLACE_GYM",
+      "displayName": "Work Out",
+      "description": "",
+      "durationMinutes": null,
+      "durationLabel": null,
+      "companyOptions": [],
+      "stressReductionPerTick": null,
+      "fatigueCostPerTick": null,
+      "energyRequiredToStart": null,
+      "hungerReductionPerTick": null,
+      "sourceReference": "User decision 2026-10-07 (PCARE-07)",
+      "sortOrder": 50,
+      "active": false
+    },
+    {
+      "activityId": "REC_PLAY_BASKETBALL",
+      "placeTypeId": "PLACE_GYM",
+      "displayName": "Play Basketball",
+      "description": "",
+      "durationMinutes": null,
+      "durationLabel": null,
+      "companyOptions": [],
+      "stressReductionPerTick": null,
+      "fatigueCostPerTick": null,
+      "energyRequiredToStart": null,
+      "hungerReductionPerTick": null,
+      "sourceReference": "User decision 2026-10-07 (PCARE-07)",
+      "sortOrder": 60,
+      "active": false
+    },
+    {
+      "activityId": "REC_SWIM",
+      "placeTypeId": "PLACE_GYM",
+      "displayName": "Swim",
+      "description": "",
+      "durationMinutes": null,
+      "durationLabel": null,
+      "companyOptions": [],
+      "stressReductionPerTick": null,
+      "fatigueCostPerTick": null,
+      "energyRequiredToStart": null,
+      "hungerReductionPerTick": null,
+      "sourceReference": "User decision 2026-10-07 (PCARE-07)",
+      "sortOrder": 70,
+      "active": false
+    },
+    {
+      "activityId": "REC_HIKE",
+      "placeTypeId": "PLACE_NATIONAL_PARK",
+      "displayName": "Hike",
+      "description": "",
+      "durationMinutes": null,
+      "durationLabel": null,
+      "companyOptions": [],
+      "stressReductionPerTick": null,
+      "fatigueCostPerTick": null,
+      "energyRequiredToStart": null,
+      "hungerReductionPerTick": null,
+      "sourceReference": "User decision 2026-10-07 (PCARE-07)",
+      "sortOrder": 80,
+      "active": false
+    },
+    {
+      "activityId": "REC_CAMP_OVERNIGHT",
+      "placeTypeId": "PLACE_NATIONAL_PARK",
+      "displayName": "Camp Overnight",
+      "description": "",
+      "durationMinutes": null,
+      "durationLabel": "Overnight",
+      "companyOptions": [],
+      "stressReductionPerTick": null,
+      "fatigueCostPerTick": null,
+      "energyRequiredToStart": null,
+      "hungerReductionPerTick": null,
+      "sourceReference": "User decision 2026-10-07 (PCARE-07)",
+      "sortOrder": 90,
+      "active": false
+    },
+    {
+      "activityId": "REC_CAMP_3_DAYS",
+      "placeTypeId": "PLACE_NATIONAL_PARK",
+      "displayName": "Camp for Three Days",
+      "description": "",
+      "durationMinutes": 4320,
+      "durationLabel": "Three days",
+      "companyOptions": [],
+      "stressReductionPerTick": null,
+      "fatigueCostPerTick": null,
+      "energyRequiredToStart": null,
+      "hungerReductionPerTick": null,
+      "sourceReference": "User decision 2026-10-07 (PCARE-07)",
+      "sortOrder": 100,
+      "active": false
+    },
+    {
+      "activityId": "REC_CAMP_1_WEEK",
+      "placeTypeId": "PLACE_NATIONAL_PARK",
+      "displayName": "Camp for a Week",
+      "description": "",
+      "durationMinutes": 10080,
+      "durationLabel": "One week",
+      "companyOptions": [],
+      "stressReductionPerTick": null,
+      "fatigueCostPerTick": null,
+      "energyRequiredToStart": null,
+      "hungerReductionPerTick": null,
+      "sourceReference": "User decision 2026-10-07 (PCARE-07)",
+      "sortOrder": 110,
+      "active": false
+    },
+    {
+      "activityId": "REC_FISH_1_HOUR",
+      "placeTypeId": "PLACE_NATIONAL_PARK",
+      "displayName": "Go Fishing for an Hour",
+      "description": "",
+      "durationMinutes": 60,
+      "durationLabel": "One hour",
+      "companyOptions": [],
+      "stressReductionPerTick": null,
+      "fatigueCostPerTick": null,
+      "energyRequiredToStart": null,
+      "hungerReductionPerTick": null,
+      "sourceReference": "User decision 2026-10-07 (PCARE-07)",
+      "sortOrder": 120,
+      "active": false
+    },
+    {
+      "activityId": "REC_FISH_2_HOURS",
+      "placeTypeId": "PLACE_NATIONAL_PARK",
+      "displayName": "Go Fishing for Two Hours",
+      "description": "",
+      "durationMinutes": 120,
+      "durationLabel": "Two hours",
+      "companyOptions": [],
+      "stressReductionPerTick": null,
+      "fatigueCostPerTick": null,
+      "energyRequiredToStart": null,
+      "hungerReductionPerTick": null,
+      "sourceReference": "User decision 2026-10-07 (PCARE-07)",
+      "sortOrder": 130,
+      "active": false
+    },
+    {
+      "activityId": "REC_FISH_ALL_DAY",
+      "placeTypeId": "PLACE_NATIONAL_PARK",
+      "displayName": "Go Fishing All Day",
+      "description": "",
+      "durationMinutes": null,
+      "durationLabel": "All day",
+      "companyOptions": [],
+      "stressReductionPerTick": null,
+      "fatigueCostPerTick": null,
+      "energyRequiredToStart": null,
+      "hungerReductionPerTick": null,
+      "sourceReference": "User decision 2026-10-07 (PCARE-07)",
+      "sortOrder": 140,
+      "active": false
+    }
+  ],
+  "duringCare": [
+    {
+      "careServiceId": "REMED_RECOVERY",
+      "actionId": "REMED_RESTING",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "careServiceId": "REMED_RECOVERY",
+      "actionId": "REMED_EATING",
+      "sortOrder": 20,
+      "active": false
+    }
+  ],
+  "actions": [
+    {
+      "actionId": "REMED_OFF_DUTY",
+      "displayName": "Scheduled Off Duty Time",
+      "initiation": "PLAYER_SCHEDULED",
+      "offDutyRequired": true,
+      "followUpActionId": "REMED_EATING",
+      "workbookStatus": "NATIVE_PLANNED",
+      "sourceReference": "doda_05_remediation_and_care_v107.xlsx RemedyCat!A11",
+      "description": "Player-scheduled time off duty. Workbook: may not comply immediately when busy, deployed, endangered, or in transit. Free (PCARE-09); workbook cost policy COST_PAID_LEAVE not used.",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "actionId": "REMED_EATING",
+      "displayName": "Eating",
+      "initiation": "AGENT_INITIATED",
+      "offDutyRequired": true,
+      "followUpActionId": "REMED_OFF_DUTY",
+      "workbookStatus": "DOCUMENTED",
+      "sourceReference": "doda_05_remediation_and_care_v107.xlsx RemedyCat!A12",
+      "description": "Agent needs food. Workbook also has an undercover hostile-location route (deferred). Workbook duration cell is malformed (2 days 12:00:00) and is not imported. Free (PCARE-09); workbook cost policy COST_CONTRACTOR_SERVICE not used.",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "actionId": "REMED_RESTING",
+      "displayName": "Resting",
+      "initiation": "AGENT_INITIATED",
+      "offDutyRequired": true,
+      "followUpActionId": "REMED_OFF_DUTY",
+      "workbookStatus": "DOCUMENTED",
+      "sourceReference": "doda_05_remediation_and_care_v107.xlsx RemedyCat!A13",
+      "description": "Agent is off duty and can rest. Resting and sleeping are one system.",
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "actionId": "REMED_DECOMPRESSION",
+      "displayName": "Decompression",
+      "initiation": "AGENT_INITIATED",
+      "offDutyRequired": true,
+      "followUpActionId": "REMED_RESTING",
+      "workbookStatus": "DEFERRED",
+      "sourceReference": "doda_05_remediation_and_care_v107.xlsx RemedyCat!A14",
+      "description": "Agent is strained or overworked but not in acute crisis. Workbook: optional later refinement.",
+      "sortOrder": 40,
+      "active": false
+    }
+  ],
+  "features": [
+    {
+      "featureId": "CAP_FOOD",
+      "displayName": "Food Access",
+      "description": "A place where agents can eat.",
+      "sourceReference": "doda_01_department_progression_v107.xlsx FacilityCapsCat!A2",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "featureId": "CAP_REST",
+      "displayName": "Rest Facility",
+      "description": "A place for fatigue recovery and off-duty rest.",
+      "sourceReference": "doda_01_department_progression_v107.xlsx FacilityCapsCat!A3",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "featureId": "CAP_SAFE_HOUSING",
+      "displayName": "Safe Housing",
+      "description": "Deprecated 2026-10-07 (PCARE-04): replaced by place type PLACE_SAFE_HOUSE, which offers Rest and Food. Kept for ID history; do not activate.",
+      "sourceReference": "doda_01_department_progression_v107.xlsx FacilityCapsCat!A11",
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "featureId": "CAP_RECREATION",
+      "displayName": "Recreation",
+      "description": "A place where agents and analysts can do recreational activities. Workbook FUN_CAPABLE.",
+      "sourceReference": "doda_05_remediation_and_care_v107.xlsx RemedyCat!A11, A14 (FUN_CAPABLE); user decision 2026-10-07 (PCARE-06)",
+      "sortOrder": 40,
+      "active": false
+    }
+  ],
+  "actionLocations": [
+    {
+      "actionId": "REMED_OFF_DUTY",
+      "featureId": "CAP_REST",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "actionId": "REMED_OFF_DUTY",
+      "featureId": "CAP_FOOD",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "actionId": "REMED_EATING",
+      "featureId": "CAP_FOOD",
+      "sortOrder": 40,
+      "active": false
+    },
+    {
+      "actionId": "REMED_RESTING",
+      "featureId": "CAP_REST",
+      "sortOrder": 50,
+      "active": false
+    },
+    {
+      "actionId": "REMED_DECOMPRESSION",
+      "featureId": "CAP_REST",
+      "sortOrder": 70,
+      "active": false
+    },
+    {
+      "actionId": "REMED_DECOMPRESSION",
+      "featureId": "CAP_FOOD",
+      "sortOrder": 80,
+      "active": false
+    },
+    {
+      "actionId": "REMED_OFF_DUTY",
+      "featureId": "CAP_RECREATION",
+      "sortOrder": 90,
+      "active": false
+    },
+    {
+      "actionId": "REMED_DECOMPRESSION",
+      "featureId": "CAP_RECREATION",
+      "sortOrder": 100,
+      "active": false
+    }
+  ],
+  "actionTrainings": [
+    {
+      "actionId": "REMED_EATING",
+      "trainingId": "TRAIN_CULINARY",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "actionId": "REMED_EATING",
+      "trainingId": "TRAIN_HOSPITALITY",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "actionId": "REMED_EATING",
+      "trainingId": "TRAIN_SURVIVALIST",
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "actionId": "REMED_RESTING",
+      "trainingId": "TRAIN_HOSPITALITY",
+      "sortOrder": 40,
+      "active": false
+    },
+    {
+      "actionId": "REMED_RESTING",
+      "trainingId": "TRAIN_SURVIVALIST",
+      "sortOrder": 50,
+      "active": false
+    },
+    {
+      "actionId": "REMED_DECOMPRESSION",
+      "trainingId": "TRAIN_HOSPITALITY",
+      "sortOrder": 60,
+      "active": false
+    },
+    {
+      "actionId": "REMED_DECOMPRESSION",
+      "trainingId": "TRAIN_SURVIVALIST",
+      "sortOrder": 70,
+      "active": false
+    }
+  ],
+  "placeRule": {
+    "locationMatch": "ANY_LINKED_FEATURE",
+    "trainingBypassesLocation": true,
+    "placeTypesOfferFeatures": true,
+    "duringCare": "CARE_SERVICE_PROVIDES_LINKED_ACTIONS",
+    "cost": "FREE_NO_AGENT_FINANCES",
+    "energy": {
+      "definition": "FATIGUE_MAX_MINUS_FATIGUE",
+      "fatigueStatId": "FATIGUE",
+      "startRule": "ENERGY_AT_OR_ABOVE_REQUIRED"
+    },
+    "safeHouseOccupancy": "BEDS",
+    "recreationPlacement": "RANDOMIZED_IN_TERRITORY_TRAVEL_MAY_BE_REQUIRED"
+  },
+  "openItems": {
+    "PCARE-OPEN-01": "Durations, effects (fatigue, nutrition, stress recovery), and cost amounts.",
+    "PCARE-OPEN-02": "Activities for the other recreation places; durations for Overnight, All day, and bowling; stress, fatigue, and hunger rates.",
+    "PCARE-OPEN-03": "Whether Emergency Hospitalization also counts as recovery rest (PCARE-05).",
+    "PCARE-OPEN-06": "Actual places, safe-house bed counts, and recreation placement and travel (territory authoring).",
+    "PCARE-OPEN-04": "Accommodations (personal residence, rental, hotel, vehicle), location conditions (safe, hostile), undercover routes, and compliance rules.",
+    "PCARE-OPEN-05": "CAP_REST and CAP_SAFE_HOUSING access booleans (workbook row shift)."
+  },
+  "runtimeImplemented": false
+}

@@ -1,7 +1,7 @@
 {
   "schema": "doda.network_transfer_rules",
   "toolVersion": "0.1.0",
-  "generatedAtUtc": "2026-10-07T06:09:56.854464+00:00",
+  "generatedAtUtc": "2026-10-07T19:48:43.281752+00:00",
   "tiers": [
     {
       "tierId": "NET_DIALUP_G1",

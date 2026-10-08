@@ -1,0 +1,21 @@
+place_type_id,display_name,serves_as_home,agent_owned,occupancy_rule,source_reference,description,sort_order,active
+PLACE_AGENT_HOME,Agent's Home,true,true,UNSPECIFIED,User decision 2026-10-07 (PCARE-03),An agent's or analyst's own home.,10,false
+PLACE_SAFE_HOUSE,FBI Safe House,true,false,BEDS,"User decision 2026-10-07 (PCARE-03, PCARE-04)",Serves as a home but belongs to no agent. Occupancy depends on the number of beds. Rest at a safe house follows from it serving as a home.,20,false
+PLACE_HOTEL,Hotel,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-03),Rest location.,30,false
+PLACE_VEHICLE,Car or Van,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-03),Rest location. Workbook MOTOR_VEHICLE accommodation.,40,false
+PLACE_RESTAURANT,Restaurant,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-03),Food location.,50,false
+PLACE_OFFICE_KITCHEN,Office Kitchen,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-03),Food location.,60,false
+PLACE_CULT_MESS_HALL,Cult Mess Hall,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-03),Food location.,70,false
+PLACE_GAS_STATION,Gas Station,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-03),Food location.,80,false
+PLACE_MOVIE_THEATER,Movie Theater,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-06),Recreation place. Randomized throughout operational territory.,90,false
+PLACE_SHOPPING_MALL,Shopping Mall,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-06),Recreation place. Randomized throughout operational territory.,100,false
+PLACE_VIDEO_ARCADE,Video Arcade,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-06),Recreation place. Randomized throughout operational territory.,110,false
+PLACE_AMUSEMENT_PARK,Amusement Park,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-06),Recreation place. Randomized throughout operational territory.,120,false
+PLACE_VACATION_RESORT,Vacation Resort,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-06),Recreation place. Randomized throughout operational territory.,130,false
+PLACE_LUXURY_CRUISE,Luxury Cruise,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-06),Recreation place. Randomized throughout operational territory.,140,false
+PLACE_NATIONAL_PARK,National Park,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-06),Recreation place. Randomized throughout operational territory.,150,false
+PLACE_VIDEO_RENTAL_STORE,Video Rental Store,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-06),Recreation place. Randomized throughout operational territory.,160,false
+PLACE_BOOKSTORE,Bookstore,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-06),Recreation place. Randomized throughout operational territory.,170,false
+PLACE_BOWLING_ALLEY,Bowling Alley,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-06),Recreation place. Randomized throughout operational territory.,180,false
+PLACE_GYM,Gym,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-06),Recreation place. Randomized throughout operational territory.,190,false
+PLACE_BAR_LOUNGE,Bar or Lounge,false,false,UNSPECIFIED,User decision 2026-10-07 (PCARE-06),Recreation place. Randomized throughout operational territory.,200,false

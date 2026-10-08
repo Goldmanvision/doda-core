@@ -1,7 +1,7 @@
 {
   "schema": "doda.equipment_catalog",
   "toolVersion": "0.1.0",
-  "generatedAtUtc": "2026-10-07T06:09:13.221919+00:00",
+  "generatedAtUtc": "2026-10-07T19:48:43.282997+00:00",
   "totalPersonalDeviceLimit": 8,
   "families": [
     {

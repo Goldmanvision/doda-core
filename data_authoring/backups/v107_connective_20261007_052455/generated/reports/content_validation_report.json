@@ -1,0 +1,24 @@
+{
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-07T06:09:11.335070+00:00",
+  "projectRoot": "E:\\Dev\\uzdoom_src\\doda-core",
+  "valid": true,
+  "errorCount": 0,
+  "warningCount": 0,
+  "stats": {
+    "enum_catalog": 27,
+    "department_tracks": 6,
+    "metrics": 5,
+    "metric_tiers": 20,
+    "facilities": 6,
+    "flavor_text": 20,
+    "qualification_catalog": 4,
+    "capabilities": 2,
+    "facility_capabilities": 2,
+    "capability_staffing_rules": 4,
+    "facility_capability_staffing_overrides": 3,
+    "task_templates": 2
+  },
+  "errors": [],
+  "warnings": []
+}

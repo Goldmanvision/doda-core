@@ -46,6 +46,11 @@ from doda_network_editor import install_network_editor, network_editors_dirty
 from doda_navigation import install_grouped_navigation
 import doda_network_rules
 import doda_equipment_rules
+import doda_care_rules
+import doda_condition_rules
+import doda_agent_attribute_rules
+import doda_personal_care_rules
+import doda_time_rules
 import doda_zscript_catalog
 
 
@@ -1617,7 +1622,33 @@ class ContentWorkbenchApp(tk.Tk):
                     result.warnings += equipment_result.warnings
                     if equipment_path is not None:
                         self.log(f"Equipment catalog exported: {equipment_path}")
-                    if equipment_result.valid:
+                    care_result, care_path = doda_care_rules.export(self.project_root)
+                    result.errors += care_result.errors
+                    result.warnings += care_result.warnings
+                    if care_path is not None:
+                        self.log(f"Care services catalog exported: {care_path}")
+                    condition_result, condition_path = doda_condition_rules.export(self.project_root)
+                    result.errors += condition_result.errors
+                    result.warnings += condition_result.warnings
+                    if condition_path is not None:
+                        self.log(f"Personnel conditions catalog exported: {condition_path}")
+                    attribute_result, attribute_path = doda_agent_attribute_rules.export(self.project_root)
+                    result.errors += attribute_result.errors
+                    result.warnings += attribute_result.warnings
+                    if attribute_path is not None:
+                        self.log(f"Personnel traits/training catalog exported: {attribute_path}")
+                    pcare_result, pcare_path = doda_personal_care_rules.export(self.project_root)
+                    result.errors += pcare_result.errors
+                    result.warnings += pcare_result.warnings
+                    if pcare_path is not None:
+                        self.log(f"Personal-care catalog exported: {pcare_path}")
+                    time_result, time_path = doda_time_rules.export(self.project_root)
+                    result.errors += time_result.errors
+                    result.warnings += time_result.warnings
+                    if time_path is not None:
+                        self.log(f"Time settings catalog exported: {time_path}")
+                    if (equipment_result.valid and care_result.valid and condition_result.valid
+                            and attribute_result.valid and pcare_result.valid and time_result.valid):
                         catalog_path, catalog_sha, included = doda_zscript_catalog.generate(self.project_root)
                         self.log(f"ZScript catalog regenerated: {catalog_path} sha256 {catalog_sha[:16]}")
                         if not included:
@@ -1627,6 +1658,11 @@ class ContentWorkbenchApp(tk.Tk):
                 doda_network_rules.validate_contract(result)
                 doda_network_rules.validate_network(self.project_root, result)
                 doda_equipment_rules.validate_equipment(self.project_root, result)
+                doda_care_rules.validate_care(self.project_root, result)
+                doda_condition_rules.validate_conditions(self.project_root, result)
+                doda_agent_attribute_rules.validate_attributes(self.project_root, result)
+                doda_personal_care_rules.validate_personal_care(self.project_root, result)
+                doda_time_rules.validate_time_settings(self.project_root, result)
                 if result.valid and not doda_zscript_catalog.is_current(self.project_root):
                     result.warnings.append("ZScript catalog is stale; export network rules to regenerate it")
                 out_path = None

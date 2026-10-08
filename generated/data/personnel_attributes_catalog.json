@@ -1,0 +1,199 @@
+{
+  "schema": "doda.personnel_attributes_catalog",
+  "toolVersion": "0.3.0",
+  "generatedAtUtc": "2026-10-08T04:28:44.100495+00:00",
+  "traits": [
+    {
+      "id": "COURAGE",
+      "displayName": "Courage",
+      "category": "PERSONALITY",
+      "minimumValue": 0,
+      "maximumValue": 100,
+      "defaultValue": null,
+      "creationRule": "RANDOM_IN_RANGE",
+      "canChangeOverTime": false,
+      "contributesToHealth": false,
+      "healthFormula": null,
+      "healthReferenceId": null,
+      "primaryUses": "Stress resistance; dangerous-task response; refusal risk",
+      "relatedSystems": "Stress; combat; retrieval; compliance",
+      "sourceReference": "doda_02_personnel_and_operations_v107.xlsx TraitDefsCat!A3",
+      "description": "Replaces earlier Bravery terminology",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "id": "AGILITY",
+      "displayName": "Agility",
+      "category": "ATTRIBUTE",
+      "minimumValue": 0,
+      "maximumValue": 100,
+      "defaultValue": null,
+      "creationRule": "RANDOM_IN_RANGE",
+      "canChangeOverTime": false,
+      "contributesToHealth": false,
+      "healthFormula": null,
+      "healthReferenceId": null,
+      "primaryUses": "Movement; evasion; extraction; injury avoidance",
+      "relatedSystems": "Travel; retrieval; field events",
+      "sourceReference": "doda_02_personnel_and_operations_v107.xlsx TraitDefsCat!A4",
+      "description": "Physical attribute",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "id": "PARANORMAL_SENSITIVITY",
+      "displayName": "Paranormal Sensitivity",
+      "category": "SPECIAL_APTITUDE",
+      "minimumValue": 0,
+      "maximumValue": 100,
+      "defaultValue": null,
+      "creationRule": "RANDOM_IN_RANGE",
+      "canChangeOverTime": false,
+      "contributesToHealth": false,
+      "healthFormula": null,
+      "healthReferenceId": null,
+      "primaryUses": "Anomaly detection; paranormal event response; case outcomes",
+      "relatedSystems": "Paranormal cases; stress; research",
+      "sourceReference": "doda_02_personnel_and_operations_v107.xlsx TraitDefsCat!A5",
+      "description": "May have both advantages and risks",
+      "sortOrder": 30,
+      "active": false
+    }
+  ],
+  "training": [
+    {
+      "id": "TRAIN_COMBAT",
+      "displayName": "Combat Training",
+      "category": "TACTICAL",
+      "eligibleAtCreation": true,
+      "primaryUses": "Combat tasks; dangerous retrieval; injury avoidance; tactical response",
+      "relatedSystems": "Tasks: TASK_RETRIEVE_INCAPACITATED; FIELD_OPERATION. Events: EVENT_COMBAT_EXPOSURE; EVENT_COMBAT_INJURY",
+      "sourceReference": "doda_02_personnel_and_operations_v107.xlsx TrainingCat!A2",
+      "description": "Workbook note superseded by PERS-15: can improve later through training systems. Binary: an agent is trained or not (PERS-15).",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "id": "TRAIN_INVESTIGATIVE",
+      "displayName": "Investigative Training",
+      "category": "INVESTIGATIVE",
+      "eligibleAtCreation": true,
+      "primaryUses": "Interviews; evidence recovery; case analysis; surveillance",
+      "relatedSystems": "Tasks: TASK_INTERVIEW; TASK_SECURE_EVIDENCE; TASK_SURVEY. Events: EVENT_TASK_COMPLETED",
+      "sourceReference": "doda_02_personnel_and_operations_v107.xlsx TrainingCat!A3",
+      "description": "Core strategic investigation competency. Binary: an agent is trained or not (PERS-15).",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "id": "TRAIN_MEDICAL",
+      "displayName": "Medical Training",
+      "category": "MEDICAL",
+      "eligibleAtCreation": true,
+      "primaryUses": "Medical attention; stabilization; retrieval support",
+      "relatedSystems": "Tasks: TASK_HEAL; TASK_RETRIEVE_INCAPACITATED. Events: EVENT_MEDICAL_TREATMENT",
+      "sourceReference": "doda_02_personnel_and_operations_v107.xlsx TrainingCat!A4",
+      "description": "Needed when agents can act as medics. Binary: an agent is trained or not (PERS-15).",
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "id": "TRAIN_RESEARCH",
+      "displayName": "Research Training",
+      "category": "RESEARCH",
+      "eligibleAtCreation": true,
+      "primaryUses": "Evidence analysis; anomalous research; technical tasks",
+      "relatedSystems": "Tasks: TASK_ANALYZE_EVIDENCE. Events: EVENT_PARANORMAL_EXPOSURE",
+      "sourceReference": "doda_02_personnel_and_operations_v107.xlsx TrainingCat!A5",
+      "description": "Deferred research competency. Binary: an agent is trained or not (PERS-15).",
+      "sortOrder": 40,
+      "active": false
+    },
+    {
+      "id": "TRAIN_ADMINISTRATIVE",
+      "displayName": "Administrative Training",
+      "category": "ADMINISTRATIVE",
+      "eligibleAtCreation": true,
+      "primaryUses": "Scheduling; reporting; logistics; administrative tasks",
+      "relatedSystems": "Tasks: FUTURE_ADMIN_TASKS. Events: EVENT_TASK_COMPLETED",
+      "sourceReference": "doda_02_personnel_and_operations_v107.xlsx TrainingCat!A6",
+      "description": "Deferred administration competency. Binary: an agent is trained or not (PERS-15).",
+      "sortOrder": 50,
+      "active": false
+    },
+    {
+      "id": "TRAIN_CULINARY",
+      "displayName": "Culinary Training",
+      "category": "PERSONAL_CARE",
+      "eligibleAtCreation": true,
+      "primaryUses": "Eating without a designated food location",
+      "relatedSystems": "Personal care: REMED_EATING",
+      "sourceReference": "doda_05_remediation_and_care_v107.xlsx RemedyCat!A12 (TRAINED_CULINARY); dodabase-v107_department_schema_template.xlsx RemedyCat!A12",
+      "description": "Lets the agent or analyst perform these actions without being at a location designated for them (PERS-18). Workbook flag TRAINED_CULINARY. Binary: trained or not (PERS-15).",
+      "sortOrder": 60,
+      "active": false
+    },
+    {
+      "id": "TRAIN_HOSPITALITY",
+      "displayName": "Hospitality Training",
+      "category": "PERSONAL_CARE",
+      "eligibleAtCreation": true,
+      "primaryUses": "Eating, resting, and decompression without a designated location",
+      "relatedSystems": "Personal care: REMED_EATING; REMED_RESTING; REMED_DECOMPRESSION",
+      "sourceReference": "dodabase-v107_department_schema_template.xlsx RemedyCat!A12:A14 (TRAINED_HOSPITALITY)",
+      "description": "Lets the agent or analyst perform these actions without being at a location designated for them (PERS-18). Workbook flag TRAINED_HOSPITALITY. Binary: trained or not (PERS-15).",
+      "sortOrder": 70,
+      "active": false
+    },
+    {
+      "id": "TRAIN_SURVIVALIST",
+      "displayName": "Survivalist Training",
+      "category": "PERSONAL_CARE",
+      "eligibleAtCreation": true,
+      "primaryUses": "Eating, resting, and decompression without a designated location; field injury stabilization and emergency transport support",
+      "relatedSystems": "Personal care: REMED_EATING; REMED_RESTING; REMED_DECOMPRESSION. Care: REMED_INJURY_STABILIZATION; REMED_EMERGENCY_TRANSPORT",
+      "sourceReference": "doda_05_remediation_and_care_v107.xlsx RemedyCat!A7, A12:A14 (TRAINED_SURVIVALIST); dodabase-v107_department_schema_template.xlsx RemedyCat!A3, A12:A13",
+      "description": "Lets the agent or analyst perform these actions without being at a location designated for them (PERS-18). Workbook flag TRAINED_SURVIVALIST. Binary: trained or not (PERS-15).",
+      "sortOrder": 80,
+      "active": false
+    },
+    {
+      "id": "TRAIN_MAGIC",
+      "displayName": "Magic Training",
+      "category": "ARCANE",
+      "eligibleAtCreation": true,
+      "primaryUses": "Magic tasks and actions without a designated magic location",
+      "relatedSystems": "REMED_RESURRECTION (deferred); Digital Encantation (TREE-03, open)",
+      "sourceReference": "doda_05_remediation_and_care_v107.xlsx RemedyCat!A4 (TRAINED_MAGIC)",
+      "description": "Lets the agent or analyst perform these actions without being at a location designated for them (PERS-18). Workbook flag TRAINED_MAGIC. Binary: trained or not (PERS-15).",
+      "sortOrder": 90,
+      "active": false
+    }
+  ],
+  "trainingModel": {
+    "binary": true,
+    "maxTrainingsPerAgent": null,
+    "creationSkills": {
+      "min": 1,
+      "max": 2,
+      "pool": "ELIGIBLE_AT_CREATION",
+      "countDistribution": "UNIFORM",
+      "skillDistribution": "UNIFORM_WITHOUT_REPLACEMENT"
+    },
+    "remedyRequirementAliases": {
+      "TRAINED_MEDIC": "TRAIN_MEDICAL",
+      "TRAINED_CULINARY": "TRAIN_CULINARY",
+      "TRAINED_HOSPITALITY": "TRAIN_HOSPITALITY",
+      "TRAINED_SURVIVALIST": "TRAIN_SURVIVALIST",
+      "TRAINED_MAGIC": "TRAIN_MAGIC"
+    }
+  },
+  "openItems": {
+    "PERS-OPEN-07": "How traits and training affect tasks, events, stress, and compliance (values and formulas).",
+    "PERS-OPEN-08": "How agents get trained after hiring (cost, time, location).",
+    "PERS-OPEN-09": "Structured links from trainings to the tasks and personal-care services they allow away from designated locations (PERS-18).",
+    "PERS-OPEN-10": "Weighted new-hire skill rolls (PERS-19)."
+  },
+  "runtimeImplemented": false
+}

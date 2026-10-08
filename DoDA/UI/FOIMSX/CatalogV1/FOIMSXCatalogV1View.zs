@@ -2,7 +2,7 @@
 // DoDA/UI/FOIMSX/CatalogV1/FOIMSXCatalogV1View.zs
 //
 // FOIMS-X Workbench Catalog V1 — read-only browser for the generated
-// DoDAWorkbenchCatalog (network tiers, hardware, equipment families/models).
+// DoDAWorkbenchCatalog (network/equipment, facilities/capabilities, authored staffing).
 //
 // Scope:
 //   - Presentation only. No native calls, persistence, or gameplay enforcement.
@@ -20,7 +20,10 @@ class DoDAFOIMSXCatalogV1View : Object
     const SECTION_MODELS = 3;
     const SECTION_FACILITIES = 4;
     const SECTION_CAPABILITIES = 5;
-    const SECTION_COUNT = 6;
+    const SECTION_STAFFING_DEFAULTS = 6;
+    const SECTION_FACILITY_STAFFING = 7;
+    const SECTION_TASK_TEMPLATES = 8;
+    const SECTION_COUNT = 9;
     const MAX_VISIBLE_ROWS = 29;
 
     private ui int mSection;
@@ -62,6 +65,9 @@ class DoDAFOIMSXCatalogV1View : Object
         case SECTION_MODELS: return DoDAWorkbenchCatalog.MODEL_COUNT;
         case SECTION_FACILITIES: return DoDAWorkbenchCatalog.FACILITY_COUNT;
         case SECTION_CAPABILITIES: return DoDAWorkbenchCatalog.CAPABILITY_COUNT;
+        case SECTION_STAFFING_DEFAULTS: return DoDAWorkbenchCatalog.STAFFING_DEFAULT_COUNT;
+        case SECTION_FACILITY_STAFFING: return DoDAWorkbenchCatalog.FACILITY_STAFFING_COUNT;
+        case SECTION_TASK_TEMPLATES: return DoDAWorkbenchCatalog.TASK_TEMPLATE_COUNT;
         default: return 0;
         }
     }
@@ -76,6 +82,9 @@ class DoDAFOIMSXCatalogV1View : Object
         case SECTION_MODELS: return "EQUIPMENT MODELS";
         case SECTION_FACILITIES: return "FACILITIES";
         case SECTION_CAPABILITIES: return "CAPABILITIES";
+        case SECTION_STAFFING_DEFAULTS: return "STAFFING DEFAULTS";
+        case SECTION_FACILITY_STAFFING: return "FACILITY STAFFING";
+        case SECTION_TASK_TEMPLATES: return "TASK TEMPLATES";
         default: return "CATALOG";
         }
     }
@@ -148,6 +157,9 @@ class DoDAFOIMSXCatalogV1View : Object
         case SECTION_MODELS: return DoDAWorkbenchCatalog.ModelDisplayName(i);
         case SECTION_FACILITIES: return DoDAWorkbenchCatalog.FacilityDisplayName(i);
         case SECTION_CAPABILITIES: return DoDAWorkbenchCatalog.CapabilityDisplayName(i);
+        case SECTION_STAFFING_DEFAULTS: return DoDAWorkbenchCatalog.StaffingDefaultQualificationName(i);
+        case SECTION_FACILITY_STAFFING: return DoDAWorkbenchCatalog.FacilityStaffingQualificationName(i);
+        case SECTION_TASK_TEMPLATES: return DoDAWorkbenchCatalog.TaskTemplateDisplayName(i);
         default: return "";
         }
     }
@@ -162,6 +174,9 @@ class DoDAFOIMSXCatalogV1View : Object
         case SECTION_MODELS: return DoDAWorkbenchCatalog.ModelFamilyId(i);
         case SECTION_FACILITIES: return "FACILITY";
         case SECTION_CAPABILITIES: return "CAPABILITY";
+        case SECTION_STAFFING_DEFAULTS: return "GLOBAL";
+        case SECTION_FACILITY_STAFFING: return DoDAWorkbenchCatalog.FacilityStaffingSource(i);
+        case SECTION_TASK_TEMPLATES: return DoDAWorkbenchCatalog.TaskTemplatePriority(i);
         default: return "";
         }
     }
@@ -194,7 +209,10 @@ class DoDAFOIMSXCatalogV1View : Object
         }
 
         DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_WHITE, 20, 82,
-            "  NAME                         KIND",
+            mSection == SECTION_TASK_TEMPLATES ? "  TEMPLATE                     PRIORITY" :
+            mSection >= SECTION_STAFFING_DEFAULTS
+                ? "  QUALIFICATION                SOURCE"
+                : "  NAME                         KIND",
             clipLeft, clipTop, clipRight, clipBottom);
 
         DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_DARKGRAY, 20, 92,
@@ -399,6 +417,127 @@ class DoDAFOIMSXCatalogV1View : Object
             clipLeft, clipTop, clipRight, clipBottom);
     }
 
+    private ui void RenderStaffingDetail(int i,
+        int clipLeft, int clipTop, int clipRight, int clipBottom)
+    {
+        if (mSection == SECTION_STAFFING_DEFAULTS)
+        {
+            int capabilityIndex = DoDAWorkbenchCatalog.FindCapability(
+                DoDAWorkbenchCatalog.StaffingDefaultCapabilityId(i));
+            DetailLine(0, "CAPABILITY:", DoDAWorkbenchCatalog.CapabilityDisplayName(capabilityIndex),
+                clipLeft, clipTop, clipRight, clipBottom);
+            DetailLine(1, "QUALIFICATION:", DoDAWorkbenchCatalog.StaffingDefaultQualificationId(i),
+                clipLeft, clipTop, clipRight, clipBottom);
+            DetailLine(2, "MINIMUM:", IntOrNone(DoDAWorkbenchCatalog.StaffingDefaultMin(i)),
+                clipLeft, clipTop, clipRight, clipBottom);
+            DetailLine(3, "PREFERRED:", IntOrNone(DoDAWorkbenchCatalog.StaffingDefaultPreferred(i)),
+                clipLeft, clipTop, clipRight, clipBottom);
+            DetailLine(4, "MAXIMUM:", IntOrNone(DoDAWorkbenchCatalog.StaffingDefaultMax(i)),
+                clipLeft, clipTop, clipRight, clipBottom);
+            DetailLine(5, "SOURCE:", "GLOBAL DEFAULT",
+                clipLeft, clipTop, clipRight, clipBottom);
+        }
+        else
+        {
+            int facilityIndex = DoDAWorkbenchCatalog.FindFacility(
+                DoDAWorkbenchCatalog.FacilityStaffingFacilityId(i));
+            DetailLine(0, "FACILITY:", DoDAWorkbenchCatalog.FacilityDisplayName(facilityIndex),
+                clipLeft, clipTop, clipRight, clipBottom);
+            DetailLine(1, "CAPABILITY:", DoDAWorkbenchCatalog.FacilityStaffingCapabilityName(i),
+                clipLeft, clipTop, clipRight, clipBottom);
+            DetailLine(2, "QUALIFICATION:", DoDAWorkbenchCatalog.FacilityStaffingQualificationId(i),
+                clipLeft, clipTop, clipRight, clipBottom);
+            DetailLine(3, "GLOBAL:", String.Format("%d / %d / %d",
+                DoDAWorkbenchCatalog.FacilityStaffingGlobalMin(i),
+                DoDAWorkbenchCatalog.FacilityStaffingGlobalPreferred(i),
+                DoDAWorkbenchCatalog.FacilityStaffingGlobalMax(i)),
+                clipLeft, clipTop, clipRight, clipBottom);
+            DetailLine(4, "EFFECTIVE:", String.Format("%d / %d / %d",
+                DoDAWorkbenchCatalog.FacilityStaffingMin(i),
+                DoDAWorkbenchCatalog.FacilityStaffingPreferred(i),
+                DoDAWorkbenchCatalog.FacilityStaffingMax(i)),
+                clipLeft, clipTop, clipRight, clipBottom);
+            String source = DoDAWorkbenchCatalog.FacilityStaffingSource(i);
+            DetailLine(5, "SOURCE:", source == "OVERRIDE" ? "FACILITY OVERRIDE" : "INHERITED GLOBAL",
+                clipLeft, clipTop, clipRight, clipBottom);
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GRAY, 330, 248,
+                "RANGES: MINIMUM / PREFERRED / MAXIMUM",
+                clipLeft, clipTop, clipRight, clipBottom);
+        }
+        DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GRAY, 330, 314,
+            "COUNTS ARE PER QUALIFICATION ROW",
+            clipLeft, clipTop, clipRight, clipBottom);
+        DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GRAY, 330, 330,
+            "NO SUMMED HEADCOUNT OR LIVE READINESS",
+            clipLeft, clipTop, clipRight, clipBottom);
+        DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_YELLOW, 330, 364,
+            "AUTHORED REQUIREMENTS - NOT LIVE STATUS",
+            clipLeft, clipTop, clipRight, clipBottom);
+    }
+
+    private ui void RenderTaskTemplateDetail(int i,
+        int clipLeft, int clipTop, int clipRight, int clipBottom)
+    {
+        String capabilityId = DoDAWorkbenchCatalog.TaskTemplateCapabilityId(i);
+        int capabilityIndex = DoDAWorkbenchCatalog.FindCapability(capabilityId);
+        DetailLine(0, "ID:", DoDAWorkbenchCatalog.TaskTemplateId(i),
+            clipLeft, clipTop, clipRight, clipBottom);
+        DetailLine(1, "CAPABILITY:", DoDAWorkbenchCatalog.CapabilityDisplayName(capabilityIndex),
+            clipLeft, clipTop, clipRight, clipBottom);
+        DetailLine(2, "PRIORITY:", DoDAWorkbenchCatalog.TaskTemplatePriority(i),
+            clipLeft, clipTop, clipRight, clipBottom);
+        DetailLine(3, "EFFORT (MIN):", IntOrNone(DoDAWorkbenchCatalog.TaskTemplateTargetEffortMinutes(i)),
+            clipLeft, clipTop, clipRight, clipBottom);
+        DetailLine(4, "DEADLINE (MIN):", IntOrNone(DoDAWorkbenchCatalog.TaskTemplateDeadlineMinutes(i)),
+            clipLeft, clipTop, clipRight, clipBottom);
+        DetailLine(5, "AUTO-ALLOCATE:", DoDAWorkbenchCatalog.TaskTemplateAutoAllocate(i) == 1 ? "YES (AUTHORED)" : "NO (AUTHORED)",
+            clipLeft, clipTop, clipRight, clipBottom);
+
+        String description = DoDAWorkbenchCatalog.TaskTemplateDescription(i);
+        for (int line = 0; line < 3; line++)
+        {
+            if (description.Length() <= line * 56) break;
+            String text = description.Mid(line * 56, 56);
+            if (line == 2 && description.Length() > 168) text = text.Left(53) .. "...";
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GRAY, 330, 230 + line * 10,
+                text, clipLeft, clipTop, clipRight, clipBottom);
+        }
+        DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GOLD, 330, 274,
+            "LINKED FACILITIES (AUTHORED)",
+            clipLeft, clipTop, clipRight, clipBottom);
+        int count = 0;
+        for (int link = 0; link < DoDAWorkbenchCatalog.FACILITY_CAPABILITY_COUNT; link++)
+        {
+            if (DoDAWorkbenchCatalog.FacilityCapabilityCapabilityId(link) != capabilityId) continue;
+            int facilityIndex = DoDAWorkbenchCatalog.FindFacility(
+                DoDAWorkbenchCatalog.FacilityCapabilityFacilityId(link));
+            if (count < 3)
+            {
+                DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_WHITE,
+                    330, 294 + count * 14, DoDAWorkbenchCatalog.FacilityDisplayName(facilityIndex),
+                    clipLeft, clipTop, clipRight, clipBottom);
+            }
+            count++;
+        }
+        if (count == 0)
+        {
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_GRAY, 330, 294,
+                "NO LINKED FACILITIES", clipLeft, clipTop, clipRight, clipBottom);
+        }
+        if (count > 3)
+        {
+            DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_YELLOW, 330, 338,
+                String.Format("+%d MORE LINKS (SEE WORKBENCH)", count - 3),
+                clipLeft, clipTop, clipRight, clipBottom);
+        }
+        DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_YELLOW, 330, 352,
+            "EFFORT IS NOT ELAPSED DEADLINE TIME",
+            clipLeft, clipTop, clipRight, clipBottom);
+        DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_YELLOW, 330, 364,
+            "TEMPLATE ONLY - NO TASKS CREATED",
+            clipLeft, clipTop, clipRight, clipBottom);
+    }
+
     ui void RenderDetail()
     {
         int clipLeft, clipTop, clipRight, clipBottom;
@@ -454,6 +593,13 @@ class DoDAFOIMSXCatalogV1View : Object
         case SECTION_FACILITIES:
         case SECTION_CAPABILITIES:
             RenderDepartmentDetail(i, clipLeft, clipTop, clipRight, clipBottom);
+            break;
+        case SECTION_STAFFING_DEFAULTS:
+        case SECTION_FACILITY_STAFFING:
+            RenderStaffingDetail(i, clipLeft, clipTop, clipRight, clipBottom);
+            break;
+        case SECTION_TASK_TEMPLATES:
+            RenderTaskTemplateDetail(i, clipLeft, clipTop, clipRight, clipBottom);
             break;
         }
 

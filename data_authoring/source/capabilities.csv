@@ -1,3 +1,7 @@
 "capability_id","display_name","description","standing_operation_label","sort_order","active"
 "ELECTRONIC_SURVEILLANCE","Electronic Surveillance","Authorized collection and analysis of electronic signals.","Signal Monitoring","10","TRUE"
 "OCCULT_RESPONSE","Occult Response","Specialized investigation and containment of anomalous threats.","Response Readiness","20","TRUE"
+"CAP_EMERGENCY_TRANSPORT","Emergency Transport","V107 draft: Supports emergency retrieval and medical transport. Staffing and facility mapping are not yet configured.","","70","FALSE"
+"CAP_RESEARCH","Research Facility","V107 draft: Supports evidence analysis and research tasks. Staffing and facility mapping are not yet configured.","","80","FALSE"
+"CAP_EVIDENCE_STORAGE","Evidence Storage","V107 draft: Supports custody and warehouse workflows. Staffing and facility mapping are not yet configured.","","90","FALSE"
+"CAP_ANOMALOUS_CONTAINMENT","Anomalous Containment","V107 draft: Supports anomalous evidence or entity containment. Staffing and facility mapping are not yet configured.","","100","FALSE"

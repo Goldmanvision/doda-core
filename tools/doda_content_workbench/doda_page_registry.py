@@ -15,6 +15,11 @@ from dataclasses import dataclass, field
 
 import doda_network_rules as network_rules
 import doda_equipment_rules as equipment_rules
+import doda_care_rules as care_rules
+import doda_condition_rules as condition_rules
+import doda_agent_attribute_rules as attribute_rules
+import doda_personal_care_rules as personal_care_rules
+import doda_time_rules as time_rules
 
 
 @dataclass(frozen=True)
@@ -31,6 +36,7 @@ GROUP_ORDER = (
     "Department",
     "Facilities and Staffing",
     "Tasks",
+    "Personnel and Care",
     "Equipment",
     "Network and Transfers",
     "Content",
@@ -53,6 +59,36 @@ PAGES: tuple[PageSpec, ...] = (
     PageSpec("qualifications", "Facilities and Staffing", "Qualifications", "Qualifications",
              ("qualification_catalog",)),
     PageSpec("task_templates", "Tasks", "Task Templates", "Task Templates", ("task_templates",)),
+    PageSpec("care_services", "Personnel and Care", "Care Services", "Care Services",
+             ("care_services",)),
+    PageSpec("care_location_features", "Personnel and Care", "Care Locations", "Care Locations",
+             ("care_location_features",)),
+    PageSpec("care_service_locations", "Personnel and Care", "Care Service Locations",
+             "Care Service Locations", ("care_service_locations",)),
+    PageSpec("condition_stats", "Personnel and Care", "Condition Stats", "Condition Stats",
+             ("condition_stats",)),
+    PageSpec("condition_bands", "Personnel and Care", "Condition Bands", "Condition Bands",
+             ("condition_bands",)),
+    PageSpec("personnel_traits", "Personnel and Care", "Traits", "Traits", ("personnel_traits",)),
+    PageSpec("training_catalog", "Personnel and Care", "Training", "Training", ("training_catalog",)),
+    PageSpec("personal_care_actions", "Personnel and Care", "Personal Care", "Personal Care —",
+             ("personal_care_actions",)),
+    PageSpec("personal_care_features", "Personnel and Care", "Personal Care Places",
+             "Personal Care Places", ("personal_care_features",)),
+    PageSpec("personal_care_locations", "Personnel and Care", "Personal Care Place Links",
+             "Personal Care Place Links", ("personal_care_locations",)),
+    PageSpec("personal_care_trainings", "Personnel and Care", "Personal Care Trainings",
+             "Personal Care Trainings", ("personal_care_trainings",)),
+    PageSpec("personal_care_place_types", "Personnel and Care", "Place Types", "Place Types —",
+             ("personal_care_place_types",)),
+    PageSpec("personal_care_place_type_features", "Personnel and Care", "Place Type Features",
+             "Place Type Features", ("personal_care_place_type_features",)),
+    PageSpec("recreation_activities", "Personnel and Care", "Recreation Activities",
+             "Recreation Activities", ("recreation_activities",)),
+    PageSpec("personal_care_during_care", "Personnel and Care", "Personal Care During Care",
+             "Personal Care During Care", ("personal_care_during_care",)),
+    PageSpec("time_settings", "Administration", "Time Settings", "Time Settings",
+             ("time_settings",)),
     PageSpec("equipment_families", "Equipment", "Equipment Families", "Equipment Families",
              ("equipment_families",)),
     PageSpec("equipment_models", "Equipment", "Equipment Models", "Equipment Models", ("equipment_models",)),
@@ -88,6 +124,11 @@ class TableSpec:
     @property
     def columns(self) -> list[str]:
         return [f.name for f in self.fields]
+
+    @property
+    def key_columns(self) -> tuple[str, ...]:
+        """Composite keys are written as 'a+b'."""
+        return tuple(self.key.split("+"))
 
 
 TABLE_METADATA: dict[str, TableSpec] = {
@@ -139,6 +180,224 @@ TABLE_METADATA: dict[str, TableSpec] = {
             FieldSpec("sort_order", "Sort Order", kind="int"),
             FieldSpec("active", "Active", kind="bool"),
         )),
+    "care_services": TableSpec(
+        "care_services", care_rules.CARE_FILE, "care_service_id", (
+            FieldSpec("care_service_id", "Care Service ID"),
+            FieldSpec("display_name", "Display Name"),
+            FieldSpec("care_category", "Category", kind="choice", choices=care_rules.CARE_CATEGORIES),
+            FieldSpec("recipient_assignment", "Patient Assignment", kind="choice",
+                      choices=care_rules.RECIPIENT_ASSIGNMENTS),
+            FieldSpec("provider_mode", "Provider", kind="choice", choices=care_rules.PROVIDER_MODES),
+            FieldSpec("cost_policy", "Cost Policy", kind="choice", choices=care_rules.COST_POLICIES),
+            FieldSpec("duration_minutes", "Duration (minutes, blank = undecided)", required=False),
+            FieldSpec("follow_up_care_service_id", "Follow-Up Service", kind="ref", required=False,
+                      ref_table="care_services"),
+            FieldSpec("destination_feature_id", "Delivers Agent To", kind="ref", required=False,
+                      ref_table="care_location_features"),
+            FieldSpec("source_reference", "Source Reference", required=False),
+            FieldSpec("description", "Description", required=False, multiline=True),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
+    "care_location_features": TableSpec(
+        "care_location_features", care_rules.FEATURES_FILE, "feature_id", (
+            FieldSpec("feature_id", "Feature ID"),
+            FieldSpec("display_name", "Display Name"),
+            FieldSpec("description", "Description", required=False, multiline=True),
+            FieldSpec("source_reference", "Source Reference", required=False),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
+    "care_service_locations": TableSpec(
+        "care_service_locations", care_rules.LINKS_FILE, "care_service_id+feature_id", (
+            FieldSpec("care_service_id", "Care Service", kind="ref", ref_table="care_services"),
+            FieldSpec("feature_id", "Location Feature", kind="ref", ref_table="care_location_features"),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
+    "condition_stats": TableSpec(
+        "condition_stats", condition_rules.STATS_FILE, "stat_id", (
+            FieldSpec("stat_id", "Stat ID"),
+            FieldSpec("display_name", "Display Name"),
+            FieldSpec("stat_category", "Category", kind="choice", choices=condition_rules.STAT_CATEGORIES),
+            FieldSpec("minimum_value", "Minimum", kind="int"),
+            FieldSpec("maximum_value", "Maximum (blank = undecided)", required=False),
+            FieldSpec("default_value", "Default (blank = undecided)", required=False),
+            FieldSpec("creation_rule", "Starting Value Rule", kind="choice", required=False,
+                      choices=condition_rules.CREATION_RULES),
+            FieldSpec("creation_source_stat_id", "Copy Starting Value From", kind="ref", required=False,
+                      ref_table="condition_stats"),
+            FieldSpec("direction", "Direction", kind="choice", choices=condition_rules.DIRECTIONS),
+            FieldSpec("storage_model", "Storage", kind="choice", choices=condition_rules.STORAGE_MODELS),
+            FieldSpec("derivation", "Derivation", kind="choice", required=False,
+                      choices=condition_rules.DERIVATIONS),
+            FieldSpec("contributes_to_health", "Counts Toward Health", kind="bool"),
+            FieldSpec("health_formula", "Health Formula", kind="choice", required=False,
+                      choices=condition_rules.HEALTH_FORMULAS),
+            FieldSpec("health_reference_stat_id", "Health Reference Stat", kind="ref", required=False,
+                      ref_table="condition_stats"),
+            FieldSpec("player_visibility", "Visibility", kind="choice", choices=condition_rules.VISIBILITIES),
+            FieldSpec("high_value_meaning", "High Value Means", required=False),
+            FieldSpec("low_value_meaning", "Low Value Means", required=False),
+            FieldSpec("source_reference", "Source Reference", required=False),
+            FieldSpec("description", "Description", required=False, multiline=True),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
+    "condition_bands": TableSpec(
+        "condition_bands", condition_rules.BANDS_FILE, "band_id", (
+            FieldSpec("band_id", "Band ID"),
+            FieldSpec("stat_id", "Stat", kind="ref", ref_table="condition_stats"),
+            FieldSpec("band_trigger", "Shown When", kind="choice", choices=condition_rules.BAND_TRIGGERS),
+            FieldSpec("minimum_value", "Minimum (RANGE only)", kind="int", required=False),
+            FieldSpec("maximum_value", "Maximum (RANGE only)", kind="int", required=False),
+            FieldSpec("display_name", "Label"),
+            FieldSpec("severity", "Severity", kind="choice", choices=condition_rules.SEVERITIES),
+            FieldSpec("assignment_effect", "Assignment Effect", kind="choice",
+                      choices=condition_rules.ASSIGNMENT_EFFECTS),
+            FieldSpec("forced_off_duty", "Forced Off Duty", kind="bool"),
+            FieldSpec("suggested_action", "Suggested Action", required=False),
+            FieldSpec("suggested_care_service_id", "Suggested Care Service", kind="ref", required=False,
+                      ref_table="care_services"),
+            FieldSpec("foims_warning", "FOIMS Warning", required=False),
+            FieldSpec("ui_color", "Colour (#RRGGBB)", required=False),
+            FieldSpec("source_reference", "Source Reference", required=False),
+            FieldSpec("description", "Description", required=False, multiline=True),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
+    "personnel_traits": TableSpec(
+        "personnel_traits", attribute_rules.TRAITS_FILE, "trait_id", (
+            FieldSpec("trait_id", "Trait ID"),
+            FieldSpec("display_name", "Display Name"),
+            FieldSpec("trait_category", "Category", kind="choice", choices=attribute_rules.TRAIT_CATEGORIES),
+            FieldSpec("minimum_value", "Minimum", kind="int"),
+            FieldSpec("maximum_value", "Maximum", kind="int"),
+            FieldSpec("default_value", "Default (DEFAULT rule only)", kind="int", required=False),
+            FieldSpec("creation_rule", "Starting Value Rule", kind="choice",
+                      choices=attribute_rules.CREATION_RULES),
+            FieldSpec("can_change_over_time", "Can Change Over Time", kind="bool"),
+            FieldSpec("contributes_to_health", "Counts Toward Health", kind="bool"),
+            FieldSpec("health_formula", "Health Formula", kind="choice", required=False,
+                      choices=attribute_rules.HEALTH_FORMULAS),
+            FieldSpec("health_reference_id", "Health Reference", kind="ref", required=False,
+                      ref_table="personnel_traits"),
+            FieldSpec("primary_uses", "Primary Uses", required=False),
+            FieldSpec("related_systems", "Related Systems", required=False),
+            FieldSpec("source_reference", "Source Reference", required=False),
+            FieldSpec("description", "Description", required=False, multiline=True),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
+    "training_catalog": TableSpec(
+        "training_catalog", attribute_rules.TRAINING_FILE, "training_id", (
+            FieldSpec("training_id", "Training ID"),
+            FieldSpec("display_name", "Display Name"),
+            FieldSpec("training_category", "Category", kind="choice",
+                      choices=attribute_rules.TRAINING_CATEGORIES),
+            FieldSpec("eligible_at_creation", "Can Appear on New Hire Dossier", kind="bool"),
+            FieldSpec("primary_uses", "Primary Uses", required=False),
+            FieldSpec("related_systems", "Related Systems", required=False),
+            FieldSpec("source_reference", "Source Reference", required=False),
+            FieldSpec("description", "Description", required=False, multiline=True),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
+    "time_settings": TableSpec(
+        "time_settings", time_rules.SETTINGS_FILE, "setting_id", (
+            FieldSpec("setting_id", "Setting ID"),
+            FieldSpec("display_name", "Display Name"),
+            FieldSpec("category", "Category", kind="choice", choices=time_rules.CATEGORIES),
+            FieldSpec("value", "Value (decimal, up to 4 places)"),
+            FieldSpec("unit", "Unit", kind="choice", choices=time_rules.UNITS),
+            FieldSpec("editable", "Editable", kind="bool"),
+            FieldSpec("source_reference", "Source Reference", required=False),
+            FieldSpec("description", "Description", required=False, multiline=True),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
+    "personal_care_actions": TableSpec(
+        "personal_care_actions", personal_care_rules.ACTIONS_FILE, "action_id", (
+            FieldSpec("action_id", "Action ID"),
+            FieldSpec("display_name", "Display Name"),
+            FieldSpec("initiation", "Who Starts It", kind="choice", choices=personal_care_rules.INITIATIONS),
+            FieldSpec("off_duty_required", "Requires Off Duty", kind="bool"),
+            FieldSpec("follow_up_action_id", "Follow-Up Action", kind="ref", required=False,
+                      ref_table="personal_care_actions"),
+            FieldSpec("workbook_status", "Workbook Status", required=False),
+            FieldSpec("source_reference", "Source Reference", required=False),
+            FieldSpec("description", "Description", required=False, multiline=True),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
+    "personal_care_features": TableSpec(
+        "personal_care_features", personal_care_rules.FEATURES_FILE, "feature_id", (
+            FieldSpec("feature_id", "Feature ID"),
+            FieldSpec("display_name", "Display Name"),
+            FieldSpec("description", "Description", required=False, multiline=True),
+            FieldSpec("source_reference", "Source Reference", required=False),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
+    "personal_care_locations": TableSpec(
+        "personal_care_locations", personal_care_rules.LOCATIONS_FILE, "action_id+feature_id", (
+            FieldSpec("action_id", "Personal-Care Action", kind="ref", ref_table="personal_care_actions"),
+            FieldSpec("feature_id", "Place Feature", kind="ref", ref_table="personal_care_features"),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
+    "personal_care_place_types": TableSpec(
+        "personal_care_place_types", personal_care_rules.PLACE_TYPES_FILE, "place_type_id", (
+            FieldSpec("place_type_id", "Place Type ID"),
+            FieldSpec("display_name", "Display Name"),
+            FieldSpec("serves_as_home", "Serves as a Home", kind="bool"),
+            FieldSpec("agent_owned", "Owned by an Agent", kind="bool"),
+            FieldSpec("occupancy_rule", "Occupancy Limit", kind="choice",
+                      choices=personal_care_rules.OCCUPANCY_RULES),
+            FieldSpec("source_reference", "Source Reference", required=False),
+            FieldSpec("description", "Description", required=False, multiline=True),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
+    "personal_care_place_type_features": TableSpec(
+        "personal_care_place_type_features", personal_care_rules.PLACE_TYPE_FEATURES_FILE,
+        "place_type_id+feature_id", (
+            FieldSpec("place_type_id", "Place Type", kind="ref", ref_table="personal_care_place_types"),
+            FieldSpec("feature_id", "Offers Feature", kind="ref", ref_table="personal_care_features"),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
+    "recreation_activities": TableSpec(
+        "recreation_activities", personal_care_rules.ACTIVITIES_FILE, "activity_id", (
+            FieldSpec("activity_id", "Activity ID"),
+            FieldSpec("place_type_id", "Place Type", kind="ref", ref_table="personal_care_place_types"),
+            FieldSpec("display_name", "Display Name"),
+            FieldSpec("description", "Description", required=False, multiline=True),
+            FieldSpec("duration_minutes", "Time Cost (minutes)", kind="int", required=False),
+            FieldSpec("duration_label", "Duration Label (e.g. Overnight)", required=False),
+            FieldSpec("company_options", "Company (ALONE; FRIENDS; STRANGERS)", required=False),
+            FieldSpec("stress_reduction_per_tick", "Stress Reduction per Tick", required=False),
+            FieldSpec("fatigue_cost_per_tick", "Fatigue Cost per Tick (energy used)", required=False),
+            FieldSpec("energy_required_to_start", "Energy Required to Start (0-100)", required=False),
+            FieldSpec("hunger_reduction_per_tick", "Hunger Reduction per Tick", required=False),
+            FieldSpec("source_reference", "Source Reference", required=False),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
+    "personal_care_during_care": TableSpec(
+        "personal_care_during_care", personal_care_rules.DURING_CARE_FILE, "care_service_id+action_id", (
+            FieldSpec("care_service_id", "Care Service", kind="ref", ref_table="care_services"),
+            FieldSpec("action_id", "Provides Personal Care", kind="ref", ref_table="personal_care_actions"),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
+    "personal_care_trainings": TableSpec(
+        "personal_care_trainings", personal_care_rules.TRAININGS_FILE, "action_id+training_id", (
+            FieldSpec("action_id", "Personal-Care Action", kind="ref", ref_table="personal_care_actions"),
+            FieldSpec("training_id", "Training (do it anywhere)", kind="ref", ref_table="training_catalog"),
+            FieldSpec("sort_order", "Sort Order", kind="int"),
+            FieldSpec("active", "Active", kind="bool"),
+        )),
 }
 
 
@@ -169,4 +428,34 @@ def check_registry() -> list[str]:
         problems.append("equipment_families metadata columns differ from validator")
     if TABLE_METADATA["equipment_models"].columns != equipment_rules.MODEL_COLUMNS:
         problems.append("equipment_models metadata columns differ from validator")
+    if TABLE_METADATA["care_services"].columns != care_rules.CARE_COLUMNS:
+        problems.append("care_services metadata columns differ from validator")
+    if TABLE_METADATA["care_location_features"].columns != care_rules.FEATURE_COLUMNS:
+        problems.append("care_location_features metadata columns differ from validator")
+    if TABLE_METADATA["care_service_locations"].columns != care_rules.LINK_COLUMNS:
+        problems.append("care_service_locations metadata columns differ from validator")
+    if TABLE_METADATA["condition_stats"].columns != condition_rules.STAT_COLUMNS:
+        problems.append("condition_stats metadata columns differ from validator")
+    if TABLE_METADATA["condition_bands"].columns != condition_rules.BAND_COLUMNS:
+        problems.append("condition_bands metadata columns differ from validator")
+    if TABLE_METADATA["personnel_traits"].columns != attribute_rules.TRAIT_COLUMNS:
+        problems.append("personnel_traits metadata columns differ from validator")
+    if TABLE_METADATA["training_catalog"].columns != attribute_rules.TRAINING_COLUMNS:
+        problems.append("training_catalog metadata columns differ from validator")
+    for name, cols in (("personal_care_actions", personal_care_rules.ACTION_COLUMNS),
+                       ("personal_care_features", personal_care_rules.FEATURE_COLUMNS),
+                       ("personal_care_locations", personal_care_rules.LOCATION_COLUMNS),
+                       ("personal_care_trainings", personal_care_rules.TRAINING_LINK_COLUMNS),
+                       ("personal_care_place_types", personal_care_rules.PLACE_TYPE_COLUMNS),
+                       ("personal_care_place_type_features", personal_care_rules.PLACE_TYPE_FEATURE_COLUMNS),
+                       ("recreation_activities", personal_care_rules.ACTIVITY_COLUMNS),
+                       ("personal_care_during_care", personal_care_rules.DURING_CARE_COLUMNS)):
+        if TABLE_METADATA[name].columns != cols:
+            problems.append(f"{name} metadata columns differ from validator")
+    if TABLE_METADATA["time_settings"].columns != time_rules.SETTING_COLUMNS:
+        problems.append("time_settings metadata columns differ from validator")
+    for spec in TABLE_METADATA.values():
+        for k in spec.key_columns:
+            if k not in spec.columns:
+                problems.append(f"{spec.table} key column {k} is not a field")
     return problems

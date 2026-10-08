@@ -1,0 +1,3 @@
+"capability_id","display_name","description","standing_operation_label","sort_order","active"
+"ELECTRONIC_SURVEILLANCE","Electronic Surveillance","Authorized collection and analysis of electronic signals.","Signal Monitoring","10","TRUE"
+"OCCULT_RESPONSE","Occult Response","Specialized investigation and containment of anomalous threats.","Response Readiness","20","TRUE"

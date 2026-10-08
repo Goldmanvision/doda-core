@@ -2,7 +2,8 @@
 
 Option B bridge (stopgap): display/lookup data only, no simulation rules.
 Inputs : generated/data/network_transfer_rules.json, generated/data/equipment_catalog.json,
-         generated/data/department_content.json (facilities, capabilities, links, tracks)
+         generated/data/department_content.json (facilities, capabilities, links, tracks,
+         qualifications, staffing defaults, facility staffing overrides, and task templates)
 Output : DoDA/Generated/WorkbenchCatalog.zs (plus expected-dump text for comparison)
 
 ZScript features used (local docs, ZDoom_Documentation):
@@ -18,7 +19,7 @@ import json
 import sys
 from pathlib import Path
 
-GENERATOR_VERSION = "0.2.0"
+GENERATOR_VERSION = "0.4.0"
 NETWORK_JSON = Path("generated/data/network_transfer_rules.json")
 EQUIPMENT_JSON = Path("generated/data/equipment_catalog.json")
 DEPARTMENT_JSON = Path("generated/data/department_content.json")
@@ -114,9 +115,130 @@ def department_catalog(dept):
         if pair in seen or pair[0] not in facility_ids or pair[1] not in capability_ids:
             raise ValueError(f"Invalid/duplicate active facility-capability link: {pair}")
         seen.add(pair)
+    rules, effective, qualifications = staffing_catalog(tables, capabilities, links)
+    templates = task_template_catalog(tables, capability_ids, seen)
     projected = dict(facilities=facilities, capabilities=capabilities, links=links,
-                     tracks=sorted(tracks.values(), key=lambda r: r["track_id"]))
-    return facilities, capabilities, links, tracks, content_hash(projected)
+                     tracks=sorted(tracks.values(), key=lambda r: r["track_id"]),
+                     staffing_defaults=rules, effective_staffing=effective,
+                     task_templates=templates, qualifications=sorted(qualifications.values(),
+                                           key=lambda r: r["qualification_id"]))
+    return facilities, capabilities, links, tracks, content_hash(projected), rules, effective, qualifications, templates
+
+
+def task_template_catalog(tables, capability_ids, facility_pairs):
+    """Authored templates only. Effort, deadline, and auto-allocation stay metadata."""
+    priorities = {r["enum_value"] for r in _active(tables["enum_catalog"])
+                  if r["enum_group"] == "TASK_PRIORITY"}
+    installed = {pair[1] for pair in facility_pairs}
+    templates = sorted(_active(tables["task_templates"]),
+                       key=lambda r: (r["sort_order"], r["task_template_id"]))
+    seen = set()
+    for row in templates:
+        key = row["task_template_id"]
+        if not key or key in seen:
+            raise ValueError(f"Invalid/duplicate active task-template ID: {key}")
+        seen.add(key)
+        if row["capability_id"] not in capability_ids or row["capability_id"] not in installed:
+            raise ValueError(f"Task template references unavailable authored capability: {key}")
+        if row["priority"] not in priorities:
+            raise ValueError(f"Unknown task priority: {key}")
+        for field in ("default_target_effort_minutes", "default_deadline_minutes"):
+            if type(row[field]) is not int or row[field] <= 0:
+                raise ValueError(f"Task-template {field} must be a positive integer: {key}")
+        if type(row["auto_allocate"]) is not bool:
+            raise ValueError(f"Task-template auto_allocate must be boolean: {key}")
+    return templates
+
+
+def task_template_lookups(templates):
+    parts = []
+    for suffix, key in (("Id", "task_template_id"), ("DisplayName", "display_name"),
+                        ("Description", "description"), ("CapabilityId", "capability_id"),
+                        ("Priority", "priority")):
+        parts.append(string_lookup("TaskTemplate" + suffix, [r[key] for r in templates]))
+    for suffix, key in (("TargetEffortMinutes", "default_target_effort_minutes"),
+                        ("DeadlineMinutes", "default_deadline_minutes")):
+        parts.append(int_lookup("TaskTemplate" + suffix, [r[key] for r in templates]))
+    parts.append(int_lookup("TaskTemplateAutoAllocate", [int(r["auto_allocate"]) for r in templates]))
+    parts.append(find_fn("FindTaskTemplate", "TASK_TEMPLATE_COUNT", "TaskTemplateId"))
+    return "\n".join(parts)
+
+
+def staffing_catalog(tables, capabilities, links):
+    """Resolve authored ranges only, by exact composite keys. Never sum people.
+
+    An active override replaces all three counts for one qualification row.
+    Missing/inactive overrides inherit the complete global row. Provenance
+    remains OVERRIDE even when its values equal the global baseline.
+    """
+    qualifications = {}
+    for row in _active(tables["qualification_catalog"]):
+        key = row["qualification_id"]
+        if key in qualifications:
+            raise ValueError(f"Duplicate active qualification: {key}")
+        qualifications[key] = row
+    capability_ids = {r["capability_id"] for r in capabilities}
+    capability_names = {r["capability_id"]: r["display_name"] for r in capabilities}
+    pair_ids = {(r["facility_id"], r["capability_id"]) for r in links}
+    rules = sorted(_active(tables["capability_staffing_rules"]),
+                   key=lambda r: (r["capability_id"], r["sort_order"], r["qualification_id"]))
+    by_key = {}
+
+    def check_range(row):
+        values = [row[k] for k in ("min_contributors", "preferred_contributors", "max_contributors")]
+        if any(type(v) is not int for v in values) or not 0 <= values[0] <= values[1] <= values[2]:
+            raise ValueError(f"Invalid authored staffing range: {row}")
+
+    for row in rules:
+        key = (row["capability_id"], row["qualification_id"])
+        if key in by_key or key[0] not in capability_ids or key[1] not in qualifications:
+            raise ValueError(f"Invalid/duplicate active staffing default: {key}")
+        check_range(row)
+        by_key[key] = row
+    for capability_id in capability_ids:
+        if not any(key[0] == capability_id for key in by_key):
+            raise ValueError(f"Capability has no active staffing defaults: {capability_id}")
+    overrides = {}
+    for row in _active(tables["facility_capability_staffing_overrides"]):
+        key = (row["facility_id"], row["capability_id"], row["qualification_id"])
+        if key in overrides or key[:2] not in pair_ids or key[1:] not in by_key:
+            raise ValueError(f"Invalid/duplicate active staffing override: {key}")
+        check_range(row)
+        overrides[key] = row
+    effective = []
+    for link in links:
+        for rule in rules:
+            if rule["capability_id"] != link["capability_id"]:
+                continue
+            key = (link["facility_id"], rule["capability_id"], rule["qualification_id"])
+            selected = overrides.get(key, rule)
+            row = dict(facility_id=key[0], capability_id=key[1], qualification_id=key[2],
+                       capability_label=link["display_name_override"] or capability_names[key[1]],
+                       provenance="OVERRIDE" if key in overrides else "INHERITED")
+            for field in ("min_contributors", "preferred_contributors", "max_contributors"):
+                row["global_" + field] = rule[field]
+                row[field] = selected[field]
+            effective.append(row)
+    return rules, effective, qualifications
+
+
+def staffing_lookups(rules, effective, qualifications):
+    parts = []
+    for prefix, rows in (("StaffingDefault", rules), ("FacilityStaffing", effective)):
+        columns = [("CapabilityId", "capability_id"), ("QualificationId", "qualification_id")]
+        if prefix == "FacilityStaffing":
+            columns += [("FacilityId", "facility_id"), ("Source", "provenance"),
+                        ("CapabilityName", "capability_label")]
+        for suffix, key in columns:
+            parts.append(string_lookup(prefix + suffix, [r[key] for r in rows]))
+        parts.append(string_lookup(prefix + "QualificationName", [
+            qualifications[r["qualification_id"]]["display_name"] for r in rows]))
+        for suffix, key in (("Min", "min_contributors"), ("Preferred", "preferred_contributors"),
+                            ("Max", "max_contributors")):
+            parts.append(int_lookup(prefix + suffix, [r[key] for r in rows]))
+            if prefix == "FacilityStaffing":
+                parts.append(int_lookup(prefix + "Global" + suffix, [r["global_" + key] for r in rows]))
+    return "\n".join(parts)
 
 
 def department_lookups(facilities, capabilities, links, tracks):
@@ -158,7 +280,8 @@ def build(net, eq, net_hash, eq_hash, dept):
     hw = _sorted(_active(net["hardwareModels"]), "modelId")
     fams = _sorted(_active(eq["families"]), "familyId")
     models = _sorted(_active(eq["models"]), "modelId")
-    facilities, capabilities, links, tracks, dept_hash = department_catalog(dept)
+    facilities, capabilities, links, tracks, dept_hash, rules, effective, qualifications, templates = department_catalog(dept)
+    override_count = sum(r["provenance"] == "OVERRIDE" for r in effective)
 
     out = [
         "/*//////////////////////////|",
@@ -180,6 +303,10 @@ def build(net, eq, net_hash, eq_hash, dept):
         f"    const FACILITY_COUNT = {len(facilities)};",
         f"    const CAPABILITY_COUNT = {len(capabilities)};",
         f"    const FACILITY_CAPABILITY_COUNT = {len(links)};",
+        f"    const STAFFING_DEFAULT_COUNT = {len(rules)};",
+        f"    const FACILITY_STAFFING_COUNT = {len(effective)};",
+        f"    const STAFFING_OVERRIDE_COUNT = {override_count};",
+        f"    const TASK_TEMPLATE_COUNT = {len(templates)};",
         f"    const TOTAL_PERSONAL_DEVICE_LIMIT = {int(eq['totalPersonalDeviceLimit'])};",
         "",
         f"    static String GeneratorVersion() {{ return {zs_str(GENERATOR_VERSION)}; }}",
@@ -218,6 +345,10 @@ def build(net, eq, net_hash, eq_hash, dept):
         find_fn("FindModel", "MODEL_COUNT", "ModelId"),
         "    // Authored facilities/capabilities. Initial tiers are NOT campaign status.",
         department_lookups(facilities, capabilities, links, tracks),
+        "    // Resolved authored staffing only. No personnel assignment or readiness.",
+        staffing_lookups(rules, effective, qualifications),
+        "    // Authored task templates only; no task creation, allocation, or scheduling.",
+        task_template_lookups(templates),
         "}",
         "",
         "// Console: netevent " + DUMP_EVENT,
@@ -243,6 +374,14 @@ def build(net, eq, net_hash, eq_hash, dept):
         '            Console.PrintF("DODA_CATALOG CAPABILITY %s", DoDAWorkbenchCatalog.CapabilityId(ca));',
         "        for (int li = 0; li < DoDAWorkbenchCatalog.FACILITY_CAPABILITY_COUNT; li++)",
         '            Console.PrintF("DODA_CATALOG LINK %s %s", DoDAWorkbenchCatalog.FacilityCapabilityFacilityId(li), DoDAWorkbenchCatalog.FacilityCapabilityCapabilityId(li));',
+        '        Console.PrintF("DODA_CATALOG STAFFING defaults=%d effective=%d overrides=%d", DoDAWorkbenchCatalog.STAFFING_DEFAULT_COUNT, DoDAWorkbenchCatalog.FACILITY_STAFFING_COUNT, DoDAWorkbenchCatalog.STAFFING_OVERRIDE_COUNT);',
+        "        for (int sd = 0; sd < DoDAWorkbenchCatalog.STAFFING_DEFAULT_COUNT; sd++)",
+        '            Console.PrintF("DODA_CATALOG STAFFING_DEFAULT %s %s %d/%d/%d", DoDAWorkbenchCatalog.StaffingDefaultCapabilityId(sd), DoDAWorkbenchCatalog.StaffingDefaultQualificationId(sd), DoDAWorkbenchCatalog.StaffingDefaultMin(sd), DoDAWorkbenchCatalog.StaffingDefaultPreferred(sd), DoDAWorkbenchCatalog.StaffingDefaultMax(sd));',
+        "        for (int se = 0; se < DoDAWorkbenchCatalog.FACILITY_STAFFING_COUNT; se++)",
+        '            Console.PrintF("DODA_CATALOG STAFFING_EFFECTIVE %s %s %s global=%d/%d/%d effective=%d/%d/%d source=%s", DoDAWorkbenchCatalog.FacilityStaffingFacilityId(se), DoDAWorkbenchCatalog.FacilityStaffingCapabilityId(se), DoDAWorkbenchCatalog.FacilityStaffingQualificationId(se), DoDAWorkbenchCatalog.FacilityStaffingGlobalMin(se), DoDAWorkbenchCatalog.FacilityStaffingGlobalPreferred(se), DoDAWorkbenchCatalog.FacilityStaffingGlobalMax(se), DoDAWorkbenchCatalog.FacilityStaffingMin(se), DoDAWorkbenchCatalog.FacilityStaffingPreferred(se), DoDAWorkbenchCatalog.FacilityStaffingMax(se), DoDAWorkbenchCatalog.FacilityStaffingSource(se));',
+        '        Console.PrintF("DODA_CATALOG TASK_TEMPLATES count=%d", DoDAWorkbenchCatalog.TASK_TEMPLATE_COUNT);',
+        "        for (int tt = 0; tt < DoDAWorkbenchCatalog.TASK_TEMPLATE_COUNT; tt++)",
+        '            Console.PrintF("DODA_CATALOG TASK_TEMPLATE %s %s priority=%s effort=%d deadline=%d auto=%d", DoDAWorkbenchCatalog.TaskTemplateId(tt), DoDAWorkbenchCatalog.TaskTemplateCapabilityId(tt), DoDAWorkbenchCatalog.TaskTemplatePriority(tt), DoDAWorkbenchCatalog.TaskTemplateTargetEffortMinutes(tt), DoDAWorkbenchCatalog.TaskTemplateDeadlineMinutes(tt), DoDAWorkbenchCatalog.TaskTemplateAutoAllocate(tt));',
         '        Console.PrintF("DODA_CATALOG END");',
         "    }",
         "}",
@@ -259,6 +398,17 @@ def build(net, eq, net_hash, eq_hash, dept):
     dump += [f"DODA_CATALOG FACILITY {r['facility_id']}" for r in facilities]
     dump += [f"DODA_CATALOG CAPABILITY {r['capability_id']}" for r in capabilities]
     dump += [f"DODA_CATALOG LINK {r['facility_id']} {r['capability_id']}" for r in links]
+    dump += [f"DODA_CATALOG STAFFING defaults={len(rules)} effective={len(effective)} overrides={override_count}"]
+    dump += [f"DODA_CATALOG STAFFING_DEFAULT {r['capability_id']} {r['qualification_id']} "
+             f"{r['min_contributors']}/{r['preferred_contributors']}/{r['max_contributors']}" for r in rules]
+    dump += [f"DODA_CATALOG STAFFING_EFFECTIVE {r['facility_id']} {r['capability_id']} {r['qualification_id']} "
+             f"global={r['global_min_contributors']}/{r['global_preferred_contributors']}/{r['global_max_contributors']} "
+             f"effective={r['min_contributors']}/{r['preferred_contributors']}/{r['max_contributors']} "
+             f"source={r['provenance']}" for r in effective]
+    dump += [f"DODA_CATALOG TASK_TEMPLATES count={len(templates)}"]
+    dump += [f"DODA_CATALOG TASK_TEMPLATE {r['task_template_id']} {r['capability_id']} "
+             f"priority={r['priority']} effort={r['default_target_effort_minutes']} "
+             f"deadline={r['default_deadline_minutes']} auto={int(r['auto_allocate'])}" for r in templates]
     dump.append("DODA_CATALOG END")
     return "\n".join(out), "\n".join(dump) + "\n"
 

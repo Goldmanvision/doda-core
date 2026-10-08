@@ -1,0 +1,220 @@
+{
+  "schema": "doda.care_services_catalog",
+  "toolVersion": "0.4.0",
+  "generatedAtUtc": "2026-10-08T04:28:43.882117+00:00",
+  "services": [
+    {
+      "careServiceId": "REMED_EMERGENCY_TRANSPORT",
+      "displayName": "Emergency Medical Transport",
+      "careCategory": "EMERGENCY_MEDICAL",
+      "recipientAssignment": "AUTOMATIC",
+      "providerMode": "AUTOMATIC",
+      "costPolicy": "FREE",
+      "durationMinutes": null,
+      "followUpCareServiceId": "REMED_MEDICAL_ATTENTION",
+      "destinationFeatureId": "CAP_ADVANCED_MEDICAL",
+      "sourceReference": "doda_05_remediation_and_care_v107.xlsx RemedyCat!A3",
+      "description": "Urgent transport of an incapacitated agent to a hospital for Advanced Medical Care (CARE-09). Workbook: hospital-owned medical transport with finite concurrent units.",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "careServiceId": "REMED_HOSPITALIZATION",
+      "displayName": "Emergency Hospitalization",
+      "careCategory": "EMERGENCY_MEDICAL",
+      "recipientAssignment": "AUTOMATIC",
+      "providerMode": "AUTOMATIC",
+      "costPolicy": "FREE",
+      "durationMinutes": null,
+      "followUpCareServiceId": "REMED_RECOVERY",
+      "destinationFeatureId": null,
+      "sourceReference": "doda_05_remediation_and_care_v107.xlsx RemedyCat!A6",
+      "description": "Agent health rapidly improves while hospitalized. Exact effects deferred.",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "careServiceId": "REMED_INJURY_STABILIZATION",
+      "displayName": "Injury Stabilization",
+      "careCategory": "EMERGENCY_MEDICAL",
+      "recipientAssignment": "AUTOMATIC",
+      "providerMode": "AUTOMATIC",
+      "costPolicy": "FREE",
+      "durationMinutes": null,
+      "followUpCareServiceId": null,
+      "destinationFeatureId": null,
+      "sourceReference": "doda_05_remediation_and_care_v107.xlsx RemedyCat!A7",
+      "description": "Emergency care for a severe or critical injury. Field route deferred; workbook follow-up (Retrieval) is outside this catalog.",
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "careServiceId": "REMED_MEDICAL_ATTENTION",
+      "displayName": "Medical Attention",
+      "careCategory": "MEDICAL",
+      "recipientAssignment": "PLAYER_ASSIGNED",
+      "providerMode": "AUTOMATIC_OR_AGENT_SKILL",
+      "costPolicy": "COSTED",
+      "durationMinutes": null,
+      "followUpCareServiceId": "REMED_RECOVERY",
+      "destinationFeatureId": null,
+      "sourceReference": "doda_05_remediation_and_care_v107.xlsx RemedyCat!A5",
+      "description": "Treatment for injury, health loss, or a medical request. May be delivered by an automatic provider or by an agent with medical skill (CARE-03). Exact effects deferred.",
+      "sortOrder": 40,
+      "active": false
+    },
+    {
+      "careServiceId": "REMED_CHECKUP",
+      "displayName": "Medical Check-Up",
+      "careCategory": "MEDICAL",
+      "recipientAssignment": "PLAYER_ASSIGNED",
+      "providerMode": "AUTOMATIC",
+      "costPolicy": "COSTED",
+      "durationMinutes": null,
+      "followUpCareServiceId": "REMED_MEDICAL_ATTENTION",
+      "destinationFeatureId": null,
+      "sourceReference": "doda_05_remediation_and_care_v107.xlsx RemedyCat!A15",
+      "description": "A legitimate examination or approved limited assessment. Undercover assessment route deferred.",
+      "sortOrder": 50,
+      "active": false
+    },
+    {
+      "careServiceId": "REMED_RECOVERY",
+      "displayName": "Recovery",
+      "careCategory": "MEDICAL",
+      "recipientAssignment": "PLAYER_ASSIGNED",
+      "providerMode": "NONE",
+      "costPolicy": "COSTED",
+      "durationMinutes": null,
+      "followUpCareServiceId": null,
+      "destinationFeatureId": null,
+      "sourceReference": "doda_05_remediation_and_care_v107.xlsx RemedyCat!A8",
+      "description": "Recovery after medical treatment or severe exhaustion. Workbook cost policy: paid leave. Relationship to ordinary rest deferred.",
+      "sortOrder": 60,
+      "active": false
+    },
+    {
+      "careServiceId": "REMED_THERAPY_PSYC",
+      "displayName": "Psychological Therapy",
+      "careCategory": "THERAPY",
+      "recipientAssignment": "PLAYER_ASSIGNED",
+      "providerMode": "AUTOMATIC",
+      "costPolicy": "COSTED",
+      "durationMinutes": null,
+      "followUpCareServiceId": null,
+      "destinationFeatureId": null,
+      "sourceReference": "doda_05_remediation_and_care_v107.xlsx RemedyCat!A9",
+      "description": "Behavioral therapy for high Stress or a therapy request. Player selects the agent; the provider is automatic (CARE-04).",
+      "sortOrder": 70,
+      "active": false
+    },
+    {
+      "careServiceId": "REMED_THERAPY_PHYS",
+      "displayName": "Physical Therapy",
+      "careCategory": "THERAPY",
+      "recipientAssignment": "PLAYER_ASSIGNED",
+      "providerMode": "AUTOMATIC",
+      "costPolicy": "COSTED",
+      "durationMinutes": null,
+      "followUpCareServiceId": null,
+      "destinationFeatureId": null,
+      "sourceReference": "doda_05_remediation_and_care_v107.xlsx RemedyCat!A10",
+      "description": "Physical rehabilitation for injury or physical limitation, not psychological therapy.",
+      "sortOrder": 80,
+      "active": false
+    }
+  ],
+  "locationFeatures": [
+    {
+      "featureId": "CAP_BASIC_MEDICAL",
+      "displayName": "Basic Medical Care",
+      "description": "A place that supports ordinary treatment and stabilization.",
+      "sourceReference": "doda_01_department_progression_v107.xlsx FacilityCapsCat!A4",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "featureId": "CAP_ADVANCED_MEDICAL",
+      "displayName": "Advanced Medical Care",
+      "description": "A place that supports severe injury and longer recovery.",
+      "sourceReference": "doda_01_department_progression_v107.xlsx FacilityCapsCat!A5",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "featureId": "CAP_THERAPY",
+      "displayName": "Therapy Services",
+      "description": "A place that supports player-assigned therapy.",
+      "sourceReference": "doda_01_department_progression_v107.xlsx FacilityCapsCat!A6",
+      "sortOrder": 30,
+      "active": false
+    }
+  ],
+  "serviceLocations": [
+    {
+      "careServiceId": "REMED_MEDICAL_ATTENTION",
+      "featureId": "CAP_BASIC_MEDICAL",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "careServiceId": "REMED_INJURY_STABILIZATION",
+      "featureId": "CAP_BASIC_MEDICAL",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "careServiceId": "REMED_MEDICAL_ATTENTION",
+      "featureId": "CAP_ADVANCED_MEDICAL",
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "careServiceId": "REMED_RECOVERY",
+      "featureId": "CAP_ADVANCED_MEDICAL",
+      "sortOrder": 40,
+      "active": false
+    },
+    {
+      "careServiceId": "REMED_HOSPITALIZATION",
+      "featureId": "CAP_ADVANCED_MEDICAL",
+      "sortOrder": 50,
+      "active": false
+    },
+    {
+      "careServiceId": "REMED_CHECKUP",
+      "featureId": "CAP_BASIC_MEDICAL",
+      "sortOrder": 60,
+      "active": false
+    },
+    {
+      "careServiceId": "REMED_THERAPY_PSYC",
+      "featureId": "CAP_THERAPY",
+      "sortOrder": 70,
+      "active": false
+    },
+    {
+      "careServiceId": "REMED_THERAPY_PHYS",
+      "featureId": "CAP_THERAPY",
+      "sortOrder": 80,
+      "active": false
+    }
+  ],
+  "careProvider": {
+    "providerKind": "HOSPITAL",
+    "providesAllLocationFeatures": true,
+    "hospitalsPerTerritory": "ONE_OR_MORE",
+    "variesBy": [
+      "QUALITY",
+      "COST"
+    ]
+  },
+  "openItems": {
+    "CARE-OPEN-01": "Cost amounts for COSTED services.",
+    "CARE-OPEN-02": "Durations, healing amounts, and recovery effects for every service.",
+    "CARE-OPEN-03": "Which agent skill level allows delivering medical attention (CARE-03).",
+    "CARE-OPEN-04": "How Recovery relates to ordinary rest in the personnel slice.",
+    "CARE-OPEN-05": "Hospital records per territory, and how hospital quality and cost vary (CARE-11)."
+  },
+  "runtimeImplemented": false
+}

@@ -31,7 +31,25 @@ class CatalogTests(unittest.TestCase):
             "facility_capabilities": [
                 {"facility_id": "F", "capability_id": "C", "display_name_override": "Local Name",
                  "max_concurrent_personnel": 2, "initial_tier_id": "UNBUILT",
-                 "sort_order": 1, "active": True}]}}
+                 "sort_order": 1, "active": True}],
+            "qualification_catalog": [
+                {"qualification_id": "Q", "display_name": "Qualified", "active": True},
+                {"qualification_id": "Q2", "display_name": "Second Qualification", "active": True}],
+            "capability_staffing_rules": [
+                {"capability_id": "C", "qualification_id": "Q", "min_contributors": 0,
+                 "preferred_contributors": 1, "max_contributors": 2, "sort_order": 1, "active": True},
+                {"capability_id": "C", "qualification_id": "Q2", "min_contributors": 1,
+                 "preferred_contributors": 2, "max_contributors": 2, "sort_order": 2, "active": True}],
+            "facility_capability_staffing_overrides": [
+                {"facility_id": "F", "capability_id": "C", "qualification_id": "Q",
+                 "min_contributors": 1, "preferred_contributors": 2, "max_contributors": 3,
+                 "sort_order": 1, "active": True}],
+            "enum_catalog": [{"enum_group": "TASK_PRIORITY", "enum_value": "HIGH", "active": True}],
+            "task_templates": [
+                {"task_template_id": "TASK", "display_name": "Task Template", "description": "Desc",
+                 "capability_id": "C", "priority": "HIGH", "default_target_effort_minutes": 240,
+                 "default_deadline_minutes": 120, "auto_allocate": True, "sort_order": 1,
+                 "active": True}]}}
         (self.root / zc.DEPARTMENT_JSON).write_text(json.dumps(dept))
     def tearDown(self):
         shutil.rmtree(self.root, ignore_errors=True)
@@ -77,7 +95,7 @@ class CatalogTests(unittest.TestCase):
         p = self.root / zc.DEPARTMENT_JSON
         d = json.loads(p.read_text())
         d["generatedAtUtc"] = "2099-01-01"
-        d["tables"]["capability_staffing_rules"] = [{"ignored": "deferred"}]
+        d["tables"]["flavor_text"] = [{"ignored": "deferred"}]
         p.write_text(json.dumps(d))
         self.assertTrue(zc.is_current(self.root))
 
@@ -105,5 +123,112 @@ class CatalogTests(unittest.TestCase):
         p = self.root / zc.DEPARTMENT_JSON
         d = json.loads(p.read_text())
         d["tables"]["facilities"][0]["display_name"] = "Changed"
+        p.write_text(json.dumps(d))
+        self.assertFalse(zc.is_current(self.root))
+
+    def staffing_tables(self):
+        return json.loads((self.root / zc.DEPARTMENT_JSON).read_text())["tables"]
+
+    def resolve(self, tables):
+        return zc.staffing_catalog(tables, tables["capabilities"], tables["facility_capabilities"])
+
+    def test_override_replaces_entire_row_and_other_row_inherits(self):
+        _, rows, _ = self.resolve(self.staffing_tables())
+        override, inherited = rows
+        self.assertEqual([override[k] for k in ("min_contributors", "preferred_contributors", "max_contributors")],
+                         [1, 2, 3])
+        self.assertEqual(override["global_min_contributors"], 0)
+        self.assertEqual(override["provenance"], "OVERRIDE")
+        self.assertEqual(inherited["provenance"], "INHERITED")
+        self.assertEqual(inherited["min_contributors"], inherited["global_min_contributors"])
+
+    def test_equal_valued_override_keeps_override_provenance(self):
+        t = self.staffing_tables()
+        t["facility_capability_staffing_overrides"][0].update(
+            min_contributors=0, preferred_contributors=1, max_contributors=2)
+        _, rows, _ = self.resolve(t)
+        self.assertEqual(rows[0]["provenance"], "OVERRIDE")
+        self.assertEqual(rows[0]["min_contributors"], 0)
+
+    def test_inactive_override_inherits(self):
+        t = self.staffing_tables()
+        t["facility_capability_staffing_overrides"][0]["active"] = False
+        _, rows, _ = self.resolve(t)
+        self.assertEqual(rows[0]["provenance"], "INHERITED")
+        self.assertEqual(rows[0]["min_contributors"], 0)
+
+    def test_override_cannot_create_qualification_requirement(self):
+        t = self.staffing_tables()
+        t["facility_capability_staffing_overrides"][0]["qualification_id"] = "UNKNOWN"
+        with self.assertRaises(ValueError):
+            self.resolve(t)
+
+    def test_invalid_range_rejected(self):
+        t = self.staffing_tables()
+        t["facility_capability_staffing_overrides"][0]["preferred_contributors"] = 0
+        with self.assertRaises(ValueError):
+            self.resolve(t)
+
+    def test_duplicate_override_rejected(self):
+        t = self.staffing_tables()
+        t["facility_capability_staffing_overrides"].append(
+            dict(t["facility_capability_staffing_overrides"][0]))
+        with self.assertRaises(ValueError):
+            self.resolve(t)
+
+    def test_staffing_change_stales_catalog(self):
+        zc.generate(self.root)
+        p = self.root / zc.DEPARTMENT_JSON
+        d = json.loads(p.read_text())
+        d["tables"]["capability_staffing_rules"][0]["max_contributors"] = 4
+        p.write_text(json.dumps(d))
+        self.assertFalse(zc.is_current(self.root))
+
+    def test_staffing_dump_contains_baseline_effective_and_source(self):
+        zc.generate(self.root)
+        dump = (self.root / zc.EXPECTED_DUMP).read_text()
+        self.assertIn("STAFFING defaults=2 effective=2 overrides=1", dump)
+        self.assertIn("F C Q global=0/1/2 effective=1/2/3 source=OVERRIDE", dump)
+        self.assertIn("F C Q2 global=1/2/2 effective=1/2/2 source=INHERITED", dump)
+
+    def task_catalog(self, tables):
+        return zc.task_template_catalog(tables, {"C"}, {("F", "C")})
+
+    def test_task_effort_deadline_and_allocation_exported_separately(self):
+        zc.generate(self.root)
+        dump = (self.root / zc.EXPECTED_DUMP).read_text()
+        self.assertIn("TASK_TEMPLATES count=1", dump)
+        self.assertIn("TASK_TEMPLATE TASK C priority=HIGH effort=240 deadline=120 auto=1", dump)
+
+    def test_inactive_task_excluded(self):
+        t = self.staffing_tables()
+        t["task_templates"][0]["active"] = False
+        self.assertEqual(self.task_catalog(t), [])
+
+    def test_task_reference_requires_installed_capability(self):
+        t = self.staffing_tables()
+        with self.assertRaises(ValueError):
+            zc.task_template_catalog(t, {"C"}, set())
+
+    def test_bad_task_values_rejected(self):
+        for field, value in (("priority", "UNKNOWN"), ("default_target_effort_minutes", 0),
+                             ("default_deadline_minutes", -1), ("auto_allocate", "TRUE")):
+            with self.subTest(field=field):
+                t = self.staffing_tables()
+                t["task_templates"][0][field] = value
+                with self.assertRaises(ValueError):
+                    self.task_catalog(t)
+
+    def test_duplicate_task_id_rejected(self):
+        t = self.staffing_tables()
+        t["task_templates"].append(dict(t["task_templates"][0]))
+        with self.assertRaises(ValueError):
+            self.task_catalog(t)
+
+    def test_task_change_stales_catalog(self):
+        zc.generate(self.root)
+        p = self.root / zc.DEPARTMENT_JSON
+        d = json.loads(p.read_text())
+        d["tables"]["task_templates"][0]["default_deadline_minutes"] = 60
         p.write_text(json.dumps(d))
         self.assertFalse(zc.is_current(self.root))

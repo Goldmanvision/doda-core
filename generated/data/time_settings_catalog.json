@@ -1,0 +1,161 @@
+{
+  "schema": "doda.time_settings",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-08T04:28:44.324073+00:00",
+  "decimalPlaces": 4,
+  "scale": 10000,
+  "settings": [
+    {
+      "settingId": "DOOM_TICS_PER_SECOND",
+      "displayName": "Doom Tics per Real Second",
+      "category": "ENGINE",
+      "unit": "TICS_PER_SECOND",
+      "editable": false,
+      "sourceReference": "doomdef.h TICRATE",
+      "description": "Engine constant. One real second is 35 Doom tics. Informational only.",
+      "sortOrder": 10,
+      "active": false,
+      "value": "35",
+      "valueScaled": 350000
+    },
+    {
+      "settingId": "SIM_TICK_STRATEGIC_MINUTES",
+      "displayName": "Strategic Minutes per Sim Tick",
+      "category": "SIM_TICK",
+      "unit": "MINUTES",
+      "editable": true,
+      "sourceReference": "User decision 2026-10-07 (PCARE-OPEN-07)",
+      "description": "One DoDA sim tick equals this many strategic minutes. Per-tick rates in activity catalogs use this tick.",
+      "sortOrder": 20,
+      "active": false,
+      "value": "1",
+      "valueScaled": 10000
+    },
+    {
+      "settingId": "DOOM_TICS_PER_SIM_TICK_FOIMSX_1X",
+      "displayName": "Doom Tics per Sim Tick (FOIMS-X 1x)",
+      "category": "PACING",
+      "unit": "TICS",
+      "editable": true,
+      "sourceReference": "User decision TIME-06",
+      "description": "Inside FOIMS-X at 1x one sim tick passes every 35 Doom tics (one real second).",
+      "sortOrder": 30,
+      "active": false,
+      "value": "35",
+      "valueScaled": 350000
+    },
+    {
+      "settingId": "STRATEGIC_SECONDS_PER_REAL_SECOND_OUTSIDE",
+      "displayName": "Strategic Seconds per Real Second (Outside FOIMS-X)",
+      "category": "PACING",
+      "unit": "RATIO",
+      "editable": true,
+      "sourceReference": "User decision TIME-06",
+      "description": "Outside FOIMS-X strategic time runs in real time.",
+      "sortOrder": 40,
+      "active": false,
+      "value": "1",
+      "valueScaled": 10000
+    },
+    {
+      "settingId": "FOIMSX_SPEED_1X",
+      "displayName": "FOIMS-X Speed 1x (Normal)",
+      "category": "FOIMSX_SPEED",
+      "unit": "MULTIPLIER",
+      "editable": true,
+      "sourceReference": "User decision TIME-07",
+      "description": "Multiplier on the FOIMS-X 1x rate. Subject to change.",
+      "sortOrder": 50,
+      "active": false,
+      "value": "1",
+      "valueScaled": 10000
+    },
+    {
+      "settingId": "FOIMSX_SPEED_2X",
+      "displayName": "FOIMS-X Speed 2x (Fast)",
+      "category": "FOIMSX_SPEED",
+      "unit": "MULTIPLIER",
+      "editable": true,
+      "sourceReference": "User decision TIME-07",
+      "description": "Multiplier on the FOIMS-X 1x rate. Subject to change.",
+      "sortOrder": 60,
+      "active": false,
+      "value": "2",
+      "valueScaled": 20000
+    },
+    {
+      "settingId": "FOIMSX_SPEED_3X",
+      "displayName": "FOIMS-X Speed 3x (Fastest)",
+      "category": "FOIMSX_SPEED",
+      "unit": "MULTIPLIER",
+      "editable": true,
+      "sourceReference": "User decision TIME-07",
+      "description": "Multiplier on the FOIMS-X 1x rate. Subject to change.",
+      "sortOrder": 70,
+      "active": false,
+      "value": "3",
+      "valueScaled": 30000
+    }
+  ],
+  "derived": {
+    "foimsxSpeeds": [
+      {
+        "settingId": "FOIMSX_SPEED_1X",
+        "multiplier": "1",
+        "doomTicsPerSimTick": "35",
+        "doomTicsPerSimTickScaled": 350000,
+        "strategicSecondsPerRealSecond": "60",
+        "strategicSecondsPerRealSecondScaled": 600000
+      },
+      {
+        "settingId": "FOIMSX_SPEED_2X",
+        "multiplier": "2",
+        "doomTicsPerSimTick": "17.5",
+        "doomTicsPerSimTickScaled": 175000,
+        "strategicSecondsPerRealSecond": "120",
+        "strategicSecondsPerRealSecondScaled": 1200000
+      },
+      {
+        "settingId": "FOIMSX_SPEED_3X",
+        "multiplier": "3",
+        "doomTicsPerSimTick": "11.6667",
+        "doomTicsPerSimTickScaled": 116667,
+        "strategicSecondsPerRealSecond": "180",
+        "strategicSecondsPerRealSecondScaled": 1800000
+      }
+    ],
+    "outsideFoimsx": {
+      "strategicSecondsPerRealSecond": "1",
+      "doomTicsPerSimTick": "2100",
+      "doomTicsPerSimTickScaled": 21000000,
+      "realSecondsPerSimTick": "60",
+      "realSecondsPerSimTickScaled": 600000
+    }
+  },
+  "pacingRules": {
+    "outsideFoimsx": "REAL_TIME",
+    "speedControlOnlyInsideFoimsx": true,
+    "playerStatsTickWithStrategicTime": true,
+    "agentActivitiesRealTimeOutsideFoimsx": true,
+    "pause": "MAIN_MENU_ONLY_PLUS_DEBUG_CONSOLE_COMMAND",
+    "debugPauseCommand": "pausefoimsx"
+  },
+  "decisions": {
+    "TIME-06": "Outside FOIMS-X time is real time; inside FOIMS-X at 1x one sim tick passes per 35 Doom tics.",
+    "TIME-07": "Three FOIMS-X speed multipliers (1x, 2x, 3x), subject to change; not available outside FOIMS-X.",
+    "TIME-08": "Player stat bands tick while in FOIMS-X, faster at higher speeds.",
+    "TIME-10": "After a FOIMS-X ejection the player cannot re-enter until the stat is replenished.",
+    "TIME-15": "No in-FOIMS-X pause control; Main Menu pause plus a debug-only pausefoimsx console command.",
+    "TIME-16": "Time returns to real time after any exit or ejection.",
+    "TIME-18": "2x and 3x multiply the 1x FOIMS-X rate.",
+    "TIME-19": "Agent activities run in real time outside FOIMS-X."
+  },
+  "openItems": {
+    "TIME-OPEN-01": "Whether the chosen FOIMS-X speed is remembered for the next entry.",
+    "TIME-OPEN-02": "Whether the pausefoimsx debug command is excluded from release builds.",
+    "TIME-OPEN-03": "Native fractional-tick accumulator for sub-minute time outside FOIMS-X, and its save-schema impact (deferred native task).",
+    "TIME-OPEN-04": "Reconcile the earlier metrics sampling policy (every 10 ticks, 50 samples) with the sim tick.",
+    "TIME-OPEN-05": "Which condition bands eject the player from FOIMS-X, and per-band message variants (proposed TIME-13)."
+  },
+  "runtimeImplemented": false
+}

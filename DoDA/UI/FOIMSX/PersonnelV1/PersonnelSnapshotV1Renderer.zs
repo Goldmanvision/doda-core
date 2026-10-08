@@ -31,10 +31,10 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
     private ui DoDAFOIMSXSnapshotRefreshState mAssignmentRefreshState;
     private ui int mFocusedIndex;
 
-    // Workbench Catalog V1 (read-only). Page 0 = personnel; 1..6 = catalog sections.
+    // Workbench Catalog V1 (read-only). Page 0 = personnel; 1..9 = catalog sections.
     const FOIMSX_KEYSCAN_TAB = 0x0f;
     const FOIMSX_KEYCHAR_TAB = 9;
-    const FOIMSX_PAGE_COUNT = 7;
+    const FOIMSX_PAGE_COUNT = 10;
     private ui DoDAFOIMSXCatalogV1View mCatalogView;
     private ui int mPage;
 
@@ -396,7 +396,7 @@ class DoDAFOIMSXDirectoryRenderer : EventHandler
         DoDAFOIMSXDrawingHelpers.DrawSunkenPanel(16, 58, 286, 356, 0xFF0A101C);
         DoDAFOIMSXDrawingHelpers.DrawVirtualRect(18, 60, 282, 18, 0xFF1A2638);
         DoDAFOIMSXDrawingHelpers.DrawVirtualText(SmallFont, Font.CR_GOLD, 24, 64,
-            String.Format("CATALOG %d/6: %s", mPage, mCatalogView.GetSectionTitle()), 0.5, 0.5);
+            String.Format("CATALOG %d/9: %s", mPage, mCatalogView.GetSectionTitle()), 0.5, 0.5);
 
         mCatalogView.RenderList();
 

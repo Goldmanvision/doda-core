@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "toolVersion": "0.1.1",
-  "generatedAtUtc": "2026-10-07T06:09:11.348765+00:00",
+  "generatedAtUtc": "2026-10-07T19:48:43.078485+00:00",
   "tables": {
     "enum_catalog": [
       {
@@ -816,6 +816,70 @@
         "standing_operation_label": "Response Readiness",
         "sort_order": 20,
         "active": true
+      },
+      {
+        "capability_id": "CAP_FOOD",
+        "display_name": "Food Access",
+        "description": "V107 draft: Allows scheduled eating during off-duty time. Staffing and facility mapping are not yet configured.",
+        "standing_operation_label": "",
+        "sort_order": 30,
+        "active": false
+      },
+      {
+        "capability_id": "CAP_BASIC_MEDICAL",
+        "display_name": "Basic Medical Care",
+        "description": "V107 draft: Supports ordinary treatment and stabilization. Staffing and facility mapping are not yet configured.",
+        "standing_operation_label": "",
+        "sort_order": 40,
+        "active": false
+      },
+      {
+        "capability_id": "CAP_ADVANCED_MEDICAL",
+        "display_name": "Advanced Medical Care",
+        "description": "V107 draft: Supports severe injury and longer recovery. Staffing and facility mapping are not yet configured.",
+        "standing_operation_label": "",
+        "sort_order": 50,
+        "active": false
+      },
+      {
+        "capability_id": "CAP_THERAPY",
+        "display_name": "Therapy Services",
+        "description": "V107 draft: Supports player-assigned therapy. Staffing and facility mapping are not yet configured.",
+        "standing_operation_label": "",
+        "sort_order": 60,
+        "active": false
+      },
+      {
+        "capability_id": "CAP_EMERGENCY_TRANSPORT",
+        "display_name": "Emergency Transport",
+        "description": "V107 draft: Supports emergency retrieval and medical transport. Staffing and facility mapping are not yet configured.",
+        "standing_operation_label": "",
+        "sort_order": 70,
+        "active": false
+      },
+      {
+        "capability_id": "CAP_RESEARCH",
+        "display_name": "Research Facility",
+        "description": "V107 draft: Supports evidence analysis and research tasks. Staffing and facility mapping are not yet configured.",
+        "standing_operation_label": "",
+        "sort_order": 80,
+        "active": false
+      },
+      {
+        "capability_id": "CAP_EVIDENCE_STORAGE",
+        "display_name": "Evidence Storage",
+        "description": "V107 draft: Supports custody and warehouse workflows. Staffing and facility mapping are not yet configured.",
+        "standing_operation_label": "",
+        "sort_order": 90,
+        "active": false
+      },
+      {
+        "capability_id": "CAP_ANOMALOUS_CONTAINMENT",
+        "display_name": "Anomalous Containment",
+        "description": "V107 draft: Supports anomalous evidence or entity containment. Staffing and facility mapping are not yet configured.",
+        "standing_operation_label": "",
+        "sort_order": 100,
+        "active": false
       }
     ],
     "facility_capabilities": [

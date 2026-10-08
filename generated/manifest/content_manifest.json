@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "toolVersion": "0.1.1",
-  "generatedAtUtc": "2026-10-07T06:09:11.348765+00:00",
+  "generatedAtUtc": "2026-10-07T19:48:43.078485+00:00",
   "projectRoot": "E:\\Dev\\uzdoom_src\\doda-core",
   "sourceFiles": {
     "enum_catalog.csv": "e981a5243ee973c9f6c3e2fcdbca7dd017f06ca84c0c3b2374c11e131532e6ad",
@@ -11,14 +11,14 @@
     "facilities.csv": "73ddc9aede7d8060557f3391384e20de674a0395fb436e5b12a88e8d3a0605ae",
     "flavor_text.csv": "89d1684320406ecf2de93f58b02fbd71f125c808152cac9d3a2fa1f55b6c4b68",
     "qualification_catalog.csv": "4310980996e37628c20f94b54b5888147da250b99879ba21861c63a9f6c55dd3",
-    "capabilities.csv": "b9d802784b37568e9841250806200e3acf9104ba0911bd5ca315157ff73e36a3",
+    "capabilities.csv": "8b931c868ca21907bdbd1ed20c4701b035645c7dae244ddaed3dc7fab0a5b6f6",
     "facility_capabilities.csv": "f3d3f1d24c2c8cfc3893c77f13bcacc35d51a628c6effded8cfe301e20b9959f",
     "capability_staffing_rules.csv": "0d3ac032a1ee3f8177e38579e3cb14067c5fca2e6971e86d5eb9a630a077c581",
     "facility_capability_staffing_overrides.csv": "b16cb793eb505241fa206d7a5dae3e6be210a09a8d57faab95c88cd936fbd647",
     "task_templates.csv": "375188ac210100ea92df2637188270c81ee11dcf3c2b4a47a0e80344a79fe638"
   },
   "outputFiles": {
-    "generated/data/department_content.json": "252e6da5a5a4473d875a600d4ca0b8dff4bef476a12d5198712216f7b1a86d12",
+    "generated/data/department_content.json": "a23f6700b74e548104e2184d1cfda7be2940dd8f3b25f974e2f9a102817c3ac0",
     "generated/language/DODA_GENERATED_LANGUAGE.txt": "a23e4e7790b0a6901012ebe89ea328b202d7f1d48767c0a84e75411f75c20441"
   },
   "tableRowCounts": {
@@ -29,7 +29,7 @@
     "facilities": 6,
     "flavor_text": 20,
     "qualification_catalog": 4,
-    "capabilities": 2,
+    "capabilities": 10,
     "facility_capabilities": 2,
     "capability_staffing_rules": 4,
     "facility_capability_staffing_overrides": 3,

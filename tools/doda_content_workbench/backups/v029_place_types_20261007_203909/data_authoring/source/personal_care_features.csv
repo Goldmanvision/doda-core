@@ -1,0 +1,4 @@
+feature_id,display_name,description,source_reference,sort_order,active
+CAP_FOOD,Food Access,A place where agents can eat.,doda_01_department_progression_v107.xlsx FacilityCapsCat!A2,10,false
+CAP_REST,Rest Facility,A place for fatigue recovery and off-duty rest.,doda_01_department_progression_v107.xlsx FacilityCapsCat!A3,20,false
+CAP_SAFE_HOUSING,Safe Housing,A place for safe rest away from headquarters.,doda_01_department_progression_v107.xlsx FacilityCapsCat!A11,30,false

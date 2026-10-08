@@ -1,0 +1,2356 @@
+{
+  "version": "v107",
+  "purpose": "Read-only source provenance; not live campaign data",
+  "rows": [
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "README",
+      "row": 2,
+      "headers": [
+        "Workbook",
+        "DoDA 00 \u2014 Governance and Contracts"
+      ],
+      "values": [
+        "Purpose",
+        "Canonical terminology, schema rules, controlled vocabulary, and FOIMS-X presentation contracts."
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "README",
+      "row": 3,
+      "headers": [
+        "Workbook",
+        "DoDA 00 \u2014 Governance and Contracts"
+      ],
+      "values": [
+        "Ownership",
+        "Terms and authoring rules."
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "README",
+      "row": 4,
+      "headers": [
+        "Workbook",
+        "DoDA 00 \u2014 Governance and Contracts"
+      ],
+      "values": [
+        "Exclusions",
+        "Live campaign data and runtime state."
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "README",
+      "row": 5,
+      "headers": [
+        "Workbook",
+        "DoDA 00 \u2014 Governance and Contracts"
+      ],
+      "values": [
+        "Dependencies",
+        "Required by every modular workbook."
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "README",
+      "row": 6,
+      "headers": [
+        "Workbook",
+        "DoDA 00 \u2014 Governance and Contracts"
+      ],
+      "values": [
+        "Runtime rule",
+        "This is an authoring workbook. Native C++ owns live campaign records, validation, strategic time, and save data."
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "README",
+      "row": 7,
+      "headers": [
+        "Workbook",
+        "DoDA 00 \u2014 Governance and Contracts"
+      ],
+      "values": [
+        "Identity rule",
+        "Use stable IDs. Never use actor pointers, TIDs, spawn order, row numbers, or temporary map references as persistent identity."
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "README",
+      "row": 8,
+      "headers": [
+        "Workbook",
+        "DoDA 00 \u2014 Governance and Contracts"
+      ],
+      "values": [
+        "Export rule",
+        "A future compiler validates this workbook and emits game data. Do not read Excel directly at runtime."
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "README",
+      "row": 9,
+      "headers": [
+        "Workbook",
+        "DoDA 00 \u2014 Governance and Contracts"
+      ],
+      "values": [
+        "Editing rule",
+        "Do not rename released IDs. Deprecate records and write migrations instead."
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 2,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_PERSON",
+        "Person",
+        "IDENTITY",
+        "person_id",
+        "Agent; Personnel Member; Individual",
+        "Actor; NPC pointer; Row Number; TID; Spawn Order",
+        "Use Person only for persistent individual record identified by person_id",
+        "ActivePersRoster; ActivePersConds; ActivePersTraits",
+        "ACTIVE",
+        "Field actor is only temporary presentation"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 3,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_PERSON_ID",
+        "Person ID",
+        "IDENTITY",
+        "person_id",
+        "Persistent Person ID",
+        "Display Row; Name Key; Actor ID",
+        "Use person_id as canonical key across all person-linked records",
+        "ActivePersRoster; PersScheduleCat; PersLocCat; Assignments",
+        "ACTIVE",
+        "Never reuse after death retirement or defection"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 4,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_CATALOG",
+        "Catalog",
+        "WORKBOOK_STRUCTURE",
+        "*_Cat",
+        "Definition Catalog; Rule Catalog",
+        "Live Register; Runtime Array",
+        "Use Cat suffix only for reusable definitions matrices dictionaries or static rule structures",
+        "All *Cat sheets",
+        "ACTIVE",
+        "Created to avoid conflict with related code structures"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 5,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_REGISTER",
+        "Register",
+        "WORKBOOK_STRUCTURE",
+        "no_required_suffix",
+        "Live Record Sheet; Campaign Record",
+        "Catalog when storing changing campaign instances",
+        "Use register-style naming for persistent live campaign records such as Cases Tasks Assignments and Evidence",
+        "ActivePersRoster; Tasks; Assignments; Evidence",
+        "ACTIVE",
+        "May use plural sheet names"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 6,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_CONDITION",
+        "Condition",
+        "STRATEGIC_STATE",
+        "condition",
+        "Stat; Vital",
+        "Moodlet when referring to raw numeric state",
+        "Use Condition for authoritative numeric state such as Fatigue Injury Health Nutrition Stress and Workload",
+        "StatsCat; ActivePersConds",
+        "ACTIVE",
+        "Conditions drive rules"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 7,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_CONDITION_BAND",
+        "Condition Band",
+        "PRESENTATION",
+        "*_band_id",
+        "Status when referring to broad availability",
+        "Condition Name stored as free text",
+        "Use band ID for label derived from a condition percentage",
+        "CondBandsCat; ActivePersConds",
+        "ACTIVE",
+        "Band labels must be non-overlapping"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 8,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_MOODLET",
+        "Moodlet",
+        "PRESENTATION",
+        "current_moodlet_id",
+        "Condition Marker; Temporary State",
+        "Permanent Trait; Raw Vital",
+        "Use Moodlet for readable temporary explanation of condition or recent event",
+        "MoodletsCat; ActivePersConds",
+        "ACTIVE",
+        "May trigger remediation request"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 9,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_FATIGUE",
+        "Fatigue",
+        "CONDITION",
+        "FATIGUE",
+        "Exhaustion",
+        "Sleep Debt",
+        "Use Fatigue as broad exhaustion measure not a detailed separate sleep-debt system",
+        "StatsCat; CondBandsCat; CondRules",
+        "ACTIVE",
+        "90 through 100 means forced off duty"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 10,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_NUTRITION",
+        "Nutrition",
+        "CONDITION",
+        "NUTRITION",
+        "Hunger when discussing player warning",
+        "Visible Hunger Percent; Satiety Meter",
+        "Use Nutrition as hidden internal value; use Hungry or Meal Required for player warning",
+        "StatsCat; CondBandsCat; FXFieldsCat",
+        "ACTIVE",
+        "Raw percentage is hidden from FOIMS-X"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 11,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_HEALTH",
+        "Health",
+        "CONDITION",
+        "HEALTH",
+        "Overall Condition",
+        "Hit Points; Injury",
+        "Use Health for accumulated overall score; use Current HP and Injury as separate inputs",
+        "StatsCat; CondBandsCat; ActivePersConds",
+        "ACTIVE",
+        "Health 0 means death"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 12,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_CURRENT_HP",
+        "Current Health Points",
+        "CONDITION_INPUT",
+        "CURRENT_HP",
+        "HP",
+        "Health when referring to overall percent",
+        "Use Current HP for immediate physical-capacity value and Health for overall score",
+        "StatsCat; ActivePersConds",
+        "ACTIVE",
+        "Do not merge with Health"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 13,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_BASE_HP",
+        "Base Health Points",
+        "CONDITION_INPUT",
+        "BASE_HP",
+        "Base HP; Maximum HP",
+        "Health Maximum",
+        "Use Base HP as baseline physical-capacity value",
+        "StatsCat; ActivePersConds",
+        "ACTIVE",
+        "May be randomized at creation"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 14,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_INJURY",
+        "Injury",
+        "CONDITION",
+        "INJURY",
+        "Trauma",
+        "Health when referring to wound burden",
+        "Use Injury for acute trauma burden that worsens other vital tick rates",
+        "StatsCat; CondBandsCat; CondRules",
+        "ACTIVE",
+        "Injury 70 or higher incapacitates"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 15,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_STRESS",
+        "Stress",
+        "CONDITION",
+        "STRESS",
+        "Operational Strain",
+        "Manic State; generic Psychosis label",
+        "Use Stress for cumulative operational and psychological strain",
+        "StatsCat; CondBandsCat; CondRules",
+        "ACTIVE",
+        "Stress 90 or higher forces off duty"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 16,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_WORKLOAD",
+        "Workload",
+        "CONDITION",
+        "WORKLOAD",
+        "Task Load; Commitment",
+        "Deployment; Location State",
+        "Use Workload for active commitment intensity; Deployment is separate",
+        "StatsCat; CondBandsCat; ActivePersConds",
+        "ACTIVE",
+        "Maximum Effort is limited-duration state"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 17,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_LOYALTY",
+        "Loyalty",
+        "RELATIONSHIP",
+        "LOYALTY",
+        "Departmental Commitment",
+        "Static Alignment",
+        "Use Loyalty for dynamic department relationship and compliance influence",
+        "TraitDefsCat; ActivePersTraits; ComplianceCat",
+        "ACTIVE",
+        "Can lead to cult or defection outcomes"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 18,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_DEPLOYMENT",
+        "Deployment",
+        "OPERATIONS",
+        "DEPLOYMENT",
+        "Deployed; Field Operation",
+        "Workload Band",
+        "Use Deployment as assignment schedule or location state, not Workload",
+        "PersScheduleCat; PersLocCat; PersStatusCat",
+        "ACTIVE",
+        "Separate from fatigue and workload"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 19,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_TASK_TYPE",
+        "Task Type",
+        "OPERATIONS",
+        "task_type_id",
+        "Task Archetype",
+        "Task Instance",
+        "Use Task Type for reusable definition such as Eating Survey or Therapy",
+        "TaskTypesCat",
+        "ACTIVE",
+        "Static catalog record"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 20,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_TASK",
+        "Task",
+        "OPERATIONS",
+        "task_id",
+        "Task Instance",
+        "Task Type",
+        "Use Task for one generated work item tied to case objective location and state",
+        "Tasks; Assignments; Objectives",
+        "ACTIVE",
+        "Persistent live campaign record"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 21,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_ASSIGNMENT",
+        "Assignment",
+        "OPERATIONS",
+        "assignment_id",
+        "Tasking; Personnel Assignment",
+        "Person ID; Task ID",
+        "Use Assignment for the relationship linking one person to one task",
+        "Assignments; ActivePersRoster",
+        "ACTIVE",
+        "Assignment contributes to Workload"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 22,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_REMEDIATION",
+        "Remediation",
+        "CARE",
+        "remediation_id",
+        "Care Action; Intervention",
+        "Request",
+        "Use Remediation for reusable corrective intervention definition",
+        "RemedyCat",
+        "ACTIVE",
+        "Examples include Eating Therapy and Retrieval"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 23,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_REMEDIATION_REQUEST",
+        "Remediation Request",
+        "CARE",
+        "request_id",
+        "Care Request; Intervention Request",
+        "Remediation Catalog Entry",
+        "Use Remediation Request for active person-specific care need",
+        "RemedyRequestCat; FXAlertsCat",
+        "ACTIVE",
+        "Live register name may later become RemedyRequests"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 24,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_LOCATION",
+        "Location",
+        "STRATEGIC_WORLD",
+        "location_id",
+        "Strategic Location",
+        "Map Actor; Field Actor",
+        "Use Location for persistent strategic place with stable ID and capabilities",
+        "Locations; PersLocCat; FacilityCapsCat",
+        "ACTIVE",
+        "Do not use GZDoom object identity"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 25,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_EVENT",
+        "Event",
+        "HISTORY",
+        "event_type_id",
+        "Strategic Event; Incident",
+        "Moodlet; Alert",
+        "Use Event for occurrence that changes records and may create moodlets or alerts",
+        "EventsCat; PersHistoryCat",
+        "ACTIVE",
+        "Events are historical facts"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 26,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_ALERT",
+        "Alert",
+        "PRESENTATION",
+        "alert_id",
+        "Warning; Notification",
+        "Event; Remediation Request",
+        "Use Alert for FOIMS-X player-facing notification about current concern",
+        "FXAlertsCat; FXStatesCat",
+        "ACTIVE",
+        "Alerts may link to event or request"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 27,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_FOIMS",
+        "FOIMS-X",
+        "PRESENTATION",
+        "FOIMS_X",
+        "FOIMS",
+        "Strategic Authority; Campaign Database",
+        "Use FOIMS-X only for read-only presentation until explicit mutation contract is approved",
+        "FXFieldsCat; FXStatesCat; FXAlertsCat",
+        "ACTIVE",
+        "Native C++ owns strategic truth"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 28,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_STALE",
+        "Snapshot Stale",
+        "PRESENTATION",
+        "STALE_SNAPSHOT",
+        "Last Valid Readout",
+        "Current Data",
+        "Use Stale only when retaining prior accepted snapshot after new acquisition fails",
+        "FXStatesCat",
+        "ACTIVE",
+        "Never present stale values as current"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 29,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_MANIC_STATE",
+        "Manic State",
+        "DEPRECATED_TERM",
+        "none",
+        "none",
+        "Normal Stress Endpoint",
+        "Do not use as normal Stress band; reserve only for a future rare specific condition if appropriate",
+        "CondBandsCat; MoodletsCat",
+        "DEPRECATED",
+        "Not a generic result of high stress"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "TermDictCat",
+      "row": 30,
+      "headers": [
+        "term_id",
+        "canonical_term",
+        "term_category",
+        "canonical_identifier",
+        "allowed_aliases",
+        "deprecated_or_disallowed_terms",
+        "definition_usage_rule",
+        "related_sheet_ids",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "TERM_BURDENDED",
+        "Burdended",
+        "DEPRECATED_TERM",
+        "none",
+        "Burdened",
+        "Misspelled Burdened",
+        "Use Burdened if retained as Stress terminology",
+        "CondBandsCat",
+        "DEPRECATED",
+        "Correct spelling is Burdened"
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "SchemaGuide",
+      "row": 2,
+      "headers": [
+        "rule_id",
+        "rule",
+        "phase",
+        "notes"
+      ],
+      "values": [
+        "RULESTATICLIVE",
+        "Static catalogs are compiler input. Live records are native-owned.",
+        "WAVE1",
+        "Do not export template rows as live state."
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "SchemaGuide",
+      "row": 3,
+      "headers": [
+        "rule_id",
+        "rule",
+        "phase",
+        "notes"
+      ],
+      "values": [
+        "RULESTABLEIDS",
+        "All persistent records use stable IDs only.",
+        "WAVE1",
+        "Never use actor or map-local identity."
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "SchemaGuide",
+      "row": 4,
+      "headers": [
+        "rule_id",
+        "rule",
+        "phase",
+        "notes"
+      ],
+      "values": [
+        "RULESTRATEGICMINUTES",
+        "All authoring durations use strategic minutes.",
+        "WAVE1",
+        "Use fixed 30 and 60 minute increments first."
+      ]
+    },
+    {
+      "workbook": "doda_00_governance_and_contracts_v107.xlsx",
+      "sheet": "SchemaGuide",
+      "row": 5,
+      "headers": [
+        "rule_id",
+        "rule",
+        "phase",
+        "notes"
+      ],
+      "values": [
+        "RULECONTROLLEDENUMS",
+        "Statuses, tiers, categories and policies resolve through controlled catalogs.",
+        "WAVE1",
+        "No free-text runtime enums."
+      ]
+    },
+    {
+      "workbook": "doda_01_department_progression_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 2,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_FOOD",
+        "Food Access",
+        "PERSONNEL_CARE",
+        "REMED_EATING",
+        "TASK_EAT",
+        "RESOURCE_FOOD_PROVISIONS",
+        null,
+        false,
+        true,
+        "FUTURE",
+        "PLANNED",
+        "Allows scheduled eating during off-duty time"
+      ]
+    },
+    {
+      "workbook": "doda_01_department_progression_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 3,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_REST",
+        "Rest Facility",
+        "PERSONNEL_CARE",
+        "REMED_OFF_DUTY; REMED_RESTING",
+        "TASK_REST",
+        null,
+        true,
+        true,
+        "FUTURE",
+        "PLANNED",
+        "Allows fatigue recovery and scheduled off-duty rest",
+        null
+      ]
+    },
+    {
+      "workbook": "doda_01_department_progression_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 4,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_BASIC_MEDICAL",
+        "Basic Medical Care",
+        "MEDICAL",
+        "REMED_MEDICAL_ATTENTION; REMED_INJURY_STABILIZATION",
+        "TASK_HEAL",
+        "RESOURCE_MEDICAL_SUPPLIES",
+        "MEDIC_OR_MEDICAL_STAFF",
+        true,
+        true,
+        "FUTURE",
+        "PLANNED",
+        "Supports ordinary treatment and stabilization"
+      ]
+    },
+    {
+      "workbook": "doda_01_department_progression_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 5,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_ADVANCED_MEDICAL",
+        "Advanced Medical Care",
+        "MEDICAL",
+        "REMED_MEDICAL_ATTENTION; REMED_RECOVERY",
+        "TASK_HEAL",
+        "RESOURCE_MEDICAL_SUPPLIES",
+        "MEDICAL_STAFF",
+        true,
+        true,
+        "FUTURE",
+        "LATER",
+        "Supports severe injury and longer recovery"
+      ]
+    },
+    {
+      "workbook": "doda_01_department_progression_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 6,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_THERAPY",
+        "Therapy Services",
+        "MENTAL_HEALTH",
+        "REMED_THERAPY",
+        "TASK_THERAPY",
+        "RESOURCE_THERAPY_CAPACITY",
+        "THERAPIST_OR_APPROVED_PROVIDER",
+        false,
+        true,
+        "FUTURE",
+        "PLANNED",
+        "Supports player-assigned therapy"
+      ]
+    },
+    {
+      "workbook": "doda_01_department_progression_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 7,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_EMERGENCY_TRANSPORT",
+        "Emergency Transport",
+        "LOGISTICS",
+        "REMED_RETRIEVAL; REMED_EMERGENCY_TRANSPORT",
+        "TASK_RETRIEVE_INCAPACITATED",
+        "RESOURCE_TRANSPORT_CAPACITY",
+        "TRANSPORT_OR_MEDICAL_STAFF",
+        true,
+        false,
+        "FUTURE",
+        "LATER",
+        "Supports emergency retrieval and medical transport"
+      ]
+    },
+    {
+      "workbook": "doda_01_department_progression_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 8,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_RESEARCH",
+        "Research Facility",
+        "RESEARCH",
+        null,
+        "TASK_ANALYZE_EVIDENCE",
+        "RESOURCE_RESEARCH_CAPACITY",
+        "RESEARCHER_OR_ANALYST",
+        false,
+        true,
+        "FUTURE",
+        "LATER",
+        "Supports evidence analysis and research tasks"
+      ]
+    },
+    {
+      "workbook": "doda_01_department_progression_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 9,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_EVIDENCE_STORAGE",
+        "Evidence Storage",
+        "EVIDENCE",
+        null,
+        "TASK_SECURE_EVIDENCE",
+        null,
+        "CHAIN_OF_CUSTODY_STAFF",
+        false,
+        true,
+        "FUTURE",
+        "LATER",
+        "Supports custody and warehouse workflows"
+      ]
+    },
+    {
+      "workbook": "doda_01_department_progression_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 10,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_ANOMALOUS_CONTAINMENT",
+        "Anomalous Containment",
+        "PARANORMAL",
+        null,
+        "TASK_SECURE_EVIDENCE",
+        "RESOURCE_CONTAINMENT_CAPACITY",
+        "CONTAINMENT_STAFF",
+        false,
+        true,
+        "FUTURE",
+        "LATER",
+        "Supports anomalous evidence or entity containment"
+      ]
+    },
+    {
+      "workbook": "doda_01_department_progression_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 11,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_SAFE_HOUSING",
+        "Safe Housing",
+        "PERSONNEL_CARE",
+        "REMED_OFF_DUTY; REMED_RESTING",
+        "TASK_REST",
+        null,
+        true,
+        true,
+        "FUTURE",
+        "LATER",
+        "Supports safe rest away from headquarters",
+        null
+      ]
+    },
+    {
+      "workbook": "doda_01_department_progression_v107.xlsx",
+      "sheet": "FacilitiesCat",
+      "row": 2,
+      "headers": [
+        "facility_id",
+        "display_name",
+        "location_id",
+        "tier_id",
+        "capacity_unit",
+        "capacity",
+        "foims_panel_id",
+        "hq_asset_group_id",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "FACILITYEVIDENCELAB",
+        "Evidence Lab",
+        "LOCHQ",
+        "FACILITYTIEROPERATIONAL",
+        "evidence items per day",
+        10,
+        "PANELEVIDENCELAB",
+        "HQEVIDENCELAB",
+        "APPROVED",
+        "First vertical-slice facility."
+      ]
+    },
+    {
+      "workbook": "doda_01_department_progression_v107.xlsx",
+      "sheet": "FacilitiesCat",
+      "row": 3,
+      "headers": [
+        "facility_id",
+        "display_name",
+        "location_id",
+        "tier_id",
+        "capacity_unit",
+        "capacity",
+        "foims_panel_id",
+        "hq_asset_group_id",
+        "status",
+        "notes"
+      ],
+      "values": [
+        "FACILITYINTELCELL",
+        "Intelligence Cell",
+        "LOCHQ",
+        "FACILITYTIERUNBUILT",
+        "analysis tasks per day",
+        0,
+        "PANELINTELCELL",
+        "HQINTELCELL",
+        "DEFERRED",
+        "Future facility."
+      ]
+    },
+    {
+      "workbook": "doda_02_personnel_and_operations_v107.xlsx",
+      "sheet": "TrainingCat",
+      "row": 2,
+      "headers": [
+        "training_id",
+        "display_name",
+        "training_category",
+        "minimum_value",
+        "maximum_value",
+        "default_value",
+        "randomized_at_creation",
+        "can_change_over_time",
+        "primary_uses",
+        "related_task_types",
+        "related_event_types",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "TRAIN_COMBAT",
+        "Combat Training",
+        "TACTICAL",
+        0,
+        100,
+        "TBD",
+        true,
+        true,
+        "Combat tasks; dangerous retrieval; injury avoidance; tactical response",
+        "TASK_RETRIEVE_INCAPACITATED; FIELD_OPERATION",
+        "EVENT_COMBAT_EXPOSURE; EVENT_COMBAT_INJURY",
+        "PLANNED",
+        "Can improve later through training systems"
+      ]
+    },
+    {
+      "workbook": "doda_02_personnel_and_operations_v107.xlsx",
+      "sheet": "TrainingCat",
+      "row": 3,
+      "headers": [
+        "training_id",
+        "display_name",
+        "training_category",
+        "minimum_value",
+        "maximum_value",
+        "default_value",
+        "randomized_at_creation",
+        "can_change_over_time",
+        "primary_uses",
+        "related_task_types",
+        "related_event_types",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "TRAIN_INVESTIGATIVE",
+        "Investigative Training",
+        "INVESTIGATIVE",
+        0,
+        100,
+        "TBD",
+        true,
+        true,
+        "Interviews; evidence recovery; case analysis; surveillance",
+        "TASK_INTERVIEW; TASK_SECURE_EVIDENCE; TASK_SURVEY",
+        "EVENT_TASK_COMPLETED",
+        "PLANNED",
+        "Core strategic investigation competency"
+      ]
+    },
+    {
+      "workbook": "doda_02_personnel_and_operations_v107.xlsx",
+      "sheet": "TrainingCat",
+      "row": 4,
+      "headers": [
+        "training_id",
+        "display_name",
+        "training_category",
+        "minimum_value",
+        "maximum_value",
+        "default_value",
+        "randomized_at_creation",
+        "can_change_over_time",
+        "primary_uses",
+        "related_task_types",
+        "related_event_types",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "TRAIN_MEDICAL",
+        "Medical Training",
+        "MEDICAL",
+        0,
+        100,
+        "TBD",
+        true,
+        true,
+        "Medical attention; stabilization; retrieval support",
+        "TASK_HEAL; TASK_RETRIEVE_INCAPACITATED",
+        "EVENT_MEDICAL_TREATMENT",
+        "LATER",
+        "Needed when agents can act as medics"
+      ]
+    },
+    {
+      "workbook": "doda_02_personnel_and_operations_v107.xlsx",
+      "sheet": "TrainingCat",
+      "row": 5,
+      "headers": [
+        "training_id",
+        "display_name",
+        "training_category",
+        "minimum_value",
+        "maximum_value",
+        "default_value",
+        "randomized_at_creation",
+        "can_change_over_time",
+        "primary_uses",
+        "related_task_types",
+        "related_event_types",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "TRAIN_RESEARCH",
+        "Research Training",
+        "RESEARCH",
+        0,
+        100,
+        "TBD",
+        true,
+        true,
+        "Evidence analysis; anomalous research; technical tasks",
+        "TASK_ANALYZE_EVIDENCE",
+        "EVENT_PARANORMAL_EXPOSURE",
+        "LATER",
+        "Deferred research competency"
+      ]
+    },
+    {
+      "workbook": "doda_02_personnel_and_operations_v107.xlsx",
+      "sheet": "TrainingCat",
+      "row": 6,
+      "headers": [
+        "training_id",
+        "display_name",
+        "training_category",
+        "minimum_value",
+        "maximum_value",
+        "default_value",
+        "randomized_at_creation",
+        "can_change_over_time",
+        "primary_uses",
+        "related_task_types",
+        "related_event_types",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "TRAIN_ADMINISTRATIVE",
+        "Administrative Training",
+        "ADMINISTRATIVE",
+        0,
+        100,
+        "TBD",
+        true,
+        true,
+        "Scheduling; reporting; logistics; administrative tasks",
+        "FUTURE_ADMIN_TASKS",
+        "EVENT_TASK_COMPLETED",
+        "LATER",
+        "Deferred administration competency"
+      ]
+    },
+    {
+      "workbook": "doda_02_personnel_and_operations_v107.xlsx",
+      "sheet": "TaskTypesCat",
+      "row": 2,
+      "headers": [
+        "task_type_id",
+        "display_name",
+        "task_category",
+        "status",
+        "base_duration_min_minutes",
+        "base_duration_max_minutes",
+        "base_workload",
+        "required_training_id",
+        "required_location_capability",
+        "primary_output",
+        "assignment_limit",
+        "requires_off_duty",
+        "can_be_player_overridden",
+        "notes"
+      ],
+      "values": [
+        "TASK_OFF_DUTY",
+        "Scheduled Off Duty",
+        "PERSONNEL_CARE",
+        "PLANNED",
+        60,
+        "TBD",
+        0,
+        null,
+        "CAP_REST",
+        "RECOVERY",
+        1,
+        true,
+        false,
+        "Player schedules off-duty time; agent may not transition immediately if busy"
+      ]
+    },
+    {
+      "workbook": "doda_02_personnel_and_operations_v107.xlsx",
+      "sheet": "TaskTypesCat",
+      "row": 3,
+      "headers": [
+        "task_type_id",
+        "display_name",
+        "task_category",
+        "status",
+        "base_duration_min_minutes",
+        "base_duration_max_minutes",
+        "base_workload",
+        "required_training_id",
+        "required_location_capability",
+        "primary_output",
+        "assignment_limit",
+        "requires_off_duty",
+        "can_be_player_overridden",
+        "notes"
+      ],
+      "values": [
+        "TASK_EAT",
+        "Eating",
+        "PERSONNEL_CARE",
+        "RESOLVED",
+        60,
+        120,
+        0,
+        null,
+        "CAP_FOOD",
+        "NUTRITION_RECOVERY",
+        1,
+        true,
+        false,
+        "Agent must be off duty to eat"
+      ]
+    },
+    {
+      "workbook": "doda_02_personnel_and_operations_v107.xlsx",
+      "sheet": "TaskTypesCat",
+      "row": 4,
+      "headers": [
+        "task_type_id",
+        "display_name",
+        "task_category",
+        "status",
+        "base_duration_min_minutes",
+        "base_duration_max_minutes",
+        "base_workload",
+        "required_training_id",
+        "required_location_capability",
+        "primary_output",
+        "assignment_limit",
+        "requires_off_duty",
+        "can_be_player_overridden",
+        "notes"
+      ],
+      "values": [
+        "TASK_REST",
+        "Resting",
+        "PERSONNEL_CARE",
+        "RESOLVED",
+        60,
+        "TBD",
+        0,
+        null,
+        "CAP_REST",
+        "FATIGUE_RECOVERY",
+        1,
+        true,
+        false,
+        "Resting and sleeping are the same system"
+      ]
+    },
+    {
+      "workbook": "doda_02_personnel_and_operations_v107.xlsx",
+      "sheet": "TaskTypesCat",
+      "row": 5,
+      "headers": [
+        "task_type_id",
+        "display_name",
+        "task_category",
+        "status",
+        "base_duration_min_minutes",
+        "base_duration_max_minutes",
+        "base_workload",
+        "required_training_id",
+        "required_location_capability",
+        "primary_output",
+        "assignment_limit",
+        "requires_off_duty",
+        "can_be_player_overridden",
+        "notes"
+      ],
+      "values": [
+        "TASK_MEDICAL_ATTENTION",
+        "Medical Attention",
+        "MEDICAL",
+        "PLANNED",
+        "TBD",
+        "TBD",
+        5,
+        "MEDICAL_TRAINING",
+        "CAP_BASIC_MEDICAL",
+        "HEALTH_AND_INJURY_RECOVERY",
+        1,
+        true,
+        false,
+        "Exact duration and effects remain to be balanced"
+      ]
+    },
+    {
+      "workbook": "doda_02_personnel_and_operations_v107.xlsx",
+      "sheet": "TaskTypesCat",
+      "row": 6,
+      "headers": [
+        "task_type_id",
+        "display_name",
+        "task_category",
+        "status",
+        "base_duration_min_minutes",
+        "base_duration_max_minutes",
+        "base_workload",
+        "required_training_id",
+        "required_location_capability",
+        "primary_output",
+        "assignment_limit",
+        "requires_off_duty",
+        "can_be_player_overridden",
+        "notes"
+      ],
+      "values": [
+        "TASK_INJURY_STABILIZATION",
+        "Injury Stabilization",
+        "MEDICAL_EMERGENCY",
+        "PLANNED",
+        "TBD",
+        "TBD",
+        "TBD",
+        "MEDICAL_TRAINING",
+        "CAP_BASIC_MEDICAL",
+        "TRAUMA_STABILIZATION",
+        1,
+        false,
+        false,
+        "Can later support field stabilization"
+      ]
+    },
+    {
+      "workbook": "doda_02_personnel_and_operations_v107.xlsx",
+      "sheet": "TaskTypesCat",
+      "row": 7,
+      "headers": [
+        "task_type_id",
+        "display_name",
+        "task_category",
+        "status",
+        "base_duration_min_minutes",
+        "base_duration_max_minutes",
+        "base_workload",
+        "required_training_id",
+        "required_location_capability",
+        "primary_output",
+        "assignment_limit",
+        "requires_off_duty",
+        "can_be_player_overridden",
+        "notes"
+      ],
+      "values": [
+        "TASK_THERAPY",
+        "Therapy",
+        "MENTAL_HEALTH",
+        "PLANNED",
+        "TBD",
+        "TBD",
+        5,
+        null,
+        "CAP_THERAPY",
+        "STRESS_RECOVERY",
+        1,
+        true,
+        false,
+        "Player-assigned remediation after request or severe stress"
+      ]
+    },
+    {
+      "workbook": "doda_02_personnel_and_operations_v107.xlsx",
+      "sheet": "TaskTypesCat",
+      "row": 8,
+      "headers": [
+        "task_type_id",
+        "display_name",
+        "task_category",
+        "status",
+        "base_duration_min_minutes",
+        "base_duration_max_minutes",
+        "base_workload",
+        "required_training_id",
+        "required_location_capability",
+        "primary_output",
+        "assignment_limit",
+        "requires_off_duty",
+        "can_be_player_overridden",
+        "notes"
+      ],
+      "values": [
+        "TASK_RECOVERY",
+        "Recovery",
+        "MEDICAL_OR_CARE",
+        "PLANNED",
+        "TBD",
+        "TBD",
+        0,
+        null,
+        "CAP_REST_OR_MEDICAL",
+        "RECOVERY",
+        1,
+        true,
+        false,
+        "Used after treatment severe injury or severe fatigue"
+      ]
+    },
+    {
+      "workbook": "doda_02_personnel_and_operations_v107.xlsx",
+      "sheet": "TaskTypesCat",
+      "row": 9,
+      "headers": [
+        "task_type_id",
+        "display_name",
+        "task_category",
+        "status",
+        "base_duration_min_minutes",
+        "base_duration_max_minutes",
+        "base_workload",
+        "required_training_id",
+        "required_location_capability",
+        "primary_output",
+        "assignment_limit",
+        "requires_off_duty",
+        "can_be_player_overridden",
+        "notes"
+      ],
+      "values": [
+        "TASK_RETRIEVE_INCAPACITATED",
+        "Retrieve Incapacitated Agent",
+        "EXTRACTION",
+        "RESOLVED",
+        "TBD",
+        "TBD",
+        "TBD",
+        null,
+        "CAP_EMERGENCY_TRANSPORT",
+        "AGENT_EXTRACTION",
+        1,
+        false,
+        false,
+        "Requires another eligible agent; target must be incapacitated"
+      ]
+    },
+    {
+      "workbook": "doda_02_personnel_and_operations_v107.xlsx",
+      "sheet": "TaskTypesCat",
+      "row": 10,
+      "headers": [
+        "task_type_id",
+        "display_name",
+        "task_category",
+        "status",
+        "base_duration_min_minutes",
+        "base_duration_max_minutes",
+        "base_workload",
+        "required_training_id",
+        "required_location_capability",
+        "primary_output",
+        "assignment_limit",
+        "requires_off_duty",
+        "can_be_player_overridden",
+        "notes"
+      ],
+      "values": [
+        "TASK_SURVEY",
+        "Survey Location",
+        "OPERATIONAL",
+        "PLANNED",
+        240,
+        240,
+        40,
+        "INVESTIGATIVE_TRAINING",
+        "FIELD_LOCATION",
+        "CASE_PROGRESS",
+        2,
+        false,
+        true,
+        "Useful early proof task"
+      ]
+    },
+    {
+      "workbook": "doda_02_personnel_and_operations_v107.xlsx",
+      "sheet": "TaskTypesCat",
+      "row": 11,
+      "headers": [
+        "task_type_id",
+        "display_name",
+        "task_category",
+        "status",
+        "base_duration_min_minutes",
+        "base_duration_max_minutes",
+        "base_workload",
+        "required_training_id",
+        "required_location_capability",
+        "primary_output",
+        "assignment_limit",
+        "requires_off_duty",
+        "can_be_player_overridden",
+        "notes"
+      ],
+      "values": [
+        "TASK_INTERVIEW",
+        "Interview Witness",
+        "OPERATIONAL",
+        "PLANNED",
+        120,
+        120,
+        25,
+        "INVESTIGATIVE_TRAINING",
+        "FIELD_LOCATION",
+        "CASE_PROGRESS",
+        1,
+        false,
+        true,
+        "Useful optional proof task"
+      ]
+    },
+    {
+      "workbook": "doda_02_personnel_and_operations_v107.xlsx",
+      "sheet": "TaskTypesCat",
+      "row": 12,
+      "headers": [
+        "task_type_id",
+        "display_name",
+        "task_category",
+        "status",
+        "base_duration_min_minutes",
+        "base_duration_max_minutes",
+        "base_workload",
+        "required_training_id",
+        "required_location_capability",
+        "primary_output",
+        "assignment_limit",
+        "requires_off_duty",
+        "can_be_player_overridden",
+        "notes"
+      ],
+      "values": [
+        "TASK_SECURE_EVIDENCE",
+        "Secure Evidence",
+        "OPERATIONAL",
+        "PLANNED",
+        60,
+        90,
+        30,
+        "INVESTIGATIVE_TRAINING",
+        "FIELD_LOCATION",
+        "EVIDENCE",
+        2,
+        false,
+        true,
+        "Creates persistent evidence record"
+      ]
+    },
+    {
+      "workbook": "doda_02_personnel_and_operations_v107.xlsx",
+      "sheet": "TaskTypesCat",
+      "row": 13,
+      "headers": [
+        "task_type_id",
+        "display_name",
+        "task_category",
+        "status",
+        "base_duration_min_minutes",
+        "base_duration_max_minutes",
+        "base_workload",
+        "required_training_id",
+        "required_location_capability",
+        "primary_output",
+        "assignment_limit",
+        "requires_off_duty",
+        "can_be_player_overridden",
+        "notes"
+      ],
+      "values": [
+        "TASK_ANALYZE_EVIDENCE",
+        "Analyze Evidence",
+        "RESEARCH",
+        "LATER",
+        180,
+        180,
+        30,
+        "RESEARCH_TRAINING",
+        "CAP_RESEARCH",
+        "CASE_PROGRESS",
+        1,
+        false,
+        true,
+        "Deferred research task"
+      ]
+    },
+    {
+      "workbook": "doda_04_hq_and_map_authoring_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 2,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_FOOD",
+        "Food Access",
+        "PERSONNEL_CARE",
+        "REMED_EATING",
+        "TASK_EAT",
+        "RESOURCE_FOOD_PROVISIONS",
+        null,
+        false,
+        true,
+        "FUTURE",
+        "PLANNED",
+        "Allows scheduled eating during off-duty time"
+      ]
+    },
+    {
+      "workbook": "doda_04_hq_and_map_authoring_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 3,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_REST",
+        "Rest Facility",
+        "PERSONNEL_CARE",
+        "REMED_OFF_DUTY; REMED_RESTING",
+        "TASK_REST",
+        null,
+        true,
+        true,
+        "FUTURE",
+        "PLANNED",
+        "Allows fatigue recovery and scheduled off-duty rest",
+        null
+      ]
+    },
+    {
+      "workbook": "doda_04_hq_and_map_authoring_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 4,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_BASIC_MEDICAL",
+        "Basic Medical Care",
+        "MEDICAL",
+        "REMED_MEDICAL_ATTENTION; REMED_INJURY_STABILIZATION",
+        "TASK_HEAL",
+        "RESOURCE_MEDICAL_SUPPLIES",
+        "MEDIC_OR_MEDICAL_STAFF",
+        true,
+        true,
+        "FUTURE",
+        "PLANNED",
+        "Supports ordinary treatment and stabilization"
+      ]
+    },
+    {
+      "workbook": "doda_04_hq_and_map_authoring_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 5,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_ADVANCED_MEDICAL",
+        "Advanced Medical Care",
+        "MEDICAL",
+        "REMED_MEDICAL_ATTENTION; REMED_RECOVERY",
+        "TASK_HEAL",
+        "RESOURCE_MEDICAL_SUPPLIES",
+        "MEDICAL_STAFF",
+        true,
+        true,
+        "FUTURE",
+        "LATER",
+        "Supports severe injury and longer recovery"
+      ]
+    },
+    {
+      "workbook": "doda_04_hq_and_map_authoring_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 6,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_THERAPY",
+        "Therapy Services",
+        "MENTAL_HEALTH",
+        "REMED_THERAPY",
+        "TASK_THERAPY",
+        "RESOURCE_THERAPY_CAPACITY",
+        "THERAPIST_OR_APPROVED_PROVIDER",
+        false,
+        true,
+        "FUTURE",
+        "PLANNED",
+        "Supports player-assigned therapy"
+      ]
+    },
+    {
+      "workbook": "doda_04_hq_and_map_authoring_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 7,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_EMERGENCY_TRANSPORT",
+        "Emergency Transport",
+        "LOGISTICS",
+        "REMED_RETRIEVAL; REMED_EMERGENCY_TRANSPORT",
+        "TASK_RETRIEVE_INCAPACITATED",
+        "RESOURCE_TRANSPORT_CAPACITY",
+        "TRANSPORT_OR_MEDICAL_STAFF",
+        true,
+        false,
+        "FUTURE",
+        "LATER",
+        "Supports emergency retrieval and medical transport"
+      ]
+    },
+    {
+      "workbook": "doda_04_hq_and_map_authoring_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 8,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_RESEARCH",
+        "Research Facility",
+        "RESEARCH",
+        null,
+        "TASK_ANALYZE_EVIDENCE",
+        "RESOURCE_RESEARCH_CAPACITY",
+        "RESEARCHER_OR_ANALYST",
+        false,
+        true,
+        "FUTURE",
+        "LATER",
+        "Supports evidence analysis and research tasks"
+      ]
+    },
+    {
+      "workbook": "doda_04_hq_and_map_authoring_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 9,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_EVIDENCE_STORAGE",
+        "Evidence Storage",
+        "EVIDENCE",
+        null,
+        "TASK_SECURE_EVIDENCE",
+        null,
+        "CHAIN_OF_CUSTODY_STAFF",
+        false,
+        true,
+        "FUTURE",
+        "LATER",
+        "Supports custody and warehouse workflows"
+      ]
+    },
+    {
+      "workbook": "doda_04_hq_and_map_authoring_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 10,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_ANOMALOUS_CONTAINMENT",
+        "Anomalous Containment",
+        "PARANORMAL",
+        null,
+        "TASK_SECURE_EVIDENCE",
+        "RESOURCE_CONTAINMENT_CAPACITY",
+        "CONTAINMENT_STAFF",
+        false,
+        true,
+        "FUTURE",
+        "LATER",
+        "Supports anomalous evidence or entity containment"
+      ]
+    },
+    {
+      "workbook": "doda_04_hq_and_map_authoring_v107.xlsx",
+      "sheet": "FacilityCapsCat",
+      "row": 11,
+      "headers": [
+        "facility_capability_id",
+        "display_name",
+        "capability_category",
+        "required_for_remediation_ids",
+        "required_for_task_types",
+        "minimum_resource_id",
+        "required_staff_or_role",
+        "allows_incapacitated_agents",
+        "allows_off_duty_agents",
+        "player_visible",
+        "v1_status",
+        "notes"
+      ],
+      "values": [
+        "CAP_SAFE_HOUSING",
+        "Safe Housing",
+        "PERSONNEL_CARE",
+        "REMED_OFF_DUTY; REMED_RESTING",
+        "TASK_REST",
+        null,
+        true,
+        true,
+        "FUTURE",
+        "LATER",
+        "Supports safe rest away from headquarters",
+        null
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+band_id,stat_id,minimum_value,maximum_value,display_name,severity,assignment_effect,forced_off_duty,suggested_action,suggested_care_service_id,foims_warning,ui_color,source_reference,description,sort_order,active
+FATIGUE_ENERGETIC,FATIGUE,0,10,Energetic,NONE,NONE,false,,,,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A2,No fatigue and fully rested,10,false
+FATIGUE_ALERT,FATIGUE,11,30,Alert,LOW,NONE,false,,,,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A3,Final label can change if desired,20,false
+FATIGUE_RELAXED,FATIGUE,31,60,Relaxed,MODERATE,MINOR_PENALTY,false,Resting,,Monitor condition,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A4,Final label can change if desired,30,false
+FATIGUE_EXHAUSTED,FATIGUE,61,89,Exhausted,HIGH,MAJOR_PENALTY,false,Resting,,Rest recommended,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A5,High fatigue but not yet forced off duty,40,false
+FATIGUE_UNCONSCIOUS,FATIGUE,90,100,Unconscious,CRITICAL,HARD_BLOCK,true,Recovery,REMED_RECOVERY,Immediate recovery required,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A6,Collapse unconsciousness and forced off duty,50,false
+HEALTH_DEAD,HEALTH,0,0,Dead,TERMINAL,NONE,false,,,Deceased,#8B0000,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A7,"Death is remediable later only through magic. Workbook effect removed (PERS-04): Hard block, forced off duty False.",10,false
+HEALTH_INCAPACITATED,HEALTH,1,10,Incapacitated,CRITICAL,NONE,false,Retrieval,,Medical rescue required,#FF0000,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A8,"Another agent must retrieve agent if necessary. Workbook effect removed (PERS-04): Hard block, forced off duty True.",20,false
+HEALTH_VERY_UNHEALTHY,HEALTH,11,30,Very Unhealthy,HIGH,NONE,false,Recovering,,Medical attention recommended,#FF8C00,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A9,"Health state. Workbook effect removed (PERS-04): Major penalty, forced off duty False.",30,false
+HEALTH_UNHEALTHY,HEALTH,31,60,Unhealthy,MODERATE,NONE,false,Recovering,,Monitor condition,#FFD700,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A10,"Health state. Workbook effect removed (PERS-04): Minor penalty, forced off duty False.",40,false
+HEALTH_HEALTHY,HEALTH,61,89,Healthy,LOW,NONE,false,,,,#00C000,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A11,Health state,50,false
+HEALTH_VERY_HEALTHY,HEALTH,90,100,Very Healthy,NONE,NONE,false,,,,#00BFFF,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A12,Health state,60,false
+INJURY_NONE,INJURY,0,0,None,NONE,NONE,false,,,,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A13,No acute injury,10,false
+INJURY_STABLE,INJURY,1,30,Stable,LOW,MINOR_PENALTY,false,Healing,,Minor injury,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A14,Low injury burden,20,false
+INJURY_MINOR,INJURY,31,60,Minor,MODERATE,MAJOR_PENALTY,false,Healing,,Treatment recommended,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A15,Moderate injury burden,30,false
+INJURY_SEVERE,INJURY,61,69,Severe,HIGH,MAJOR_PENALTY,false,Healing,,Medical attention required,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A16,Below incapacitation threshold,40,false
+INJURY_CRITICAL,INJURY,70,89,Critical,CRITICAL,HARD_BLOCK,true,Retrieval,,Agent incapacitated,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A17,Injury 70 or higher incapacitates,50,false
+INJURY_COMA,INJURY,90,100,Coma,TERMINAL,HARD_BLOCK,true,Medical Attention,REMED_MEDICAL_ATTENTION,Emergency medical condition,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A18,Can be remediated later; not permanent state,60,false
+NUTRITION_CACHEXIA,NUTRITION,0,0,Cachexia,TERMINAL,HARD_BLOCK,false,Eating,,Severe deprivation,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A19,Hidden percentage; visible operational warning only,10,false
+NUTRITION_EMACIATION,NUTRITION,1,10,Emaciation,CRITICAL,MAJOR_PENALTY,false,Eating,,Food and recovery required,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A20,Hidden percentage; visible operational warning only,20,false
+NUTRITION_UNDERNUTRITION,NUTRITION,11,30,Undernutrition,HIGH,MAJOR_PENALTY,false,Eating,,Food required,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A21,Hidden percentage; visible operational warning only,30,false
+NUTRITION_MALNUTRITION,NUTRITION,31,60,Malnutrition,MODERATE,MINOR_PENALTY,false,Eating,,Meal recommended,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A22,Hidden percentage; visible operational warning only,40,false
+NUTRITION_HUNGRY,NUTRITION,61,89,Hungry,LOW,NONE,false,Eating,,Meal required,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A23,Hidden percentage; visible operational warning only,50,false
+NUTRITION_SATED,NUTRITION,90,100,Sated,NONE,NONE,false,,,,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A24,Hidden percentage; normally not displayed,60,false
+STRESS_UNBURDENED,STRESS,0,10,Unburdened,NONE,NONE,false,,,,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A25,Final terminology remains editable,10,false
+STRESS_CONCERNED,STRESS,11,30,Concerned,LOW,NONE,false,,,Monitor condition,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A26,Final terminology remains editable,20,false
+STRESS_BURDENED,STRESS,31,60,Burdened,MODERATE,MINOR_PENALTY,false,Off Duty,,Stress elevated,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A27,Corrected spelling from Burdended,30,false
+STRESS_BURNOUT,STRESS,61,75,Burnout State,HIGH,MAJOR_PENALTY,false,Therapy,REMED_THERAPY_PSYC,Recovery recommended,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A28,Final terminology remains editable,40,false
+STRESS_TRAUMATIC,STRESS,76,89,Traumatic Episode,CRITICAL,HIGH_RISK_TASK_BLOCK,false,Therapy,REMED_THERAPY_PSYC,Clinical attention required,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A29,May be replaced with Acute Stress Reaction,50,false
+STRESS_BREAKDOWN,STRESS,90,100,Breakdown,CRITICAL,HARD_BLOCK,true,Therapy,REMED_THERAPY_PSYC,Immediate intervention required,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A30,Forced off duty with cult or defection risk,60,false
+WORKLOAD_IDLE,WORKLOAD,0,10,Idle,NONE,NONE,false,,,,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A31,No meaningful current commitment,10,false
+WORKLOAD_PRIMED,WORKLOAD,11,30,Primed,LOW,NONE,false,,,Ready for work,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A32,Prepared and lightly committed,20,false
+WORKLOAD_FOCUSED,WORKLOAD,31,60,Focused,MODERATE,MINOR_PENALTY,false,,,Current task load,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A33,Normal active commitment,30,false
+WORKLOAD_BUSY,WORKLOAD,61,75,Busy,HIGH,MAJOR_PENALTY,false,,,High commitment,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A34,Limit additional tasking,40,false
+WORKLOAD_FULLY_ENGAGED,WORKLOAD,76,89,Fully Engaged,HIGH,MAJOR_PENALTY,false,,,Near capacity,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A35,Limit additional tasking,50,false
+WORKLOAD_MAXIMUM_EFFORT,WORKLOAD,90,100,Maximum Effort,CRITICAL,NEW_TASK_BLOCK,false,Off Duty,,Overextended,,doda_02_personnel_and_operations_v107.xlsx CondBandsCat!A36,Sustainable for approximately one strategic week,60,false
