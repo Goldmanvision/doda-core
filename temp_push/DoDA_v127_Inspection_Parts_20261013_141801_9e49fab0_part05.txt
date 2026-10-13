@@ -1,0 +1,222 @@
+\n"
+ 1037:                         f"Backup created:\n{backup}\n\n"
+ 1038:                         "Project validation passed."
+ 1039:                     ),
+ 1040:                 )
+ 1041:             else:
+ 1042:                 messagebox.showwarning(
+ 1043:                     "DoDA Content Workbench",
+ 1044:                     (
+ 1045:                         "Staffing Override "
+ 1046:                         f"{action}, but post-save validation failed.\n\n"
+ 1047:                         f"Backup:\n{backup}"
+ 1048:                     ),
+ 1049:                 )
+ 1050: 
+ 1051:         except (OSError, ValueError) as error:
+ 1052:             self.app.log(f"STAFFING OVERRIDE SAVE ERROR: {error}")
+ 1053:             messagebox.showerror(
+ 1054:                 "DoDA Content Workbench",
+ 1055:                 f"Unable to save Staffing Override.\n\n{error}",
+ 1056:             )
+ 1057:         finally:
+ 1058:             if temporary.exists():
+ 1059:                 temporary.unlink()
+ 1060: 
+ 1061:             self.app.config(cursor="")
+ 1062:             self.app.update_idletasks()
+ 1063: 
+ 1064:     def remove(self) -> None:
+ 1065:         if not self.editing_key:
+ 1066:             messagebox.showwarning(
+ 1067:                 "DoDA Content Workbench",
+ 1068:                 "Select an existing Staffing Override before using Remove.",
+ 1069:             )
+ 1070:             return
+ 1071: 
+ 1072:         facility_id, capability_id, qualification_id = self.editing_key
+ 1073: 
+ 1074:         confirmed = messagebox.askyesno(
+ 1075:             "Remove Staffing Override?",
+ 1076:             (
+ 1077:                 "ARE YOU SURE you want to remove this facility-specific "
+ 1078:                 "staffing override?\n\n"
+ 1079:                 f"Facility: {facility_id}\n"
+ 1080:                 f"Capability: {capability_id}\n"
+ 1081:                 f"Qualification: {qualification_id}\n\n"
+ 1082:                 "A timestamped backup will be created before removal."
+ 1083:             ),
+ 1084:             icon="warning",
+ 1085:             default=messagebox.NO,
+ 1086:         )
+ 1087: 
+ 1088:         if not confirmed:
+ 1089:             self.app.log(
+ 1090:                 "Remove Staffing Override cancelled for "
+ 1091:                 f"'{facility_id} / {capability_id} / {qualification_id}'."
+ 1092:             )
+ 1093:             return
+ 1094: 
+ 1095:         rows = [
+ 1096:             row
+ 1097:             for row in self.rows()
+ 1098:             if not (
+ 1099:                 row.get("facility_id", "") == facility_id
+ 1100:                 and row.get("capability_id", "") == capability_id
+ 1101:                 and row.get("qualification_id", "") == qualification_id
+ 1102:             )
+ 1103:         ]
+ 1104: 
+ 1105:         temporary = self.app.source_directory / (
+ 1106:             f".facility-capability-staffing-overrides-remove-{uuid4().hex}.tmp.csv"
+ 1107:         )
+ 1108: 
+ 1109:         self.app.config(cursor="watch")
+ 1110:         self.app.update_idletasks()
+ 1111: 
+ 1112:         try:
+ 1113:             self.write(temporary, rows)
+ 1114: 
+ 1115:             valid, output = self.candidate_valid(temporary)
+ 1116: 
+ 1117:             self.app.log(
+ 1118:                 "Facility Capability Staffing Override removal candidate "
+ 1119:                 f"validation output for '{facility_id} / {capability_id} / "
+ 1120:                 f"{qualification_id}':"
+ 1121:             )
+ 1122: 
+ 1123:             for line in output.splitlines():
+ 1124:                 self.app.log(" " + line)
+ 1125: 
+ 1126:             if not valid:
+ 1127:                 messagebox.showerror(
+ 1128:                     "DoDA Content Workbench",
+ 1129:                     (
+ 1130:                         "Staffing Override removal was blocked by validation.\n\n"
+ 1131:                         "Source CSV was unchanged."
+ 1132:                     ),
+ 1133:                 )
+ 1134:                 return
+ 1135: 
+ 1136:             folder = self.backup_directory()
+ 1137:             folder.mkdir(parents=True, exist_ok=True)
+ 1138: 
+ 1139:             backup = folder / (
+ 1140:                 "facility_capability_staffing_overrides_before_remove_"
+ 1141:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+ 1142:                 + ".csv"
+ 1143:             )
+ 1144: 
+ 1145:             shutil.copy2(self.source_path(), backup)
+ 1146:             os.replace(temporary, self.source_path())
+ 1147: 
+ 1148:             self.editing_key = None
+ 1149: 
+ 1150:             self.app.log(
+ 1151:                 "Created pre-removal Facility Capability Staffing Override "
+ 1152:                 f"backup: {backup}"
+ 1153:             )
+ 1154:             self.app.log(
+ 1155:                 "Removed Facility Capability Staffing Override: "
+ 1156:                 f"{facility_id} / {capability_id} / {qualification_id}"
+ 1157:             )
+ 1158: 
+ 1159:             self.app.refresh_all(False)
+ 1160:             self.new()
+ 1161: 
+ 1162:             valid, output = self.post_validate()
+ 1163: 
+ 1164:             for line in output.splitlines():
+ 1165:                 self.app.log(" " + line)
+ 1166: 
+ 1167:             self.app.refresh_all(False)
+ 1168: 
+ 1169:             if valid:
+ 1170:                 messagebox.showinfo(
+ 1171:                     "DoDA Content Workbench",
+ 1172:                     (
+ 1173:                         "Facility Capability Staffing Override "
+ 1174:                         f"'{facility_id} / {capability_id} / "
+ 1175:                         f"{qualification_id}' removed.\n\n"
+ 1176:                         f"Backup created:\n{backup}\n\n"
+ 1177:                         "Project validation passed."
+ 1178:                     ),
+ 1179:                 )
+ 1180:             else:
+ 1181:                 messagebox.showwarning(
+ 1182:                     "DoDA Content Workbench",
+ 1183:                     (
+ 1184:                         "Staffing Override removed, but post-save validation "
+ 1185:                         f"failed.\n\nBackup:\n{backup}"
+ 1186:                     ),
+ 1187:                 )
+ 1188: 
+ 1189:         except (OSError, ValueError) as error:
+ 1190:             self.app.log(f"STAFFING OVERRIDE REMOVE ERROR: {error}")
+ 1191:             messagebox.showerror(
+ 1192:                 "DoDA Content Workbench",
+ 1193:                 f"Unable to remove Staffing Override.\n\n{error}",
+ 1194:             )
+ 1195:         finally:
+ 1196:             if temporary.exists():
+ 1197:                 temporary.unlink()
+ 1198: 
+ 1199:             self.app.config(cursor="")
+ 1200:             self.app.update_idletasks()
+ 1201: 
+ 1202:     def open_backups(self) -> None:
+ 1203:         self.backup_directory().mkdir(parents=True, exist_ok=True)
+ 1204:         self.app.open_folder(self.backup_directory())
+ 1205: 
+ 1206: 
+ 1207: def install_facility_capability_staffing_overrides_editor(app: Any) -> None:
+ 1208:     editor = FacilityCapabilityStaffingOverridesEditor(app)
+ 1209:     app.facility_capability_staffing_overrides_editor = editor
+
+===== BOUNDED GUI INTEGRATION: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_content_gui.py =====
+SHA256: 828522DB74281FF5E9D4E5078B39AD4724A2A62AB30F9DD638B605ED554F06D0
+    ...
+   38: from doda_enum_catalog_editor import install_enum_catalog_editor
+   39: from doda_qualification_catalog_editor import install_qualification_catalog_editor
+   40: from doda_capabilities_editor import install_capabilities_editor
+   41: from doda_facility_capabilities_editor import install_facility_capabilities_editor
+   42: from doda_capability_staffing_rules_editor import install_capability_staffing_rules_editor
+   43: from doda_capability_staffing_draft_policy import allow_capability_staffing_project_change, install_capability_staffing_draft_close_guard
+   44: from doda_facility_capability_staffing_overrides_editor import install_facility_capability_staffing_overrides_editor
+   45: from doda_task_templates_editor import install_task_templates_editor
+   46: from doda_task_draft_policy import task_draft_dirty, allow_task_project_change, install_task_draft_close_guard
+   47: from doda_foims_x_preview import FoimsXPreview
+   48: from doda_network_editor import install_network_editor, network_editors_dirty
+   49: from doda_navigation import install_grouped_navigation
+   50: from doda_ui_enhancements import install_tree_autosize
+   51: import doda_network_rules
+   52: import doda_equipment_rules
+   53: import doda_care_rules
+   54: import doda_condition_rules
+    ...
+   85:     "flavor_text": "flavor_text.csv",
+   86:     "qualification_catalog": "qualification_catalog.csv",
+   87:     "capabilities": "capabilities.csv",
+   88:     "facility_capabilities": "facility_capabilities.csv",
+   89:     "capability_staffing_rules": "capability_staffing_rules.csv",
+   90:     "facility_capability_staffing_overrides": (
+   91:         "facility_capability_staffing_overrides.csv"
+   92:     ),
+   93:     "task_templates": "task_templates.csv",
+   94: }
+   95: 
+   96: 
+   97: def enable_windows_dark_title_bar(window: tk.Tk) -> None:
+   98:     """Request a dark native Windows title bar for the top-level app frame."""
+   99: 
+    ...
+  263:         install_enum_catalog_editor(self)
+  264:         install_qualification_catalog_editor(self)
+  265:         install_capabilities_editor(self)
+  266:         install_facility_capabilities_editor(self)
+  267:         install_capability_staffing_rules_editor(self)
+  268:         install_facility_capability_staffing_overrides_editor(self)
+  269:         install_task_templates_editor(self)
+  270:         install_network_editor(self)
+  271:         install_task_draft_close_guard(self, messagebox)
+  272:         install_

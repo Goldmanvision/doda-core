@@ -1,0 +1,287 @@
+:     ) -> bool:
+  245:         return any(
+  246:             row.get("facility_id", "") == facility_id
+  247:             and row.get("capability_id", "") == capability_id
+  248:             for row in self.active_installations()
+  249:         )
+  250: 
+  251:     def next_sort_order(self, facility_id: str, capability_id: str) -> int:
+  252:         values: list[int] = []
+  253: 
+  254:         for row in self.rows():
+  255:             if (
+  256:                 row.get("facility_id", "") != facility_id
+  257:                 or row.get("capability_id", "") != capability_id
+  258:             ):
+  259:                 continue
+  260: 
+  261:             try:
+  262:                 values.append(int(row.get("sort_order", "")))
+  263:             except ValueError:
+  264:                 pass
+  265: 
+  266:         return max(values, default=0) + 1
+  267: 
+  268:     def build(self) -> None:
+  269:         for child in self.app.staffing_overrides_tab.winfo_children():
+  270:             child.destroy()
+  271: 
+  272:         tab = self.app.staffing_overrides_tab
+  273:         tab.columnconfigure(0, weight=3)
+  274:         tab.columnconfigure(1, weight=2)
+  275:         tab.rowconfigure(0, weight=1)
+  276: 
+  277:         list_frame = ttk.LabelFrame(
+  278:             tab,
+  279:             text="Facility Capability Staffing Overrides",
+  280:             padding=8,
+  281:         )
+  282:         editor_frame = ttk.LabelFrame(
+  283:             tab,
+  284:             text="Staffing Override Editor",
+  285:             padding=10,
+  286:         )
+  287: 
+  288:         list_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=(0, 6))
+  289:         editor_frame.grid(row=0, column=1, sticky=tk.NSEW)
+  290: 
+  291:         list_frame.columnconfigure(0, weight=1)
+  292:         list_frame.rowconfigure(0, weight=1)
+  293:         editor_frame.columnconfigure(1, weight=1)
+  294: 
+  295:         self.tree = ttk.Treeview(
+  296:             list_frame,
+  297:             columns=(
+  298:                 "facility",
+  299:                 "capability",
+  300:                 "qualification",
+  301:                 "minimum",
+  302:                 "preferred",
+  303:                 "maximum",
+  304:                 "sort",
+  305:                 "active",
+  306:             ),
+  307:             show="headings",
+  308:             selectmode="browse",
+  309:         )
+  310: 
+  311:         columns = (
+  312:             ("facility", "Facility", 165),
+  313:             ("capability", "Capability", 180),
+  314:             ("qualification", "Qualification", 165),
+  315:             ("minimum", "Min", 55),
+  316:             ("preferred", "Preferred", 80),
+  317:             ("maximum", "Max", 55),
+  318:             ("sort", "Sort", 55),
+  319:             ("active", "Active", 70),
+  320:         )
+  321: 
+  322:         for key, title, width in columns:
+  323:             self.tree.heading(key, text=title)
+  324:             self.tree.column(key, width=width, anchor=tk.W)
+  325: 
+  326:         scrollbar = ttk.Scrollbar(
+  327:             list_frame,
+  328:             orient=tk.VERTICAL,
+  329:             command=self.tree.yview,
+  330:         )
+  331: 
+  332:         self.tree.configure(yscrollcommand=scrollbar.set)
+  333:         self.tree.grid(row=0, column=0, sticky=tk.NSEW)
+  334:         scrollbar.grid(row=0, column=1, sticky=tk.NS)
+  335:         self.tree.bind("<<TreeviewSelect>>", self.on_select)
+  336: 
+  337:         def label(text: str, row: int) -> None:
+  338:             ttk.Label(
+  339:                 editor_frame,
+  340:                 text=text,
+  341:                 style="Section.TLabel",
+  342:             ).grid(
+  343:                 row=row,
+  344:                 column=0,
+  345:                 sticky=tk.NW,
+  346:                 padx=(0, 8),
+  347:                 pady=(0, 8),
+  348:             )
+  349: 
+  350:         label("Installation:", 0)
+  351: 
+  352:         self.installation_combo = ttk.Combobox(
+  353:             editor_frame,
+  354:             textvariable=self.installation_choice,
+  355:             state="readonly",
+  356:             values=self.installation_choices(),
+  357:         )
+  358:         self.installation_combo.grid(
+  359:             row=0,
+  360:             column=1,
+  361:             sticky=tk.EW,
+  362:             pady=(0, 8),
+  363:         )
+  364:         self.installation_combo.bind(
+  365:             "<<ComboboxSelected>>",
+  366:             self.on_installation_changed,
+  367:         )
+  368: 
+  369:         self.installation_hint = ttk.Label(
+  370:             editor_frame,
+  371:             text="Select an active Facility Capability installation.",
+  372:             foreground="#9da7b3",
+  373:             justify=tk.LEFT,
+  374:             wraplength=360,
+  375:         )
+  376:         self.installation_hint.grid(
+  377:             row=1,
+  378:             column=1,
+  379:             sticky=tk.W,
+  380:             pady=(0, 10),
+  381:         )
+  382: 
+  383:         label("Qualification:", 2)
+  384: 
+  385:         self.qualification_combo = ttk.Combobox(
+  386:             editor_frame,
+  387:             textvariable=self.qualification_id,
+  388:             state="readonly",
+  389:             values=[],
+  390:         )
+  391:         self.qualification_combo.grid(
+  392:             row=2,
+  393:             column=1,
+  394:             sticky=tk.EW,
+  395:             pady=(0, 8),
+  396:         )
+  397:         self.qualification_combo.bind(
+  398:             "<<ComboboxSelected>>",
+  399:             self.on_qualification_changed,
+  400:         )
+  401: 
+  402:         ttk.Label(
+  403:             editor_frame,
+  404:             text=(
+  405:                 "Installation + Qualification are immutable after creation. "
+  406:                 "Only global-rule qualifications are offered."
+  407:             ),
+  408:             foreground="#9da7b3",
+  409:             wraplength=360,
+  410:         ).grid(
+  411:             row=3,
+  412:             column=1,
+  413:             sticky=tk.W,
+  414:             pady=(0, 10),
+  415:         )
+  416: 
+  417:         label("Global Baseline:", 4)
+  418: 
+  419:         ttk.Label(
+  420:             editor_frame,
+  421:             textvariable=self.baseline_text,
+  422:             foreground="#9da7b3",
+  423:             justify=tk.LEFT,
+  424:             wraplength=360,
+  425:         ).grid(
+  426:             row=4,
+  427:             column=1,
+  428:             sticky=tk.W,
+  429:             pady=(0, 10),
+  430:         )
+  431: 
+  432:         label("Override Range:", 5)
+  433: 
+  434:         range_frame = ttk.Frame(editor_frame)
+  435:         range_frame.grid(
+  436:             row=5,
+  437:             column=1,
+  438:             sticky=tk.W,
+  439:             pady=(0, 8),
+  440:         )
+  441: 
+  442:         ttk.Label(range_frame, text="Min").grid(row=0, column=0)
+  443:         ttk.Entry(
+  444:             range_frame,
+  445:             textvariable=self.minimum,
+  446:             width=8,
+  447:         ).grid(row=0, column=1, padx=(4, 10))
+  448: 
+  449:         ttk.Label(range_frame, text="Preferred").grid(row=0, column=2)
+  450:         ttk.Entry(
+  451:             range_frame,
+  452:             textvariable=self.preferred,
+  453:             width=8,
+  454:         ).grid(row=0, column=3, padx=(4, 10))
+  455: 
+  456:         ttk.Label(range_frame, text="Max").grid(row=0, column=4)
+  457:         ttk.Entry(
+  458:             range_frame,
+  459:             textvariable=self.maximum,
+  460:             width=8,
+  461:         ).grid(row=0, column=5, padx=(4, 0))
+  462: 
+  463:         ttk.Label(
+  464:             editor_frame,
+  465:             text="Required range: 0 ≤ Min ≤ Preferred ≤ Max.",
+  466:             foreground="#9da7b3",
+  467:         ).grid(
+  468:             row=6,
+  469:             column=1,
+  470:             sticky=tk.W,
+  471:             pady=(0, 10),
+  472:         )
+  473: 
+  474:         label("Sort Order:", 7)
+  475: 
+  476:         ttk.Entry(
+  477:             editor_frame,
+  478:             textvariable=self.sort_order,
+  479:             width=10,
+  480:         ).grid(
+  481:             row=7,
+  482:             column=1,
+  483:             sticky=tk.W,
+  484:             pady=(0, 8),
+  485:         )
+  486: 
+  487:         label("Active:", 8)
+  488: 
+  489:         ttk.Checkbutton(
+  490:             editor_frame,
+  491:             text="This facility-specific override is active",
+  492:             variable=self.active,
+  493:         ).grid(
+  494:             row=8,
+  495:             column=1,
+  496:             sticky=tk.W,
+  497:             pady=(0, 8),
+  498:         )
+  499: 
+  500:         buttons = ttk.Frame(editor_frame)
+  501:         buttons.grid(
+  502:             row=9,
+  503:             column=0,
+  504:             columnspan=2,
+  505:             sticky=tk.EW,
+  506:             pady=(8, 0),
+  507:         )
+  508: 
+  509:         ttk.Button(
+  510:             buttons,
+  511:             text="Add Override",
+  512:             command=self.new,
+  513:         ).pack(side=tk.LEFT)
+  514: 
+  515:         ttk.Button(
+  516:             buttons,
+  517:             text="Save Override",
+  518:             command=self.save,
+  519:         ).pack(side=tk.LEFT, padx=6)
+  520: 
+  521:         ttk.Button(
+  522:             buttons,
+  523:             text="Remove Override",
+  524:             command=self.remove,
+  525:         ).pack(side=tk.LEFT, padx=6)
+  526: 
+  527:         ttk.Button(
+  528:             buttons,
+  529:             text="Revert Form",
+  530:             command=self.revert,

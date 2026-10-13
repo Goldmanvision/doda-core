@@ -1,0 +1,255 @@
+
+  531:         ).pack(side=tk.LEFT, padx=6)
+  532: 
+  533:         ttk.Button(
+  534:             buttons,
+  535:             text="Open Backups",
+  536:             command=self.open_backups,
+  537:         ).pack(side=tk.RIGHT)
+  538: 
+  539:         ttk.Label(
+  540:             editor_frame,
+  541:             text=(
+  542:                 "Overrides are optional. They must refer to an active Facility "
+  543:                 "Capability installation and an active global staffing rule."
+  544:             ),
+  545:             foreground="#9da7b3",
+  546:             wraplength=390,
+  547:         ).grid(
+  548:             row=10,
+  549:             column=0,
+  550:             columnspan=2,
+  551:             sticky=tk.EW,
+  552:             pady=(12, 0),
+  553:         )
+  554: 
+  555:         self.new()
+  556: 
+  557:     def update(self) -> None:
+  558:         selected = self.editing_key
+  559: 
+  560:         self.installation_combo.configure(
+  561:             values=self.installation_choices()
+  562:         )
+  563: 
+  564:         for item in self.tree.get_children():
+  565:             self.tree.delete(item)
+  566: 
+  567:         rows = sorted(
+  568:             self.rows(),
+  569:             key=lambda row: (
+  570:                 row.get("facility_id", ""),
+  571:                 row.get("capability_id", ""),
+  572:                 self.integer_or_default(row.get("sort_order", ""), 999999),
+  573:                 row.get("qualification_id", ""),
+  574:             ),
+  575:         )
+  576: 
+  577:         for row in rows:
+  578:             facility_id = row.get("facility_id", "")
+  579:             capability_id = row.get("capability_id", "")
+  580:             qualification_id = row.get("qualification_id", "")
+  581:             key = f"{facility_id}::{capability_id}::{qualification_id}"
+  582: 
+  583:             self.tree.insert(
+  584:                 "",
+  585:                 tk.END,
+  586:                 iid=key,
+  587:                 values=(
+  588:                     facility_id,
+  589:                     capability_id,
+  590:                     qualification_id,
+  591:                     row.get("min_contributors", ""),
+  592:                     row.get("preferred_contributors", ""),
+  593:                     row.get("max_contributors", ""),
+  594:                     row.get("sort_order", ""),
+  595:                     row.get("active", ""),
+  596:                 ),
+  597:             )
+  598: 
+  599:         if selected:
+  600:             key = f"{selected[0]}::{selected[1]}::{selected[2]}"
+  601: 
+  602:             if self.tree.exists(key):
+  603:                 self.tree.selection_set(key)
+  604:                 self.tree.focus(key)
+  605: 
+  606:         self.refresh_dependent_fields()
+  607: 
+  608:     def refresh_dependent_fields(self) -> None:
+  609:         facility_id, capability_id = self.selected_installation_parts()
+  610:         qualifications = self.qualification_choices_for_selected_installation()
+  611: 
+  612:         self.qualification_combo.configure(values=qualifications)
+  613: 
+  614:         if self.qualification_id.get().strip() not in qualifications:
+  615:             self.qualification_id.set(
+  616:                 qualifications[0] if qualifications else ""
+  617:             )
+  618: 
+  619:         labels = self.installation_labels()
+  620:         selected_key = self.installation_choice.get().strip()
+  621: 
+  622:         if selected_key:
+  623:             self.installation_hint.configure(
+  624:                 text=labels.get(selected_key, selected_key)
+  625:             )
+  626:         else:
+  627:             self.installation_hint.configure(
+  628:                 text="Select an active Facility Capability installation."
+  629:             )
+  630: 
+  631:         rule = self.rule_for(
+  632:             capability_id,
+  633:             self.qualification_id.get().strip(),
+  634:         )
+  635: 
+  636:         if rule is None:
+  637:             self.baseline_text.set(
+  638:                 "No active global staffing baseline is available."
+  639:             )
+  640:         else:
+  641:             self.baseline_text.set(
+  642:                 "Global rule: "
+  643:                 f"Min {rule.get('min_contributors', '')}, "
+  644:                 f"Preferred {rule.get('preferred_contributors', '')}, "
+  645:                 f"Max {rule.get('max_contributors', '')}."
+  646:             )
+  647: 
+  648:     def on_installation_changed(self, _event: Any = None) -> None:
+  649:         facility_id, capability_id = self.selected_installation_parts()
+  650: 
+  651:         self.qualification_id.set("")
+  652:         self.refresh_dependent_fields()
+  653: 
+  654:         if facility_id and capability_id:
+  655:             self.sort_order.set(
+  656:                 str(self.next_sort_order(facility_id, capability_id))
+  657:             )
+  658: 
+  659:     def on_qualification_changed(self, _event: Any = None) -> None:
+  660:         self.refresh_dependent_fields()
+  661: 
+  662:     def new(self) -> None:
+  663:         self.editing_key = None
+  664: 
+  665:         self.installation_combo.configure(state="readonly")
+  666:         self.qualification_combo.configure(state="readonly")
+  667: 
+  668:         installations = self.installation_choices()
+  669: 
+  670:         self.installation_choice.set(
+  671:             installations[0] if installations else ""
+  672:         )
+  673:         self.qualification_id.set("")
+  674:         self.minimum.set("0")
+  675:         self.preferred.set("1")
+  676:         self.maximum.set("1")
+  677:         self.active.set(True)
+  678: 
+  679:         self.refresh_dependent_fields()
+  680: 
+  681:         facility_id, capability_id = self.selected_installation_parts()
+  682: 
+  683:         self.sort_order.set(
+  684:             str(self.next_sort_order(facility_id, capability_id))
+  685:             if facility_id and capability_id
+  686:             else "1"
+  687:         )
+  688: 
+  689:         self.installation_combo.focus_set()
+  690: 
+  691:     def on_select(self, _event: Any = None) -> None:
+  692:         selection = self.tree.selection()
+  693: 
+  694:         if not selection:
+  695:             return
+  696: 
+  697:         facility_id, capability_id, qualification_id = selection[0].split(
+  698:             "::",
+  699:             2,
+  700:         )
+  701: 
+  702:         row = next(
+  703:             (
+  704:                 item
+  705:                 for item in self.rows()
+  706:                 if item.get("facility_id", "") == facility_id
+  707:                 and item.get("capability_id", "") == capability_id
+  708:                 and item.get("qualification_id", "") == qualification_id
+  709:             ),
+  710:             None,
+  711:         )
+  712: 
+  713:         if row is None:
+  714:             return
+  715: 
+  716:         self.editing_key = (
+  717:             facility_id,
+  718:             capability_id,
+  719:             qualification_id,
+  720:         )
+  721: 
+  722:         self.installation_combo.configure(state=tk.DISABLED)
+  723:         self.qualification_combo.configure(state=tk.DISABLED)
+  724: 
+  725:         self.installation_choice.set(
+  726:             self.installation_key(facility_id, capability_id)
+  727:         )
+  728:         self.qualification_id.set(qualification_id)
+  729:         self.minimum.set(row.get("min_contributors", ""))
+  730:         self.preferred.set(row.get("preferred_contributors", ""))
+  731:         self.maximum.set(row.get("max_contributors", ""))
+  732:         self.sort_order.set(row.get("sort_order", ""))
+  733:         self.active.set(row.get("active", "").upper() == "TRUE")
+  734: 
+  735:         self.refresh_dependent_fields()
+  736: 
+  737:     def revert(self) -> None:
+  738:         if self.editing_key:
+  739:             key = (
+  740:                 f"{self.editing_key[0]}::{self.editing_key[1]}::"
+  741:                 f"{self.editing_key[2]}"
+  742:             )
+  743: 
+  744:             if self.tree.exists(key):
+  745:                 self.tree.selection_set(key)
+  746:                 self.on_select()
+  747:                 return
+  748: 
+  749:         self.new()
+  750: 
+  751:     def record(self) -> dict[str, str] | None:
+  752:         facility_id, capability_id = self.selected_installation_parts()
+  753: 
+  754:         row = {
+  755:             "facility_id": facility_id,
+  756:             "capability_id": capability_id,
+  757:             "qualification_id": self.qualification_id.get().strip(),
+  758:             "min_contributors": self.minimum.get().strip(),
+  759:             "preferred_contributors": self.preferred.get().strip(),
+  760:             "max_contributors": self.maximum.get().strip(),
+  761:             "sort_order": self.sort_order.get().strip(),
+  762:             "active": "TRUE" if self.active.get() else "FALSE",
+  763:         }
+  764: 
+  765:         errors: list[str] = []
+  766: 
+  767:         if not self.installation_is_valid(
+  768:             row["facility_id"],
+  769:             row["capability_id"],
+  770:         ):
+  771:             errors.append(
+  772:                 "Select a valid active Facility Capability installation."
+  773:             )
+  774: 
+  775:         if row["qualification_id"] not in self.active_qualification_ids():
+  776:             errors.append("Select a valid active Qualification.")
+  777: 
+  778:         if self.rule_for(
+  779:             row["capability_id"],
+  780:             row["qualification_id"],
+  781:         ) is None:
+  782:             errors.append(
+  783:                 "The selected Qualification has no active global staffing "
+  78

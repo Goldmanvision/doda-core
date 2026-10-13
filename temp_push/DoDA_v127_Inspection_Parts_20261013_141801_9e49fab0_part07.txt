@@ -1,0 +1,14 @@
+card applied Capability Staffing draft changes?",
+   30:             parent=app,
+   31:         ):
+   32:             return
+   33:         if previous is not None:
+   34:             return previous()
+   35:         return app.destroy()
+   36: 
+   37:     app._network_close_handler = on_close
+   38:     app.protocol("WM_DELETE_WINDOW", on_close)
+   39:     app._capability_staffing_close_guard_installed = True
+
+Inspection completed. No source/CSV edits, tests, or GUI launch.
+Report-only commit/push follows after the log is closed.

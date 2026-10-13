@@ -1,0 +1,211 @@
+capability_staffing_draft_close_guard(self, messagebox)
+  273:         install_grouped_navigation(self)
+  274:         install_tree_autosize(self)
+  275:         self.refresh_all(show_message=False)
+  276: 
+  277:     def _configure_styles(self) -> None:
+  278:         """Apply the standard DoDA dark desktop theme."""
+  279: 
+  280:         palette = {
+    ...
+  935:         self.flavor_tab = ttk.Frame(self.notebook, padding=10)
+  936:         self.qualifications_tab = ttk.Frame(self.notebook, padding=10)
+  937:         self.capabilities_tab = ttk.Frame(self.notebook, padding=10)
+  938:         self.facility_capabilities_tab = ttk.Frame(self.notebook, padding=10)
+  939:         self.capability_staffing_rules_tab = ttk.Frame(self.notebook, padding=10)
+  940:         self.staffing_overrides_tab = ttk.Frame(self.notebook, padding=10)
+  941:         self.task_templates_tab = ttk.Frame(self.notebook, padding=10)
+  942:         self.activity_tab = ttk.Frame(self.notebook, padding=10)
+  943: 
+  944:         self.notebook.add(self.dashboard_tab, text="Dashboard")
+  945:         self.notebook.add(self.tracks_tab, text="Department Tracks — Editor")
+  946:         self.notebook.add(self.metrics_tab, text="Metrics — Editor")
+  947:         self.notebook.add(self.metric_tiers_tab, text="Metric Tiers — Editor")
+  948:         self.notebook.add(self.facilities_tab, text="Facilities — Editor")
+  949:         self.notebook.add(self.flavor_tab, text="Flavor Text — Editor")
+  950:         self.notebook.add(self.qualifications_tab, text="Qualifications — Editor")
+  951:         self.notebook.add(self.capabilities_tab, text="Capabilities — Editor")
+  952:         self.notebook.add(self.facility_capabilities_tab, text="Facility Capabilities — Editor")
+  953:         self.notebook.add(self.capability_staffing_rules_tab, text="Capability Staffing Rules — Editor")
+  954:         self.notebook.add(self.staffing_overrides_tab, text="Facility Staffing Overrides — Editor")
+  955:         self.notebook.add(self.task_templates_tab, text="Task Templates — Editor")
+  956:         self.notebook.add(self.activity_tab, text="Activity Log")
+  957: 
+  958:         self._build_dashboard_tab()
+  959:         self._build_tracks_tab()
+  960:         self._build_metrics_tab()
+  961:         self._build_facilities_tab()
+  962:         self._build_flavor_tab()
+    ...
+ 1227:     def refresh_all(self, show_message: bool = False) -> None:
+ 1228:         try:
+ 1229:             self.tables = {
+ 1230:                 table_name: read_csv(self.source_directory / filename)
+ 1231:                 for table_name, filename in SOURCE_FILES.items()
+ 1232:             }
+ 1233:             if hasattr(self, "metrics_editor"):
+ 1234:                 self.metrics_editor.update()
+ 1235: 
+ 1236:             if hasattr(self, "metric_tiers_editor"):
+ 1237:                 self.metric_tiers_editor.update()
+ 1238: 
+ 1239:             if hasattr(self, "facilities_editor"):
+ 1240:                 self.facilities_editor.update()
+ 1241: 
+ 1242:             if hasattr(self, "enum_catalog_editor"):
+ 1243:                 self.enum_catalog_editor.update()
+ 1244: 
+ 1245:             if hasattr(self, "qualification_catalog_editor"):
+ 1246:                 self.qualification_catalog_editor.update()
+ 1247: 
+ 1248:             if hasattr(self, "capabilities_editor"):
+ 1249:                 self.capabilities_editor.update()
+ 1250: 
+ 1251:             if hasattr(self, "facility_capabilities_editor"):
+ 1252:                 self.facility_capabilities_editor.update()
+ 1253: 
+ 1254:             if hasattr(self, "capability_staffing_rules_editor"):
+ 1255:                 self.capability_staffing_rules_editor.update()
+ 1256: 
+ 1257:             if hasattr(self, "facility_capability_staffing_overrides_editor"):
+ 1258:                 self.facility_capability_staffing_overrides_editor.update()
+ 1259: 
+ 1260:             if hasattr(self, "task_templates_editor"):
+ 1261:                 self.task_templates_editor.update()
+ 1262: 
+ 1263:             for network_editor in getattr(self, "network_editors", []):
+ 1264:                 network_editor.update()
+ 1265: 
+ 1266:             if hasattr(self, "transfer_rules_view"):
+ 1267:                 self.transfer_rules_view.update()
+ 1268: 
+ 1269:             self.load_validation_report()
+ 1270:             self.update_dashboard()
+ 1271:             self.update_tracks()
+ 1272:             self.update_metrics()
+ 1273:             self.update_facilities()
+ 1274:             self.update_flavor_text()
+ 1275:             self.update_status_labels()
+ 1276: 
+ 1277:             self.status_text.set("Source data refreshed successfully.")
+ 1278:             self.log("Source data refreshed.")
+ 1279: 
+ 1280:             if show_message:
+ 1281:                 messagebox.showinfo(
+ 1282:                     APP_TITLE,
+ 1283:                     "Source data was refreshed successfully.",
+ 1284:                 )
+ 1285: 
+ 1286:         except Exception as error:
+ 1287:             self.status_text.set("Refresh failed.")
+ 1288:             self.log(f"REFRESH ERROR: {error}")
+ 1289:             messagebox.showerror(
+ 1290:                 APP_TITLE,
+ 1291:                 f"Unable to refresh source data.\n\n{error}",
+ 1292:             )
+ 1293: 
+    ...
+ 1806:         elif announce:
+ 1807:             messagebox.showinfo(APP_TITLE, f"Network rules {mode} passed ({len(result.warnings)} warnings).")
+ 1808:         return result.valid
+ 1809: 
+ 1810:     def request_close(self) -> None:
+ 1811:         handler = getattr(self, "_network_close_handler", None)
+ 1812:         if handler is not None:
+ 1813:             handler()
+ 1814:         else:
+ 1815:             self.destroy()
+ 1816: 
+ 1817:     def run_command(
+ 1818:         self,
+ 1819:         label: str,
+    ...
+ 1899:                 APP_TITLE,
+ 1900:                 f"Could not open folder.\n\n{folder}\n\n{error}",
+ 1901:             )
+ 1902: 
+ 1903:     def choose_project_root(self) -> None:
+ 1904:         if not allow_capability_staffing_project_change(self, messagebox):
+ 1905:             return
+ 1906:         if not allow_task_project_change(self, messagebox):
+ 1907:             return
+ 1908:         selected = filedialog.askdirectory(
+ 1909:             title="Choose DoDA Project Root",
+ 1910:             initialdir=str(self.project_root),
+ 1911:         )
+ 1912: 
+ 1913:         if not selected:
+ 1914:             return
+ 1915: 
+ 1916:         candidate = Path(selected)
+ 1917: 
+ 1918:         try:
+ 1919:             verified_root = find_project_root(candidate)
+ 1920:         except FileNotFoundError as error:
+ 1921:             messagebox.showerror(APP_TITLE, str(error))
+ 1922:             return
+ 1923: 
+ 1924:         self.project_root = verified_root
+ 1925:         self.workbench_directory = (
+ 1926:             self.project_root / "tools" / "doda_content_workbench"
+ 1927:         )
+ 1928:         self.validator_path = (
+ 1929:             self.workbench_directory / "doda_content_workbench.py"
+ 1930:         )
+ 1931:         self.exporter_path = (
+ 1932:             self.workbench_directory / "doda_content_export.py"
+ 1933:         )
+ 1934:         self.source_directory = self.project_root / "data_authoring" / "source"
+ 1935:         self.generated_directory = self.project_root / "generated"
+ 1936:         self.report_directory = self.generated_directory / "reports"
+ 1937:         self.build_directory = self.project_root / "build"
+ 1938:         self.validation_report_path = (
+ 1939:             self.report_directory / "content_validation_report.json"
+ 1940:         )
+ 1941: 
+ 1942:         self.project_text.set(str(self.project_root))
+ 1943:         self.log(f"Project root changed to: {self.project_root}")
+ 1944:         self.refresh_all(show_message=True)
+ 1945: 
+
+===== OVERRIDE CSV HEADER ONLY =====
+Path: E:\Dev\uzdoom_src\doda-core\data_authoring\source\facility_capability_staffing_overrides.csv
+SHA256: B16CB793EB505241FA206D7A5DAE3E6BE210A09A8D57FAAB95C88CD936FBD647
+facility_id,capability_id,qualification_id,min_contributors,preferred_contributors,max_contributors,sort_order,active
+
+===== RELEVANT TEST DISCOVERY — IMMEDIATE TEST DIRECTORY ONLY =====
+No directly matching test files found. This does not establish absence of broader validation coverage.
+
+===== EXISTING CLOSE POLICY — READ ONLY =====
+
+===== FULL SOURCE: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_capability_staffing_draft_policy.py =====
+SHA256: 0ABFE3D2A4364EA39D4A239AD3819E7FE42FF39845707D1F6B77D61782B91983
+    1: """Capability Staffing applied-draft guards; installed after existing guards."""
+    2: 
+    3: 
+    4: def capability_staffing_draft_dirty(app):
+    5:     editor = getattr(app, "capability_staffing_rules_editor", None)
+    6:     return bool(editor is not None and getattr(editor, "dirty", False))
+    7: 
+    8: 
+    9: def allow_capability_staffing_project_change(app, dialogs):
+   10:     if capability_staffing_draft_dirty(app):
+   11:         dialogs.showwarning(
+   12:             "Capability Staffing Rules",
+   13:             "Save to Source or Revert Draft before switching projects. "
+   14:             "Your Capability Staffing draft is retained.",
+   15:             parent=app,
+   16:         )
+   17:         return False
+   18:     return True
+   19: 
+   20: 
+   21: def install_capability_staffing_draft_close_guard(app, dialogs):
+   22:     if getattr(app, "_capability_staffing_close_guard_installed", False):
+   23:         return
+   24:     previous = getattr(app, "_network_close_handler", None)
+   25: 
+   26:     def on_close():
+   27:         if capability_staffing_draft_dirty(app) and not dialogs.askyesno(
+   28:             "Unsaved Capability Staffing Draft",
+   29:             "Close and dis
