@@ -1,0 +1,3 @@
+setting_id,display_name,value,unit,source_reference,description,sort_order,active
+INTOXICATION_DECAY_PER_STRATEGIC_MINUTE,Intoxication Decay,0.2,POINTS_PER_STRATEGIC_MINUTE,User decision 2026-10-08 (alcohol and sobriety),Points of intoxication lost per strategic minute (starting value).,10,false
+UNCONSCIOUS_WAKE_BELOW,Wake Threshold,60,POINTS,User decision 2026-10-08 (alcohol and sobriety),An unconscious agent wakes when intoxication falls below this value (starting value).,20,false

@@ -1,15 +1,53 @@
-activity_id,place_type_id,display_name,description,duration_minutes,duration_label,company_options,stress_reduction_per_tick,fatigue_cost_per_tick,energy_required_to_start,hunger_reduction_per_tick,source_reference,sort_order,active,duration_step_minutes,duration_max_minutes,stress_reduction_level_id,fatigue_cost_level_id,fatigue_cost_level_id_cafe,hunger_restore_level_id,hunger_restore_level_id_cafe
-REC_BOWL,PLACE_BOWLING_ALLEY,Bowl,"Bowl alone, with friends, or with strangers.",,,ALONE;FRIENDS;STRANGERS,,,,,User decision 2026-10-07 (PCARE-07),10,false,,,,,,,
-REC_BUY_BOOKS,PLACE_BOOKSTORE,Buy Books,Deprecated 2026-10-08 (REC-06): covered by visiting the bookstore.,,,,,,,,User decision 2026-10-07 (PCARE-07),20,false,,,,,,,
-REC_READ_BOOKS,PLACE_BOOKSTORE,Read Books,Read or browse at the bookstore. Any visit gives the agent a book if they have none.,20,,ALONE,,,20,,User decisions 2026-10-07 (PCARE-07) and 2026-10-08 (REC-01 to REC-08),30,false,20,240,MODERATE,VERY_LOW,MINIMAL,,LOW
-REC_BOOKSTORE_RESEARCH,PLACE_BOOKSTORE,Do Research,Deprecated 2026-10-08 (REC-23): research is an on-duty analyst task (occult items; like evidence processing) and not recreation.,,,,,,,,User decision 2026-10-07 (PCARE-07),40,false,,,,,,,
-REC_WORKOUT,PLACE_GYM,Work Out,,,,,,,,,User decision 2026-10-07 (PCARE-07),50,false,,,,,,,
-REC_PLAY_BASKETBALL,PLACE_GYM,Play Basketball,,,,,,,,,User decision 2026-10-07 (PCARE-07),60,false,,,,,,,
-REC_SWIM,PLACE_GYM,Swim,,,,,,,,,User decision 2026-10-07 (PCARE-07),70,false,,,,,,,
-REC_HIKE,PLACE_NATIONAL_PARK,Hike,,,,,,,,,User decision 2026-10-07 (PCARE-07),80,false,,,,,,,
-REC_CAMP_OVERNIGHT,PLACE_NATIONAL_PARK,Camp Overnight,,,Overnight,,,,,,User decision 2026-10-07 (PCARE-07),90,false,,,,,,,
-REC_CAMP_3_DAYS,PLACE_NATIONAL_PARK,Camp for Three Days,,4320,Three days,,,,,,User decision 2026-10-07 (PCARE-07),100,false,,,,,,,
-REC_CAMP_1_WEEK,PLACE_NATIONAL_PARK,Camp for a Week,,10080,One week,,,,,,User decision 2026-10-07 (PCARE-07),110,false,,,,,,,
-REC_FISH_1_HOUR,PLACE_NATIONAL_PARK,Go Fishing for an Hour,,60,One hour,,,,,,User decision 2026-10-07 (PCARE-07),120,false,,,,,,,
-REC_FISH_2_HOURS,PLACE_NATIONAL_PARK,Go Fishing for Two Hours,,120,Two hours,,,,,,User decision 2026-10-07 (PCARE-07),130,false,,,,,,,
-REC_FISH_ALL_DAY,PLACE_NATIONAL_PARK,Go Fishing All Day,,,All day,,,,,,User decision 2026-10-07 (PCARE-07),140,false,,,,,,,
+activity_id,place_type_id,display_name,description,duration_minutes,duration_label,company_options,stress_reduction_per_tick,fatigue_cost_per_tick,energy_required_to_start,hunger_reduction_per_tick,source_reference,sort_order,active,duration_step_minutes,duration_max_minutes,stress_reduction_level_id,fatigue_cost_level_id,fatigue_cost_level_id_cafe,hunger_restore_level_id,hunger_restore_level_id_cafe,energy_restore_level_id,stress_gain_level_id,stress_gain_delay_min_minutes,stress_gain_delay_max_minutes,intoxication_gain_level_id,off_duty_only,hunger_loss_level_id
+REC_BOWL,PLACE_BOWLING_ALLEY,Bowl,"Bowl alone, with friends, or with strangers.",20,Quick,ALONE;FRIENDS;STRANGERS,,,30,,User decision 2026-10-07 (PCARE-07); placeholder values 2026-10-08,10,false,20,300,LOW,LOW,,,,,,,,,,
+REC_BUY_BOOKS,PLACE_BOOKSTORE,Buy Books,Pick out books to take home.,30,Quick,ALONE;FRIENDS;STRANGERS,,,5,,User decision 2026-10-07 (PCARE-07); placeholder values 2026-10-08,20,false,,,LOW,MINIMAL,,,VERY_LOW,,,,,,,
+REC_READ_BOOKS,PLACE_BOOKSTORE,Read Books,Read or browse at the bookstore. Any visit gives the agent a book if they have none.,20,,ALONE,,,20,,User decisions 2026-10-07 (PCARE-07) and 2026-10-08 (REC-01 to REC-08),30,false,20,240,MODERATE,VERY_LOW,MINIMAL,,LOW,,,,,,,
+REC_EXERCISE,PLACE_GYM,Exercise,,45,,,,,80,,User decision 2026-10-07 (PCARE-07),50,false,,,VERY_HIGH,VERY_HIGH,HIGH,,LOW,,,,,,,
+REC_PLAY_BASKETBALL,PLACE_GYM,Play Basketball,A pickup game at the gym.,60,One game,FRIENDS;STRANGERS,,,40,,User decision 2026-10-07 (PCARE-07); placeholder values 2026-10-08,60,false,,,HIGH,HIGH,MODERATE,,LOW,,,,,,,
+REC_SWIM,PLACE_GYM,Swim,Laps or a casual swim.,45,Swim,ALONE;FRIENDS;STRANGERS,,,30,,User decision 2026-10-07 (PCARE-07); placeholder values 2026-10-08,70,false,,,HIGH,MODERATE,LOW,,VERY_LOW,,,,,,,
+REC_HIKE,PLACE_NATIONAL_PARK,Hike,,,,,,,,,User decision 2026-10-07 (PCARE-07),80,false,,,,,,,,,,,,,,
+REC_CAMP_OVERNIGHT,PLACE_NATIONAL_PARK,Camp Overnight,One night under the stars.,840,Overnight,ALONE;FRIENDS,,,84,,User decision 2026-10-07 (PCARE-07); placeholder values 2026-10-08,90,false,,,VERY_HIGH,LOW,,,,,,,,,,
+REC_CAMP_3_DAYS,PLACE_NATIONAL_PARK,Camp for Three Days,A long weekend outdoors.,4320,Three days,ALONE;FRIENDS,,,40,,User decision 2026-10-07 (PCARE-07); placeholder values 2026-10-08,100,false,,,,,,,,,,,,,,
+REC_CAMP_1_WEEK,PLACE_NATIONAL_PARK,Camp for a Week,A week in the wilderness.,10080,One week,ALONE;FRIENDS,,,50,,User decision 2026-10-07 (PCARE-07); placeholder values 2026-10-08,110,false,,,,,,,,,,,,,,
+REC_FISH_1_HOUR,PLACE_NATIONAL_PARK,Go Fishing for an Hour,A quiet hour at the water.,60,One hour,ALONE;FRIENDS,,,10,,User decision 2026-10-07 (PCARE-07); placeholder values 2026-10-08,120,false,,,MODERATE,VERY_LOW,,,,,,,,,,
+REC_FISH_2_HOURS,PLACE_NATIONAL_PARK,Go Fishing for Two Hours,A relaxed couple of hours.,120,Two hours,ALONE;FRIENDS,,,10,,User decision 2026-10-07 (PCARE-07); placeholder values 2026-10-08,130,false,,,HIGH,VERY_LOW,,,,,,,,,,
+REC_FISH_ALL_DAY,PLACE_NATIONAL_PARK,Go Fishing All Day,Dawn to dusk on the water.,600,All day,ALONE;FRIENDS,,,60,,User decision 2026-10-07 (PCARE-07); placeholder values 2026-10-08,140,false,,,VERY_HIGH,LOW,,,,,,,,,,
+REC_MOVIE_DOUBLE,PLACE_MOVIE_THEATER,Double Feature,Two films back to back.,210,Double feature,ALONE;FRIENDS;STRANGERS,,,21,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),120,false,,,HIGH,LOW,,,MODERATE,,,,,,,
+REC_MOVIE_MATINEE,PLACE_MOVIE_THEATER,Watch a Matinee,Catch an afternoon film.,100,One film,ALONE;FRIENDS;STRANGERS,,,10,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),110,false,,,MODERATE,VERY_LOW,,,LOW,,,,,,,
+REC_MOVIE_LATE,PLACE_MOVIE_THEATER,Late Show,A late-night showing.,120,Late show,ALONE;FRIENDS;STRANGERS,,,10,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),130,false,,,MODERATE,VERY_LOW,,,LOW,,,,,,,
+REC_MALL_WINDOW,PLACE_SHOPPING_MALL,Window Shop,Wander the stores without buying.,60,Quick,ALONE;FRIENDS;STRANGERS,,,15,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),210,false,,,LOW,LOW,,,,,,,,,,
+REC_MALL_SHOP,PLACE_SHOPPING_MALL,Shopping Trip,A long walk through the mall.,120,Afternoon,ALONE;FRIENDS;STRANGERS,,,25,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),220,false,,,MODERATE,MODERATE,,,,,,,,,,
+REC_MALL_FOODCOURT,PLACE_SHOPPING_MALL,Eat at the Food Court,Sit down for a meal.,45,Meal,ALONE;FRIENDS;STRANGERS,,,1,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),230,false,,,LOW,MINIMAL,,HIGH,HIGH,,,,,,,
+REC_ARCADE_QUICK,PLACE_VIDEO_ARCADE,Play a Few Games,A handful of quarters' worth.,30,Quick,ALONE;FRIENDS;STRANGERS,,,5,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),310,false,,,MODERATE,VERY_LOW,,,,,,,,,,
+REC_ARCADE_SESSION,PLACE_VIDEO_ARCADE,Arcade Session,A long session at the cabinets.,90,Session,ALONE;FRIENDS;STRANGERS,,,10,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),320,false,,,HIGH,LOW,,,LOW,,,,,,,
+REC_PARK_SIDESHOW,PLACE_AMUSEMENT_PARK,Games and Sideshows,Midway games and small attractions.,90,Short visit,ALONE;FRIENDS;STRANGERS,,,20,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),410,false,,,MODERATE,LOW,,,LOW,,,,,,,
+REC_PARK_RIDES_HALF,PLACE_AMUSEMENT_PARK,Ride the Rides (Half Day),Roller coasters and more.,240,Half day,ALONE;FRIENDS;STRANGERS,,,84,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),420,false,,,VERY_HIGH,HIGH,,,MODERATE,,,,,,,
+REC_PARK_FULLDAY,PLACE_AMUSEMENT_PARK,Full Day at the Park,Open to close.,480,All day,ALONE;FRIENDS;STRANGERS,,,96,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),430,false,,,FULL,MODERATE,LOW,,HIGH,,,,,,,
+REC_RESORT_POOL,PLACE_VACATION_RESORT,Relax by the Pool,Lounge chairs and drinks.,180,Afternoon,ALONE;FRIENDS;STRANGERS,,,9,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),510,false,,,VERY_HIGH,VERY_LOW,,,LOW,,,,,,,
+REC_RESORT_SPA,PLACE_VACATION_RESORT,Spa Treatment,Massage and sauna.,120,Treatment,ALONE;FRIENDS,,,3,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),520,false,,,FULL,MINIMAL,,,,,,,,,,
+REC_RESORT_WEEKEND,PLACE_VACATION_RESORT,Resort Weekend,Two nights at the resort.,2880,Weekend,ALONE;FRIENDS;STRANGERS,,,0,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),530,false,,,,,,VERY_HIGH,VERY_HIGH,,,,,,,
+REC_RESORT_WEEK,PLACE_VACATION_RESORT,Resort Week,A full week away.,10080,One week,ALONE;FRIENDS;STRANGERS,,,0,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),540,false,,,,,,FULL,FULL,,,,,,,
+REC_CRUISE_DINNER,PLACE_LUXURY_CRUISE,Captain's Dinner,Formal dinner on board.,120,Dinner,FRIENDS;STRANGERS,,,3,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),610,false,,,HIGH,MINIMAL,,VERY_HIGH,VERY_HIGH,,,,,,,
+REC_CRUISE_DAY,PLACE_LUXURY_CRUISE,Day Cruise,A day on the water with meals.,480,All day,ALONE;FRIENDS;STRANGERS,,,48,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),620,false,,,VERY_HIGH,LOW,,MODERATE,MODERATE,,,,,,,
+REC_CRUISE_WEEK,PLACE_LUXURY_CRUISE,One-Week Cruise,Seven days at sea.,10080,One week,ALONE;FRIENDS;STRANGERS,,,0,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),630,false,,,,,,FULL,FULL,,,,,,,
+REC_RENTAL_BROWSE,PLACE_VIDEO_RENTAL_STORE,Browse the Shelves,Look for something to watch.,30,Quick,ALONE;FRIENDS;STRANGERS,,,5,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),710,false,,,LOW,MINIMAL,,,,,,,,,,
+REC_RENTAL_MOVIE_NIGHT,PLACE_VIDEO_RENTAL_STORE,Rent a Movie and Watch It,Pick a tape and watch it.,150,Movie night,ALONE;FRIENDS,,,8,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),720,false,,,MODERATE,VERY_LOW,,,,,,,,,,
+REC_RENTAL_MARATHON,PLACE_VIDEO_RENTAL_STORE,Movie Marathon,Several rentals in a row.,360,Marathon,ALONE;FRIENDS,,,36,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),730,false,,,HIGH,LOW,,,,,,,,,,
+REC_BAR_FOOD,PLACE_BAR_LOUNGE,Grab Bar Food,A quick bite at the counter.,45,Meal,ALONE;FRIENDS;STRANGERS,,,1,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),810,false,,,LOW,MINIMAL,,HIGH,HIGH,,,,,,,
+REC_BAR_DRINK,PLACE_BAR_LOUNGE,Have a Drink,A quiet drink.,60,One drink,ALONE;FRIENDS;STRANGERS,,,2,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),820,false,,,MODERATE,MINIMAL,,,VERY_LOW,,,,,,,
+REC_BAR_EVENING,PLACE_BAR_LOUNGE,Evening Out,A full evening at the lounge.,180,Evening,ALONE;FRIENDS;STRANGERS,,,18,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),830,false,,,HIGH,LOW,,,LOW,,,,,,,
+REC_BAR_KARAOKE,PLACE_BAR_LOUNGE,Karaoke Night,Sing with friends and strangers.,150,Karaoke,FRIENDS;STRANGERS,,,30,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),840,false,,,VERY_HIGH,MODERATE,,,LOW,,,,,,,
+REC_BOOKSTORE_RESEARCH,PLACE_BOOKSTORE,Do Research,Look things up in the stacks.,120,Research session,ALONE,,,20,,User decision 2026-10-07 (PCARE-07); placeholder values 2026-10-08,40,false,,,LOW,LOW,,,LOW,,,,,,,
+REC_ARCADE_TOURNAMENT,PLACE_VIDEO_ARCADE,Arcade Tournament,Competitive high-score night.,180,Tournament,FRIENDS;STRANGERS,,,40,,PLACEHOLDER 2026-10-08 (REC-TEMPLATE),330,false,,,HIGH,MODERATE,,,LOW,,,,,,,
+REC_BAR_BEER,PLACE_BAR_LOUNGE,Beer,A cold beer.,30,30 minutes,ALONE;FRIENDS;STRANGERS,,,10,,User decision 2026-10-08 (alcohol and sobriety),200,false,,,HIGH,LOW,,,,,,,,LOW,true,LOW
+REC_BAR_WINE,PLACE_BAR_LOUNGE,Glass of Wine,A glass of wine.,30,30 minutes,ALONE;FRIENDS;STRANGERS,,,10,,User decision 2026-10-08 (alcohol and sobriety),210,false,,,HIGH,LOW,,,,,,,,MODERATE,true,LOW
+REC_BAR_COCKTAIL,PLACE_BAR_LOUNGE,Cocktail,A mixed drink.,30,30 minutes,ALONE;FRIENDS;STRANGERS,,,10,,User decision 2026-10-08 (alcohol and sobriety),220,false,,,VERY_HIGH,MODERATE,,,,,,,,HIGH,true,MODERATE
+REC_BAR_WHISKEY,PLACE_BAR_LOUNGE,Whiskey,Whiskey neat.,30,30 minutes,ALONE;FRIENDS;STRANGERS,,,10,,User decision 2026-10-08 (alcohol and sobriety),230,false,,,VERY_HIGH,MODERATE,,,,,,,,VERY_HIGH,true,LOW
+REC_BAR_SHOTS,PLACE_BAR_LOUNGE,Shots,A quick round of shots.,10,10 minutes,ALONE;FRIENDS;STRANGERS,,,10,,User decision 2026-10-08 (alcohol and sobriety),240,false,,,VERY_HIGH,MODERATE,,,,,,,,FULL,true,MODERATE
+REC_RESTAURANT_BEER,PLACE_RESTAURANT,Beer,A cold beer.,30,30 minutes,ALONE;FRIENDS;STRANGERS,,,10,,User decision 2026-10-08 (alcohol and sobriety),250,false,,,HIGH,LOW,,,,,,,,LOW,true,LOW
+REC_RESTAURANT_WINE,PLACE_RESTAURANT,Glass of Wine,A glass of wine.,30,30 minutes,ALONE;FRIENDS;STRANGERS,,,10,,User decision 2026-10-08 (alcohol and sobriety),260,false,,,HIGH,LOW,,,,,,,,MODERATE,true,LOW
+REC_RESTAURANT_COCKTAIL,PLACE_RESTAURANT,Cocktail,A mixed drink.,30,30 minutes,ALONE;FRIENDS;STRANGERS,,,10,,User decision 2026-10-08 (alcohol and sobriety),270,false,,,VERY_HIGH,MODERATE,,,,,,,,HIGH,true,MODERATE
+REC_RESORT_BEER,PLACE_VACATION_RESORT,Beer,A cold beer.,30,30 minutes,ALONE;FRIENDS;STRANGERS,,,10,,User decision 2026-10-08 (alcohol and sobriety),280,false,,,HIGH,LOW,,,,,,,,LOW,true,LOW
+REC_RESORT_WINE,PLACE_VACATION_RESORT,Glass of Wine,A glass of wine.,30,30 minutes,ALONE;FRIENDS;STRANGERS,,,10,,User decision 2026-10-08 (alcohol and sobriety),290,false,,,HIGH,LOW,,,,,,,,MODERATE,true,LOW
+REC_RESORT_COCKTAIL,PLACE_VACATION_RESORT,Cocktail,A mixed drink.,30,30 minutes,ALONE;FRIENDS;STRANGERS,,,10,,User decision 2026-10-08 (alcohol and sobriety),300,false,,,VERY_HIGH,MODERATE,,,,,,,,HIGH,true,MODERATE
+REC_RESORT_WHISKEY,PLACE_VACATION_RESORT,Whiskey,Whiskey neat.,30,30 minutes,ALONE;FRIENDS;STRANGERS,,,10,,User decision 2026-10-08 (alcohol and sobriety),310,false,,,VERY_HIGH,MODERATE,,,,,,,,VERY_HIGH,true,LOW

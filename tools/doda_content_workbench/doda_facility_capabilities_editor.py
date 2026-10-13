@@ -39,6 +39,8 @@ FILES = (
     "facility_capability_staffing_overrides.csv",
     "task_templates.csv",
 )
+FILES = tuple(FILES) + ("equipment_families.csv",)
+FILES = tuple(dict.fromkeys(tuple(FILES) + ("resources.csv", "task_template_flows.csv")))
 
 
 class FacilityCapabilitiesEditor:

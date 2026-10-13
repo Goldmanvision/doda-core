@@ -1,7 +1,7 @@
 {
   "schema": "doda.equipment_catalog",
   "toolVersion": "0.1.0",
-  "generatedAtUtc": "2026-10-07T19:48:43.282997+00:00",
+  "generatedAtUtc": "2026-10-13T03:47:56.052502+00:00",
   "totalPersonalDeviceLimit": 8,
   "families": [
     {
@@ -57,6 +57,72 @@
       "connectionKind": "PHONE_LINE",
       "description": "Department/location equipment; no personal owner; outside the eight-device limit.",
       "sortOrder": 50,
+      "active": true
+    },
+    {
+      "familyId": "DIGITAL_FORENSICS",
+      "displayName": "Digital Forensics Station",
+      "ownership": "LOCATION",
+      "perTaskLimit": null,
+      "storageKind": "NONE",
+      "connectionKind": "NONE",
+      "description": "Examines computer and internet evidence. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition.",
+      "sortOrder": 60,
+      "active": true
+    },
+    {
+      "familyId": "PAPER_FORENSICS",
+      "displayName": "Paper Forensics Lab",
+      "ownership": "LOCATION",
+      "perTaskLimit": null,
+      "storageKind": "NONE",
+      "connectionKind": "NONE",
+      "description": "Examines notes, letters, documents and receipts. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition.",
+      "sortOrder": 70,
+      "active": true
+    },
+    {
+      "familyId": "PHOTO_FORENSICS",
+      "displayName": "Photo Forensics Lab",
+      "ownership": "LOCATION",
+      "perTaskLimit": null,
+      "storageKind": "NONE",
+      "connectionKind": "NONE",
+      "description": "Examines photographs and photographic evidence. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition.",
+      "sortOrder": 80,
+      "active": true
+    },
+    {
+      "familyId": "AUDIO_FORENSICS",
+      "displayName": "Audio Forensics Station",
+      "ownership": "LOCATION",
+      "perTaskLimit": null,
+      "storageKind": "NONE",
+      "connectionKind": "NONE",
+      "description": "Examines tapes, audio reels, CDs and other audio evidence. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition.",
+      "sortOrder": 90,
+      "active": true
+    },
+    {
+      "familyId": "VIDEO_FORENSICS",
+      "displayName": "Video Forensics Station",
+      "ownership": "LOCATION",
+      "perTaskLimit": null,
+      "storageKind": "NONE",
+      "connectionKind": "NONE",
+      "description": "Examines VHS tapes, DVDs, film stock and other video evidence. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition.",
+      "sortOrder": 100,
+      "active": true
+    },
+    {
+      "familyId": "CHEMICAL_FORENSICS",
+      "displayName": "Chemical Forensics Lab",
+      "ownership": "LOCATION",
+      "perTaskLimit": null,
+      "storageKind": "NONE",
+      "connectionKind": "NONE",
+      "description": "Examines chemical and biological evidence. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition.",
+      "sortOrder": 110,
       "active": true
     }
   ],
@@ -150,6 +216,84 @@
       "generationOrder": 1,
       "description": "Diagram: CELLULAR DEVICES. Mobile-internet PDA; locked at 14.4KB/s.",
       "sortOrder": 70,
+      "active": true
+    },
+    {
+      "modelId": "DIGITAL_FORENSICS_BASE",
+      "displayName": "Digital Forensics Station - Baseline",
+      "familyId": "DIGITAL_FORENSICS",
+      "phoneLineKind": null,
+      "networkTierId": null,
+      "connectionOverride": null,
+      "mobileInternetSpeedLabel": null,
+      "generationOrder": 1,
+      "description": "Examines computer and internet evidence. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition. Baseline catalog model; prices, stats and research unlocks are not set.",
+      "sortOrder": 80,
+      "active": true
+    },
+    {
+      "modelId": "PAPER_FORENSICS_BASE",
+      "displayName": "Paper Forensics Lab - Baseline",
+      "familyId": "PAPER_FORENSICS",
+      "phoneLineKind": null,
+      "networkTierId": null,
+      "connectionOverride": null,
+      "mobileInternetSpeedLabel": null,
+      "generationOrder": 1,
+      "description": "Examines notes, letters, documents and receipts. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition. Baseline catalog model; prices, stats and research unlocks are not set.",
+      "sortOrder": 90,
+      "active": true
+    },
+    {
+      "modelId": "PHOTO_FORENSICS_BASE",
+      "displayName": "Photo Forensics Lab - Baseline",
+      "familyId": "PHOTO_FORENSICS",
+      "phoneLineKind": null,
+      "networkTierId": null,
+      "connectionOverride": null,
+      "mobileInternetSpeedLabel": null,
+      "generationOrder": 1,
+      "description": "Examines photographs and photographic evidence. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition. Baseline catalog model; prices, stats and research unlocks are not set.",
+      "sortOrder": 100,
+      "active": true
+    },
+    {
+      "modelId": "AUDIO_FORENSICS_BASE",
+      "displayName": "Audio Forensics Station - Baseline",
+      "familyId": "AUDIO_FORENSICS",
+      "phoneLineKind": null,
+      "networkTierId": null,
+      "connectionOverride": null,
+      "mobileInternetSpeedLabel": null,
+      "generationOrder": 1,
+      "description": "Examines tapes, audio reels, CDs and other audio evidence. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition. Baseline catalog model; prices, stats and research unlocks are not set.",
+      "sortOrder": 110,
+      "active": true
+    },
+    {
+      "modelId": "VIDEO_FORENSICS_BASE",
+      "displayName": "Video Forensics Station - Baseline",
+      "familyId": "VIDEO_FORENSICS",
+      "phoneLineKind": null,
+      "networkTierId": null,
+      "connectionOverride": null,
+      "mobileInternetSpeedLabel": null,
+      "generationOrder": 1,
+      "description": "Examines VHS tapes, DVDs, film stock and other video evidence. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition. Baseline catalog model; prices, stats and research unlocks are not set.",
+      "sortOrder": 120,
+      "active": true
+    },
+    {
+      "modelId": "CHEMICAL_FORENSICS_BASE",
+      "displayName": "Chemical Forensics Lab - Baseline",
+      "familyId": "CHEMICAL_FORENSICS",
+      "phoneLineKind": null,
+      "networkTierId": null,
+      "connectionOverride": null,
+      "mobileInternetSpeedLabel": null,
+      "generationOrder": 1,
+      "description": "Examines chemical and biological evidence. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition. Baseline catalog model; prices, stats and research unlocks are not set.",
+      "sortOrder": 130,
       "active": true
     }
   ],

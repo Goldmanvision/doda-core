@@ -1,18 +1,18 @@
 scale_id,level_id,display_name,value,unit,source_reference,description,sort_order,active
-STRESS_REDUCTION,MINIMAL,Minimal,,PER_TICK,Level name proposed; value not set,Stress reduction per sim tick (value not set).,10,false
-STRESS_REDUCTION,VERY_LOW,Very Low,,PER_TICK,Level name proposed; value not set,Stress reduction per sim tick (value not set).,20,false
-STRESS_REDUCTION,LOW,Low,,PER_TICK,Level name proposed; value not set,Stress reduction per sim tick (value not set).,30,false
-STRESS_REDUCTION,MODERATE,Moderate,,PER_TICK,Level name proposed; value not set,Stress reduction per sim tick (value not set).,40,false
-STRESS_REDUCTION,HIGH,High,,PER_TICK,Level name proposed; value not set,Stress reduction per sim tick (value not set).,50,false
-STRESS_REDUCTION,VERY_HIGH,Very High,,PER_TICK,Level name proposed; value not set,Stress reduction per sim tick (value not set).,60,false
-STRESS_REDUCTION,FULL,Full,,PER_TICK,Level name proposed; value not set,Stress reduction per sim tick (value not set).,70,false
-FATIGUE_COST,MINIMAL,Minimal,,PER_TICK,Level name proposed; value not set,Fatigue cost per sim tick (value not set).,10,false
-FATIGUE_COST,VERY_LOW,Very Low,,PER_TICK,Level name proposed; value not set,Fatigue cost per sim tick (value not set).,20,false
-FATIGUE_COST,LOW,Low,,PER_TICK,Level name proposed; value not set,Fatigue cost per sim tick (value not set).,30,false
-FATIGUE_COST,MODERATE,Moderate,,PER_TICK,Level name proposed; value not set,Fatigue cost per sim tick (value not set).,40,false
-FATIGUE_COST,HIGH,High,,PER_TICK,Level name proposed; value not set,Fatigue cost per sim tick (value not set).,50,false
-FATIGUE_COST,VERY_HIGH,Very High,,PER_TICK,Level name proposed; value not set,Fatigue cost per sim tick (value not set).,60,false
-FATIGUE_COST,FULL,Full,,PER_TICK,Level name proposed; value not set,Fatigue cost per sim tick (value not set).,70,false
+STRESS_REDUCTION,MINIMAL,Minimal,0.05,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Stress reduction per strategic minute.,10,false
+STRESS_REDUCTION,VERY_LOW,Very Low,0.1,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Stress reduction per strategic minute.,20,false
+STRESS_REDUCTION,LOW,Low,0.2,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Stress reduction per strategic minute.,30,false
+STRESS_REDUCTION,MODERATE,Moderate,0.35,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Stress reduction per strategic minute.,40,false
+STRESS_REDUCTION,HIGH,High,0.5,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Stress reduction per strategic minute.,50,false
+STRESS_REDUCTION,VERY_HIGH,Very High,0.75,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Stress reduction per strategic minute.,60,false
+STRESS_REDUCTION,FULL,Full,1,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Stress reduction per strategic minute.,70,false
+FATIGUE_COST,MINIMAL,Minimal,0.02,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Fatigue cost per strategic minute.,10,false
+FATIGUE_COST,VERY_LOW,Very Low,0.05,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Fatigue cost per strategic minute.,20,false
+FATIGUE_COST,LOW,Low,0.1,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Fatigue cost per strategic minute.,30,false
+FATIGUE_COST,MODERATE,Moderate,0.2,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Fatigue cost per strategic minute.,40,false
+FATIGUE_COST,HIGH,High,0.35,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Fatigue cost per strategic minute.,50,false
+FATIGUE_COST,VERY_HIGH,Very High,0.5,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Fatigue cost per strategic minute.,60,false
+FATIGUE_COST,FULL,Full,0.75,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Fatigue cost per strategic minute.,70,false
 HUNGER_RESTORE,MINIMAL,Minimal,5,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (REC-02),Percent of the full Nutrition range restored when the meal finishes.,10,false
 HUNGER_RESTORE,VERY_LOW,Very Low,10,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (REC-02),Percent of the full Nutrition range restored when the meal finishes.,20,false
 HUNGER_RESTORE,LOW,Low,20,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (REC-02),Percent of the full Nutrition range restored when the meal finishes.,30,false
@@ -20,3 +20,31 @@ HUNGER_RESTORE,MODERATE,Moderate,35,PERCENT_OF_NUTRITION_RANGE,User decision 202
 HUNGER_RESTORE,HIGH,High,50,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (REC-02),Percent of the full Nutrition range restored when the meal finishes.,50,false
 HUNGER_RESTORE,VERY_HIGH,Very High,80,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (REC-02),Percent of the full Nutrition range restored when the meal finishes.,60,false
 HUNGER_RESTORE,FULL,Full,100,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (REC-02),Percent of the full Nutrition range restored when the meal finishes.,70,false
+ENERGY_RESTORE,MINIMAL,Minimal,,PERCENT_OF_ENERGY_RANGE,User decision 2026-10-08 (REC-06); value not set,Percent of the full energy range restored when the activity finishes.,10,false
+ENERGY_RESTORE,VERY_LOW,Very Low,,PERCENT_OF_ENERGY_RANGE,User decision 2026-10-08 (REC-06); value not set,Percent of the full energy range restored when the activity finishes.,20,false
+ENERGY_RESTORE,LOW,Low,,PERCENT_OF_ENERGY_RANGE,User decision 2026-10-08 (REC-06); value not set,Percent of the full energy range restored when the activity finishes.,30,false
+ENERGY_RESTORE,MODERATE,Moderate,,PERCENT_OF_ENERGY_RANGE,User decision 2026-10-08 (REC-06); value not set,Percent of the full energy range restored when the activity finishes.,40,false
+ENERGY_RESTORE,HIGH,High,,PERCENT_OF_ENERGY_RANGE,User decision 2026-10-08 (REC-06); value not set,Percent of the full energy range restored when the activity finishes.,50,false
+ENERGY_RESTORE,VERY_HIGH,Very High,,PERCENT_OF_ENERGY_RANGE,User decision 2026-10-08 (REC-06); value not set,Percent of the full energy range restored when the activity finishes.,60,false
+ENERGY_RESTORE,FULL,Full,,PERCENT_OF_ENERGY_RANGE,User decision 2026-10-08 (REC-06); value not set,Percent of the full energy range restored when the activity finishes.,70,false
+STRESS_GAIN,MINIMAL,Minimal,,PERCENT_OF_STRESS_RANGE,User decision 2026-10-08 (REC-06); value not set,"Percent of the full Stress range added once, after a random delay following the activity.",10,false
+STRESS_GAIN,VERY_LOW,Very Low,,PERCENT_OF_STRESS_RANGE,User decision 2026-10-08 (REC-06); value not set,"Percent of the full Stress range added once, after a random delay following the activity.",20,false
+STRESS_GAIN,LOW,Low,,PERCENT_OF_STRESS_RANGE,User decision 2026-10-08 (REC-06); value not set,"Percent of the full Stress range added once, after a random delay following the activity.",30,false
+STRESS_GAIN,MODERATE,Moderate,,PERCENT_OF_STRESS_RANGE,User decision 2026-10-08 (REC-06); value not set,"Percent of the full Stress range added once, after a random delay following the activity.",40,false
+STRESS_GAIN,HIGH,High,,PERCENT_OF_STRESS_RANGE,User decision 2026-10-08 (REC-06); value not set,"Percent of the full Stress range added once, after a random delay following the activity.",50,false
+STRESS_GAIN,VERY_HIGH,Very High,,PERCENT_OF_STRESS_RANGE,User decision 2026-10-08 (REC-06); value not set,"Percent of the full Stress range added once, after a random delay following the activity.",60,false
+STRESS_GAIN,FULL,Full,,PERCENT_OF_STRESS_RANGE,User decision 2026-10-08 (REC-06); value not set,"Percent of the full Stress range added once, after a random delay following the activity.",70,false
+INTOXICATION_GAIN,MINIMAL,Minimal,5,PERCENT_OF_INTOXICATION_RANGE,User decision 2026-10-08 (alcohol and sobriety),,10,false
+INTOXICATION_GAIN,VERY_LOW,Very Low,10,PERCENT_OF_INTOXICATION_RANGE,User decision 2026-10-08 (alcohol and sobriety),,20,false
+INTOXICATION_GAIN,LOW,Low,15,PERCENT_OF_INTOXICATION_RANGE,User decision 2026-10-08 (alcohol and sobriety),,30,false
+INTOXICATION_GAIN,MODERATE,Moderate,20,PERCENT_OF_INTOXICATION_RANGE,User decision 2026-10-08 (alcohol and sobriety),,40,false
+INTOXICATION_GAIN,HIGH,High,25,PERCENT_OF_INTOXICATION_RANGE,User decision 2026-10-08 (alcohol and sobriety),,50,false
+INTOXICATION_GAIN,VERY_HIGH,Very High,30,PERCENT_OF_INTOXICATION_RANGE,User decision 2026-10-08 (alcohol and sobriety),,60,false
+INTOXICATION_GAIN,FULL,Full,35,PERCENT_OF_INTOXICATION_RANGE,User decision 2026-10-08 (alcohol and sobriety),,70,false
+HUNGER_LOSS,MINIMAL,Minimal,,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (alcohol and sobriety),,10,false
+HUNGER_LOSS,VERY_LOW,Very Low,,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (alcohol and sobriety),,20,false
+HUNGER_LOSS,LOW,Low,,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (alcohol and sobriety),,30,false
+HUNGER_LOSS,MODERATE,Moderate,,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (alcohol and sobriety),,40,false
+HUNGER_LOSS,HIGH,High,,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (alcohol and sobriety),,50,false
+HUNGER_LOSS,VERY_HIGH,Very High,,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (alcohol and sobriety),,60,false
+HUNGER_LOSS,FULL,Full,,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (alcohol and sobriety),,70,false

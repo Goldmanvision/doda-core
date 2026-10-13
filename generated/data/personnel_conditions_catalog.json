@@ -1,7 +1,7 @@
 {
   "schema": "doda.personnel_conditions_catalog",
   "toolVersion": "0.3.0",
-  "generatedAtUtc": "2026-10-08T06:13:16.652373+00:00",
+  "generatedAtUtc": "2026-10-13T03:47:56.066966+00:00",
   "stats": [
     {
       "statId": "HEALTH",
@@ -208,6 +208,29 @@
       "sourceReference": "doda_02_personnel_and_operations_v107.xlsx StatsCat!A10",
       "description": "Can change through care neglect stress and department decisions",
       "sortOrder": 90,
+      "active": false
+    },
+    {
+      "statId": "INTOXICATION",
+      "displayName": "Intoxication",
+      "statCategory": "CONDITION",
+      "minimumValue": 0,
+      "maximumValue": 100,
+      "defaultValue": 0,
+      "creationRule": "DEFAULT",
+      "creationSourceStatId": null,
+      "direction": "NEGATIVE",
+      "storageModel": "DIRECT",
+      "derivation": null,
+      "contributesToHealth": false,
+      "healthFormula": null,
+      "healthReferenceStatId": null,
+      "playerVisibility": "VISIBLE_BOTH",
+      "highValueMeaning": "Heavily intoxicated or unconscious",
+      "lowValueMeaning": "Sober",
+      "sourceReference": "User decision 2026-10-08 (alcohol and sobriety)",
+      "description": "Persistent alcohol impairment that rises when a drink finishes and falls at a fixed rate per strategic minute. Stages and thresholds are in sobriety_stages.csv.",
+      "sortOrder": 100,
       "active": false
     }
   ],

@@ -1,0 +1,22 @@
+scale_id,level_id,display_name,value,unit,source_reference,description,sort_order,active
+STRESS_REDUCTION,MINIMAL,Minimal,0.05,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Stress reduction per strategic minute.,10,false
+STRESS_REDUCTION,VERY_LOW,Very Low,0.1,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Stress reduction per strategic minute.,20,false
+STRESS_REDUCTION,LOW,Low,0.2,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Stress reduction per strategic minute.,30,false
+STRESS_REDUCTION,MODERATE,Moderate,0.35,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Stress reduction per strategic minute.,40,false
+STRESS_REDUCTION,HIGH,High,0.5,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Stress reduction per strategic minute.,50,false
+STRESS_REDUCTION,VERY_HIGH,Very High,0.75,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Stress reduction per strategic minute.,60,false
+STRESS_REDUCTION,FULL,Full,1,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Stress reduction per strategic minute.,70,false
+FATIGUE_COST,MINIMAL,Minimal,0.02,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Fatigue cost per strategic minute.,10,false
+FATIGUE_COST,VERY_LOW,Very Low,0.05,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Fatigue cost per strategic minute.,20,false
+FATIGUE_COST,LOW,Low,0.1,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Fatigue cost per strategic minute.,30,false
+FATIGUE_COST,MODERATE,Moderate,0.2,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Fatigue cost per strategic minute.,40,false
+FATIGUE_COST,HIGH,High,0.35,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Fatigue cost per strategic minute.,50,false
+FATIGUE_COST,VERY_HIGH,Very High,0.5,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Fatigue cost per strategic minute.,60,false
+FATIGUE_COST,FULL,Full,0.75,PER_STRATEGIC_MINUTE,"User decision 2026-10-08 (REC-03); rate per strategic minute, ladder approved",Fatigue cost per strategic minute.,70,false
+HUNGER_RESTORE,MINIMAL,Minimal,5,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (REC-02),Percent of the full Nutrition range restored when the meal finishes.,10,false
+HUNGER_RESTORE,VERY_LOW,Very Low,10,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (REC-02),Percent of the full Nutrition range restored when the meal finishes.,20,false
+HUNGER_RESTORE,LOW,Low,20,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (REC-02),Percent of the full Nutrition range restored when the meal finishes.,30,false
+HUNGER_RESTORE,MODERATE,Moderate,35,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (REC-02),Percent of the full Nutrition range restored when the meal finishes.,40,false
+HUNGER_RESTORE,HIGH,High,50,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (REC-02),Percent of the full Nutrition range restored when the meal finishes.,50,false
+HUNGER_RESTORE,VERY_HIGH,Very High,80,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (REC-02),Percent of the full Nutrition range restored when the meal finishes.,60,false
+HUNGER_RESTORE,FULL,Full,100,PERCENT_OF_NUTRITION_RANGE,User decision 2026-10-08 (REC-02),Percent of the full Nutrition range restored when the meal finishes.,70,false

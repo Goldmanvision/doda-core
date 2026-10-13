@@ -1,0 +1,7 @@
+{
+  "doda_task_templates_editor.py": "8388b37bae91a1e28e28cf261baebe78cbbd073fd86bd9d584d772a74c25e76b",
+  "tests/test_row_selection.py": "cc457d2e3fa0a411e648182968764c6c1cff554d6dd4f3aacd1c68647566edf4",
+  "tests/test_task_template_drafts.py": "8061a9dcc8b19060cdd1d3bc6a4658902150edcfb49f006d3b0bbc080099890b",
+  "doda_task_inline_bulk_edit.py": "2207dacc56756795c3309b7c8494f919742c39141f08737609f33d0607056ae8",
+  "tests/test_task_inline_bulk_edit.py": "9378945bb949bb4fbfc328231fb367a43fd3638df5c28ac4cc98b4305582975c"
+}

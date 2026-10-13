@@ -1,0 +1,3 @@
+model_id,display_name,hardware_kind,tier_id,description,sort_order,active
+M,M,MODEM,A,,1,true
+R,R,ROUTER,B,,2,true

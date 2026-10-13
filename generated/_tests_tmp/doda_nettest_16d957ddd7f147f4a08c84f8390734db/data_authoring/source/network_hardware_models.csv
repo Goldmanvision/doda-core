@@ -1,0 +1,3 @@
+model_id,display_name,hardware_kind,tier_id,description,sort_order,active
+M1,Modem,MODEM,DIAL_1,,1,true
+R1,Router,ROUTER,DIAL_1,,2,true

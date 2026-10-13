@@ -1,0 +1,75 @@
+{
+  "schema": "doda.collection_models",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-13T03:47:56.004061+00:00",
+  "runtimeImplemented": false,
+  "deviceTypes": [
+    {
+      "deviceTypeId": "FILM_CAMERA",
+      "displayName": "Film Camera",
+      "description": "Photographic evidence collection device; not a receptacle.",
+      "sortOrder": 10,
+      "active": true
+    }
+  ],
+  "models": [
+    {
+      "modelId": "COLL_BAGS_DEFAULT",
+      "displayName": "Default Evidence Bags",
+      "collectionKind": "RECEPTACLE",
+      "collectionTypeId": "EVIDENCE_BAGS",
+      "brand": null,
+      "modelName": null,
+      "evidenceTypes": [
+        "EVIDENCE_PAPER",
+        "EVIDENCE_DIGITAL",
+        "EVIDENCE_AUDIO",
+        "EVIDENCE_VIDEO",
+        "EVIDENCE_PHYSICAL"
+      ],
+      "evidenceValueMultiplier": "1",
+      "description": "Default 1x model. Evidence selections await authoring.",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "modelId": "COLL_CHEMICAL_KIT_INITIAL",
+      "displayName": "Initial Chemical Collection Kit",
+      "collectionKind": "RECEPTACLE",
+      "collectionTypeId": "CHEMICAL_COLLECTION_KIT",
+      "brand": null,
+      "modelName": null,
+      "evidenceTypes": [
+        "EVIDENCE_CHEMICAL"
+      ],
+      "evidenceValueMultiplier": "3",
+      "description": "Provisional 3x starting model; brand/version unspecified.",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "modelId": "COLL_FILM_CAMERA_INITIAL",
+      "displayName": "Initial Film Camera",
+      "collectionKind": "DEVICE",
+      "collectionTypeId": "FILM_CAMERA",
+      "brand": null,
+      "modelName": null,
+      "evidenceTypes": [
+        "EVIDENCE_PHOTOGRAPHIC"
+      ],
+      "evidenceValueMultiplier": "2",
+      "description": "Provisional 2x starting model; brand/version unspecified.",
+      "sortOrder": 30,
+      "active": false
+    }
+  ],
+  "rules": {
+    "multiplierOwner": "MODEL",
+    "multiplierRepresentation": "EXACT_DECIMAL_STRING",
+    "rounding": "ROUND_HALF_UP_PER_PIECE",
+    "pieceCountUnchanged": true,
+    "definitionsCreateNoInventory": true,
+    "stackingImplemented": false,
+    "repeatedPhotographRewardsImplemented": false
+  }
+}

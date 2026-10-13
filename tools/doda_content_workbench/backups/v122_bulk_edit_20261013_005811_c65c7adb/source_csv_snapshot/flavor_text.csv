@@ -1,0 +1,21 @@
+﻿flavor_text_id,category,title,body,active
+FLV_METRIC_PREPAREDNESS_FRAGILE,METRIC,Preparedness: Fragile,"The Department has people, rooms, and procedures. It does not yet have margin. Every new demand is solved by borrowing attention from another problem.",TRUE
+FLV_METRIC_PREPAREDNESS_OPERATIONAL,METRIC,Preparedness: Operational,"Routine demands can be met without improvising every response. The distinction between routine and exceptional remains under active review.",TRUE
+FLV_METRIC_PREPAREDNESS_HARDENED,METRIC,Preparedness: Hardened,"The Department can sustain pressure now. Some senior staff privately question whether this is resilience or simply a better-organized form of overwork.",TRUE
+FLV_METRIC_PREPAREDNESS_OVEREXTENDED,METRIC,Preparedness: Overextended,"The Department can respond almost anywhere. It has begun to discover that capability attracts obligations faster than it creates relief.",TRUE
+FLV_METRIC_INTEL_ANECDOTAL,METRIC,Intelligence Quality: Anecdotal,"The records contain names, claims, coordinates, and warnings. They do not yet agree on what any of them mean.",TRUE
+FLV_METRIC_INTEL_STRUCTURED,METRIC,Intelligence Quality: Structured,"Patterns are beginning to survive contact with additional evidence. Analysts have started pinning fewer questions to the walls and drawing more lines between them.",TRUE
+FLV_METRIC_INTEL_CORRELATED,METRIC,Intelligence Quality: Correlated,"Independent sources reinforce one another. The most troubling connections are the ones that recur without being requested.",TRUE
+FLV_METRIC_INTEL_PREDICTIVE,METRIC,Intelligence Quality: Predictive,"The Department sees movement before it understands it. This has improved response time and made some personnel uncomfortable with the implications.",TRUE
+FLV_METRIC_TRUST_CONTESTED,METRIC,Public Trust: Contested,"The Department is visible enough to be blamed and obscure enough to be distrusted. Both conditions are operationally expensive.",TRUE
+FLV_METRIC_TRUST_TOLERATED,METRIC,Public Trust: Tolerated,"Most people accept the Department when it remains useful, distant, and difficult to describe.",TRUE
+FLV_METRIC_TRUST_ESTABLISHED,METRIC,Public Trust: Established,"The Department's authority is broadly accepted. The communications office reminds everyone that acceptance is not the same thing as understanding.",TRUE
+FLV_METRIC_TRUST_RESILIENT,METRIC,Public Trust: Resilient,"Confidence survives difficult disclosures. The Department has earned room to explain itself, which may be more dangerous than having none.",TRUE
+FLV_METRIC_CORRUPTION_CONTAINED,METRIC,Corruption Pressure: Contained,"Controls are holding. The Oversight archive is quiet, though no one calls that reassuring.",TRUE
+FLV_METRIC_CORRUPTION_LATENT,METRIC,Corruption Pressure: Latent,"Small exceptions are accumulating. Each one has a justification. Together, they are beginning to resemble policy.",TRUE
+FLV_METRIC_CORRUPTION_ENTRENCHED,METRIC,Corruption Pressure: Entrenched,"Compromise is shaping decisions before those decisions are written down. The Department is still documenting the difference between adaptation and surrender.",TRUE
+FLV_METRIC_CORRUPTION_CRITICAL,METRIC,Corruption Pressure: Critical,"The Department may no longer be able to investigate itself without assistance from the systems it was created to monitor.",TRUE
+FLV_METRIC_STRESS_STEADY,METRIC,Staff Stress: Steady,"Personnel are tired in ordinary ways. Recovery remains possible between cases.",TRUE
+FLV_METRIC_STRESS_STRAINED,METRIC,Staff Stress: Strained,"Recovery has become a scheduling problem. Staff are beginning to measure time off by what it fails to repair.",TRUE
+FLV_METRIC_STRESS_EXHAUSTED,METRIC,Staff Stress: Exhausted,"The Department is functioning through accumulated fatigue. Errors are still individual; patterns are not.",TRUE
+FLV_METRIC_STRESS_BREAKING,METRIC,Staff Stress: Breaking,"Personnel systems are approaching failure. The reports remain professionally written, which is part of the problem.",TRUE

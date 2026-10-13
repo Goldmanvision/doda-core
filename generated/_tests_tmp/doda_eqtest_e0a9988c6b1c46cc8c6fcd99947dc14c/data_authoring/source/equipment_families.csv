@@ -1,0 +1,6 @@
+family_id,display_name,ownership,per_task_limit,storage_kind,connection_kind,description,sort_order,active
+DESKTOP,D,PERSONAL,2,HDD,NETWORK,,1,true
+LAPTOP,L,PERSONAL,2,HDD,NETWORK,,2,true
+PDA,P,PERSONAL,3,SC,NETWORK,,3,true
+PHONE,Ph,PERSONAL,2,NONE,PHONE_LINE,,4,true
+FAX,F,LOCATION,,NONE,PHONE_LINE,,5,true

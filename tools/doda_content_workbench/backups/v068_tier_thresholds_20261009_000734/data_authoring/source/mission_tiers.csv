@@ -1,0 +1,7 @@
+tier_id,display_name,min_lifetime_evidence,authored_content,source_reference,description,sort_order,active
+TIER_1,Tier 1,0,false,User decisions 2026-10-08 (mission tiers),First generated mission tier. Starts at zero lifetime Evidence. Tutorial pacing is a separate progression rule.,10,false
+TIER_2,Tier 2,,false,User decisions 2026-10-08 (mission tiers),Generated mission tier. Lifetime Evidence threshold is undecided.,20,false
+TIER_3,Tier 3,,false,User decisions 2026-10-08 (mission tiers),Generated mission tier. Lifetime Evidence threshold is undecided.,30,false
+TIER_4,Tier 4,,false,User decisions 2026-10-08 (mission tiers),Generated mission tier. Lifetime Evidence threshold is undecided.,40,false
+TIER_5,Tier 5,,false,User decisions 2026-10-08 (mission tiers),Generated mission tier. Lifetime Evidence threshold is undecided.,50,false
+TIER_6,Tier 6,,true,User decisions 2026-10-08 (mission tiers),Authored end-game tier. Unlock requires completion of the protected Tier 5 capstone after department eligibility checks.,60,false

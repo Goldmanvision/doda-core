@@ -1,0 +1,5 @@
+"qualification_id","display_name","description","sort_order","active"
+"SIGNALS_ANALYSIS","Signals Analysis","Interprets and validates electronic signal intelligence.","10","TRUE"
+"DATA_SYSTEMS","Data Systems","Operates Department information and monitoring systems.","20","TRUE"
+"FIELD_RESPONSE","Field Response","Conducts routine Department field operations.","30","TRUE"
+"OCCULT_RESPONSE","Occult Response","Operates safely during anomalous field incidents.","40","TRUE"

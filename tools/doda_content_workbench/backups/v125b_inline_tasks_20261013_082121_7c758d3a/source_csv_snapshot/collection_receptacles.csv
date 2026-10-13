@@ -1,0 +1,3 @@
+receptacle_id,display_name,description,sort_order,active
+EVIDENCE_BAGS,Evidence Bags,"Collection receptacles for baggable evidence. Evidence retains its original category; capacity and consumption are not configured.",10,true
+CHEMICAL_COLLECTION_KIT,Chemical Collection Kit,"Collection receptacle for chemical evidence. Capacity and consumption are not configured.",20,true

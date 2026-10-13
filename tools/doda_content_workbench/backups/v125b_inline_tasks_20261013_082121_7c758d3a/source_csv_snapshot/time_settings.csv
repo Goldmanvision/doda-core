@@ -1,0 +1,8 @@
+setting_id,display_name,category,value,unit,editable,source_reference,description,sort_order,active
+DOOM_TICS_PER_SECOND,Doom Tics per Real Second,ENGINE,35,TICS_PER_SECOND,false,doomdef.h TICRATE,Engine constant. One real second is 35 Doom tics. Informational only.,10,false
+SIM_TICK_STRATEGIC_MINUTES,Strategic Minutes per Sim Tick,SIM_TICK,1,MINUTES,true,User decision 2026-10-07 (PCARE-OPEN-07),One DoDA sim tick equals this many strategic minutes. Per-tick rates in activity catalogs use this tick.,20,false
+DOOM_TICS_PER_SIM_TICK_FOIMSX_1X,Doom Tics per Sim Tick (FOIMS-X 1x),PACING,35,TICS,true,User decision TIME-06,Inside FOIMS-X at 1x one sim tick passes every 35 Doom tics (one real second).,30,false
+STRATEGIC_SECONDS_PER_REAL_SECOND_OUTSIDE,Strategic Seconds per Real Second (Outside FOIMS-X),PACING,1,RATIO,true,User decision TIME-06,Outside FOIMS-X strategic time runs in real time.,40,false
+FOIMSX_SPEED_1X,FOIMS-X Speed 1x (Normal),FOIMSX_SPEED,1,MULTIPLIER,true,User decision TIME-07,Multiplier on the FOIMS-X 1x rate. Subject to change.,50,false
+FOIMSX_SPEED_2X,FOIMS-X Speed 2x (Fast),FOIMSX_SPEED,2,MULTIPLIER,true,User decision TIME-07,Multiplier on the FOIMS-X 1x rate. Subject to change.,60,false
+FOIMSX_SPEED_3X,FOIMS-X Speed 3x (Fastest),FOIMSX_SPEED,3,MULTIPLIER,true,User decision TIME-07,Multiplier on the FOIMS-X 1x rate. Subject to change.,70,false

@@ -1,0 +1,73 @@
+{
+  "schema": "doda.hostile_catalog",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-13T03:47:56.134651+00:00",
+  "hostiles": [
+    {
+      "hostileId": "HOSTILE_SAILOR",
+      "displayName": "Sailor",
+      "engineClass": null,
+      "weaponId": null,
+      "tierId": null,
+      "authoredOnly": false,
+      "placeholder": true,
+      "sourceReference": "User decision 2026-10-08 (HOST-01)",
+      "description": "Freedoom Phase 2 blue uniformed enemy. Primary hostile for now. Class name and weapon blank until confirmed.",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "hostileId": "HOSTILE_ZOMBIE",
+      "displayName": "Zombie",
+      "engineClass": null,
+      "weaponId": null,
+      "tierId": null,
+      "authoredOnly": false,
+      "placeholder": true,
+      "sourceReference": "User decision 2026-10-08 (HOST-01)",
+      "description": "Freedoom placeholder. Lower tier hostile.",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "hostileId": "HOSTILE_SHOTGUN_ZOMBIE",
+      "displayName": "Shotgun Zombie",
+      "engineClass": null,
+      "weaponId": null,
+      "tierId": null,
+      "authoredOnly": false,
+      "placeholder": true,
+      "sourceReference": "User decision 2026-10-08 (HOST-01)",
+      "description": "Freedoom placeholder. Lower tier hostile.",
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "hostileId": "HOSTILE_MINIGUN_ZOMBIE",
+      "displayName": "Minigun Zombie",
+      "engineClass": null,
+      "weaponId": null,
+      "tierId": null,
+      "authoredOnly": false,
+      "placeholder": true,
+      "sourceReference": "User decision 2026-10-08 (HOST-01)",
+      "description": "Freedoom placeholder. Lower tier hostile.",
+      "sortOrder": 40,
+      "active": false
+    }
+  ],
+  "rules": {
+    "sharedWeaponCatalog": true,
+    "tierMatchesMissionTiers": true,
+    "authoredMissionAreasMayIgnoreTier": true,
+    "agentsAndPlayerShareWeapons": true
+  },
+  "openItems": {
+    "HOST-OPEN-01": "Engine class names for each hostile.",
+    "HOST-OPEN-02": "Hit points, damage and other balance values.",
+    "HOST-OPEN-03": "Tier assignments, once mission tiers exist.",
+    "HOST-OPEN-04": "Human hostiles that replace the Freedoom placeholders.",
+    "HOST-OPEN-05": "How hostile count and tier weight the mission dice."
+  },
+  "runtimeImplemented": false
+}

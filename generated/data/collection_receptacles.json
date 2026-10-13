@@ -1,0 +1,35 @@
+{
+  "schema": "doda.collection_receptacles",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-13T03:47:56.002918+00:00",
+  "runtimeImplemented": false,
+  "receptacles": [
+    {
+      "receptacleId": "EVIDENCE_BAGS",
+      "displayName": "Evidence Bags",
+      "description": "Collection receptacles for baggable evidence. Evidence retains its original category; capacity and consumption are not configured.",
+      "sortOrder": 10,
+      "active": true
+    },
+    {
+      "receptacleId": "CHEMICAL_COLLECTION_KIT",
+      "displayName": "Chemical Collection Kit",
+      "description": "Collection receptacle for chemical evidence. Capacity and consumption are not configured.",
+      "sortOrder": 20,
+      "active": true
+    }
+  ],
+  "rules": {
+    "definitionsCreateNoInventory": true,
+    "collectionMappingsImplemented": false,
+    "consumptionImplemented": false,
+    "personalDeviceSlotAccountingApplies": false,
+    "receptacleDoesNotReclassifyEvidence": true
+  },
+  "openItems": {
+    "COLLECT-01": "Authored evidence-type eligibility mappings.",
+    "COLLECT-02": "Quantities, capacity, reuse and consumption.",
+    "COLLECT-03": "Missing-receptacle weighted-selection behavior.",
+    "COLLECT-04": "Task prerequisites and runtime inventory integration."
+  }
+}

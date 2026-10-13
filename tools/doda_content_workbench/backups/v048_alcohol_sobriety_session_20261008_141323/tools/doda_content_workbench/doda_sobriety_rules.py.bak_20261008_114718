@@ -1,0 +1,343 @@
+#!/usr/bin/env python3
+r"""
+DoDA Content Workbench - Sobriety (authoring slice).
+
+Authored definitions only; nothing here changes runtime behaviour.
+
+Settled decisions encoded here (2026-10-08):
+  * Alcoholic drinks raise fatigue and hunger and greatly reduce stress. They
+    also raise a persistent INTOXICATION stat (scale INTOXICATION_GAIN).
+  * Four sobriety stages: sober, buzzed, drunk, heavily intoxicated.
+  * Buzzed halves skills; drunk halves them again. Neither can drive; they
+    ask a friend to drive, which works mechanically like driving themselves.
+  * Heavily intoxicated renders an agent or analyst unconscious until
+    intoxication falls below a wake threshold.
+  * Agents and analysts go to a bar only when off duty. Agents with low
+    Loyalty can arrive at a shift still buzzed or drunk, a visible sign that
+    their Loyalty is dwindling.
+
+Source files:
+  data_authoring/source/sobriety_stages.csv
+  data_authoring/source/sobriety_settings.csv
+  data_authoring/source/sobriety_shift_rules.csv
+"""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import hashlib
+import json
+import sys
+from datetime import datetime, timezone
+from decimal import Decimal, InvalidOperation
+from pathlib import Path
+from typing import Any
+
+import doda_network_rules as net
+
+TOOL_VERSION = "0.1.0"
+STAGES_FILE = "sobriety_stages.csv"
+SETTINGS_FILE = "sobriety_settings.csv"
+SHIFT_RULES_FILE = "sobriety_shift_rules.csv"
+STAGE_COLUMNS = ["stage_id", "display_name", "min_intoxication", "skill_multiplier", "can_drive",
+                 "unconscious", "driving_note", "source_reference", "description", "sort_order", "active"]
+SETTING_COLUMNS = ["setting_id", "display_name", "value", "unit", "source_reference", "description",
+                   "sort_order", "active"]
+SHIFT_COLUMNS = ["rule_id", "loyalty_min", "max_stage_id", "source_reference", "description",
+                 "sort_order", "active"]
+STAGE_IDS = ("SOBER", "BUZZED", "DRUNK", "HEAVILY_INTOXICATED")
+UNCONSCIOUS_STAGE = "HEAVILY_INTOXICATED"
+INTOXICATION_STAT = "INTOXICATION"
+DECAY_ID = "INTOXICATION_DECAY_PER_STRATEGIC_MINUTE"
+WAKE_ID = "UNCONSCIOUS_WAKE_BELOW"
+SETTING_UNITS = {DECAY_ID: "POINTS_PER_STRATEGIC_MINUTE", WAKE_ID: "POINTS"}
+SCALE = 10000
+MAX_DECIMAL_PLACES = 4
+LOYALTY_MAX = Decimal(100)
+
+RULES = {
+    "stat": INTOXICATION_STAT,
+    "skills": {"effect": "MULTIPLY_EFFECTIVE_SKILL_BY_STAGE_MULTIPLIER"},
+    "driving": {"substitute": "ASK_A_FRIEND_WORKS_LIKE_DRIVING_YOURSELF"},
+    "unconscious": {"stage": UNCONSCIOUS_STAGE, "wakeRule": "INTOXICATION_BELOW_WAKE_THRESHOLD",
+                    "sharesStateWith": "FATIGUE_COLLAPSE_UNCONSCIOUSNESS"},
+    "alcohol": {"chosenOnlyWhileOffDuty": True},
+    "shiftStart": {"bandBasis": "LOYALTY_AT_OR_ABOVE_RULE_MINIMUM",
+                   "visibleSignOfDwindlingLoyalty": True},
+}
+
+OPEN_ITEMS = {
+    "SOBR-OPEN-01": "Which skills the stage multiplier applies to, and how it combines with trait and training bonuses.",
+    "SOBR-OPEN-02": "Final stage thresholds, decay rate, wake threshold, and Loyalty bands (current values are starting points).",
+    "SOBR-OPEN-03": "The INTOXICATION row in condition_stats.csv, and the native runtime and save-schema work.",
+}
+
+
+def _dec(raw: str, ctx: str, field: str, res: net.Result, blank_ok: bool = False) -> Decimal | None:
+    if not raw:
+        if not blank_ok:
+            res.errors.append(f"{ctx}: {field} is required")
+        return None
+    try:
+        d = Decimal(raw)
+    except InvalidOperation:
+        res.errors.append(f"{ctx}: {field} must be a number")
+        return None
+    if not d.is_finite():
+        res.errors.append(f"{ctx}: {field} must be a finite number")
+        return None
+    exponent = d.normalize().as_tuple().exponent
+    if isinstance(exponent, int) and exponent < -MAX_DECIMAL_PLACES:
+        res.errors.append(f"{ctx}: {field} may have at most {MAX_DECIMAL_PLACES} decimal places")
+        return None
+    return d
+
+
+def _plain(d: Decimal) -> str:
+    return format(d.normalize(), "f")
+
+
+def _scaled(d: Decimal) -> int:
+    return int((d * SCALE).to_integral_value())
+
+
+def _opt(d: Decimal | None) -> tuple[str | None, int | None]:
+    return (_plain(d), _scaled(d)) if d is not None else (None, None)
+
+
+def _stat_info(src: Path) -> tuple[Decimal, bool]:
+    path = src / "condition_stats.csv"
+    if not path.exists():
+        return Decimal(100), True
+    with path.open(encoding="utf-8-sig", newline="") as f:
+        for r in csv.DictReader(f):
+            if (r.get("stat_id") or "").strip() == INTOXICATION_STAT:
+                try:
+                    return Decimal((r.get("maximum_value") or "100").strip()), True
+                except InvalidOperation:
+                    return Decimal(100), True
+    return Decimal(100), False
+
+
+def _validate_stages(src: Path, stat_max: Decimal, res: net.Result) -> dict[str, dict[str, Any]]:
+    rows = net.read_table(src / STAGES_FILE, STAGE_COLUMNS, "sobriety_stages", res) or []
+    stages: dict[str, dict[str, Any]] = {}
+    for r in rows:
+        ctx = f"[sobriety_stages] Line {r['_line']}"
+        sid = r["stage_id"]
+        if sid not in STAGE_IDS:
+            res.errors.append(f"{ctx}: stage_id must be one of {', '.join(STAGE_IDS)} (got '{sid}')")
+            continue
+        if sid in stages:
+            res.errors.append(f"{ctx}: duplicate stage_id '{sid}'")
+            continue
+        if not r["display_name"]:
+            res.errors.append(f"{ctx}: display_name is required")
+        stages[sid] = {"stageId": sid, "displayName": r["display_name"],
+                       "_min": _dec(r["min_intoxication"], ctx, "min_intoxication", res),
+                       "_mult": _dec(r["skill_multiplier"], ctx, "skill_multiplier", res, blank_ok=True),
+                       "canDrive": net._bool(r["can_drive"], ctx, res),
+                       "unconscious": net._bool(r["unconscious"], ctx, res),
+                       "drivingNote": r["driving_note"] or None,
+                       "sourceReference": r["source_reference"] or None, "description": r["description"],
+                       "sortOrder": net._int(r["sort_order"], ctx, "sort_order", res),
+                       "active": net._bool(r["active"], ctx, res), "_ctx": ctx}
+    missing = [s for s in STAGE_IDS if s not in stages]
+    if missing:
+        res.errors.append("[sobriety_stages] must define exactly the four stages " + ", ".join(STAGE_IDS)
+                          + " once each (missing " + ", ".join(missing) + ")")
+        return stages
+    ordered = [stages[s] for s in STAGE_IDS]
+    first = ordered[0]
+    if first["_min"] is not None and first["_min"] != 0:
+        res.errors.append(f"{first['_ctx']}: SOBER must start at 0")
+    for a, b in zip(ordered, ordered[1:]):
+        if a["_min"] is not None and b["_min"] is not None and not a["_min"] < b["_min"]:
+            res.errors.append(f"{b['_ctx']}: min_intoxication must strictly increase "
+                              f"({b['stageId']} is not above {a['stageId']})")
+    top = ordered[-1]
+    if top["_min"] is not None and not top["_min"] < stat_max:
+        res.errors.append(f"{top['_ctx']}: min_intoxication must be below the {INTOXICATION_STAT} "
+                          f"maximum ({_plain(stat_max)})")
+    for s in ordered:
+        if s["stageId"] == UNCONSCIOUS_STAGE and not s["unconscious"]:
+            res.errors.append(f"{s['_ctx']}: {UNCONSCIOUS_STAGE} must be unconscious")
+        if s["stageId"] != UNCONSCIOUS_STAGE and s["unconscious"]:
+            res.errors.append(f"{s['_ctx']}: only {UNCONSCIOUS_STAGE} can be unconscious")
+        if s["unconscious"]:
+            if s["_mult"] is not None:
+                res.errors.append(f"{s['_ctx']}: an unconscious stage must leave skill_multiplier blank")
+            if s["canDrive"]:
+                res.errors.append(f"{s['_ctx']}: an unconscious stage cannot drive")
+        else:
+            m = s["_mult"]
+            if m is None:
+                res.errors.append(f"{s['_ctx']}: skill_multiplier is required for a conscious stage")
+            elif not 0 < m <= 1:
+                res.errors.append(f"{s['_ctx']}: skill_multiplier must be above 0 and at most 1")
+            if not s["canDrive"] and not s["drivingNote"]:
+                res.errors.append(f"{s['_ctx']}: a stage that cannot drive needs a driving_note")
+    if first["_mult"] is not None and first["_mult"] != 1:
+        res.errors.append(f"{first['_ctx']}: SOBER skill_multiplier must be 1")
+    if not first["canDrive"]:
+        res.errors.append(f"{first['_ctx']}: SOBER must be able to drive")
+    conscious = [s for s in ordered if not s["unconscious"] and s["_mult"] is not None]
+    for a, b in zip(conscious, conscious[1:]):
+        if b["_mult"] > a["_mult"]:
+            res.errors.append(f"{b['_ctx']}: skill_multiplier must not rise ({b['stageId']} is above {a['stageId']})")
+    barred = False
+    for s in ordered:
+        if not s["canDrive"]:
+            barred = True
+        elif barred:
+            res.errors.append(f"{s['_ctx']}: can_drive must not return to true after a stage that cannot drive")
+    return stages
+
+
+def _validate_settings(src: Path, unconscious_min: Decimal | None, res: net.Result) -> list[dict[str, Any]]:
+    rows = net.read_table(src / SETTINGS_FILE, SETTING_COLUMNS, "sobriety_settings", res) or []
+    settings: dict[str, dict[str, Any]] = {}
+    for r in rows:
+        ctx = f"[sobriety_settings] Line {r['_line']}"
+        sid = r["setting_id"]
+        if not sid or sid in settings:
+            res.errors.append(f"{ctx}: blank or duplicate setting_id '{sid}'")
+            continue
+        if sid not in SETTING_UNITS:
+            res.errors.append(f"{ctx}: unknown setting_id '{sid}' (expected {', '.join(SETTING_UNITS)})")
+        elif r["unit"].upper() != SETTING_UNITS[sid]:
+            res.errors.append(f"{ctx}: {sid} must use unit {SETTING_UNITS[sid]}")
+        value = _dec(r["value"], ctx, "value", res)
+        if value is not None and value <= 0:
+            res.errors.append(f"{ctx}: value must be above 0")
+        if not r["display_name"]:
+            res.errors.append(f"{ctx}: display_name is required")
+        settings[sid] = {"settingId": sid, "displayName": r["display_name"], "unit": r["unit"].upper(),
+                         "sourceReference": r["source_reference"] or None, "description": r["description"],
+                         "sortOrder": net._int(r["sort_order"], ctx, "sort_order", res),
+                         "active": net._bool(r["active"], ctx, res), "_d": value, "_ctx": ctx}
+    for sid in SETTING_UNITS:
+        if sid not in settings:
+            res.errors.append(f"[sobriety_settings] Required setting '{sid}' is missing")
+    wake = settings.get(WAKE_ID)
+    if wake and wake["_d"] is not None and unconscious_min is not None and not 0 < wake["_d"] < unconscious_min:
+        res.errors.append(f"{wake['_ctx']}: {WAKE_ID} must be above 0 and below the {UNCONSCIOUS_STAGE} "
+                          f"start ({_plain(unconscious_min)})")
+    out = []
+    for s in sorted(settings.values(), key=lambda x: (x["sortOrder"] or 0, x["settingId"])):
+        item = {k: v for k, v in s.items() if not k.startswith("_")}
+        item["value"], item["valueScaled"] = _opt(s["_d"])
+        out.append(item)
+    return out
+
+
+def _validate_shift_rules(src: Path, res: net.Result) -> list[dict[str, Any]]:
+    rows = net.read_table(src / SHIFT_RULES_FILE, SHIFT_COLUMNS, "sobriety_shift_rules", res) or []
+    rules: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    seen_min: set[Decimal] = set()
+    for r in rows:
+        ctx = f"[sobriety_shift_rules] Line {r['_line']}"
+        rid = r["rule_id"]
+        if not rid or rid in seen_ids:
+            res.errors.append(f"{ctx}: blank or duplicate rule_id '{rid}'")
+            continue
+        seen_ids.add(rid)
+        low = _dec(r["loyalty_min"], ctx, "loyalty_min", res)
+        if low is not None:
+            if not 0 <= low <= LOYALTY_MAX:
+                res.errors.append(f"{ctx}: loyalty_min must be 0 to {_plain(LOYALTY_MAX)}")
+            if low in seen_min:
+                res.errors.append(f"{ctx}: duplicate loyalty_min {_plain(low)}")
+            seen_min.add(low)
+        stage = r["max_stage_id"]
+        if stage not in STAGE_IDS:
+            res.errors.append(f"{ctx}: unknown max_stage_id '{stage}'")
+        elif stage == UNCONSCIOUS_STAGE:
+            res.errors.append(f"{ctx}: max_stage_id cannot be {UNCONSCIOUS_STAGE}: an unconscious agent "
+                              "cannot arrive at a shift")
+        rules.append({"ruleId": rid, "_low": low, "maxStageId": stage,
+                      "sourceReference": r["source_reference"] or None, "description": r["description"],
+                      "sortOrder": net._int(r["sort_order"], ctx, "sort_order", res),
+                      "active": net._bool(r["active"], ctx, res), "_ctx": ctx})
+    if Decimal(0) not in seen_min:
+        res.errors.append("[sobriety_shift_rules] one rule must start at loyalty_min 0 so every Loyalty value is covered")
+    by_loyalty = sorted((x for x in rules if x["_low"] is not None), key=lambda x: x["_low"])
+    for a, b in zip(by_loyalty, by_loyalty[1:]):
+        if a["maxStageId"] in STAGE_IDS and b["maxStageId"] in STAGE_IDS \
+                and STAGE_IDS.index(b["maxStageId"]) > STAGE_IDS.index(a["maxStageId"]):
+            res.errors.append(f"{b['_ctx']}: higher Loyalty cannot allow a more intoxicated arrival "
+                              f"({b['maxStageId']} after {a['maxStageId']})")
+    out = []
+    for x in sorted(rules, key=lambda x: (x["_low"] if x["_low"] is not None else Decimal(-1), x["ruleId"])):
+        item = {k: v for k, v in x.items() if not k.startswith("_")}
+        item["loyaltyMin"], item["loyaltyMinScaled"] = _opt(x["_low"])
+        out.append(item)
+    return out
+
+
+def validate_sobriety(root: Path, res: net.Result) -> dict[str, Any]:
+    src = root / "data_authoring" / "source"
+    stat_max, defined = _stat_info(src)
+    if not defined:
+        res.warnings.append(f"[condition_stats] stat {INTOXICATION_STAT} is not defined; sobriety needs it "
+                            "before it can be activated")
+    stages = _validate_stages(src, stat_max, res)
+    top = stages.get(UNCONSCIOUS_STAGE)
+    settings = _validate_settings(src, top["_min"] if top else None, res)
+    shift = _validate_shift_rules(src, res)
+    stage_out = []
+    for sid in STAGE_IDS:
+        s = stages.get(sid)
+        if s is None:
+            continue
+        item = {k: v for k, v in s.items() if not k.startswith("_")}
+        item["minIntoxication"], item["minIntoxicationScaled"] = _opt(s["_min"])
+        item["skillMultiplier"], item["skillMultiplierScaled"] = _opt(s["_mult"])
+        stage_out.append(item)
+    return {"stages": stage_out, "settings": settings, "shiftRules": shift}
+
+
+def export(root: Path) -> tuple[net.Result, Path | None]:
+    res = net.Result()
+    data = validate_sobriety(root, res)
+    if not res.valid:
+        return res, None
+    out = root / "generated" / "data" / "sobriety_catalog.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    payload = {"schema": "doda.sobriety_catalog", "toolVersion": TOOL_VERSION,
+               "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
+               "decimalPlaces": MAX_DECIMAL_PLACES, "scale": SCALE, **data,
+               "rules": RULES, "openItems": OPEN_ITEMS, "runtimeImplemented": False}
+    tmp = out.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(out)
+    return res, out
+
+
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(description="DoDA sobriety content: validate or export.")
+    p.add_argument("command", choices=["validate", "export"])
+    p.add_argument("--root", type=Path, default=None)
+    a = p.parse_args(argv)
+    root = a.root.resolve() if a.root else net.find_project_root(Path(__file__).parent)
+    if a.command == "validate":
+        res = net.Result()
+        validate_sobriety(root, res)
+        out = None
+    else:
+        res, out = export(root)
+    for w in res.warnings:
+        print("WARNING:", w)
+    for e in res.errors:
+        print("ERROR:", e)
+    print("Rows:", res.stats)
+    if out:
+        print("Exported:", out, "sha256", hashlib.sha256(out.read_bytes()).hexdigest())
+    print("RESULT:", "PASS" if res.valid else "FAIL")
+    return 0 if res.valid else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

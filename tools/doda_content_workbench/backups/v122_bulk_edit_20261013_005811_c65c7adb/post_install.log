@@ -1,0 +1,15 @@
+...........................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 731 tests in 5.413s
+
+OK
+Wrote E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\zc_22ea4c3ab9b045679b47ed90a9a4b295\DoDA\Generated\WorkbenchCatalog.zs sha256 08185cac004030ac037759159d057453ac7f5e1db4b25322f87b365d0abe2026
+Wrote E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\zc_22ea4c3ab9b045679b47ed90a9a4b295\generated\data\workbench_catalog_expected_dump.txt
+zscript.txt include present: yes
+RESULT: PASS
+RESULT: PASS (catalog current)
+Wrote E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\zc_efdd9d44e61a46cc98d94eaad4aa6792\DoDA\Generated\WorkbenchCatalog.zs sha256 08185cac004030ac037759159d057453ac7f5e1db4b25322f87b365d0abe2026
+Wrote E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\zc_efdd9d44e61a46cc98d94eaad4aa6792\generated\data\workbench_catalog_expected_dump.txt
+zscript.txt include present: yes
+RESULT: PASS
+RESULT: FAIL (catalog stale or missing)

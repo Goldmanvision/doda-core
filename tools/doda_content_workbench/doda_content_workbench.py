@@ -8,6 +8,7 @@ or game integration occurs.
 
 from __future__ import annotations
 
+import doda_task_schema as task_schema
 import argparse
 import csv
 import json
@@ -194,9 +195,12 @@ TABLE_SPECS: dict[str, dict[str, Any]] = {
             "description",
             "capability_id",
             "priority",
-            "default_target_effort_minutes",
-            "default_deadline_minutes",
-            "auto_allocate",
+            "target_type",
+            "target_family_id",
+            "loop_task",
+            "time_to_complete_minutes",
+            "reward_mode",
+            "payout_count",
             "sort_order",
             "active",
         ],
@@ -241,6 +245,10 @@ def load_csv(
                 return []
 
             actual_columns = [column.strip() for column in reader.fieldnames]
+            if table_name == "task_templates" and set(actual_columns) != set(task_schema.COLUMNS):
+                result.error("[task_templates] Header must match the current task schema exactly")
+                return []
+
             missing_columns = [
                 column for column in required_columns if column not in actual_columns
             ]
@@ -817,72 +825,24 @@ def validate_facility_capability_staffing_overrides(
     )
 
 
-def validate_task_templates(
-    rows: list[dict[str, str]],
-    active_capability_ids: set[str],
-    active_facility_capabilities: dict[tuple[str, str], dict[str, str]],
-    enum_values: dict[str, set[str]],
-    result: ValidationResult,
-) -> None:
-    allowed_priorities = enum_values.get("TASK_PRIORITY", set())
-    installed_capability_ids = {
-        capability_id
-        for _, capability_id in active_facility_capabilities
-    }
-
+def validate_task_templates(rows, active_capability_ids, active_facility_capabilities, enum_values, result):
+    priorities = enum_values.get("TASK_PRIORITY", set())
+    installed = {cid for _, cid in active_facility_capabilities}
     for row in rows:
-        capability_id = row["capability_id"]
-        priority = row["priority"]
-
-        if capability_id not in active_capability_ids:
-            result.error(
-                f"[task_templates] Line {row['_line_number']}: capability_id "
-                f"'{capability_id}' does not exist in active capabilities.csv"
-            )
-
-        if priority not in allowed_priorities:
-            result.error(
-                f"[task_templates] Line {row['_line_number']}: priority "
-                f"'{priority}' does not exist in active enum_catalog TASK_PRIORITY"
-            )
-
-        target_effort = parse_int(
-            "task_templates",
-            row,
-            "default_target_effort_minutes",
-            result,
-        )
-        deadline = parse_int(
-            "task_templates",
-            row,
-            "default_deadline_minutes",
-            result,
-        )
-
-        if target_effort is not None and target_effort <= 0:
-            result.error(
-                f"[task_templates] Line {row['_line_number']}: "
-                "default_target_effort_minutes must be greater than 0"
-            )
-
-        if deadline is not None and deadline <= 0:
-            result.error(
-                f"[task_templates] Line {row['_line_number']}: "
-                "default_deadline_minutes must be greater than 0"
-            )
-
-        parse_bool("task_templates", row, "auto_allocate", result)
-
-        if (
-            row.get("active", "").upper() == "TRUE"
-            and capability_id in active_capability_ids
-            and capability_id not in installed_capability_ids
-        ):
-            result.error(
-                f"[task_templates] Line {row['_line_number']}: active capability "
-                f"'{capability_id}' has no active Facility Capability installation"
-            )
-
+        ctx = "[task_templates] Line " + str(row.get("_line_number", "?"))
+        for message in task_schema.errors(row, priorities):
+            result.error(ctx + ": " + message)
+        try:
+            active = task_schema.boolean(row.get("active"))
+        except ValueError:
+            active = False
+        cid = row.get("capability_id", "")
+        if active and cid not in active_capability_ids:
+            result.error(ctx + ": capability_id is not an active capability")
+        if active and cid not in installed:
+            result.error(ctx + ": capability has no active Facility Capability installation")
+        if not active and (not cid or not row.get("time_to_complete_minutes")):
+            result.warning(ctx + ": draft task requirements/timing are not fully configured")
     validate_sort_order("task_templates", rows, result)
 
 
@@ -926,6 +886,24 @@ def warn_on_facility_capacity_overcommit(
                 "a strategic allocation tradeoff."
             )
 
+
+def validate_task_station_links(rows, project_root, result):
+    path = project_root / "data_authoring/source/equipment_families.csv"
+    if not path.is_file():
+        if any(row.get("target_family_id") for row in rows):
+            result.error("[task_templates] equipment_families.csv is required for station references")
+        return
+    with path.open(encoding="utf-8-sig", newline="") as handle:
+        families = {r["family_id"]: r for r in csv.DictReader(handle)}
+    for row in rows:
+        family_id = row.get("target_family_id", "")
+        if not family_id:
+            continue
+        family = families.get(family_id)
+        if family is None or family.get("ownership", "").upper() != "LOCATION":
+            result.error("[task_templates] station target must reference a LOCATION equipment family: " + family_id)
+        elif row.get("active", "").upper() == "TRUE" and family.get("active", "").upper() != "TRUE":
+            result.error("[task_templates] active task references inactive station family: " + family_id)
 
 def validate_project(project_root: Path) -> ValidationResult:
     result = ValidationResult()
@@ -1033,6 +1011,28 @@ def validate_project(project_root: Path) -> ValidationResult:
         result,
     )
 
+    validate_task_station_links(loaded_tables["task_templates"], project_root, result)
+    if (source_directory / "task_template_flows.csv").is_file():
+        import doda_task_flow_rules
+        doda_task_flow_rules.validate_flows(project_root, result)
+    if (source_directory / "task_staffing_rules.csv").is_file():
+        import doda_task_staffing_rules
+        doda_task_staffing_rules.validate_staffing(project_root, result)
+    if (source_directory / "collection_receptacles.csv").is_file():
+        import doda_collection_rules
+        doda_collection_rules.validate_collection(project_root, result)
+    if (source_directory / "collection_models.csv").is_file():
+        import doda_collection_model_rules
+        doda_collection_model_rules.validate_models(project_root, result)
+    if (source_directory / "evidence_type_instances.csv").is_file():
+        import doda_evidence_instance_rules
+        doda_evidence_instance_rules.validate_instances(project_root, result)
+    if (source_directory / "task_prerequisites.csv").is_file():
+        import doda_task_prerequisite_rules
+        doda_task_prerequisite_rules.validate_prerequisites(project_root, result)
+    if (source_directory / "vehicle_types.csv").is_file():
+        import doda_vehicle_rules
+        doda_vehicle_rules.validate_vehicles(project_root, result)
     return result
 
 

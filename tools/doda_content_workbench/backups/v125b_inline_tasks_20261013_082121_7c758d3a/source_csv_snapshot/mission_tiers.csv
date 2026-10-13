@@ -1,0 +1,7 @@
+tier_id,display_name,min_lifetime_admissible_evidence,authored_content,source_reference,description,sort_order,active
+TIER_1,Tier 1,1000,false,User decisions 2026-10-08 (mission tiers),"First generated mission tier. Starts at 1,000 lifetime Evidence. The tutorial runs before it, from the 900 starting Evidence.",10,false
+TIER_2,Tier 2,10000,false,User decisions 2026-10-08 (mission tiers),"Generated mission tier. Starts at 10,000 lifetime Evidence.",20,false
+TIER_3,Tier 3,100000,false,User decisions 2026-10-08 (mission tiers),"Generated mission tier. Starts at 100,000 lifetime Evidence.",30,false
+TIER_4,Tier 4,1000000,false,User decisions 2026-10-08 (mission tiers),"Generated mission tier. Starts at 1,000,000 lifetime Evidence.",40,false
+TIER_5,Tier 5,10000000,false,User decisions 2026-10-08 (mission tiers),"Generated mission tier. Starts at 10,000,000 lifetime Evidence.",50,false
+TIER_6,Tier 6,100000000,true,User decisions 2026-10-08 (mission tiers),"Authored end-game tier. Starts at 100,000,000 lifetime Evidence. Unlocks automatically when every requirement is met, including completion of the protected Tier 5 capstone after department eligibility checks.",60,false

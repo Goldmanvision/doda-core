@@ -1,0 +1,2 @@
+task_template_id,display_name,description,capability_id,priority,default_target_effort_minutes,default_deadline_minutes,auto_allocate,sort_order,active
+SIGNAL_REVIEW,Priority Signal Review,Analyze and classify urgent signal interference.,ELECTRONIC_SURVEILLANCE,HIGH,240,120,TRUE,10,TRUE

@@ -1,0 +1,12 @@
+family_id,display_name,ownership,per_task_limit,storage_kind,connection_kind,description,sort_order,active
+DESKTOP,Desktop Computers,PERSONAL,2,HDD,NETWORK,Heavy laboratory processing. Shares HDD storage with laptops.,10,true
+LAPTOP,Laptop Computers,PERSONAL,2,HDD,NETWORK,"Light, mobile field processing. Shares HDD storage with desktops.",20,true
+PDA,PDA Devices,PERSONAL,2,SC,NETWORK,Communication and text/photo gathering; mobile. SC storage only.,30,true
+PHONE,Phones,PERSONAL,2,NONE,PHONE_LINE,Any landline/mobile combination. One number per phone.,40,true
+FAX,Fax Machines,LOCATION,,NONE,PHONE_LINE,Department/location equipment; no personal owner; outside the eight-device limit.,50,true
+DIGITAL_FORENSICS,Digital Forensics Station,LOCATION,,NONE,NONE,Examines computer and internet evidence. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition.,60,true
+PAPER_FORENSICS,Paper Forensics Lab,LOCATION,,NONE,NONE,"Examines notes, letters, documents and receipts. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition.",70,true
+PHOTO_FORENSICS,Photo Forensics Lab,LOCATION,,NONE,NONE,Examines photographs and photographic evidence. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition.,80,true
+AUDIO_FORENSICS,Audio Forensics Station,LOCATION,,NONE,NONE,"Examines tapes, audio reels, CDs and other audio evidence. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition.",90,true
+VIDEO_FORENSICS,Video Forensics Station,LOCATION,,NONE,NONE,"Examines VHS tapes, DVDs, film stock and other video evidence. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition.",100,true
+CHEMICAL_FORENSICS,Chemical Forensics Lab,LOCATION,,NONE,NONE,Examines chemical and biological evidence. Location-owned processing station; analyst computer/device access is a separate requirement. No campaign inventory is created by this definition.,110,true

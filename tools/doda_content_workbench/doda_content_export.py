@@ -35,7 +35,7 @@ from typing import Any
 
 
 TOOL_VERSION = "0.1.1"
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 TABLE_FILES = {
     "enum_catalog": "enum_catalog.csv",
@@ -79,8 +79,8 @@ INTEGER_COLUMNS = {
         "sort_order",
     },
     "task_templates": {
-        "default_target_effort_minutes",
-        "default_deadline_minutes",
+        "time_to_complete_minutes",
+        "payout_count",
         "sort_order",
     },
 }
@@ -96,7 +96,7 @@ BOOLEAN_COLUMNS = {
     "facility_capabilities": {"active"},
     "capability_staffing_rules": {"active"},
     "facility_capability_staffing_overrides": {"active"},
-    "task_templates": {"auto_allocate", "active"},
+    "task_templates": {"loop_task", "active"},
 }
 
 
@@ -159,6 +159,8 @@ def run_validator(project_root: Path) -> None:
 
 def normalize_value(table_name: str, column_name: str, value: str) -> Any:
     normalized = value.strip()
+    if table_name == "task_templates" and column_name == "time_to_complete_minutes" and not normalized:
+        return None
 
     if column_name in INTEGER_COLUMNS.get(table_name, set()):
         return int(normalized)

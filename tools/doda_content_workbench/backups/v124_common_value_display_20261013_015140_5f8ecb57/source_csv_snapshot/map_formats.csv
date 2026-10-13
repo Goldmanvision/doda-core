@@ -1,0 +1,7 @@
+format_id,display_name,role,source_reference,description,sort_order,active
+FMT_BRIEFING_ROOM,Briefing Room,MISSION,User decision 2026-10-08 (TERR-03),Briefing room with one objective.,10,false
+FMT_COMPUTER_LAB,Computer Lab,MISSION,User decision 2026-10-08 (TERR-03),Computer lab with one objective.,20,false
+FMT_STEALTH,Stealth,MISSION,User decision 2026-10-08 (TERR-03),Small stealth-style map with one objective.,30,false
+FMT_ASSAULT,Assault,MISSION,User decision 2026-10-08 (TERR-03),Assault-style map. Needs an objective to end the level.,40,false
+FMT_OUTDOOR_HUB,Outdoor Hub,HUB,User decision 2026-10-08 (TERR-04),Planned outdoor level with exits that lead to other maps.,50,false
+FMT_PRIVATE_JET,Private Jet,TRANSIT,User decision 2026-10-08 (TERR-15),Planned static FBI jet map with a moving skybox. Plot device.,60,false

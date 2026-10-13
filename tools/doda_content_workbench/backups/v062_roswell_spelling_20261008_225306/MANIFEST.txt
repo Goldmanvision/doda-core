@@ -1,0 +1,2 @@
+c89683e15b7ca02aa104a080eb62486d38c392b0509ebbef248d600a720b4e48  data_authoring/source/territories.csv
+cfd0ceb0d5fa9af493905c5698191fd0b2accecb4cdff09fe44f7c0e40ae6d85  docs/workbench/spec/DESIGN_DECISIONS_2026-10-08.md

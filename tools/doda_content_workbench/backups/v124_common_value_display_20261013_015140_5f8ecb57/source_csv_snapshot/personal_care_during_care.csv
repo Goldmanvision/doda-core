@@ -1,0 +1,3 @@
+care_service_id,action_id,sort_order,active
+REMED_RECOVERY,REMED_RESTING,10,false
+REMED_RECOVERY,REMED_EATING,20,false

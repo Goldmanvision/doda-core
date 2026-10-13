@@ -47,8 +47,9 @@ class CatalogTests(unittest.TestCase):
             "enum_catalog": [{"enum_group": "TASK_PRIORITY", "enum_value": "HIGH", "active": True}],
             "task_templates": [
                 {"task_template_id": "TASK", "display_name": "Task Template", "description": "Desc",
-                 "capability_id": "C", "priority": "HIGH", "default_target_effort_minutes": 240,
-                 "default_deadline_minutes": 120, "auto_allocate": True, "sort_order": 1,
+                 "capability_id": "C", "priority": "HIGH", "target_type": "TERRITORY", "target_family_id": "",
+                 "time_to_complete_minutes": 240, "loop_task": True,
+                 "reward_mode": "CONTINUOUS", "payout_count": 0, "sort_order": 1,
                  "active": True}]}}
         (self.root / zc.DEPARTMENT_JSON).write_text(json.dumps(dept))
     def tearDown(self):
@@ -194,11 +195,11 @@ class CatalogTests(unittest.TestCase):
     def task_catalog(self, tables):
         return zc.task_template_catalog(tables, {"C"}, {("F", "C")})
 
-    def test_task_effort_deadline_and_allocation_exported_separately(self):
+    def test_task_assignment_metadata_exported(self):
         zc.generate(self.root)
         dump = (self.root / zc.EXPECTED_DUMP).read_text()
         self.assertIn("TASK_TEMPLATES count=1", dump)
-        self.assertIn("TASK_TEMPLATE TASK C priority=HIGH effort=240 deadline=120 auto=1", dump)
+        self.assertIn("TASK_TEMPLATE TASK C priority=HIGH target=TERRITORY loop=1 duration=240 payouts=0 reward=CONTINUOUS", dump)
 
     def test_inactive_task_excluded(self):
         t = self.staffing_tables()
@@ -211,8 +212,8 @@ class CatalogTests(unittest.TestCase):
             zc.task_template_catalog(t, {"C"}, set())
 
     def test_bad_task_values_rejected(self):
-        for field, value in (("priority", "UNKNOWN"), ("default_target_effort_minutes", 0),
-                             ("default_deadline_minutes", -1), ("auto_allocate", "TRUE")):
+        for field, value in (("priority", "UNKNOWN"), ("time_to_complete_minutes", 0),
+                             ("target_type", "UNKNOWN"), ("loop_task", "TRUE")):
             with self.subTest(field=field):
                 t = self.staffing_tables()
                 t["task_templates"][0][field] = value
@@ -229,6 +230,6 @@ class CatalogTests(unittest.TestCase):
         zc.generate(self.root)
         p = self.root / zc.DEPARTMENT_JSON
         d = json.loads(p.read_text())
-        d["tables"]["task_templates"][0]["default_deadline_minutes"] = 60
+        d["tables"]["task_templates"][0]["time_to_complete_minutes"] = 60
         p.write_text(json.dumps(d))
         self.assertFalse(zc.is_current(self.root))

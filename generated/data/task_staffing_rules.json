@@ -1,0 +1,134 @@
+{
+  "schema": "doda.task_staffing_rules",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-13T03:47:56.002319+00:00",
+  "runtimeImplemented": false,
+  "staffingRules": [
+    {
+      "taskTemplateId": "FIELD_SURVEILLANCE",
+      "personnelRole": "ANALYST",
+      "minContributors": 3,
+      "preferredContributors": 4,
+      "maxContributors": 6,
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "taskTemplateId": "INVESTIGATE",
+      "personnelRole": "AGENT",
+      "minContributors": 1,
+      "preferredContributors": 2,
+      "maxContributors": 4,
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "taskTemplateId": "MISSION_DEPLOYMENT",
+      "personnelRole": "AGENT",
+      "minContributors": 1,
+      "preferredContributors": 4,
+      "maxContributors": 4,
+      "sortOrder": 90,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_AUDIO",
+      "personnelRole": "ANALYST",
+      "minContributors": 1,
+      "preferredContributors": 2,
+      "maxContributors": 3,
+      "sortOrder": 60,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_CHEMICAL",
+      "personnelRole": "ANALYST",
+      "minContributors": 2,
+      "preferredContributors": 4,
+      "maxContributors": 6,
+      "sortOrder": 80,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_DIGITAL",
+      "personnelRole": "ANALYST",
+      "minContributors": 1,
+      "preferredContributors": 4,
+      "maxContributors": 8,
+      "sortOrder": 50,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_PAPER",
+      "personnelRole": "ANALYST",
+      "minContributors": 1,
+      "preferredContributors": 2,
+      "maxContributors": 3,
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_PHOTOGRAPHIC",
+      "personnelRole": "ANALYST",
+      "minContributors": 1,
+      "preferredContributors": 2,
+      "maxContributors": 3,
+      "sortOrder": 40,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_VIDEO",
+      "personnelRole": "ANALYST",
+      "minContributors": 2,
+      "preferredContributors": 4,
+      "maxContributors": 8,
+      "sortOrder": 70,
+      "active": false
+    },
+    {
+      "taskTemplateId": "TECH_DEVELOPMENT",
+      "personnelRole": "ANALYST",
+      "minContributors": 1,
+      "preferredContributors": 1,
+      "maxContributors": 2,
+      "sortOrder": 130,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_14_DAY",
+      "personnelRole": "AGENT",
+      "minContributors": 1,
+      "preferredContributors": 1,
+      "maxContributors": 2,
+      "sortOrder": 110,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_31_DAY",
+      "personnelRole": "AGENT",
+      "minContributors": 1,
+      "preferredContributors": 1,
+      "maxContributors": 2,
+      "sortOrder": 120,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_7_DAY",
+      "personnelRole": "AGENT",
+      "minContributors": 1,
+      "preferredContributors": 1,
+      "maxContributors": 2,
+      "sortOrder": 100,
+      "active": false
+    }
+  ],
+  "rules": {
+    "scope": "TASK_SPECIFIC_ROLE_COUNTS",
+    "capabilityStaffingIsSeparate": true,
+    "blankMinimum": "UNCONFIGURED",
+    "blankPreferred": "UNSPECIFIED",
+    "blankMaximum": "UNSPECIFIED_NOT_CONFIRMED_UNLIMITED",
+    "draftRowsExecute": false,
+    "skillAndQualificationMappingsImplemented": false
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "doda_content_gui.py": "6f4893bcb97e43dc067159df3cdebf2e481b036db6c308119408e3c8b40032bc",
+  "doda_task_templates_editor.py": "a2a00708f42f93d6672ee5da2ea5d6e37dfc2a49ef4f295261bc5a4d3be6a9ac",
+  "tests/test_row_selection.py": "9f2e5c80d314f2f00aa0ff623cbf599b180590e59a6b79ba1cccad9fd6139607",
+  "doda_task_draft_policy.py": "bc049c06d730c0874cab797d443666f50b2682649bb05d3c7d850e954c7ea06a",
+  "tests/test_task_template_drafts.py": "89bf06d7095a7b984490dfde554170ad96a55af07b8c22869c9c152804a5924e",
+  "tests/test_task_draft_export_context.py": "6d0690148361c48ed9f6003fdd1d47ea37e102981f92a80ee773ef062513e314"
+}

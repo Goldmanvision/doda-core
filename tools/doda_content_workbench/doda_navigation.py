@@ -17,6 +17,9 @@ from typing import Any
 from doda_page_registry import GROUP_ORDER, page_for_tab_text
 
 MIN_WIDTH, MAX_WIDTH, DEFAULT_WIDTH = 160, 480, 240
+TAB_BG, TAB_FG = "#1c2430", "#e6edf3"
+TAB_HOVER = "#2a3544"
+TAB_SEL_BG, TAB_SEL_FG = "#0d1117", "#58a6ff"
 
 
 class GroupedNavigation:
@@ -29,6 +32,7 @@ class GroupedNavigation:
         self.item_to_tab: dict[str, str] = {}
         self.tab_to_item: dict[str, str] = {}
         self.groups: dict[str, list[tuple[str, str]]] = {}
+        self.subgroup_of: dict[str, str] = {}
 
         style = ttk.Style(app)
         self._orig_layout = style.layout("TNotebook.Tab")
@@ -41,6 +45,8 @@ class GroupedNavigation:
         self.handle = tk.Frame(self.nb.master, width=5, cursor="sb_h_double_arrow", background="#30363d")
         self.handle.pack(side=tk.LEFT, fill=tk.Y, before=self.nb, padx=(2, 8))
         self.handle.bind("<B1-Motion>", self._drag)
+        self.handle.bind("<Enter>", lambda _e: self.handle.configure(background="#58a6ff"))
+        self.handle.bind("<Leave>", lambda _e: self.handle.configure(background="#30363d"))
 
         bar = ttk.Frame(self.container)
         bar.pack(fill=tk.X, pady=(0, 4))
@@ -49,6 +55,9 @@ class GroupedNavigation:
         ttk.Button(bar, text="−", width=2, command=lambda: self.set_all_open(False)).pack(side=tk.RIGHT, padx=(0, 2))
 
         self.tree = ttk.Treeview(self.container, show="tree", selectmode="browse")
+        self.tree_xsb = ttk.Scrollbar(self.container, orient=tk.HORIZONTAL, command=self.tree.xview)
+        self.tree.configure(xscrollcommand=self.tree_xsb.set)
+        self.tree_xsb.pack(side=tk.BOTTOM, fill=tk.X)
         self.tree.pack(fill=tk.BOTH, expand=True)
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
         self.nb.bind("<<NotebookTabChanged>>", self._sync_from_notebook, add="+")
@@ -62,19 +71,29 @@ class GroupedNavigation:
         self.item_to_tab.clear()
         self.tab_to_item.clear()
         self.groups = {}
+        self.subgroup_of = {}
         for tab_id in self.nb.tabs():
             text = self.nb.tab(tab_id, "text")
             page = page_for_tab_text(text.replace(" - ", " — "))
             group = page.group if page else "Other"
             label = page.label if page else text
             self.groups.setdefault(group, []).append((label, tab_id))
+            self.subgroup_of[tab_id] = page.subgroup if page else ""
         order = [g for g in GROUP_ORDER if g in self.groups] + (["Other"] if "Other" in self.groups else [])
         for g in order:
             gid = self.tree.insert("", tk.END, text=g, open=True)
+            sub_nodes: dict[str, str] = {}
             for label, tab_id in self.groups[g]:
-                iid = self.tree.insert(gid, tk.END, text="  " + label)
+                parent = gid
+                sg = self.subgroup_of.get(tab_id, "")
+                if sg:
+                    if sg not in sub_nodes:
+                        sub_nodes[sg] = self.tree.insert(gid, tk.END, text=sg, open=False)
+                    parent = sub_nodes[sg]
+                iid = self.tree.insert(parent, tk.END, text="  " + label)
                 self.item_to_tab[iid] = tab_id
                 self.tab_to_item[tab_id] = iid
+        self._fit_columns()
         self._sync_from_notebook()
 
     def _on_select(self, _e: Any = None) -> None:
@@ -91,7 +110,10 @@ class GroupedNavigation:
     def _sync_from_notebook(self, _e: Any = None) -> None:
         item = self.tab_to_item.get(self.nb.select())
         if item and self.tree.selection() != (item,):
-            self.tree.item(self.tree.parent(item), open=True)
+            parent = self.tree.parent(item)
+            while parent:
+                self.tree.item(parent, open=True)
+                parent = self.tree.parent(parent)
             self.tree.selection_set(item)
             self.tree.see(item)
 
@@ -103,7 +125,47 @@ class GroupedNavigation:
     # ---- View-menu actions ------------------------------------------
     def set_all_open(self, is_open: bool) -> None:
         for g in self.tree.get_children():
-            self.tree.item(g, open=is_open)
+            self._open_recursive(g, is_open)
+
+    def _open_recursive(self, item: str, is_open: bool) -> None:
+        self.tree.item(item, open=is_open)
+        for child in self.tree.get_children(item):
+            self._open_recursive(child, is_open)
+
+    def _fit_columns(self) -> None:
+        import tkinter.font as tkfont
+        try:
+            desc = ttk.Style(self.app).lookup("Treeview", "font") or "TkDefaultFont"
+            font = tkfont.Font(root=self.app, font=desc)
+        except tk.TclError:
+            font = tkfont.nametofont("TkDefaultFont")
+        widest = 160
+
+        def walk(item: str, depth: int) -> None:
+            nonlocal widest
+            widest = max(widest, font.measure(self.tree.item(item, "text")) + 20 * (depth + 1) + 24)
+            for child in self.tree.get_children(item):
+                walk(child, depth + 1)
+
+        for g in self.tree.get_children():
+            walk(g, 0)
+        self.tree.column("#0", width=widest, minwidth=widest, stretch=False)
+
+    def set_nav_panel(self) -> None:
+        if self.panel_vars["nav"].get() != self.visible:
+            self.toggle_sidebar()
+
+    def set_editor_panel(self, which: str) -> None:
+        other = "record" if which == "list" else "list"
+        want = self.panel_vars[which].get()
+        if not want and not self.panel_vars[other].get():
+            self.panel_vars[which].set(True)
+            return
+        self.app.panel_state[which] = want
+        for ed in getattr(self.app, "network_editors", []):
+            fn = getattr(ed, "set_panel_visible", None)
+            if fn:
+                fn(which, want)
 
     def toggle_sidebar(self) -> None:
         if self.visible:
@@ -115,10 +177,104 @@ class GroupedNavigation:
             self.handle.pack(side=tk.LEFT, fill=tk.Y, before=self.nb, padx=(2, 8))
             self.set_tab_strip_hidden(True)
         self.visible = not self.visible
+        pv = getattr(self, "panel_vars", None)
+        if pv:
+            pv["nav"].set(self.visible)
 
     def set_tab_strip_hidden(self, hidden: bool) -> None:
-        self.nb.configure(style="Grouped.TNotebook" if hidden else "TNotebook")
+        # The native notebook strip squeezes tabs and cannot scroll, so it stays
+        # hidden; a scrollable tab bar is shown instead when the sidebar is hidden.
+        self.nb.configure(style="Grouped.TNotebook")
         self.tab_strip_hidden = hidden
+        if hidden:
+            if getattr(self, "tabbar", None) is not None:
+                self.tabbar.pack_forget()
+        else:
+            self._show_tabbar()
+
+    def _show_tabbar(self) -> None:
+        if getattr(self, "tabbar", None) is None:
+            self._build_tabbar()
+        self._fill_tabbar()
+        self.tabbar.pack(side=tk.TOP, fill=tk.X, before=self.nb, pady=(0, 6))
+        self.tabbar.after(60, self._reveal_tab)
+
+    def _build_tabbar(self) -> None:
+        bar = ttk.Frame(self.nb.master)
+        canvas = tk.Canvas(bar, height=34, highlightthickness=0, borderwidth=0,
+                           background=TAB_SEL_BG, xscrollincrement=40)
+        sb = ttk.Scrollbar(bar, orient=tk.HORIZONTAL, command=canvas.xview)
+        canvas.configure(xscrollcommand=sb.set)
+        canvas.pack(side=tk.TOP, fill=tk.X)
+        sb.pack(side=tk.TOP, fill=tk.X)
+        inner = tk.Frame(canvas, background=TAB_SEL_BG)
+        canvas.create_window((0, 0), window=inner, anchor="nw")
+        inner.bind("<Configure>", lambda _e: canvas.configure(scrollregion=canvas.bbox("all")))
+        for w in (canvas, inner, sb):
+            w.bind("<MouseWheel>", self._tab_wheel)
+        self.tabbar, self.tab_canvas, self.tab_inner = bar, canvas, inner
+        self.tab_labels = {}
+        self.nb.bind("<<NotebookTabChanged>>", self._tabbar_highlight, add="+")
+
+    def _fill_tabbar(self) -> None:
+        label_of = {tab: label for items in self.groups.values() for label, tab in items}
+        for w in self.tab_inner.winfo_children():
+            w.destroy()
+        self.tab_labels = {}
+        for tab_id in self.nb.tabs():
+            text = label_of.get(tab_id) or self.nb.tab(tab_id, "text")
+            lbl = tk.Label(self.tab_inner, text=text, padx=14, pady=7, cursor="hand2",
+                           background=TAB_BG, foreground=TAB_FG)
+            lbl.pack(side=tk.LEFT, padx=(0, 2))
+            lbl.bind("<Button-1>", lambda _e, t=tab_id: self.nb.select(t))
+            lbl.bind("<Enter>", lambda _e, t=tab_id: self._hover_tab(t, True))
+            lbl.bind("<Leave>", lambda _e, t=tab_id: self._hover_tab(t, False))
+            lbl.bind("<MouseWheel>", self._tab_wheel)
+            self.tab_labels[tab_id] = lbl
+        self.tab_inner.update_idletasks()
+        self.tab_canvas.configure(height=self.tab_inner.winfo_reqheight())
+        self._tabbar_highlight()
+
+    def _paint_tab(self, tab_id: str) -> None:
+        lbl = self.tab_labels.get(tab_id)
+        if lbl is None:
+            return
+        if self.nb.select() == tab_id:
+            lbl.configure(background=TAB_SEL_BG, foreground=TAB_SEL_FG)
+        else:
+            lbl.configure(background=TAB_BG, foreground=TAB_FG)
+
+    def _hover_tab(self, tab_id: str, over: bool) -> None:
+        lbl = self.tab_labels.get(tab_id)
+        if lbl is not None and over and self.nb.select() != tab_id:
+            lbl.configure(background=TAB_HOVER)
+        else:
+            self._paint_tab(tab_id)
+
+    def _tabbar_highlight(self, _e: Any = None) -> None:
+        if getattr(self, "tabbar", None) is None or not self.tab_labels:
+            return
+        for tab_id in self.tab_labels:
+            self._paint_tab(tab_id)
+        self._reveal_tab()
+
+    def _reveal_tab(self) -> None:
+        lbl = self.tab_labels.get(self.nb.select())
+        if lbl is None:
+            return
+        self.tab_canvas.update_idletasks()
+        total = max(1, self.tab_inner.winfo_reqwidth())
+        view = self.tab_canvas.winfo_width()
+        left = self.tab_canvas.canvasx(0)
+        x0, x1 = lbl.winfo_x(), lbl.winfo_x() + lbl.winfo_width()
+        if x0 < left:
+            self.tab_canvas.xview_moveto(max(0.0, (x0 - 8) / total))
+        elif x1 > left + view:
+            self.tab_canvas.xview_moveto(min(1.0, (x1 + 8 - view) / total))
+
+    def _tab_wheel(self, event: Any) -> str:
+        self.tab_canvas.xview_scroll(-3 if event.delta > 0 else 3, "units")
+        return "break"
 
     def go(self, tab_id: str) -> None:
         self.nb.select(tab_id)
@@ -143,6 +299,17 @@ def install_grouped_navigation(app: Any) -> GroupedNavigation:
             sub.add_command(label=label, command=lambda t=tab_id: nav.go(t))
         nav_menu.add_cascade(label=group, menu=sub)
     menu.add_separator()
+    panel_menu = tk.Menu(menu, tearoff=False, borderwidth=0, relief=tk.FLAT,
+                         selectcolor=opts["foreground"], **opts)
+    app.panel_state = {"list": True, "record": True}
+    nav.panel_vars = {k: tk.BooleanVar(master=app, value=True) for k in ("nav", "list", "record")}
+    panel_menu.add_checkbutton(label="Panel 1: Navigation", variable=nav.panel_vars["nav"],
+                               command=nav.set_nav_panel)
+    panel_menu.add_checkbutton(label="Panel 2: List", variable=nav.panel_vars["list"],
+                               command=lambda: nav.set_editor_panel("list"))
+    panel_menu.add_checkbutton(label="Panel 3: Record", variable=nav.panel_vars["record"],
+                               command=lambda: nav.set_editor_panel("record"))
+    menu.add_cascade(label="Show / Hide Panel", menu=panel_menu)
     menu.add_cascade(label="Navigation", menu=nav_menu)
     app.bind_all("<Control-b>", lambda _e: (nav.toggle_sidebar(), "break")[1], add="+")
     return nav

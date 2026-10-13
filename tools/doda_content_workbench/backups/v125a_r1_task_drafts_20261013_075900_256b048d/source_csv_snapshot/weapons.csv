@@ -1,0 +1,4 @@
+weapon_id,display_name,weapon_type,engine_class,tags,source_reference,description,sort_order,active
+WPN_BERETTA_M92,Beretta M92,PISTOL,,,User decision 2026-10-08 (TERR-09),Engine class blank until supplied.,10,false
+WPN_PUMP_SHOTGUN,Pump-Action Shotgun,SHOTGUN,,,User decision 2026-10-08 (TERR-09),Engine class blank until supplied.,20,false
+WPN_MP5KSD,MP5kSD,SMG,,SUPPRESSED,User decision 2026-10-08 (TERR-09),Engine class blank until supplied.,30,false

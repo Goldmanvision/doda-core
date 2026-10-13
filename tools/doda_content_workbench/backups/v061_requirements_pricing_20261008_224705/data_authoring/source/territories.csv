@@ -1,0 +1,5 @@
+territory_id,display_name,locality,region,kind,hq_name,agents_allowed,population,source_reference,description,sort_order,active
+TERR_EBON_FALLS,"Ebon Falls, New York",Ebon Falls,New York,STARTING,Ebon Falls DoDA Office,true,,User decision 2026-10-08 (TERR-22),Starting territory. Population is blank until supplied.,10,false
+TERR_ROSEWELL,"Rosewell, New Mexico",Rosewell,New Mexico,PLOT,,true,,User decision 2026-10-08 (TERR-23),Plot territory. Unlocks through plot events. HQ name is blank until supplied.,20,false
+TERR_UNKNOWN_KADDATH,Unknown Kaddath,,,PLAYER_ONLY,,false,,User decision 2026-10-08 (TERR-23),Player-only territory. Agents cannot be directed here. No HQ.,30,false
+TERR_SRS_NUCLEAR_FACILITY,"Savannah River Site Nuclear Research Facility, Savannah River, South Carolina",Savannah River,South Carolina,PLOT,,true,,User decision 2026-10-08 (CAP-02),Authored territory for the Tier 5 capstone chain. Qualified agents can be deployed to its operational territory. HQ name and the deployment qualification are undecided. Real-name use pending legal review.,40,false

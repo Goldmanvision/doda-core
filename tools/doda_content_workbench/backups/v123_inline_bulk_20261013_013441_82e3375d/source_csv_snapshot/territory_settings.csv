@@ -1,0 +1,15 @@
+setting_id,display_name,value,unit,source_reference,description,sort_order,active
+TEAM_SIZE_LIMIT,Team Size Limit,4,AGENTS,User decision 2026-10-08 (TERR-19),Agents per mission area deployment. May later vary by mission area or tier.,10,false
+OPEN_MISSION_AREA_CAP,Open Mission Area Cap,,COUNT,User decision 2026-10-08 (TERR-17),Department-wide cap. Upgrades can raise it. Value undecided.,20,false
+MISSION_PERSISTENCE_MINUTES,Mission Persistence Time,,STRATEGIC_MINUTES,User decision 2026-10-08 (TERR-18),How long Evidence and hostiles persist after a deployment. Templates may override. Value undecided.,30,false
+MAX_AGENT_SHARE_PER_HOUSING_PLACE,Max Agent Share Per Housing Place,,PERCENT,User decision 2026-10-08 (TERR-26),Limit on the share of a territory's agents living in one place. Value undecided.,40,false
+LEAD_BASE_COST,Ordinary Lead Base Cost,100,EVIDENCE_POINTS,"STARTING VALUE (user, 2026-10-08) MTIER-14",First ordinary paid Lead costs this many Evidence points. Starting value; expected to be tuned.,50,true
+LEAD_COST_GROWTH_PERCENT,Lead Cost Growth Per Purchase (percent),10,PERCENT,"STARTING VALUE (user, 2026-10-08) MTIER-14",Each ordinary paid Lead costs this percent more than the previous one (compounding). Starting value; expected to be tuned.,60,true
+FINAL_GATE_CHECK_MINUTES,Final Gate Check Interval,,STRATEGIC_MINUTES,MTIER-03 to MTIER-11 (2026-10-08),Periodic eligibility checks after Tier 5 unlocks. Undecided.,70,false
+CAPSTONE_LEAD_COST,Tier 5 Capstone Lead Cost,,EVIDENCE_POINTS,MTIER-03 to MTIER-11 (2026-10-08),"Special purchase price, separate from ordinary Lead pricing. Undecided.",80,false
+FINAL_MIN_AVAILABLE_FUNDING,Final Gate Available Funding Minimum,,FUNDING_UNITS,MTIER-03 to MTIER-11 (2026-10-08),"Checks current available Department Funding, not lifetime funding. Whole-unit threshold undecided.",90,false
+FINAL_MIN_PREPAREDNESS,Final Gate Preparedness Minimum,,METRIC_UNITS,MTIER-03 to MTIER-11 (2026-10-08),Threshold for the PREPAREDNESS metric. Undecided.,100,false
+FINAL_MIN_OPERATIONAL_TERRITORIES,Final Gate Operational Territories Minimum,,COUNT,MTIER-03 to MTIER-11 (2026-10-08),Minimum operational territory count. Undecided.,110,false
+STARTING_EVIDENCE,Starting Evidence,900,EVIDENCE_POINTS,User decision 2026-10-08 (PROG-01),Evidence the player starts with. The tutorial lets the player easily earn the remaining amount to reach the first tier threshold.,120,true
+BUDGET_CYCLE_MINUTES,Budget Cycle Length,,STRATEGIC_MINUTES,User decision 2026-10-09 (CONG-09),Length of one budget cycle. Congressional Support is reviewed at each budget cycle or hearing. Two weeks is the working idea; not confirmed.,130,false
+SUCCESS_RATE_WINDOW_CYCLES,Success Rate Window (budget cycles),,COUNT,User decision 2026-10-09 (CONG-09),How many recent budget cycles the mission success rate is measured over. Undecided.,140,false

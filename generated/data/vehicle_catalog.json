@@ -1,0 +1,39 @@
+{
+  "schema": "doda.vehicle_catalog",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-13T03:47:56.006420+00:00",
+  "vehicleTypes": [
+    {
+      "vehicleTypeId": "STANDARD_MOTOR_VEHICLE",
+      "displayName": "Standard Motor Vehicle",
+      "maxTeamMembers": 4,
+      "description": "Generic motor vehicle supporting a team of up to 4; no brand model or owned vehicle is created.",
+      "sortOrder": 10,
+      "active": true
+    },
+    {
+      "vehicleTypeId": "VAN",
+      "displayName": "Van",
+      "maxTeamMembers": 6,
+      "description": "Generic van supporting a team of up to 6; no brand model or owned vehicle is created.",
+      "sortOrder": 20,
+      "active": true
+    }
+  ],
+  "runtimeImplemented": false,
+  "rules": {
+    "catalogScope": "GENERIC_VEHICLE_TYPES",
+    "capacityUnit": "TEAM_MEMBERS_PER_VEHICLE",
+    "capacityIsNotVehicleQuantity": true,
+    "capacityDoesNotChangeTaskStaffingLimits": true,
+    "definitionsCreateNoInventory": true,
+    "personalDeviceSlotAccountingApplies": false,
+    "runtimeCapacityChecksImplemented": false,
+    "allocationImplemented": false
+  },
+  "openItems": {
+    "VEH-01": "Vehicle brands/models and ownership catalog.",
+    "VEH-02": "Multiple vehicles, oversized teams and allocation policy.",
+    "VEH-03": "Travel, cargo, upgrades, prices and runtime inventory."
+  }
+}

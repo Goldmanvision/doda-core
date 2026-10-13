@@ -1,0 +1,8 @@
+{
+  "doda_bulk_edit.py": "8e149daccbfb03106dfb4c3f16491286c8d58fcf30bf7bb4b4ab0bd493221595",
+  "doda_multiselect.py": "76594c79c8728425f768877ba6b134cf17be24978b5a47a561e0b093fc8aa757",
+  "doda_network_editor.py": "2f764a4f126d9be5714b97d88d986dba12841b2f77f045b5f1fe4b823203d6f6",
+  "tests/test_row_selection.py": "5966f9998027672d386968e48267ccdebdc03cfa7065c7a1f84b0cab9f428070",
+  "doda_inline_bulk_edit.py": "d235bb6f8c4285980b290e40f6db007ccf53cb1aef56d865646d10b87ffa6708",
+  "tests/test_inline_bulk_edit.py": "69893b43ca1fdb852b1669bc82079434979434d9d944df43061ea6ab36d50efc"
+}

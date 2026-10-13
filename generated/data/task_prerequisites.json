@@ -1,0 +1,60 @@
+{
+  "schema": "doda.task_prerequisites",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-13T03:47:56.005834+00:00",
+  "prerequisites": [
+    {
+      "prerequisiteId": "PRE_INVESTIGATE_PISTOL",
+      "taskTemplateId": "INVESTIGATE",
+      "requirementKind": "WEAPON_TYPE",
+      "scope": "PER_ASSIGNED_AGENT",
+      "personnelRole": "AGENT",
+      "requirementValue": "PISTOL",
+      "minQuantity": 1,
+      "description": "Each assigned agent carries a pistol; no brand/model restriction.",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "prerequisiteId": "PRE_INVESTIGATE_RECEPTACLE",
+      "taskTemplateId": "INVESTIGATE",
+      "requirementKind": "APPLICABLE_COLLECTION_RECEPTACLE",
+      "scope": "PER_ASSIGNED_AGENT",
+      "personnelRole": "AGENT",
+      "requirementValue": null,
+      "minQuantity": 1,
+      "description": "Each assigned agent carries a receptacle whose model collects the evidence category; missing-category selection policy remains open.",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "prerequisiteId": "PRE_INVESTIGATE_VEHICLE",
+      "taskTemplateId": "INVESTIGATE",
+      "requirementKind": "MOTOR_VEHICLE",
+      "scope": "TASK",
+      "personnelRole": null,
+      "requirementValue": null,
+      "minQuantity": 1,
+      "description": "One shared motor vehicle per Investigation task assignment. Standard vehicle supports teams up to 4; van supports teams up to 6. Staffing limits remain separate. Generic vehicle types are cataloged; runtime capacity enforcement and allocation are not implemented.",
+      "sortOrder": 30,
+      "active": false
+    }
+  ],
+  "runtimeImplemented": false,
+  "rules": {
+    "definitionsCreateNoInventory": true,
+    "perAgentQuantityAppliesSeparatelyToEachAssignedAgent": true,
+    "applicableReceptacle": "RECEPTACLE_MODEL_WITH_MATCHING_EVIDENCE_CATEGORY",
+    "collectionDevicesDoNotSatisfyReceptacleRequirement": true,
+    "weaponTypeIsNotBrandOrModel": true,
+    "blankQuantity": "UNCONFIGURED",
+    "personalDeviceLimitsUnchanged": true,
+    "runtimeEligibilityImplemented": false
+  },
+  "openItems": {
+    "PRE-01": "Owned vehicle quantities, runtime capacity enforcement and allocation; generic vehicle types and capacities are authored separately.",
+    "PRE-02": "Missing-receptacle behavior for weighted evidence selection.",
+    "PRE-03": "Runtime inventory, equipment assignment and eligibility.",
+    "PRE-04": "Consumption, reuse and capacity rules."
+  }
+}

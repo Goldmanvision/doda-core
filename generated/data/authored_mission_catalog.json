@@ -1,0 +1,54 @@
+{
+  "schema": "doda.authored_mission_catalog",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-13T03:47:56.149121+00:00",
+  "missions": [
+    {
+      "missionId": "MISSION_TIER5_CAPSTONE_01",
+      "displayName": "Serena River Site Nuclear Research Facility, South Carolina",
+      "kind": "TIER_CAPSTONE",
+      "chainId": "CHAIN_TIER5_CAPSTONE",
+      "chainPosition": 1,
+      "tierId": "TIER_5",
+      "unlocksTierId": "TIER_6",
+      "territoryId": "TERR_SRS_NUCLEAR_FACILITY",
+      "mapId": null,
+      "playerOnly": true,
+      "sourceReference": "User decision 2026-10-08 (CAP-01 to CAP-05)",
+      "description": "First mission of the Tier 5 capstone chain. Map, objectives and further chain missions are not yet designed. The site name is fictional.",
+      "sortOrder": 10,
+      "active": false
+    }
+  ],
+  "objectives": [],
+  "capstoneStatus": {
+    "chainId": "CHAIN_TIER5_CAPSTONE",
+    "missionIds": [
+      "MISSION_TIER5_CAPSTONE_01"
+    ],
+    "unlocksTierId": "TIER_6",
+    "configured": false,
+    "missingConfiguration": [
+      "CAPSTONE_MISSIONS_INACTIVE",
+      "CAPSTONE_MAPS",
+      "CAPSTONE_REQUIRED_OBJECTIVES"
+    ]
+  },
+  "rules": {
+    "sharedTableForPlotMissionsAndCapstone": true,
+    "plotMissionsPlayerOnly": true,
+    "capstoneIsMissionChain": true,
+    "chainPositionsContiguousFromOne": true,
+    "capstoneRequiresRequiredObjectivePerMission": true,
+    "tier6UnlockTrigger": "ALL_REQUIREMENTS_MET_AUTOMATIC",
+    "oneLeadPurchaseUnlocksWholeChain": "UNDECIDED_LEANING_NO_LEADS_STILL_OPEN_MISSION_AREAS",
+    "campaignProgressIsNativeState": true
+  },
+  "openItems": {
+    "CAP-OPEN-01": "Legal review is deferred: the site name is fictional (Serena River Site) for now.",
+    "CAP-OPEN-02": "Capstone territory HQ name and the qualification agents need to deploy there.",
+    "CAP-OPEN-03": "Chain mission names, maps and authored objectives.",
+    "CAP-OPEN-04": "Whether one capstone Lead opens the whole chain (leaning no: Leads still open mission areas)."
+  },
+  "runtimeImplemented": false
+}

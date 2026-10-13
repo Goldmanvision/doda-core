@@ -1,0 +1,6 @@
+level_id,display_name,min_score,grant_funding,grant_territories,source_reference,description,sort_order,active
+CS_LEVEL_1,Congressional Support Level 1,,,,User decision 2026-10-09 (CONG-01 to CONG-05),Placeholder level. Score threshold and grants are undecided. Levels are hidden from the player.,10,false
+CS_LEVEL_2,Congressional Support Level 2,,,,User decision 2026-10-09 (CONG-01 to CONG-05),Placeholder level. Score threshold and grants are undecided. Levels are hidden from the player.,20,false
+CS_LEVEL_3,Congressional Support Level 3,,,,User decision 2026-10-09 (CONG-01 to CONG-05),Placeholder level. Score threshold and grants are undecided. Levels are hidden from the player.,30,false
+CS_LEVEL_4,Congressional Support Level 4,,,,User decision 2026-10-09 (CONG-01 to CONG-05),Placeholder level. Score threshold and grants are undecided. Levels are hidden from the player.,40,false
+CS_LEVEL_5,Congressional Support Level 5,,,,User decision 2026-10-09 (CONG-01 to CONG-05),Placeholder level. Score threshold and grants are undecided. Levels are hidden from the player.,50,false

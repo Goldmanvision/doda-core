@@ -1,0 +1,11 @@
+model_id,display_name,hardware_kind,tier_id,description,sort_order,active
+MODEM_DIALUP_G1,14.4KB/s Dial-up Modem,MODEM,NET_DIALUP_G1,Diagram label: 14.4KB/s MODEM.,10,true
+ROUTER_DIALUP_G1,14.4KB/s Dial-up Router,ROUTER,NET_DIALUP_G1,PLACEHOLDER: diagram shows no routers; one matching router per tier (NET-01).,20,true
+MODEM_DIALUP_G2,56K Dial-up Modem,MODEM,NET_DIALUP_G2,Diagram label: 56K MODEM.,30,true
+ROUTER_DIALUP_G2,56K Dial-up Router,ROUTER,NET_DIALUP_G2,PLACEHOLDER: diagram shows no routers; one matching router per tier (NET-01).,40,true
+MODEM_LEASED_G1,1.5MB/s Leased Line (T1) Modem,MODEM,NET_LEASED_G1,Diagram label: 1.5MB/s MODEM.,50,true
+ROUTER_LEASED_G1,1.5MB/s Leased Line (T1) Router,ROUTER,NET_LEASED_G1,PLACEHOLDER: diagram shows no routers; one matching router per tier (NET-01).,60,true
+MODEM_LEASED_G2,44MB/s Leased Line (T3) Modem,MODEM,NET_LEASED_G2,Diagram label: 44MB/s MODEM.,70,true
+ROUTER_LEASED_G2,44MB/s Leased Line (T3) Router,ROUTER,NET_LEASED_G2,PLACEHOLDER: diagram shows no routers; one matching router per tier (NET-01).,80,true
+MODEM_FIBER_G1,2GB/s Fiber Modem,MODEM,NET_FIBER_G1,Diagram label: 2GB/s MODEM.,90,true
+ROUTER_FIBER_G1,2GB/s Fiber Router,ROUTER,NET_FIBER_G1,PLACEHOLDER: diagram shows no routers; one matching router per tier (NET-01).,100,true

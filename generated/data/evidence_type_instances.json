@@ -1,0 +1,144 @@
+{
+  "schema": "doda.evidence_type_instances",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-13T03:47:56.005008+00:00",
+  "definitions": [
+    {
+      "evidenceInstanceId": "EVI_HANDWRITTEN_NOTE",
+      "displayName": "Handwritten note",
+      "evidenceResourceId": "EVIDENCE_PAPER",
+      "baseValueMin": 1,
+      "baseValueMax": 1,
+      "description": "Starting definition; value is points per piece before collection modifiers.",
+      "sortOrder": 10,
+      "active": true
+    },
+    {
+      "evidenceInstanceId": "EVI_HANDWRITTEN_LETTER",
+      "displayName": "Handwritten letter",
+      "evidenceResourceId": "EVIDENCE_PAPER",
+      "baseValueMin": 5,
+      "baseValueMax": 5,
+      "description": "Starting definition; value is points per piece before collection modifiers.",
+      "sortOrder": 20,
+      "active": true
+    },
+    {
+      "evidenceInstanceId": "EVI_TYPED_DOCUMENT",
+      "displayName": "Typed document",
+      "evidenceResourceId": "EVIDENCE_PAPER",
+      "baseValueMin": 3,
+      "baseValueMax": 3,
+      "description": "Starting definition; value is points per piece before collection modifiers.",
+      "sortOrder": 30,
+      "active": true
+    },
+    {
+      "evidenceInstanceId": "EVI_SIGNED_TYPED_DOCUMENT",
+      "displayName": "Signed typed document",
+      "evidenceResourceId": "EVIDENCE_PAPER",
+      "baseValueMin": 6,
+      "baseValueMax": 6,
+      "description": "Starting definition; value is points per piece before collection modifiers.",
+      "sortOrder": 40,
+      "active": true
+    },
+    {
+      "evidenceInstanceId": "EVI_PHOTO_SUSPECT",
+      "displayName": "Photo of suspect",
+      "evidenceResourceId": "EVIDENCE_PHOTOGRAPHIC",
+      "baseValueMin": 5,
+      "baseValueMax": 5,
+      "description": "Starting definition; value is points per piece before collection modifiers.",
+      "sortOrder": 50,
+      "active": true
+    },
+    {
+      "evidenceInstanceId": "EVI_PHOTO_VICTIM",
+      "displayName": "Photo of victim",
+      "evidenceResourceId": "EVIDENCE_PHOTOGRAPHIC",
+      "baseValueMin": 10,
+      "baseValueMax": 10,
+      "description": "Starting definition; value is points per piece before collection modifiers.",
+      "sortOrder": 60,
+      "active": true
+    },
+    {
+      "evidenceInstanceId": "EVI_PHOTO_CRIME",
+      "displayName": "Photo of crime",
+      "evidenceResourceId": "EVIDENCE_PHOTOGRAPHIC",
+      "baseValueMin": 20,
+      "baseValueMax": 20,
+      "description": "Starting definition; value is points per piece before collection modifiers.",
+      "sortOrder": 70,
+      "active": true
+    },
+    {
+      "evidenceInstanceId": "EVI_PHOTO_CRIME_SUSPECT",
+      "displayName": "Photo of crime with suspect",
+      "evidenceResourceId": "EVIDENCE_PHOTOGRAPHIC",
+      "baseValueMin": 50,
+      "baseValueMax": 50,
+      "description": "Starting definition; value is points per piece before collection modifiers.",
+      "sortOrder": 80,
+      "active": true
+    },
+    {
+      "evidenceInstanceId": "EVI_PHOTO_CRIME_VICTIM",
+      "displayName": "Photo of crime with victim",
+      "evidenceResourceId": "EVIDENCE_PHOTOGRAPHIC",
+      "baseValueMin": 30,
+      "baseValueMax": 30,
+      "description": "Starting definition; value is points per piece before collection modifiers.",
+      "sortOrder": 90,
+      "active": true
+    },
+    {
+      "evidenceInstanceId": "EVI_HARD_DRIVE_CONTRABAND",
+      "displayName": "Hard drive with contraband",
+      "evidenceResourceId": "EVIDENCE_DIGITAL",
+      "baseValueMin": 100,
+      "baseValueMax": 100,
+      "description": "Starting definition; value is points per piece before collection modifiers.",
+      "sortOrder": 100,
+      "active": true
+    },
+    {
+      "evidenceInstanceId": "EVI_INTERNET_TRAFFIC_LOG",
+      "displayName": "Internet traffic log",
+      "evidenceResourceId": "EVIDENCE_DIGITAL",
+      "baseValueMin": 20,
+      "baseValueMax": 20,
+      "description": "Starting definition; value is points per piece before collection modifiers.",
+      "sortOrder": 110,
+      "active": true
+    },
+    {
+      "evidenceInstanceId": "EVI_ILLEGAL_INTERNET_TRAFFIC_LOG",
+      "displayName": "Illegal internet traffic log",
+      "evidenceResourceId": "EVIDENCE_DIGITAL",
+      "baseValueMin": 100,
+      "baseValueMax": 100,
+      "description": "Starting definition; value is points per piece before collection modifiers.",
+      "sortOrder": 120,
+      "active": true
+    }
+  ],
+  "runtimeImplemented": false,
+  "rules": {
+    "catalogStoresDefinitionsNotLivePieces": true,
+    "baseValueUnit": "EVIDENCE_VALUE_POINTS_NOT_PIECE_COUNT",
+    "rangeEndpoints": "INCLUSIVE_NONNEGATIVE_INTEGERS",
+    "equalEndpointsMeanFixedValue": true,
+    "exportSamplesNoValues": true,
+    "randomSamplingImplemented": false,
+    "collectionMultiplierOwner": "COLLECTION_MODEL",
+    "rounding": "ROUND_HALF_UP_PER_PIECE_AFTER_MULTIPLIER",
+    "definitionsCreateNoInventory": true
+  },
+  "openItems": {
+    "EVI-01": "Random distribution and runtime creation/persistence of a piece value.",
+    "EVI-02": "Runtime collection and admissible-evidence processing integration.",
+    "EVI-03": "Bulk discoveries, duplicate rewards and collection stacking."
+  }
+}

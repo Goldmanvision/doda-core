@@ -1,0 +1,5 @@
+map_id,format_id,display_name,has_objective,agent_deployable,source_reference,description,sort_order,active
+MAP01,FMT_BRIEFING_ROOM,MAP01 Briefing Room,true,true,User decision 2026-10-08 (TERR-03),Change agent_deployable if this is player-only.,10,false
+MAP02,FMT_COMPUTER_LAB,MAP02 Computer Lab,true,true,User decision 2026-10-08 (TERR-03),Change agent_deployable if this is player-only.,20,false
+MAP03,FMT_STEALTH,MAP03 Stealth,true,true,User decision 2026-10-08 (TERR-03),Change agent_deployable if this is player-only.,30,false
+MAP04,FMT_ASSAULT,MAP04 Assault,false,true,User decision 2026-10-08 (TERR-03),Has no objective yet so the level cannot end.,40,false

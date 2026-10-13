@@ -1,0 +1,9 @@
+{
+  "tools\\doda_content_workbench\\doda_content_workbench.py": "90898db301de746faf495c97acf1d2675038e52f14433bf41efd502f0056919b",
+  "tools\\doda_content_workbench\\doda_page_registry.py": "634e7055b737da207017773714332724b958958f88ceaaa3285aac79d5a68314",
+  "tools\\doda_content_workbench\\doda_network_editor.py": "a72ff2dbf0f1f15eba4d726392e8fa0686297d20c710076696ee19e1172c8e1d",
+  "tools\\doda_content_workbench\\doda_task_templates_editor.py": "3f8b0eaf592e2e8ec69fdf3516e8df65a134ed86c546cd1e5085bc9da6eeb752",
+  "tools\\doda_content_workbench\\doda_content_gui.py": "d3410075abd55236737981ebb9f3c94690d281ff0b82966c048279dd0c38805d",
+  "tools\\doda_content_workbench\\tests\\test_vehicle_integration.py": "NEW",
+  "docs\\workbench\\history\\vehicle_integration_v110.md": "NEW"
+}

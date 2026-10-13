@@ -37,6 +37,8 @@ FILES = (
     "facility_capability_staffing_overrides.csv",
     "task_templates.csv",
 )
+FILES = tuple(FILES) + ("equipment_families.csv",)
+FILES = tuple(dict.fromkeys(tuple(FILES) + ("resources.csv", "task_template_flows.csv")))
 
 ID_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
 
@@ -988,7 +990,3 @@ def install_enum_catalog_editor(app: Any) -> None:
     editor = EnumCatalogEditor(app)
 
     app.enum_catalog_editor = editor
-
-
-
-

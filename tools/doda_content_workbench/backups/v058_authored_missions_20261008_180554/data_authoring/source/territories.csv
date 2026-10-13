@@ -1,0 +1,4 @@
+territory_id,display_name,locality,region,kind,hq_name,agents_allowed,population,source_reference,description,sort_order,active
+TERR_EBON_FALLS,"Ebon Falls, New York",Ebon Falls,New York,STARTING,Ebon Falls DoDA Office,true,,User decision 2026-10-08 (TERR-22),Starting territory. Population is blank until supplied.,10,false
+TERR_ROSEWELL,"Rosewell, New Mexico",Rosewell,New Mexico,PLOT,,true,,User decision 2026-10-08 (TERR-23),Plot territory. Unlocks through plot events. HQ name is blank until supplied.,20,false
+TERR_UNKNOWN_KADDATH,Unknown Kaddath,,,PLAYER_ONLY,,false,,User decision 2026-10-08 (TERR-23),Player-only territory. Agents cannot be directed here. No HQ.,30,false

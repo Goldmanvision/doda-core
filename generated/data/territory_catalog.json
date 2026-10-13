@@ -1,0 +1,1292 @@
+{
+  "schema": "doda.territory_catalog",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-13T03:47:56.121778+00:00",
+  "decimalPlaces": 4,
+  "scale": 10000,
+  "territories": [
+    {
+      "territoryId": "TERR_EBON_FALLS",
+      "displayName": "Ebon Falls, New York",
+      "locality": "Ebon Falls",
+      "region": "GT_UPSTATE_NEW_YORK",
+      "greaterTerritoryId": "GT_UPSTATE_NEW_YORK",
+      "kind": "STARTING",
+      "unlockMethod": "AT_START",
+      "hqName": "Ebon Falls DoDA Office",
+      "agentsAllowed": true,
+      "population": null,
+      "sourceReference": "User decision 2026-10-08 (TERR-22)",
+      "description": "Starting territory. Population is blank until supplied.",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "territoryId": "TERR_ROSEWELL",
+      "displayName": "Roswell, New Mexico",
+      "locality": "Roswell",
+      "region": "GT_NEW_MEXICO",
+      "greaterTerritoryId": "GT_NEW_MEXICO",
+      "kind": "PLOT",
+      "unlockMethod": "PLOT_EVENT",
+      "hqName": "Roswell DoDA Office",
+      "agentsAllowed": true,
+      "population": null,
+      "sourceReference": "User decision 2026-10-08 (TERR-23)",
+      "description": "Plot territory. Unlocks through plot events.",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "territoryId": "TERR_UNKNOWN_KADDATH",
+      "displayName": "Unknown Kaddath",
+      "locality": null,
+      "region": "GT_THE_DREAMLANDS",
+      "greaterTerritoryId": "GT_THE_DREAMLANDS",
+      "kind": "PLAYER_ONLY",
+      "unlockMethod": "PLOT_EVENT",
+      "hqName": "DoDA Unknown Kaddath Satellite Operations Center",
+      "agentsAllowed": false,
+      "population": null,
+      "sourceReference": "User decision 2026-10-08 (TERR-23)",
+      "description": "Player-only territory. Agents cannot be directed here. HQ is DUKSOC (DoDA Unknown Kaddath Satellite Operations Center), in the Dreamlands.",
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "territoryId": "TERR_SRS_NUCLEAR_FACILITY",
+      "displayName": "Serena River Site Nuclear Research Facility, Serena River, South Carolina",
+      "locality": "Serena River",
+      "region": "GT_SOUTH_CAROLINA",
+      "greaterTerritoryId": "GT_SOUTH_CAROLINA",
+      "kind": "PLOT",
+      "unlockMethod": "PLOT_EVENT",
+      "hqName": "Serena River DoDA Office",
+      "agentsAllowed": true,
+      "population": null,
+      "sourceReference": "User decision 2026-10-08 (CAP-02)",
+      "description": "Authored territory for the Tier 5 capstone chain. Qualified agents can be deployed to its operational territory. The deployment qualification is undecided. The site name is fictional.",
+      "sortOrder": 40,
+      "active": false
+    }
+  ],
+  "settings": [
+    {
+      "settingId": "TEAM_SIZE_LIMIT",
+      "displayName": "Team Size Limit",
+      "unit": "AGENTS",
+      "value": "4",
+      "valueScaled": 40000,
+      "sourceReference": "User decision 2026-10-08 (TERR-19)",
+      "description": "Agents per mission area deployment. May later vary by mission area or tier.",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "settingId": "OPEN_MISSION_AREA_CAP",
+      "displayName": "Open Mission Area Cap",
+      "unit": "COUNT",
+      "value": null,
+      "valueScaled": null,
+      "sourceReference": "User decision 2026-10-08 (TERR-17)",
+      "description": "Department-wide cap. Upgrades can raise it. Value undecided.",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "settingId": "MISSION_PERSISTENCE_MINUTES",
+      "displayName": "Mission Persistence Time",
+      "unit": "STRATEGIC_MINUTES",
+      "value": null,
+      "valueScaled": null,
+      "sourceReference": "User decision 2026-10-08 (TERR-18)",
+      "description": "How long Evidence and hostiles persist after a deployment. Templates may override. Value undecided.",
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "settingId": "MAX_AGENT_SHARE_PER_HOUSING_PLACE",
+      "displayName": "Max Agent Share Per Housing Place",
+      "unit": "PERCENT",
+      "value": null,
+      "valueScaled": null,
+      "sourceReference": "User decision 2026-10-08 (TERR-26)",
+      "description": "Limit on the share of a territory's agents living in one place. Value undecided.",
+      "sortOrder": 40,
+      "active": false
+    },
+    {
+      "settingId": "LEAD_BASE_COST",
+      "displayName": "Ordinary Lead Base Cost",
+      "unit": "EVIDENCE_POINTS",
+      "value": "100",
+      "valueScaled": 1000000,
+      "sourceReference": "STARTING VALUE (user, 2026-10-08) MTIER-14",
+      "description": "First ordinary paid Lead costs this many Evidence points. Starting value; expected to be tuned.",
+      "sortOrder": 50,
+      "active": true
+    },
+    {
+      "settingId": "LEAD_COST_GROWTH_PERCENT",
+      "displayName": "Lead Cost Growth Per Purchase (percent)",
+      "unit": "PERCENT",
+      "value": "10",
+      "valueScaled": 100000,
+      "sourceReference": "STARTING VALUE (user, 2026-10-08) MTIER-14",
+      "description": "Each ordinary paid Lead costs this percent more than the previous one (compounding). Starting value; expected to be tuned.",
+      "sortOrder": 60,
+      "active": true
+    },
+    {
+      "settingId": "FINAL_GATE_CHECK_MINUTES",
+      "displayName": "Final Gate Check Interval",
+      "unit": "STRATEGIC_MINUTES",
+      "value": null,
+      "valueScaled": null,
+      "sourceReference": "MTIER-03 to MTIER-11 (2026-10-08)",
+      "description": "Periodic eligibility checks after Tier 5 unlocks. Undecided.",
+      "sortOrder": 70,
+      "active": false
+    },
+    {
+      "settingId": "CAPSTONE_LEAD_COST",
+      "displayName": "Tier 5 Capstone Lead Cost",
+      "unit": "EVIDENCE_POINTS",
+      "value": null,
+      "valueScaled": null,
+      "sourceReference": "MTIER-03 to MTIER-11 (2026-10-08)",
+      "description": "Special purchase price, separate from ordinary Lead pricing. Undecided.",
+      "sortOrder": 80,
+      "active": false
+    },
+    {
+      "settingId": "FINAL_MIN_AVAILABLE_FUNDING",
+      "displayName": "Final Gate Available Funding Minimum",
+      "unit": "FUNDING_UNITS",
+      "value": null,
+      "valueScaled": null,
+      "sourceReference": "MTIER-03 to MTIER-11 (2026-10-08)",
+      "description": "Checks current available Department Funding, not lifetime funding. Whole-unit threshold undecided.",
+      "sortOrder": 90,
+      "active": false
+    },
+    {
+      "settingId": "FINAL_MIN_PREPAREDNESS",
+      "displayName": "Final Gate Preparedness Minimum",
+      "unit": "METRIC_UNITS",
+      "value": null,
+      "valueScaled": null,
+      "sourceReference": "MTIER-03 to MTIER-11 (2026-10-08)",
+      "description": "Threshold for the PREPAREDNESS metric. Undecided.",
+      "sortOrder": 100,
+      "active": false
+    },
+    {
+      "settingId": "FINAL_MIN_OPERATIONAL_TERRITORIES",
+      "displayName": "Final Gate Operational Territories Minimum",
+      "unit": "COUNT",
+      "value": null,
+      "valueScaled": null,
+      "sourceReference": "MTIER-03 to MTIER-11 (2026-10-08)",
+      "description": "Minimum operational territory count. Undecided.",
+      "sortOrder": 110,
+      "active": false
+    },
+    {
+      "settingId": "STARTING_EVIDENCE",
+      "displayName": "Starting Evidence",
+      "unit": "EVIDENCE_POINTS",
+      "value": "900",
+      "valueScaled": 9000000,
+      "sourceReference": "User decision 2026-10-08 (PROG-01)",
+      "description": "Evidence the player starts with. The tutorial lets the player easily earn the remaining amount to reach the first tier threshold.",
+      "sortOrder": 120,
+      "active": true
+    },
+    {
+      "settingId": "BUDGET_CYCLE_MINUTES",
+      "displayName": "Budget Cycle Length",
+      "unit": "STRATEGIC_MINUTES",
+      "value": null,
+      "valueScaled": null,
+      "sourceReference": "User decision 2026-10-09 (CONG-09)",
+      "description": "Length of one budget cycle. Congressional Support is reviewed at each budget cycle or hearing. Two weeks is the working idea; not confirmed.",
+      "sortOrder": 130,
+      "active": false
+    },
+    {
+      "settingId": "SUCCESS_RATE_WINDOW_CYCLES",
+      "displayName": "Success Rate Window (budget cycles)",
+      "unit": "COUNT",
+      "value": null,
+      "valueScaled": null,
+      "sourceReference": "User decision 2026-10-09 (CONG-09)",
+      "description": "How many recent budget cycles the mission success rate is measured over. Undecided.",
+      "sortOrder": 140,
+      "active": false
+    }
+  ],
+  "missionTiers": [
+    {
+      "tierId": "TIER_1",
+      "displayName": "Tier 1",
+      "minLifetimeAdmissibleEvidence": 1000,
+      "authoredContent": false,
+      "sourceReference": "User decisions 2026-10-08 (mission tiers)",
+      "description": "First generated mission tier. Starts at 1,000 lifetime Evidence. The tutorial runs before it, from the 900 starting Evidence.",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "tierId": "TIER_2",
+      "displayName": "Tier 2",
+      "minLifetimeAdmissibleEvidence": 10000,
+      "authoredContent": false,
+      "sourceReference": "User decisions 2026-10-08 (mission tiers)",
+      "description": "Generated mission tier. Starts at 10,000 lifetime Evidence.",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "tierId": "TIER_3",
+      "displayName": "Tier 3",
+      "minLifetimeAdmissibleEvidence": 100000,
+      "authoredContent": false,
+      "sourceReference": "User decisions 2026-10-08 (mission tiers)",
+      "description": "Generated mission tier. Starts at 100,000 lifetime Evidence.",
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "tierId": "TIER_4",
+      "displayName": "Tier 4",
+      "minLifetimeAdmissibleEvidence": 1000000,
+      "authoredContent": false,
+      "sourceReference": "User decisions 2026-10-08 (mission tiers)",
+      "description": "Generated mission tier. Starts at 1,000,000 lifetime Evidence.",
+      "sortOrder": 40,
+      "active": false
+    },
+    {
+      "tierId": "TIER_5",
+      "displayName": "Tier 5",
+      "minLifetimeAdmissibleEvidence": 10000000,
+      "authoredContent": false,
+      "sourceReference": "User decisions 2026-10-08 (mission tiers)",
+      "description": "Generated mission tier. Starts at 10,000,000 lifetime Evidence.",
+      "sortOrder": 50,
+      "active": false
+    },
+    {
+      "tierId": "TIER_6",
+      "displayName": "Tier 6",
+      "minLifetimeAdmissibleEvidence": 100000000,
+      "authoredContent": true,
+      "sourceReference": "User decisions 2026-10-08 (mission tiers)",
+      "description": "Authored end-game tier. Starts at 100,000,000 lifetime Evidence. Unlocks automatically when every requirement is met, including completion of the protected Tier 5 capstone after department eligibility checks.",
+      "sortOrder": 60,
+      "active": false
+    }
+  ],
+  "mapFormats": [
+    {
+      "formatId": "FMT_BRIEFING_ROOM",
+      "displayName": "Briefing Room",
+      "role": "MISSION",
+      "sourceReference": "User decision 2026-10-08 (TERR-03)",
+      "description": "Briefing room with one objective.",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "formatId": "FMT_COMPUTER_LAB",
+      "displayName": "Computer Lab",
+      "role": "MISSION",
+      "sourceReference": "User decision 2026-10-08 (TERR-03)",
+      "description": "Computer lab with one objective.",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "formatId": "FMT_STEALTH",
+      "displayName": "Stealth",
+      "role": "MISSION",
+      "sourceReference": "User decision 2026-10-08 (TERR-03)",
+      "description": "Small stealth-style map with one objective.",
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "formatId": "FMT_ASSAULT",
+      "displayName": "Assault",
+      "role": "MISSION",
+      "sourceReference": "User decision 2026-10-08 (TERR-03)",
+      "description": "Assault-style map. Needs an objective to end the level.",
+      "sortOrder": 40,
+      "active": false
+    },
+    {
+      "formatId": "FMT_OUTDOOR_HUB",
+      "displayName": "Outdoor Hub",
+      "role": "HUB",
+      "sourceReference": "User decision 2026-10-08 (TERR-04)",
+      "description": "Planned outdoor level with exits that lead to other maps.",
+      "sortOrder": 50,
+      "active": false
+    },
+    {
+      "formatId": "FMT_PRIVATE_JET",
+      "displayName": "Private Jet",
+      "role": "TRANSIT",
+      "sourceReference": "User decision 2026-10-08 (TERR-15)",
+      "description": "Planned static FBI jet map with a moving skybox. Plot device.",
+      "sortOrder": 60,
+      "active": false
+    }
+  ],
+  "maps": [
+    {
+      "mapId": "MAP01",
+      "formatId": "FMT_BRIEFING_ROOM",
+      "displayName": "MAP01 Briefing Room",
+      "hasObjective": true,
+      "agentDeployable": true,
+      "sourceReference": "User decision 2026-10-08 (TERR-03)",
+      "description": "Change agent_deployable if this is player-only.",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "mapId": "MAP02",
+      "formatId": "FMT_COMPUTER_LAB",
+      "displayName": "MAP02 Computer Lab",
+      "hasObjective": true,
+      "agentDeployable": true,
+      "sourceReference": "User decision 2026-10-08 (TERR-03)",
+      "description": "Change agent_deployable if this is player-only.",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "mapId": "MAP03",
+      "formatId": "FMT_STEALTH",
+      "displayName": "MAP03 Stealth",
+      "hasObjective": true,
+      "agentDeployable": true,
+      "sourceReference": "User decision 2026-10-08 (TERR-03)",
+      "description": "Change agent_deployable if this is player-only.",
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "mapId": "MAP04",
+      "formatId": "FMT_ASSAULT",
+      "displayName": "MAP04 Assault",
+      "hasObjective": false,
+      "agentDeployable": true,
+      "sourceReference": "User decision 2026-10-08 (TERR-03)",
+      "description": "Has no objective yet so the level cannot end.",
+      "sortOrder": 40,
+      "active": false
+    }
+  ],
+  "greaterTerritoryTags": [
+    {
+      "tagId": "forest",
+      "category": "TERRAIN",
+      "displayName": "Forest",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "tagId": "desert",
+      "category": "TERRAIN",
+      "displayName": "Desert",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "tagId": "swamp",
+      "category": "TERRAIN",
+      "displayName": "Swamp",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "tagId": "coastal",
+      "category": "TERRAIN",
+      "displayName": "Coastal",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 40,
+      "active": false
+    },
+    {
+      "tagId": "cold",
+      "category": "CLIMATE",
+      "displayName": "Cold",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 50,
+      "active": false
+    },
+    {
+      "tagId": "arid",
+      "category": "CLIMATE",
+      "displayName": "Arid",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 60,
+      "active": false
+    },
+    {
+      "tagId": "humid",
+      "category": "CLIMATE",
+      "displayName": "Humid",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 70,
+      "active": false
+    },
+    {
+      "tagId": "temperate",
+      "category": "CLIMATE",
+      "displayName": "Temperate",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 80,
+      "active": false
+    },
+    {
+      "tagId": "urban",
+      "category": "SETTLEMENT",
+      "displayName": "Urban",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 90,
+      "active": false
+    },
+    {
+      "tagId": "suburban",
+      "category": "SETTLEMENT",
+      "displayName": "Suburban",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 100,
+      "active": false
+    },
+    {
+      "tagId": "small_town",
+      "category": "SETTLEMENT",
+      "displayName": "Small Town",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 110,
+      "active": false
+    },
+    {
+      "tagId": "rural",
+      "category": "SETTLEMENT",
+      "displayName": "Rural",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 120,
+      "active": false
+    },
+    {
+      "tagId": "industrial",
+      "category": "INSTITUTION",
+      "displayName": "Industrial",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 130,
+      "active": false
+    },
+    {
+      "tagId": "military",
+      "category": "INSTITUTION",
+      "displayName": "Military",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 140,
+      "active": false
+    },
+    {
+      "tagId": "government",
+      "category": "INSTITUTION",
+      "displayName": "Government",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 150,
+      "active": false
+    },
+    {
+      "tagId": "gothic",
+      "category": "THEME",
+      "displayName": "Gothic",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 160,
+      "active": false
+    },
+    {
+      "tagId": "cosmic",
+      "category": "THEME",
+      "displayName": "Cosmic",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 170,
+      "active": false
+    },
+    {
+      "tagId": "hazardous",
+      "category": "THEME",
+      "displayName": "Hazardous",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 180,
+      "active": false
+    },
+    {
+      "tagId": "surreal",
+      "category": "THEME",
+      "displayName": "Surreal",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 190,
+      "active": false
+    },
+    {
+      "tagId": "otherworldly",
+      "category": "THEME",
+      "displayName": "Otherworldly",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "description": "Draft tag. Generator mapping is not defined yet.",
+      "sortOrder": 200,
+      "active": false
+    }
+  ],
+  "greaterTerritoryTagLinks": [
+    {
+      "linkId": "LINK_UPSTATE_NEW_YORK_FOREST",
+      "greaterTerritoryId": "GT_UPSTATE_NEW_YORK",
+      "tagId": "forest",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "linkId": "LINK_UPSTATE_NEW_YORK_COLD",
+      "greaterTerritoryId": "GT_UPSTATE_NEW_YORK",
+      "tagId": "cold",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "linkId": "LINK_UPSTATE_NEW_YORK_RURAL",
+      "greaterTerritoryId": "GT_UPSTATE_NEW_YORK",
+      "tagId": "rural",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "linkId": "LINK_UPSTATE_NEW_YORK_SMALL_TOWN",
+      "greaterTerritoryId": "GT_UPSTATE_NEW_YORK",
+      "tagId": "small_town",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 40,
+      "active": false
+    },
+    {
+      "linkId": "LINK_UPSTATE_NEW_YORK_GOTHIC",
+      "greaterTerritoryId": "GT_UPSTATE_NEW_YORK",
+      "tagId": "gothic",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 50,
+      "active": false
+    },
+    {
+      "linkId": "LINK_NEW_YORK_CITY_URBAN",
+      "greaterTerritoryId": "GT_NEW_YORK_CITY",
+      "tagId": "urban",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 60,
+      "active": false
+    },
+    {
+      "linkId": "LINK_NEW_YORK_CITY_TEMPERATE",
+      "greaterTerritoryId": "GT_NEW_YORK_CITY",
+      "tagId": "temperate",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 70,
+      "active": false
+    },
+    {
+      "linkId": "LINK_NEW_YORK_CITY_INDUSTRIAL",
+      "greaterTerritoryId": "GT_NEW_YORK_CITY",
+      "tagId": "industrial",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 80,
+      "active": false
+    },
+    {
+      "linkId": "LINK_NEW_MEXICO_DESERT",
+      "greaterTerritoryId": "GT_NEW_MEXICO",
+      "tagId": "desert",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 90,
+      "active": false
+    },
+    {
+      "linkId": "LINK_NEW_MEXICO_ARID",
+      "greaterTerritoryId": "GT_NEW_MEXICO",
+      "tagId": "arid",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 100,
+      "active": false
+    },
+    {
+      "linkId": "LINK_NEW_MEXICO_SMALL_TOWN",
+      "greaterTerritoryId": "GT_NEW_MEXICO",
+      "tagId": "small_town",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 110,
+      "active": false
+    },
+    {
+      "linkId": "LINK_NEW_MEXICO_MILITARY",
+      "greaterTerritoryId": "GT_NEW_MEXICO",
+      "tagId": "military",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 120,
+      "active": false
+    },
+    {
+      "linkId": "LINK_NEW_MEXICO_COSMIC",
+      "greaterTerritoryId": "GT_NEW_MEXICO",
+      "tagId": "cosmic",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 130,
+      "active": false
+    },
+    {
+      "linkId": "LINK_SOUTH_CAROLINA_FOREST",
+      "greaterTerritoryId": "GT_SOUTH_CAROLINA",
+      "tagId": "forest",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 140,
+      "active": false
+    },
+    {
+      "linkId": "LINK_SOUTH_CAROLINA_SWAMP",
+      "greaterTerritoryId": "GT_SOUTH_CAROLINA",
+      "tagId": "swamp",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 150,
+      "active": false
+    },
+    {
+      "linkId": "LINK_SOUTH_CAROLINA_HUMID",
+      "greaterTerritoryId": "GT_SOUTH_CAROLINA",
+      "tagId": "humid",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 160,
+      "active": false
+    },
+    {
+      "linkId": "LINK_SOUTH_CAROLINA_INDUSTRIAL",
+      "greaterTerritoryId": "GT_SOUTH_CAROLINA",
+      "tagId": "industrial",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 170,
+      "active": false
+    },
+    {
+      "linkId": "LINK_SOUTH_CAROLINA_GOVERNMENT",
+      "greaterTerritoryId": "GT_SOUTH_CAROLINA",
+      "tagId": "government",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 180,
+      "active": false
+    },
+    {
+      "linkId": "LINK_SOUTH_CAROLINA_HAZARDOUS",
+      "greaterTerritoryId": "GT_SOUTH_CAROLINA",
+      "tagId": "hazardous",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 190,
+      "active": false
+    },
+    {
+      "linkId": "LINK_MARYLAND_URBAN",
+      "greaterTerritoryId": "GT_MARYLAND",
+      "tagId": "urban",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 200,
+      "active": false
+    },
+    {
+      "linkId": "LINK_MARYLAND_SUBURBAN",
+      "greaterTerritoryId": "GT_MARYLAND",
+      "tagId": "suburban",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 210,
+      "active": false
+    },
+    {
+      "linkId": "LINK_MARYLAND_COASTAL",
+      "greaterTerritoryId": "GT_MARYLAND",
+      "tagId": "coastal",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 220,
+      "active": false
+    },
+    {
+      "linkId": "LINK_MARYLAND_TEMPERATE",
+      "greaterTerritoryId": "GT_MARYLAND",
+      "tagId": "temperate",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 230,
+      "active": false
+    },
+    {
+      "linkId": "LINK_MARYLAND_GOVERNMENT",
+      "greaterTerritoryId": "GT_MARYLAND",
+      "tagId": "government",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 240,
+      "active": false
+    },
+    {
+      "linkId": "LINK_THE_DREAMLANDS_OTHERWORLDLY",
+      "greaterTerritoryId": "GT_THE_DREAMLANDS",
+      "tagId": "otherworldly",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 250,
+      "active": false
+    },
+    {
+      "linkId": "LINK_THE_DREAMLANDS_SURREAL",
+      "greaterTerritoryId": "GT_THE_DREAMLANDS",
+      "tagId": "surreal",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 260,
+      "active": false
+    },
+    {
+      "linkId": "LINK_THE_DREAMLANDS_COSMIC",
+      "greaterTerritoryId": "GT_THE_DREAMLANDS",
+      "tagId": "cosmic",
+      "sourceReference": "User decision 2026-10-08 (TERR-46)",
+      "sortOrder": 270,
+      "active": false
+    }
+  ],
+  "greaterTerritories": [
+    {
+      "greaterTerritoryId": "GT_UPSTATE_NEW_YORK",
+      "displayName": "Upstate New York",
+      "sourceReference": "User decision 2026-10-08 (TERR-34)",
+      "description": "Biome-like grouping label read by the mission-area map generator. Contains Ebon Falls.",
+      "sortOrder": 10,
+      "active": false,
+      "tags": [
+        "cold",
+        "forest",
+        "gothic",
+        "rural",
+        "small_town"
+      ]
+    },
+    {
+      "greaterTerritoryId": "GT_NEW_YORK_CITY",
+      "displayName": "New York City",
+      "sourceReference": "User decision 2026-10-08 (TERR-34)",
+      "description": "Biome-like grouping label read by the mission-area map generator. Planned. Contains Manhattan; densely populated and different in presentation from Upstate New York.",
+      "sortOrder": 20,
+      "active": false,
+      "tags": [
+        "industrial",
+        "temperate",
+        "urban"
+      ]
+    },
+    {
+      "greaterTerritoryId": "GT_NEW_MEXICO",
+      "displayName": "New Mexico",
+      "sourceReference": "User decision 2026-10-08 (TERR-34)",
+      "description": "Biome-like grouping label read by the mission-area map generator. Contains Roswell.",
+      "sortOrder": 30,
+      "active": false,
+      "tags": [
+        "arid",
+        "cosmic",
+        "desert",
+        "military",
+        "small_town"
+      ]
+    },
+    {
+      "greaterTerritoryId": "GT_SOUTH_CAROLINA",
+      "displayName": "South Carolina",
+      "sourceReference": "User decision 2026-10-08 (TERR-34)",
+      "description": "Biome-like grouping label read by the mission-area map generator. Contains the Serena River Site.",
+      "sortOrder": 40,
+      "active": false,
+      "tags": [
+        "forest",
+        "government",
+        "hazardous",
+        "humid",
+        "industrial",
+        "swamp"
+      ]
+    },
+    {
+      "greaterTerritoryId": "GT_MARYLAND",
+      "displayName": "Maryland",
+      "sourceReference": "User decision 2026-10-08 (TERR-34)",
+      "description": "Biome-like grouping label read by the mission-area map generator. Planned. Will contain Washington D.C. and Baltimore as separate operational territories.",
+      "sortOrder": 50,
+      "active": false,
+      "tags": [
+        "coastal",
+        "government",
+        "suburban",
+        "temperate",
+        "urban"
+      ]
+    },
+    {
+      "greaterTerritoryId": "GT_THE_DREAMLANDS",
+      "displayName": "The Dreamlands",
+      "sourceReference": "User decision 2026-10-08 (TERR-34)",
+      "description": "Biome-like grouping label read by the mission-area map generator. Contains Unknown Kaddath.",
+      "sortOrder": 60,
+      "active": false,
+      "tags": [
+        "cosmic",
+        "otherworldly",
+        "surreal"
+      ]
+    }
+  ],
+  "progressionIdentities": {
+    "upgrades": [],
+    "plotMilestones": [
+      {
+        "id": "PLOT_NECRONOMICON_COLLECTED",
+        "displayName": "Necronomicon Collected",
+        "sourceReference": "User decision 2026-10-08 (PLOT-01)",
+        "description": "The player has collected the Necronomicon. Permanent record even if the item is later lost or consumed.",
+        "sortOrder": 10,
+        "active": false
+      },
+      {
+        "id": "PLOT_NECRONOMICON_PROCESSED",
+        "displayName": "Necronomicon Forensically Processed",
+        "sourceReference": "User decision 2026-10-08 (PLOT-01)",
+        "description": "The collected Necronomicon has been processed forensically.",
+        "sortOrder": 20,
+        "active": false
+      }
+    ],
+    "plotItems": [
+      {
+        "id": "PLOT_ITEM_NECRONOMICON",
+        "displayName": "Necronomicon",
+        "sourceReference": "User decision 2026-10-08 (PLOT-01)",
+        "description": "The book itself. Not a gate requirement: collection and processing are milestones so losing or consuming the item cannot lock Tier 6.",
+        "sortOrder": 10,
+        "active": false
+      }
+    ],
+    "missionTierRequirements": [
+      {
+        "requirementId": "REQ_TIER6_NECRONOMICON_COLLECTED",
+        "tierId": "TIER_6",
+        "requirementType": "MILESTONE_COMPLETED",
+        "referenceId": "PLOT_NECRONOMICON_COLLECTED",
+        "sourceReference": "User decision 2026-10-08 (PLOT-01)",
+        "description": "Tier 6 gate requirement. Inactive draft until the gate is activated.",
+        "sortOrder": 10,
+        "active": false
+      },
+      {
+        "requirementId": "REQ_TIER6_NECRONOMICON_PROCESSED",
+        "tierId": "TIER_6",
+        "requirementType": "MILESTONE_COMPLETED",
+        "referenceId": "PLOT_NECRONOMICON_PROCESSED",
+        "sourceReference": "User decision 2026-10-08 (PLOT-01)",
+        "description": "Tier 6 gate requirement. Inactive draft until the gate is activated.",
+        "sortOrder": 20,
+        "active": false
+      }
+    ],
+    "finalGateReferenceStatus": {
+      "configured": false,
+      "missingConfiguration": [
+        "REQUIRED_UPGRADE_REFERENCES",
+        "REQUIRED_PLOT_MILESTONE_OR_ITEM_REFERENCES"
+      ],
+      "isCampaignEligibilityResult": false
+    }
+  },
+  "authoredMissions": {
+    "missions": [
+      {
+        "missionId": "MISSION_TIER5_CAPSTONE_01",
+        "displayName": "Serena River Site Nuclear Research Facility, South Carolina",
+        "kind": "TIER_CAPSTONE",
+        "chainId": "CHAIN_TIER5_CAPSTONE",
+        "chainPosition": 1,
+        "tierId": "TIER_5",
+        "unlocksTierId": "TIER_6",
+        "territoryId": "TERR_SRS_NUCLEAR_FACILITY",
+        "mapId": null,
+        "playerOnly": true,
+        "sourceReference": "User decision 2026-10-08 (CAP-01 to CAP-05)",
+        "description": "First mission of the Tier 5 capstone chain. Map, objectives and further chain missions are not yet designed. The site name is fictional.",
+        "sortOrder": 10,
+        "active": false
+      }
+    ],
+    "objectives": [],
+    "capstoneStatus": {
+      "chainId": "CHAIN_TIER5_CAPSTONE",
+      "missionIds": [
+        "MISSION_TIER5_CAPSTONE_01"
+      ],
+      "unlocksTierId": "TIER_6",
+      "configured": false,
+      "missingConfiguration": [
+        "CAPSTONE_MISSIONS_INACTIVE",
+        "CAPSTONE_MAPS",
+        "CAPSTONE_REQUIRED_OBJECTIVES"
+      ]
+    }
+  },
+  "congressionalSupport": {
+    "inputs": [
+      {
+        "inputId": "CS_INPUT_EVIDENCE",
+        "displayName": "Lifetime Evidence",
+        "sourceType": "LIFETIME_EVIDENCE",
+        "metricId": null,
+        "scale": "LOG10",
+        "floorValue": 1000,
+        "capValue": 100000000,
+        "weight": 2,
+        "sourceReference": "PROPOSED (assistant strawman 2026-10-09, inactive; tune freely)",
+        "description": "Lifetime Evidence component on a log scale. Floor and cap match the Tier 1 and Tier 6 thresholds, so each tier is worth 20 points.",
+        "sortOrder": 10,
+        "active": false
+      },
+      {
+        "inputId": "CS_INPUT_PREPAREDNESS",
+        "displayName": "Department Preparedness",
+        "sourceType": "METRIC",
+        "metricId": "PREPAREDNESS",
+        "scale": "LINEAR",
+        "floorValue": 200,
+        "capValue": 1000,
+        "weight": 1,
+        "sourceReference": "PROPOSED (assistant strawman 2026-10-09, inactive; tune freely)",
+        "description": "PREPAREDNESS metric component. Higher is always better to Congress, Overextended included. The floor is the top of the Fragile tier.",
+        "sortOrder": 20,
+        "active": false
+      },
+      {
+        "inputId": "CS_INPUT_SUCCESS_RATE",
+        "displayName": "Mission Success Rate",
+        "sourceType": "MISSION_SUCCESS_RATE",
+        "metricId": null,
+        "scale": "LINEAR",
+        "floorValue": 50,
+        "capValue": 90,
+        "weight": 1,
+        "sourceReference": "PROPOSED (assistant strawman 2026-10-09, inactive; tune freely)",
+        "description": "Percentage of successful missions over a window of recent budget cycles. The threshold is a soft floor, not a hard minimum, so a strong input can still make up for it.",
+        "sortOrder": 30,
+        "active": false
+      }
+    ],
+    "levels": [
+      {
+        "levelId": "CS_LEVEL_1",
+        "displayName": "Congressional Support Level 1",
+        "minScore": 15,
+        "grantFunding": null,
+        "grantTerritories": 2,
+        "sourceReference": "PROPOSED (assistant strawman 2026-10-09, inactive; tune freely)",
+        "description": "Hidden level. Territory grants are permanent once reached. Recurring budget follows the current level and can be lost. Funding amount is undecided.",
+        "sortOrder": 10,
+        "active": false
+      },
+      {
+        "levelId": "CS_LEVEL_2",
+        "displayName": "Congressional Support Level 2",
+        "minScore": 30,
+        "grantFunding": null,
+        "grantTerritories": 2,
+        "sourceReference": "PROPOSED (assistant strawman 2026-10-09, inactive; tune freely)",
+        "description": "Hidden level. Territory grants are permanent once reached. Recurring budget follows the current level and can be lost. Funding amount is undecided.",
+        "sortOrder": 20,
+        "active": false
+      },
+      {
+        "levelId": "CS_LEVEL_3",
+        "displayName": "Congressional Support Level 3",
+        "minScore": 45,
+        "grantFunding": null,
+        "grantTerritories": 3,
+        "sourceReference": "PROPOSED (assistant strawman 2026-10-09, inactive; tune freely)",
+        "description": "Hidden level. Territory grants are permanent once reached. Recurring budget follows the current level and can be lost. Funding amount is undecided.",
+        "sortOrder": 30,
+        "active": false
+      },
+      {
+        "levelId": "CS_LEVEL_4",
+        "displayName": "Congressional Support Level 4",
+        "minScore": 60,
+        "grantFunding": null,
+        "grantTerritories": 4,
+        "sourceReference": "PROPOSED (assistant strawman 2026-10-09, inactive; tune freely)",
+        "description": "Hidden level. Territory grants are permanent once reached. Recurring budget follows the current level and can be lost. Funding amount is undecided.",
+        "sortOrder": 40,
+        "active": false
+      },
+      {
+        "levelId": "CS_LEVEL_5",
+        "displayName": "Congressional Support Level 5",
+        "minScore": 75,
+        "grantFunding": null,
+        "grantTerritories": 4,
+        "sourceReference": "PROPOSED (assistant strawman 2026-10-09, inactive; tune freely)",
+        "description": "Hidden level. Territory grants are permanent once reached. Recurring budget follows the current level and can be lost. Funding amount is undecided.",
+        "sortOrder": 50,
+        "active": false
+      }
+    ],
+    "rules": {
+      "scoring": "COMPENSATORY_WEIGHTED_AVERAGE",
+      "componentRange": [
+        0,
+        100
+      ],
+      "levels": "DISCRETE_HIDDEN_FROM_PLAYER",
+      "levelSelection": "HIGHEST_LEVEL_AT_OR_BELOW_SCORE",
+      "grants": [
+        "DEPARTMENT_FUNDING",
+        "OPERATIONAL_TERRITORIES"
+      ],
+      "fundingUnit": "FUNDING_UNITS",
+      "departmentFundingIsMetric": false,
+      "fundingGrantModel": "RECURRING_BUDGET_PER_CYCLE_FOLLOWS_CURRENT_LEVEL",
+      "territoryGrantModel": "PERMANENT_CUMULATIVE_BY_HIGHEST_LEVEL_REACHED",
+      "fundingCanBeLost": true,
+      "fundingLossCanForceScaleBackAndLayoffs": true,
+      "levelReview": "BUDGET_CYCLE_OR_HEARING",
+      "successRateWindow": "RECENT_BUDGET_CYCLES",
+      "budgetCycleSetting": "BUDGET_CYCLE_MINUTES",
+      "successRateWindowSetting": "SUCCESS_RATE_WINDOW_CYCLES",
+      "preparednessScoring": "HIGHER_IS_ALWAYS_BETTER",
+      "successRateThreshold": "SOFT_FLOOR",
+      "valuesStatus": "PROPOSED_STRAWMAN_INACTIVE"
+    },
+    "implemented": false
+  },
+  "missionProgression": {
+    "contractVersion": "2026-10-08.5",
+    "tutorial": {
+      "startingEvidence": 900,
+      "firstTierThreshold": 1000,
+      "evidenceToFirstTier": 100,
+      "configured": true
+    },
+    "ordinaryPricing": {
+      "baseCost": 100,
+      "growthPercentScaled": 100000,
+      "scale": 10000,
+      "configured": true,
+      "missingConfiguration": []
+    },
+    "finalGate": {
+      "requiredUpgradeReferences": null,
+      "requiredPlotMilestoneOrItemReferences": null,
+      "requirements": [],
+      "referenceConfigurationReady": false,
+      "capstoneMissionReference": "CHAIN_TIER5_CAPSTONE",
+      "capstoneStatus": {
+        "chainId": "CHAIN_TIER5_CAPSTONE",
+        "missionIds": [
+          "MISSION_TIER5_CAPSTONE_01"
+        ],
+        "unlocksTierId": "TIER_6",
+        "configured": false,
+        "missingConfiguration": [
+          "CAPSTONE_MISSIONS_INACTIVE",
+          "CAPSTONE_MAPS",
+          "CAPSTONE_REQUIRED_OBJECTIVES"
+        ]
+      },
+      "isCampaignEligibilityResult": false,
+      "numericSettings": {
+        "FINAL_GATE_CHECK_MINUTES": null,
+        "CAPSTONE_LEAD_COST": null,
+        "FINAL_MIN_AVAILABLE_FUNDING": null,
+        "FINAL_MIN_PREPAREDNESS": null,
+        "FINAL_MIN_OPERATIONAL_TERRITORIES": null
+      },
+      "configured": false,
+      "missingConfiguration": [
+        "FINAL_GATE_CHECK_MINUTES",
+        "CAPSTONE_LEAD_COST",
+        "FINAL_MIN_AVAILABLE_FUNDING",
+        "FINAL_MIN_PREPAREDNESS",
+        "FINAL_MIN_OPERATIONAL_TERRITORIES",
+        "TIER_5_ACTIVE_WITH_THRESHOLD",
+        "TIER_6_ACTIVE_WITH_THRESHOLD",
+        "REQUIRED_UPGRADE_REFERENCES",
+        "REQUIRED_PLOT_MILESTONE_OR_ITEM_REFERENCES",
+        "CAPSTONE_MISSIONS_INACTIVE",
+        "CAPSTONE_MAPS",
+        "CAPSTONE_REQUIRED_OBJECTIVES"
+      ]
+    },
+    "unconfiguredPolicy": "DO_NOT_PURCHASE_OR_AUTO_UNLOCK",
+    "runtimeImplemented": false
+  },
+  "rules": {
+    "territories": {
+      "mostAreGenerated": true,
+      "authoredKinds": [
+        "STARTING",
+        "PLOT",
+        "PLAYER_ONLY"
+      ],
+      "unlockByKind": {
+        "STARTING": "AT_START",
+        "PLOT": "PLOT_EVENT",
+        "PLAYER_ONLY": "PLOT_EVENT"
+      },
+      "generatedUnlock": "EXPANSION_POINTS_EARNED_FROM_CONGRESSIONAL_SUPPORT",
+      "unlockIsPermanent": true
+    },
+    "evidence": {
+      "counters": [
+        "LIFETIME_EVIDENCE",
+        "SPENDABLE_EVIDENCE"
+      ],
+      "spendingLowersLifetime": false,
+      "missionTiers": "BANDS_OF_LIFETIME_EVIDENCE"
+    },
+    "leads": {
+      "tiedToMissionAreaOrTerritory": false,
+      "purchaseCreates": "MISSION_AREA_IN_RANDOM_ACCESSIBLE_TERRITORY",
+      "mapPin": "VISUAL_ONLY"
+    },
+    "missionAreas": {
+      "deployedAgentsAreNotSpawned": true,
+      "agentsRunOnStatsAndDice": true,
+      "persistenceAfterDeployment": "GLOBAL_SETTING_TEMPLATE_MAY_OVERRIDE",
+      "openAreaCap": "DEPARTMENT_WIDE_UPGRADES_CAN_RAISE",
+      "teamLimitSetting": "TEAM_SIZE_LIMIT"
+    },
+    "housing": {
+      "capacityLimitsAgents": true,
+      "spreadResidenceOut": true,
+      "housingOutsideTerritoryAddsCommute": true,
+      "tooManyAgentsHurtsPublicPerception": true
+    },
+    "missionProgression": {
+      "lowerTiersRemainAvailable": true,
+      "ordinaryLeadPricing": {
+        "model": "COMPOUND_PERCENT",
+        "scope": "DEPARTMENT_WIDE",
+        "counter": "SUCCESSFUL_ORDINARY_PAID_LEAD_PURCHASES",
+        "formula": "ROUND_HALF_UP(BASE_COST * (1 + GROWTH_PERCENT / 100) ^ PRIOR_SUCCESSFUL_PURCHASES)",
+        "rounding": "ROUND_HALF_UP_WHOLE_EVIDENCE_POINTS",
+        "excluded": [
+          "FREE_TUTORIAL",
+          "FAILED_PURCHASE",
+          "REDEPLOYMENT"
+        ],
+        "resetsOnTerritoryOrTierChange": false
+      },
+      "finalGate": {
+        "checksBeginAfterTier": "TIER_5",
+        "evaluation": "PERIODIC",
+        "requirementsCombine": "ALL",
+        "readinessMetricId": "PREPAREDNESS",
+        "fundingBasis": "CURRENT_AVAILABLE_DEPARTMENT_FUNDING",
+        "requiredUpgradeReferencesSource": "missionProgression.finalGate.requiredUpgradeReferences",
+        "requiredPlotMilestoneOrItemReferencesSource": "missionProgression.finalGate.requiredPlotMilestoneOrItemReferences",
+        "capstoneMissionReferenceSource": "missionProgression.finalGate.capstoneMissionReference"
+      },
+      "capstone": {
+        "tierId": "TIER_5",
+        "priceModel": "SPECIAL_SEPARATE_PRICE",
+        "offerRequiresAllFinalGateRequirements": true,
+        "expires": false,
+        "redeploymentRequiresRepurchase": false,
+        "retainsMissionState": true,
+        "completion": "AUTHORED_OBJECTIVES",
+        "unlocksTierId": "TIER_6",
+        "unlockIsPermanent": true,
+        "advancesOrdinaryPurchaseCounter": false,
+        "eligibilityRechecksAfterPurchase": false
+      }
+    }
+  },
+  "generationRules": {
+    "startingEvidenceSetting": "STARTING_EVIDENCE",
+    "tutorialBeforeFirstTier": true,
+    "tierUnlock": "ALL_REQUIREMENTS_MET_AUTOMATIC",
+    "tierUnlockMessaging": "HINTED_IN_GAME_NOT_ANNOUNCED",
+    "lifetimeEvidenceIncludesStartingEvidence": true,
+    "spendingReducesLifetimeEvidence": false,
+    "operationalTerritoryPlacement": "RANDOM_ACROSS_GREATER_TERRITORIES",
+    "authoredTerritoriesExcludedUntilUnlocked": true,
+    "multipleTerritoriesPerTier": true,
+    "missionTierPool": "ALL_TIERS_UP_TO_HIGHEST_ACHIEVED",
+    "missionPoolAppliesToEveryUnlockedTerritory": true,
+    "missionMixWeights": "EQUAL_ACROSS_UNLOCKED_TIERS",
+    "territoryUnlockMechanism": "CONGRESSIONAL_SUPPORT",
+    "congressionalSupportGrants": [
+      "DEPARTMENT_FUNDING",
+      "OPERATIONAL_TERRITORIES"
+    ],
+    "congressionalSupportInputs": [
+      "LIFETIME_EVIDENCE",
+      "PREPAREDNESS",
+      "MISSION_SUCCESS_RATE"
+    ],
+    "congressionalSupportScoring": "COMPENSATORY_COMBINED_SCORE",
+    "congressionalSupportLevels": "DISCRETE_HIDDEN_FROM_PLAYER",
+    "generatedOperationalTerritoryTargetRange": [
+      10,
+      20
+    ],
+    "generatedTerritoryTargetStatus": "SUBJECT_TO_CHANGE",
+    "tier6GateKeepsSeparateMinimums": true,
+    "congressionalSupportImplemented": false
+  },
+  "openItems": {
+    "TERR-OPEN-01": "Six mission tiers settled; thresholds, concrete final-gate references and values remain open.",
+    "TERR-OPEN-02": "Values for the open mission area cap, persistence time and housing share limit; whether team size varies.",
+    "TERR-OPEN-03": "Populations, housing capacity ranges, commute ranges and Public Perception bands for agent share.",
+    "TERR-OPEN-04": "Territory Expansion points: earning rule from Congressional Support; generated-territory template.",
+    "TERR-OPEN-05": "Mission area templates, hostile catalog, and how loadout weights the dice.",
+    "TERR-OPEN-06": "Objective for MAP04; HQ names for Rosewell (if any)."
+  },
+  "runtimeImplemented": false
+}

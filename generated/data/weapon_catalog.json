@@ -1,0 +1,56 @@
+{
+  "schema": "doda.weapon_catalog",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-13T03:47:56.128643+00:00",
+  "weapons": [
+    {
+      "weaponId": "WPN_BERETTA_M92",
+      "displayName": "Beretta M92",
+      "weaponType": "PISTOL",
+      "engineClass": null,
+      "tags": [],
+      "sourceReference": "User decision 2026-10-08 (TERR-09)",
+      "description": "Engine class blank until supplied.",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "weaponId": "WPN_PUMP_SHOTGUN",
+      "displayName": "Pump-Action Shotgun",
+      "weaponType": "SHOTGUN",
+      "engineClass": null,
+      "tags": [],
+      "sourceReference": "User decision 2026-10-08 (TERR-09)",
+      "description": "Engine class blank until supplied.",
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "weaponId": "WPN_MP5KSD",
+      "displayName": "MP5kSD",
+      "weaponType": "SMG",
+      "engineClass": null,
+      "tags": [
+        "SUPPRESSED"
+      ],
+      "sourceReference": "User decision 2026-10-08 (TERR-09)",
+      "description": "Engine class blank until supplied.",
+      "sortOrder": 30,
+      "active": false
+    }
+  ],
+  "rules": {
+    "sharedBy": [
+      "PLAYER",
+      "AGENTS",
+      "HOSTILES"
+    ],
+    "agentPreferredWeapon": "ONE_RANDOMIZED_PER_AGENT_DESIGN_LATER"
+  },
+  "openItems": {
+    "WPN-OPEN-01": "Engine class names for each weapon.",
+    "WPN-OPEN-02": "More pistols, shotguns and one or two assault rifles; weapon statistics and balance values.",
+    "WPN-OPEN-03": "Tactical gear catalog, agent weapon proficiency, and how loadout weights mission dice."
+  },
+  "runtimeImplemented": false
+}

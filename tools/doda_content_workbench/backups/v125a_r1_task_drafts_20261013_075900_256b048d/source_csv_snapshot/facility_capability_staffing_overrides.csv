@@ -1,0 +1,4 @@
+facility_id,capability_id,qualification_id,min_contributors,preferred_contributors,max_contributors,sort_order,active
+FIELD_OPERATIONS_ROOM,OCCULT_RESPONSE,OCCULT_RESPONSE,1,2,2,1,TRUE
+TECHOPS_HUB,ELECTRONIC_SURVEILLANCE,SIGNALS_ANALYSIS,1,2,2,1,TRUE
+TECHOPS_HUB,ELECTRONIC_SURVEILLANCE,DATA_SYSTEMS,0,1,1,2,TRUE

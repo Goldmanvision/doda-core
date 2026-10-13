@@ -1,0 +1,4 @@
+feature_id,display_name,description,source_reference,sort_order,active
+CAP_BASIC_MEDICAL,Basic Medical Care,A place that supports ordinary treatment and stabilization.,doda_01_department_progression_v107.xlsx FacilityCapsCat!A4,10,false
+CAP_ADVANCED_MEDICAL,Advanced Medical Care,A place that supports severe injury and longer recovery.,doda_01_department_progression_v107.xlsx FacilityCapsCat!A5,20,false
+CAP_THERAPY,Therapy Services,A place that supports player-assigned therapy.,doda_01_department_progression_v107.xlsx FacilityCapsCat!A6,30,false

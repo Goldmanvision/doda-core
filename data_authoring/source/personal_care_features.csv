@@ -3,3 +3,4 @@ CAP_FOOD,Food Access,A place where agents can eat.,doda_01_department_progressio
 CAP_REST,Rest Facility,A place for fatigue recovery and off-duty rest.,doda_01_department_progression_v107.xlsx FacilityCapsCat!A3,20,false
 CAP_SAFE_HOUSING,Safe Housing,"Deprecated 2026-10-07 (PCARE-04): replaced by place type PLACE_SAFE_HOUSE, which offers Rest and Food. Kept for ID history; do not activate.",doda_01_department_progression_v107.xlsx FacilityCapsCat!A11,30,false
 CAP_RECREATION,Recreation,A place where agents and analysts can do recreational activities. Workbook FUN_CAPABLE.,"doda_05_remediation_and_care_v107.xlsx RemedyCat!A11, A14 (FUN_CAPABLE); user decision 2026-10-07 (PCARE-06)",40,false
+CAP_ALCOHOL,Alcohol Service,A place that serves alcoholic drinks. Agents and analysts can drink only while off duty and not on vacation.,User decision 2026-10-08 (alcohol and sobriety),50,false

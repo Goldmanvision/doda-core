@@ -1,0 +1,5 @@
+stage_id,display_name,min_intoxication,skill_multiplier,can_drive,unconscious,driving_note,source_reference,description,sort_order,active
+SOBER,Sober,0,1,true,false,,User decision 2026-10-08 (alcohol and sobriety),No impairment.,10,false
+BUZZED,Buzzed,15,0.5,false,false,Asks a friend to drive.,User decision 2026-10-08 (alcohol and sobriety),Skills at half strength; cannot drive.,20,false
+DRUNK,Drunk,45,0.25,false,false,Asks a friend to drive.,User decision 2026-10-08 (alcohol and sobriety),Skills halved again; cannot drive.,30,false
+HEAVILY_INTOXICATED,Heavily Intoxicated,75,,false,true,,User decision 2026-10-08 (alcohol and sobriety),Unconscious until intoxication falls below the wake threshold.,40,false

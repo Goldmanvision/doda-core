@@ -1,0 +1,7 @@
+greater_territory_id,display_name,source_reference,description,sort_order,active
+GT_UPSTATE_NEW_YORK,Upstate New York,User decision 2026-10-08 (TERR-34),Biome-like grouping label read by the mission-area map generator. Contains Ebon Falls.,10,false
+GT_NEW_YORK_CITY,New York City,User decision 2026-10-08 (TERR-34),Biome-like grouping label read by the mission-area map generator. Planned. Contains Manhattan; densely populated and different in presentation from Upstate New York.,20,false
+GT_NEW_MEXICO,New Mexico,User decision 2026-10-08 (TERR-34),Biome-like grouping label read by the mission-area map generator. Contains Roswell.,30,false
+GT_SOUTH_CAROLINA,South Carolina,User decision 2026-10-08 (TERR-34),Biome-like grouping label read by the mission-area map generator. Contains the Savannah River Site.,40,false
+GT_MARYLAND,Maryland,User decision 2026-10-08 (TERR-34),Biome-like grouping label read by the mission-area map generator. Planned. Will contain Washington D.C. and Baltimore as separate operational territories.,50,false
+GT_THE_DREAMLANDS,The Dreamlands,User decision 2026-10-08 (TERR-34),Biome-like grouping label read by the mission-area map generator. Contains Unknown Kaddath.,60,false

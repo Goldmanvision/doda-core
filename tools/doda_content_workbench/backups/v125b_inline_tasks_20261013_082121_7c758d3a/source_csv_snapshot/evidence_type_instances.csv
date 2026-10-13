@@ -1,0 +1,13 @@
+evidence_instance_id,display_name,evidence_resource_id,base_value_min,base_value_max,description,sort_order,active
+EVI_HANDWRITTEN_NOTE,Handwritten note,EVIDENCE_PAPER,1,1,Starting definition; value is points per piece before collection modifiers.,10,true
+EVI_HANDWRITTEN_LETTER,Handwritten letter,EVIDENCE_PAPER,5,5,Starting definition; value is points per piece before collection modifiers.,20,true
+EVI_TYPED_DOCUMENT,Typed document,EVIDENCE_PAPER,3,3,Starting definition; value is points per piece before collection modifiers.,30,true
+EVI_SIGNED_TYPED_DOCUMENT,Signed typed document,EVIDENCE_PAPER,6,6,Starting definition; value is points per piece before collection modifiers.,40,true
+EVI_PHOTO_SUSPECT,Photo of suspect,EVIDENCE_PHOTOGRAPHIC,5,5,Starting definition; value is points per piece before collection modifiers.,50,true
+EVI_PHOTO_VICTIM,Photo of victim,EVIDENCE_PHOTOGRAPHIC,10,10,Starting definition; value is points per piece before collection modifiers.,60,true
+EVI_PHOTO_CRIME,Photo of crime,EVIDENCE_PHOTOGRAPHIC,20,20,Starting definition; value is points per piece before collection modifiers.,70,true
+EVI_PHOTO_CRIME_SUSPECT,Photo of crime with suspect,EVIDENCE_PHOTOGRAPHIC,50,50,Starting definition; value is points per piece before collection modifiers.,80,true
+EVI_PHOTO_CRIME_VICTIM,Photo of crime with victim,EVIDENCE_PHOTOGRAPHIC,30,30,Starting definition; value is points per piece before collection modifiers.,90,true
+EVI_HARD_DRIVE_CONTRABAND,Hard drive with contraband,EVIDENCE_DIGITAL,100,100,Starting definition; value is points per piece before collection modifiers.,100,true
+EVI_INTERNET_TRAFFIC_LOG,Internet traffic log,EVIDENCE_DIGITAL,20,20,Starting definition; value is points per piece before collection modifiers.,110,true
+EVI_ILLEGAL_INTERNET_TRAFFIC_LOG,Illegal internet traffic log,EVIDENCE_DIGITAL,100,100,Starting definition; value is points per piece before collection modifiers.,120,true

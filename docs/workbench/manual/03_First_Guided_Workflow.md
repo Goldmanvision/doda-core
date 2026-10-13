@@ -1,3 +1,13 @@
+# Task-template workflow update — 2026-10-10
+
+The task-template examples and timing/allocation fields in the older chapter below
+are superseded by **Task_Templates_Current_Schema.md** in this directory.
+That document is the current task-authoring workflow. Deadlines, target effort and
+template-level auto-allocation no longer exist. Other historical material below
+is preserved rather than overwritten without review.
+
+---
+
 # 3. Your First Guided Workflow
 
 DoDA Content Workbench User Manual — Batch 1

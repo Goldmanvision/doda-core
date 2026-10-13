@@ -1,0 +1,150 @@
+{
+  "schema": "doda.resource_catalog",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-13T03:47:56.000039+00:00",
+  "resources": [
+    {
+      "resourceId": "EVIDENCE_PAPER",
+      "displayName": "Paper Evidence",
+      "description": "Notes, letters, documents and receipts.",
+      "resourceKind": "STOCKPILE",
+      "tracksLifetime": false,
+      "sortOrder": 10,
+      "active": true
+    },
+    {
+      "resourceId": "EVIDENCE_PHOTOGRAPHIC",
+      "displayName": "Photographic Evidence",
+      "description": "Photographs and photographic evidence.",
+      "resourceKind": "STOCKPILE",
+      "tracksLifetime": false,
+      "sortOrder": 20,
+      "active": true
+    },
+    {
+      "resourceId": "EVIDENCE_DIGITAL",
+      "displayName": "Digital Evidence",
+      "description": "Computer and internet evidence.",
+      "resourceKind": "STOCKPILE",
+      "tracksLifetime": false,
+      "sortOrder": 30,
+      "active": true
+    },
+    {
+      "resourceId": "EVIDENCE_AUDIO",
+      "displayName": "Audio Evidence",
+      "description": "Tapes, audio reels, CDs and other audio evidence.",
+      "resourceKind": "STOCKPILE",
+      "tracksLifetime": false,
+      "sortOrder": 40,
+      "active": true
+    },
+    {
+      "resourceId": "EVIDENCE_VIDEO",
+      "displayName": "Video Evidence",
+      "description": "VHS, DVDs, film stock and other video evidence.",
+      "resourceKind": "STOCKPILE",
+      "tracksLifetime": false,
+      "sortOrder": 50,
+      "active": true
+    },
+    {
+      "resourceId": "EVIDENCE_CHEMICAL",
+      "displayName": "Chemical Evidence",
+      "description": "Chemical and biological evidence.",
+      "resourceKind": "STOCKPILE",
+      "tracksLifetime": false,
+      "sortOrder": 60,
+      "active": true
+    },
+    {
+      "resourceId": "EVIDENCE_PHYSICAL",
+      "displayName": "Physical Evidence",
+      "description": "Weapons, clothing and miscellaneous objects that do not fit another evidence category.",
+      "resourceKind": "STOCKPILE",
+      "tracksLifetime": false,
+      "sortOrder": 65,
+      "active": true
+    },
+    {
+      "resourceId": "ADMISSIBLE_EVIDENCE",
+      "displayName": "Admissible Evidence",
+      "description": "Pooled processed evidence. Lifetime credits drive mission-tier thresholds.",
+      "resourceKind": "STOCKPILE",
+      "tracksLifetime": true,
+      "sortOrder": 70,
+      "active": true
+    },
+    {
+      "resourceId": "RESEARCH_POINTS",
+      "displayName": "Research Points",
+      "description": "Tech Development output for explicitly research-unlockable equipment.",
+      "resourceKind": "STOCKPILE",
+      "tracksLifetime": false,
+      "sortOrder": 80,
+      "active": true
+    },
+    {
+      "resourceId": "DEPARTMENT_FUNDING",
+      "displayName": "Department Funding",
+      "description": "Department funds with current balance and lifetime credits.",
+      "resourceKind": "STOCKPILE",
+      "tracksLifetime": true,
+      "sortOrder": 90,
+      "active": true
+    },
+    {
+      "resourceId": "LEADS",
+      "displayName": "Leads",
+      "description": "Owned lead records, counted from their authoritative state.",
+      "resourceKind": "HOLDING",
+      "tracksLifetime": false,
+      "sortOrder": 100,
+      "active": true
+    },
+    {
+      "resourceId": "OPERATIONAL_TERRITORIES",
+      "displayName": "Operational Territories",
+      "description": "Owned operational territories, counted from campaign territory state.",
+      "resourceKind": "HOLDING",
+      "tracksLifetime": false,
+      "sortOrder": 110,
+      "active": true
+    },
+    {
+      "resourceId": "AGENTS",
+      "displayName": "Agents",
+      "description": "Current agent headcount derived from personnel records.",
+      "resourceKind": "HEADCOUNT",
+      "tracksLifetime": false,
+      "sortOrder": 120,
+      "active": true
+    },
+    {
+      "resourceId": "ANALYSTS",
+      "displayName": "Analysts",
+      "description": "Current analyst headcount derived from personnel records.",
+      "resourceKind": "HEADCOUNT",
+      "tracksLifetime": false,
+      "sortOrder": 130,
+      "active": true
+    },
+    {
+      "resourceId": "CONFIDENTIAL_INFORMANTS",
+      "displayName": "Confidential Informants",
+      "description": "Current confidential informant count derived from personnel records.",
+      "resourceKind": "HEADCOUNT",
+      "tracksLifetime": false,
+      "sortOrder": 140,
+      "active": true
+    }
+  ],
+  "runtimeImplemented": false,
+  "rules": {
+    "stockpilesAreBalances": true,
+    "holdingsCountOwnedEntities": true,
+    "headcountsDerivedFromPersonnel": true,
+    "catalogStoresNoCurrentValues": true,
+    "lifetimeCountsCreditsNotCurrentBalance": true
+  }
+}

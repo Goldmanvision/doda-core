@@ -39,23 +39,37 @@ BOOKS_FILE = "book_titles.csv"
 LEVEL_COLUMNS = ["scale_id", "level_id", "display_name", "value", "unit", "source_reference",
                  "description", "sort_order", "active"]
 BOOK_COLUMNS = ["book_id", "title", "author", "notes", "sort_order", "active"]
-SCALES = ("STRESS_REDUCTION", "FATIGUE_COST", "HUNGER_RESTORE")
-UNITS = ("PER_TICK", "PERCENT_OF_NUTRITION_RANGE")
-SCALE_UNITS = {"STRESS_REDUCTION": "PER_TICK", "FATIGUE_COST": "PER_TICK",
-               "HUNGER_RESTORE": "PERCENT_OF_NUTRITION_RANGE"}
+SCALES = ("STRESS_REDUCTION", "FATIGUE_COST", "HUNGER_RESTORE", "ENERGY_RESTORE", "STRESS_GAIN",
+          "INTOXICATION_GAIN", "HUNGER_LOSS")
+PERCENT_SCALES = ("HUNGER_RESTORE", "ENERGY_RESTORE", "STRESS_GAIN", "INTOXICATION_GAIN",
+                  "HUNGER_LOSS")
+UNITS = ("PER_TICK", "PER_STRATEGIC_MINUTE", "PERCENT_OF_NUTRITION_RANGE",
+         "PERCENT_OF_ENERGY_RANGE", "PERCENT_OF_STRESS_RANGE", "PERCENT_OF_INTOXICATION_RANGE")
+SCALE_UNITS = {"STRESS_REDUCTION": "PER_STRATEGIC_MINUTE", "FATIGUE_COST": "PER_STRATEGIC_MINUTE",
+               "HUNGER_RESTORE": "PERCENT_OF_NUTRITION_RANGE",
+               "ENERGY_RESTORE": "PERCENT_OF_ENERGY_RANGE",
+               "STRESS_GAIN": "PERCENT_OF_STRESS_RANGE",
+               "INTOXICATION_GAIN": "PERCENT_OF_INTOXICATION_RANGE",
+               "HUNGER_LOSS": "PERCENT_OF_NUTRITION_RANGE"}
 SCALE = 10000
 MAX_DECIMAL_PLACES = 4
 
 RULES = {
     "hunger": {"restoreTiming": "ON_FINISH", "inductionTiming": "PER_TICK",
                "restoreBasis": "FULL_RANGE_OF_NUTRITION_STAT"},
+    "energyRestore": {"restoreTiming": "ON_FINISH", "restoreBasis": "FULL_ENERGY_RANGE"},
+    "stressGain": {"timing": "ONCE_AFTER_FINISH_DELAYED", "delay": "RANDOM_BETWEEN_ACTIVITY_MIN_AND_MAX_MINUTES",
+                   "basis": "FULL_STRESS_RANGE"},
+    "hungerLoss": {"timing": "ON_FINISH", "basis": "FULL_RANGE_OF_NUTRITION_STAT"},
+    "intoxicationGain": {"timing": "ON_FINISH", "basis": "FULL_INTOXICATION_RANGE",
+                         "stat": "INTOXICATION"},
     "books": {"maxBooksPerAgent": 1, "destroyedWhenFinished": True,
               "grantedOnAnyBookstoreVisitIfNone": True, "readAnywhereOffDuty": True},
 }
 
 OPEN_ITEMS = {
     "REC-OPEN-01": "Per-tick values for the stress reduction and fatigue cost levels, and final level names for those scales.",
-    "REC-OPEN-02": "Energy-restore scale and the coffee model.",
+    "REC-OPEN-02": "Energy-restore and stress-gain level values, and the coffee and alcohol rows.",
     "REC-OPEN-03": "Finished-book text lives in flavor text or a separate entry; template wording and any finish benefit.",
     "REC-OPEN-04": "Cafe probability when recreation places are generated.",
 }
@@ -76,9 +90,9 @@ def _level_value(raw: str, scale: str, ctx: str, res: net.Result) -> Decimal | N
     if isinstance(exponent, int) and exponent < -MAX_DECIMAL_PLACES:
         res.errors.append(f"{ctx}: value may have at most {MAX_DECIMAL_PLACES} decimal places")
         return None
-    if scale == "HUNGER_RESTORE":
+    if scale in PERCENT_SCALES:
         if not (0 < d <= 100):
-            res.errors.append(f"{ctx}: hunger restore must be above 0 and at most 100 (percent)")
+            res.errors.append(f"{ctx}: {scale.lower()} must be above 0 and at most 100 (percent)")
             return None
     elif d < 0:
         res.errors.append(f"{ctx}: value cannot be negative")

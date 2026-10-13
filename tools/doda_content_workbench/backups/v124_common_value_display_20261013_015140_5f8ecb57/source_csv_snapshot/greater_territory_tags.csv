@@ -1,0 +1,21 @@
+tag_id,category,display_name,source_reference,description,sort_order,active
+forest,TERRAIN,Forest,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,10,false
+desert,TERRAIN,Desert,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,20,false
+swamp,TERRAIN,Swamp,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,30,false
+coastal,TERRAIN,Coastal,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,40,false
+cold,CLIMATE,Cold,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,50,false
+arid,CLIMATE,Arid,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,60,false
+humid,CLIMATE,Humid,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,70,false
+temperate,CLIMATE,Temperate,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,80,false
+urban,SETTLEMENT,Urban,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,90,false
+suburban,SETTLEMENT,Suburban,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,100,false
+small_town,SETTLEMENT,Small Town,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,110,false
+rural,SETTLEMENT,Rural,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,120,false
+industrial,INSTITUTION,Industrial,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,130,false
+military,INSTITUTION,Military,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,140,false
+government,INSTITUTION,Government,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,150,false
+gothic,THEME,Gothic,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,160,false
+cosmic,THEME,Cosmic,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,170,false
+hazardous,THEME,Hazardous,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,180,false
+surreal,THEME,Surreal,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,190,false
+otherworldly,THEME,Otherworldly,User decision 2026-10-08 (TERR-46),Draft tag. Generator mapping is not defined yet.,200,false

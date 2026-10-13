@@ -3,30 +3,30 @@
 *///////////////////////////|
 // GENERATED FILE - DO NOT EDIT. Regenerate with
 //   tools/doda_content_workbench/doda_zscript_catalog.py
-// Generator 0.4.0; network content sha256 ca30bb147d2525c2d7ba9aeab9360fb3e53be65dd639812bee4f51ec8d0dfa36
-// equipment content sha256 52bf81d446b00a3f0c808618224c12ed629738d5cd819ae0e6b5c800a9c39cab
-// department catalog content sha256 e00c18e3e36a0b6f8b78e2ab04057f3a41fb656c1212d6f9abe358e69b84a02f
+// Generator 0.5.0; network content sha256 ca30bb147d2525c2d7ba9aeab9360fb3e53be65dd639812bee4f51ec8d0dfa36
+// equipment content sha256 29cdce16968120b1daa127d59968b61cf37dacbd9e35cc7c59d938712c20f50d
+// department catalog content sha256 053a0d547e55531cd38922fb48149800d42367c143199784ebdb69ef9523ba6a
 // Read-only display/lookup catalog (Option B stopgap). No simulation rules.
 
 class DoDAWorkbenchCatalog : Object
 {
     const TIER_COUNT = 5;
     const HARDWARE_COUNT = 10;
-    const FAMILY_COUNT = 5;
-    const MODEL_COUNT = 7;
+    const FAMILY_COUNT = 11;
+    const MODEL_COUNT = 13;
     const FACILITY_COUNT = 6;
     const CAPABILITY_COUNT = 2;
     const FACILITY_CAPABILITY_COUNT = 2;
     const STAFFING_DEFAULT_COUNT = 4;
     const FACILITY_STAFFING_COUNT = 4;
     const STAFFING_OVERRIDE_COUNT = 3;
-    const TASK_TEMPLATE_COUNT = 2;
+    const TASK_TEMPLATE_COUNT = 0;
     const TOTAL_PERSONAL_DEVICE_LIMIT = 8;
 
-    static String GeneratorVersion() { return "0.4.0"; }
+    static String GeneratorVersion() { return "0.5.0"; }
     static String NetworkSourceHash() { return "ca30bb147d2525c2"; }
-    static String EquipmentSourceHash() { return "52bf81d446b00a3f"; }
-    static String DepartmentSourceHash() { return "e00c18e3e36a0b6f"; }
+    static String EquipmentSourceHash() { return "29cdce16968120b1"; }
+    static String DepartmentSourceHash() { return "053a0d547e55531c"; }
 
     // Network tiers
     static String TierId(int i)
@@ -182,6 +182,12 @@ class DoDAWorkbenchCatalog : Object
         case 2: return "PDA";
         case 3: return "PHONE";
         case 4: return "FAX";
+        case 5: return "DIGITAL_FORENSICS";
+        case 6: return "PAPER_FORENSICS";
+        case 7: return "PHOTO_FORENSICS";
+        case 8: return "AUDIO_FORENSICS";
+        case 9: return "VIDEO_FORENSICS";
+        case 10: return "CHEMICAL_FORENSICS";
         default: return "";
         }
     }
@@ -195,6 +201,12 @@ class DoDAWorkbenchCatalog : Object
         case 2: return "PDA Devices";
         case 3: return "Phones";
         case 4: return "Fax Machines";
+        case 5: return "Digital Forensics Station";
+        case 6: return "Paper Forensics Lab";
+        case 7: return "Photo Forensics Lab";
+        case 8: return "Audio Forensics Station";
+        case 9: return "Video Forensics Station";
+        case 10: return "Chemical Forensics Lab";
         default: return "";
         }
     }
@@ -208,6 +220,12 @@ class DoDAWorkbenchCatalog : Object
         case 2: return "PERSONAL";
         case 3: return "PERSONAL";
         case 4: return "LOCATION";
+        case 5: return "LOCATION";
+        case 6: return "LOCATION";
+        case 7: return "LOCATION";
+        case 8: return "LOCATION";
+        case 9: return "LOCATION";
+        case 10: return "LOCATION";
         default: return "";
         }
     }
@@ -221,6 +239,12 @@ class DoDAWorkbenchCatalog : Object
         case 2: return "SC";
         case 3: return "NONE";
         case 4: return "NONE";
+        case 5: return "NONE";
+        case 6: return "NONE";
+        case 7: return "NONE";
+        case 8: return "NONE";
+        case 9: return "NONE";
+        case 10: return "NONE";
         default: return "";
         }
     }
@@ -234,6 +258,12 @@ class DoDAWorkbenchCatalog : Object
         case 2: return "NETWORK";
         case 3: return "PHONE_LINE";
         case 4: return "PHONE_LINE";
+        case 5: return "NONE";
+        case 6: return "NONE";
+        case 7: return "NONE";
+        case 8: return "NONE";
+        case 9: return "NONE";
+        case 10: return "NONE";
         default: return "";
         }
     }
@@ -247,6 +277,12 @@ class DoDAWorkbenchCatalog : Object
         case 2: return 2;
         case 3: return 2;
         case 4: return -1;
+        case 5: return -1;
+        case 6: return -1;
+        case 7: return -1;
+        case 8: return -1;
+        case 9: return -1;
+        case 10: return -1;
         default: return -2;
         }
     }
@@ -272,6 +308,12 @@ class DoDAWorkbenchCatalog : Object
         case 4: return "PHONE_MOBILE";
         case 5: return "FAX_MACHINE";
         case 6: return "PDA_CELLULAR";
+        case 7: return "DIGITAL_FORENSICS_BASE";
+        case 8: return "PAPER_FORENSICS_BASE";
+        case 9: return "PHOTO_FORENSICS_BASE";
+        case 10: return "AUDIO_FORENSICS_BASE";
+        case 11: return "VIDEO_FORENSICS_BASE";
+        case 12: return "CHEMICAL_FORENSICS_BASE";
         default: return "";
         }
     }
@@ -287,6 +329,12 @@ class DoDAWorkbenchCatalog : Object
         case 4: return "Mobile Phone";
         case 5: return "Fax Machine";
         case 6: return "Cellular Device";
+        case 7: return "Digital Forensics Station - Baseline";
+        case 8: return "Paper Forensics Lab - Baseline";
+        case 9: return "Photo Forensics Lab - Baseline";
+        case 10: return "Audio Forensics Station - Baseline";
+        case 11: return "Video Forensics Station - Baseline";
+        case 12: return "Chemical Forensics Lab - Baseline";
         default: return "";
         }
     }
@@ -302,6 +350,12 @@ class DoDAWorkbenchCatalog : Object
         case 4: return "PHONE";
         case 5: return "FAX";
         case 6: return "PDA";
+        case 7: return "DIGITAL_FORENSICS";
+        case 8: return "PAPER_FORENSICS";
+        case 9: return "PHOTO_FORENSICS";
+        case 10: return "AUDIO_FORENSICS";
+        case 11: return "VIDEO_FORENSICS";
+        case 12: return "CHEMICAL_FORENSICS";
         default: return "";
         }
     }
@@ -317,6 +371,12 @@ class DoDAWorkbenchCatalog : Object
         case 4: return "MOBILE";
         case 5: return "";
         case 6: return "";
+        case 7: return "";
+        case 8: return "";
+        case 9: return "";
+        case 10: return "";
+        case 11: return "";
+        case 12: return "";
         default: return "";
         }
     }
@@ -332,6 +392,12 @@ class DoDAWorkbenchCatalog : Object
         case 4: return "";
         case 5: return "";
         case 6: return "";
+        case 7: return "";
+        case 8: return "";
+        case 9: return "";
+        case 10: return "";
+        case 11: return "";
+        case 12: return "";
         default: return "";
         }
     }
@@ -347,6 +413,12 @@ class DoDAWorkbenchCatalog : Object
         case 4: return "";
         case 5: return "";
         case 6: return "MOBILE_INTERNET";
+        case 7: return "";
+        case 8: return "";
+        case 9: return "";
+        case 10: return "";
+        case 11: return "";
+        case 12: return "";
         default: return "";
         }
     }
@@ -362,6 +434,12 @@ class DoDAWorkbenchCatalog : Object
         case 4: return 1;
         case 5: return 1;
         case 6: return 1;
+        case 7: return 1;
+        case 8: return 1;
+        case 9: return 1;
+        case 10: return 1;
+        case 11: return 1;
+        case 12: return 1;
         default: return -2;
         }
     }
@@ -818,8 +896,6 @@ class DoDAWorkbenchCatalog : Object
     {
         switch (i)
         {
-        case 0: return "SIGNAL_REVIEW";
-        case 1: return "OCCULT_INCIDENT_RESPONSE";
         default: return "";
         }
     }
@@ -828,8 +904,6 @@ class DoDAWorkbenchCatalog : Object
     {
         switch (i)
         {
-        case 0: return "Priority Signal Review";
-        case 1: return "Occult Incident Response";
         default: return "";
         }
     }
@@ -838,8 +912,6 @@ class DoDAWorkbenchCatalog : Object
     {
         switch (i)
         {
-        case 0: return "Analyze and classify urgent signal interference.";
-        case 1: return "Coordinate specialized response to an anomalous field incident.";
         default: return "";
         }
     }
@@ -848,8 +920,6 @@ class DoDAWorkbenchCatalog : Object
     {
         switch (i)
         {
-        case 0: return "ELECTRONIC_SURVEILLANCE";
-        case 1: return "OCCULT_RESPONSE";
         default: return "";
         }
     }
@@ -858,38 +928,54 @@ class DoDAWorkbenchCatalog : Object
     {
         switch (i)
         {
-        case 0: return "HIGH";
-        case 1: return "CRITICAL";
         default: return "";
         }
     }
 
-    static int TaskTemplateTargetEffortMinutes(int i)
+    static String TaskTemplateTargetType(int i)
     {
         switch (i)
         {
-        case 0: return 240;
-        case 1: return 360;
+        default: return "";
+        }
+    }
+
+    static String TaskTemplateTargetFamilyId(int i)
+    {
+        switch (i)
+        {
+        default: return "";
+        }
+    }
+
+    static String TaskTemplateRewardMode(int i)
+    {
+        switch (i)
+        {
+        default: return "";
+        }
+    }
+
+    static int TaskTemplateTimeToCompleteMinutes(int i)
+    {
+        switch (i)
+        {
         default: return -2;
         }
     }
 
-    static int TaskTemplateDeadlineMinutes(int i)
+    static int TaskTemplatePayoutCount(int i)
     {
         switch (i)
         {
-        case 0: return 120;
-        case 1: return 180;
         default: return -2;
         }
     }
 
-    static int TaskTemplateAutoAllocate(int i)
+    static int TaskTemplateLoopTask(int i)
     {
         switch (i)
         {
-        case 0: return 1;
-        case 1: return 1;
         default: return -2;
         }
     }
@@ -935,7 +1021,7 @@ class DoDAWorkbenchCatalogProbe : EventHandler
             Console.PrintF("DODA_CATALOG STAFFING_EFFECTIVE %s %s %s global=%d/%d/%d effective=%d/%d/%d source=%s", DoDAWorkbenchCatalog.FacilityStaffingFacilityId(se), DoDAWorkbenchCatalog.FacilityStaffingCapabilityId(se), DoDAWorkbenchCatalog.FacilityStaffingQualificationId(se), DoDAWorkbenchCatalog.FacilityStaffingGlobalMin(se), DoDAWorkbenchCatalog.FacilityStaffingGlobalPreferred(se), DoDAWorkbenchCatalog.FacilityStaffingGlobalMax(se), DoDAWorkbenchCatalog.FacilityStaffingMin(se), DoDAWorkbenchCatalog.FacilityStaffingPreferred(se), DoDAWorkbenchCatalog.FacilityStaffingMax(se), DoDAWorkbenchCatalog.FacilityStaffingSource(se));
         Console.PrintF("DODA_CATALOG TASK_TEMPLATES count=%d", DoDAWorkbenchCatalog.TASK_TEMPLATE_COUNT);
         for (int tt = 0; tt < DoDAWorkbenchCatalog.TASK_TEMPLATE_COUNT; tt++)
-            Console.PrintF("DODA_CATALOG TASK_TEMPLATE %s %s priority=%s effort=%d deadline=%d auto=%d", DoDAWorkbenchCatalog.TaskTemplateId(tt), DoDAWorkbenchCatalog.TaskTemplateCapabilityId(tt), DoDAWorkbenchCatalog.TaskTemplatePriority(tt), DoDAWorkbenchCatalog.TaskTemplateTargetEffortMinutes(tt), DoDAWorkbenchCatalog.TaskTemplateDeadlineMinutes(tt), DoDAWorkbenchCatalog.TaskTemplateAutoAllocate(tt));
+            Console.PrintF("DODA_CATALOG TASK_TEMPLATE %s %s priority=%s target=%s loop=%d duration=%d payouts=%d reward=%s", DoDAWorkbenchCatalog.TaskTemplateId(tt), DoDAWorkbenchCatalog.TaskTemplateCapabilityId(tt), DoDAWorkbenchCatalog.TaskTemplatePriority(tt), DoDAWorkbenchCatalog.TaskTemplateTargetType(tt), DoDAWorkbenchCatalog.TaskTemplateLoopTask(tt), DoDAWorkbenchCatalog.TaskTemplateTimeToCompleteMinutes(tt), DoDAWorkbenchCatalog.TaskTemplatePayoutCount(tt), DoDAWorkbenchCatalog.TaskTemplateRewardMode(tt));
         Console.PrintF("DODA_CATALOG END");
     }
 }

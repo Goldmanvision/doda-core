@@ -1,0 +1,160 @@
+{
+  "schema": "doda.sobriety_catalog",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-13T03:47:56.109585+00:00",
+  "decimalPlaces": 4,
+  "scale": 10000,
+  "stages": [
+    {
+      "stageId": "SOBER",
+      "displayName": "Sober",
+      "canDrive": true,
+      "unconscious": false,
+      "drivingNote": null,
+      "sourceReference": "User decision 2026-10-08 (alcohol and sobriety)",
+      "description": "No impairment.",
+      "sortOrder": 10,
+      "active": false,
+      "minIntoxication": "0",
+      "minIntoxicationScaled": 0,
+      "skillMultiplier": "1",
+      "skillMultiplierScaled": 10000
+    },
+    {
+      "stageId": "BUZZED",
+      "displayName": "Buzzed",
+      "canDrive": false,
+      "unconscious": false,
+      "drivingNote": "Asks a friend to drive.",
+      "sourceReference": "User decision 2026-10-08 (alcohol and sobriety)",
+      "description": "Skills at half strength; cannot drive.",
+      "sortOrder": 20,
+      "active": false,
+      "minIntoxication": "15",
+      "minIntoxicationScaled": 150000,
+      "skillMultiplier": "0.5",
+      "skillMultiplierScaled": 5000
+    },
+    {
+      "stageId": "DRUNK",
+      "displayName": "Drunk",
+      "canDrive": false,
+      "unconscious": false,
+      "drivingNote": "Asks a friend to drive.",
+      "sourceReference": "User decision 2026-10-08 (alcohol and sobriety)",
+      "description": "Skills halved again; cannot drive.",
+      "sortOrder": 30,
+      "active": false,
+      "minIntoxication": "45",
+      "minIntoxicationScaled": 450000,
+      "skillMultiplier": "0.25",
+      "skillMultiplierScaled": 2500
+    },
+    {
+      "stageId": "HEAVILY_INTOXICATED",
+      "displayName": "Heavily Intoxicated",
+      "canDrive": false,
+      "unconscious": true,
+      "drivingNote": null,
+      "sourceReference": "User decision 2026-10-08 (alcohol and sobriety)",
+      "description": "Unconscious until intoxication falls below the wake threshold.",
+      "sortOrder": 40,
+      "active": false,
+      "minIntoxication": "75",
+      "minIntoxicationScaled": 750000,
+      "skillMultiplier": null,
+      "skillMultiplierScaled": null
+    }
+  ],
+  "settings": [
+    {
+      "settingId": "INTOXICATION_DECAY_PER_STRATEGIC_MINUTE",
+      "displayName": "Intoxication Decay",
+      "unit": "POINTS_PER_STRATEGIC_MINUTE",
+      "sourceReference": "User decision 2026-10-08 (alcohol and sobriety)",
+      "description": "Points of intoxication lost per strategic minute (starting value).",
+      "sortOrder": 10,
+      "active": false,
+      "value": "0.2",
+      "valueScaled": 2000
+    },
+    {
+      "settingId": "UNCONSCIOUS_WAKE_BELOW",
+      "displayName": "Wake Threshold",
+      "unit": "POINTS",
+      "sourceReference": "User decision 2026-10-08 (alcohol and sobriety)",
+      "description": "An unconscious agent wakes when intoxication falls below this value (starting value).",
+      "sortOrder": 20,
+      "active": false,
+      "value": "60",
+      "valueScaled": 600000
+    }
+  ],
+  "shiftRules": [
+    {
+      "ruleId": "SHIFT_LOYALTY_LOW",
+      "maxStageId": "DRUNK",
+      "sourceReference": "User decision 2026-10-08 (alcohol and sobriety)",
+      "description": "Low Loyalty agents may arrive drunk; a sign their Loyalty is dwindling.",
+      "sortOrder": 10,
+      "active": false,
+      "loyaltyMin": "0",
+      "loyaltyMinScaled": 0
+    },
+    {
+      "ruleId": "SHIFT_LOYALTY_MID",
+      "maxStageId": "BUZZED",
+      "sourceReference": "User decision 2026-10-08 (alcohol and sobriety)",
+      "description": "Middling Loyalty agents may arrive buzzed.",
+      "sortOrder": 20,
+      "active": false,
+      "loyaltyMin": "25",
+      "loyaltyMinScaled": 250000
+    },
+    {
+      "ruleId": "SHIFT_LOYALTY_HIGH",
+      "maxStageId": "SOBER",
+      "sourceReference": "User decision 2026-10-08 (alcohol and sobriety)",
+      "description": "Loyal agents arrive sober.",
+      "sortOrder": 30,
+      "active": false,
+      "loyaltyMin": "50",
+      "loyaltyMinScaled": 500000
+    }
+  ],
+  "rules": {
+    "stat": "INTOXICATION",
+    "skills": {
+      "effect": "MULTIPLY_EFFECTIVE_SKILL_BY_STAGE_MULTIPLIER",
+      "appliesTo": "ALL_SKILLS_AND_ATTRIBUTES"
+    },
+    "driving": {
+      "substitute": "ASK_A_FRIEND_WORKS_LIKE_DRIVING_YOURSELF"
+    },
+    "unconscious": {
+      "stage": "HEAVILY_INTOXICATED",
+      "wakeRule": "INTOXICATION_BELOW_WAKE_THRESHOLD",
+      "sharesStateWith": "FATIGUE_COLLAPSE_UNCONSCIOUSNESS"
+    },
+    "alcohol": {
+      "chosenOnlyWhileOffDuty": true,
+      "offeredAt": "PLACE_TYPES_OFFERING_CAP_ALCOHOL",
+      "notOfferedDuringVacation": true
+    },
+    "vacation": {
+      "intoxicationTracked": false,
+      "drinksTracked": false,
+      "onReturn": "SOBER"
+    },
+    "shiftStart": {
+      "bandBasis": "LOYALTY_AT_OR_ABOVE_RULE_MINIMUM",
+      "visibleSignOfDwindlingLoyalty": true
+    }
+  },
+  "openItems": {
+    "SOBR-OPEN-01": "How the stage multiplier combines with trait, training and equipment bonuses. It applies to all skills and attributes (settled 2026-10-08).",
+    "SOBR-OPEN-02": "Final stage thresholds, decay rate, wake threshold, and Loyalty bands (current values are starting points).",
+    "SOBR-OPEN-03": "The INTOXICATION row in condition_stats.csv, and the native runtime and save-schema work."
+  },
+  "runtimeImplemented": false
+}

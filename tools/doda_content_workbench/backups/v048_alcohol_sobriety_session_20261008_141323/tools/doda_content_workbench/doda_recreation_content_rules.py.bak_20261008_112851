@@ -1,0 +1,230 @@
+#!/usr/bin/env python3
+r"""
+DoDA Content Workbench - Recreation content catalogs (authoring slice).
+
+Two small catalogs used by recreation activities. Authored definitions only;
+nothing here changes runtime behaviour.
+
+Settled decisions encoded here (2026-10-08):
+  * REC-02: Effect strength uses named levels in a lookup table. Scales are
+    separate per effect for now (stress reduction, fatigue cost, hunger
+    restore); they can be mapped globally later.
+  * Hunger restore is a one-time percentage of the full Nutrition range,
+    applied when a meal finishes. Hunger induction still ticks per sim tick
+    and is not part of this catalog.
+  * REC-05: An agent holds at most one book. The user supplies a list of
+    fictional book titles; one is assigned when a book is given.
+
+Source files:
+  data_authoring/source/effect_levels.csv
+  data_authoring/source/book_titles.csv
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import sys
+from datetime import datetime, timezone
+from decimal import Decimal, InvalidOperation
+from pathlib import Path
+from typing import Any
+
+import doda_network_rules as net
+
+TOOL_VERSION = "0.1.0"
+LEVELS_FILE = "effect_levels.csv"
+BOOKS_FILE = "book_titles.csv"
+LEVEL_COLUMNS = ["scale_id", "level_id", "display_name", "value", "unit", "source_reference",
+                 "description", "sort_order", "active"]
+BOOK_COLUMNS = ["book_id", "title", "author", "notes", "sort_order", "active"]
+SCALES = ("STRESS_REDUCTION", "FATIGUE_COST", "HUNGER_RESTORE", "ENERGY_RESTORE", "STRESS_GAIN")
+PERCENT_SCALES = ("HUNGER_RESTORE", "ENERGY_RESTORE", "STRESS_GAIN")
+UNITS = ("PER_TICK", "PER_STRATEGIC_MINUTE", "PERCENT_OF_NUTRITION_RANGE",
+         "PERCENT_OF_ENERGY_RANGE", "PERCENT_OF_STRESS_RANGE")
+SCALE_UNITS = {"STRESS_REDUCTION": "PER_STRATEGIC_MINUTE", "FATIGUE_COST": "PER_STRATEGIC_MINUTE",
+               "HUNGER_RESTORE": "PERCENT_OF_NUTRITION_RANGE",
+               "ENERGY_RESTORE": "PERCENT_OF_ENERGY_RANGE",
+               "STRESS_GAIN": "PERCENT_OF_STRESS_RANGE"}
+SCALE = 10000
+MAX_DECIMAL_PLACES = 4
+
+RULES = {
+    "hunger": {"restoreTiming": "ON_FINISH", "inductionTiming": "PER_TICK",
+               "restoreBasis": "FULL_RANGE_OF_NUTRITION_STAT"},
+    "energyRestore": {"restoreTiming": "ON_FINISH", "restoreBasis": "FULL_ENERGY_RANGE"},
+    "stressGain": {"timing": "ONCE_AFTER_FINISH_DELAYED", "delay": "RANDOM_BETWEEN_ACTIVITY_MIN_AND_MAX_MINUTES",
+                   "basis": "FULL_STRESS_RANGE"},
+    "books": {"maxBooksPerAgent": 1, "destroyedWhenFinished": True,
+              "grantedOnAnyBookstoreVisitIfNone": True, "readAnywhereOffDuty": True},
+}
+
+OPEN_ITEMS = {
+    "REC-OPEN-01": "Per-tick values for the stress reduction and fatigue cost levels, and final level names for those scales.",
+    "REC-OPEN-02": "Energy-restore and stress-gain level values, and the coffee and alcohol rows.",
+    "REC-OPEN-03": "Finished-book text lives in flavor text or a separate entry; template wording and any finish benefit.",
+    "REC-OPEN-04": "Cafe probability when recreation places are generated.",
+}
+
+
+def _level_value(raw: str, scale: str, ctx: str, res: net.Result) -> Decimal | None:
+    if not raw:
+        return None
+    try:
+        d = Decimal(raw)
+    except InvalidOperation:
+        res.errors.append(f"{ctx}: value must be a number")
+        return None
+    if not d.is_finite():
+        res.errors.append(f"{ctx}: value must be a finite number")
+        return None
+    exponent = d.normalize().as_tuple().exponent
+    if isinstance(exponent, int) and exponent < -MAX_DECIMAL_PLACES:
+        res.errors.append(f"{ctx}: value may have at most {MAX_DECIMAL_PLACES} decimal places")
+        return None
+    if scale in PERCENT_SCALES:
+        if not (0 < d <= 100):
+            res.errors.append(f"{ctx}: {scale.lower()} must be above 0 and at most 100 (percent)")
+            return None
+    elif d < 0:
+        res.errors.append(f"{ctx}: value cannot be negative")
+        return None
+    return d
+
+
+def _plain(d: Decimal) -> str:
+    return format(d.normalize(), "f")
+
+
+def _scaled(d: Decimal) -> int:
+    return int((d * SCALE).to_integral_value())
+
+
+def _validate_levels(src: Path, res: net.Result) -> list[dict[str, Any]]:
+    rows = net.read_table(src / LEVELS_FILE, LEVEL_COLUMNS, "effect_levels", res) or []
+    seen: set[tuple[str, str]] = set()
+    items: list[dict[str, Any]] = []
+    for r in rows:
+        ctx = f"[effect_levels] Line {r['_line']}"
+        scale = r["scale_id"].upper()
+        level = r["level_id"]
+        if scale not in SCALES:
+            res.errors.append(f"{ctx}: scale_id must be one of {', '.join(SCALES)}")
+        if not level:
+            res.errors.append(f"{ctx}: level_id is required")
+            continue
+        key = (scale, level)
+        if key in seen:
+            res.errors.append(f"{ctx}: duplicate level {scale} / {level}")
+            continue
+        seen.add(key)
+        if not r["display_name"]:
+            res.errors.append(f"{ctx}: display_name is required")
+        unit = r["unit"].upper()
+        if unit not in UNITS:
+            res.errors.append(f"{ctx}: unit must be one of {', '.join(UNITS)}")
+        elif scale in SCALE_UNITS and unit != SCALE_UNITS[scale]:
+            res.errors.append(f"{ctx}: scale {scale} must use unit {SCALE_UNITS[scale]}")
+        value = _level_value(r["value"], scale, ctx, res)
+        active = net._bool(r["active"], ctx, res)
+        if active and value is None:
+            res.errors.append(f"{ctx}: an active level needs a value")
+        items.append({"scaleId": scale, "levelId": level, "displayName": r["display_name"],
+                      "unit": unit, "sourceReference": r["source_reference"] or None,
+                      "description": r["description"],
+                      "sortOrder": net._int(r["sort_order"], ctx, "sort_order", res),
+                      "active": active, "_d": value, "_ctx": ctx})
+    for scale in SCALES:
+        group = sorted((i for i in items if i["scaleId"] == scale),
+                       key=lambda i: (i["sortOrder"] or 0, i["levelId"]))
+        if not group:
+            res.warnings.append(f"[effect_levels] Scale {scale} has no levels")
+        valued = [i for i in group if i["_d"] is not None]
+        for a, b in zip(valued, valued[1:]):
+            if not a["_d"] < b["_d"]:
+                res.errors.append(f"{b['_ctx']}: values in {scale} must strictly increase ({b['levelId']} is not above {a['levelId']})")
+    out = []
+    for i in sorted(items, key=lambda x: (x["scaleId"], x["sortOrder"] or 0, x["levelId"])):
+        item = {k: v for k, v in i.items() if k not in ("_d", "_ctx")}
+        d = i["_d"]
+        item["value"] = _plain(d) if d is not None else None
+        item["valueScaled"] = _scaled(d) if d is not None else None
+        out.append(item)
+    return out
+
+
+def _validate_books(src: Path, res: net.Result) -> list[dict[str, Any]]:
+    rows = net.read_table(src / BOOKS_FILE, BOOK_COLUMNS, "book_titles", res) or []
+    seen: set[str] = set()
+    titles: set[str] = set()
+    items: list[dict[str, Any]] = []
+    for r in rows:
+        ctx = f"[book_titles] Line {r['_line']}"
+        bid = r["book_id"]
+        if not bid or bid in seen:
+            res.errors.append(f"{ctx}: blank or duplicate book_id '{bid}'")
+            continue
+        seen.add(bid)
+        if not r["title"]:
+            res.errors.append(f"{ctx}: title is required")
+        if not r["author"]:
+            res.errors.append(f"{ctx}: author is required")
+        key = r["title"].casefold()
+        if r["title"] and key in titles:
+            res.warnings.append(f"{ctx}: duplicate title '{r['title']}'")
+        titles.add(key)
+        items.append({"bookId": bid, "title": r["title"], "author": r["author"],
+                      "notes": r["notes"] or None,
+                      "sortOrder": net._int(r["sort_order"], ctx, "sort_order", res),
+                      "active": net._bool(r["active"], ctx, res)})
+    return sorted(items, key=lambda x: (x["sortOrder"] or 0, x["bookId"]))
+
+
+def validate_recreation_content(root: Path, res: net.Result) -> dict[str, Any]:
+    src = root / "data_authoring" / "source"
+    return {"effectLevels": _validate_levels(src, res), "bookTitles": _validate_books(src, res)}
+
+
+def export(root: Path) -> tuple[net.Result, Path | None]:
+    res = net.Result()
+    data = validate_recreation_content(root, res)
+    if not res.valid:
+        return res, None
+    out = root / "generated" / "data" / "recreation_content_catalog.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    payload = {"schema": "doda.recreation_content", "toolVersion": TOOL_VERSION,
+               "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
+               "decimalPlaces": MAX_DECIMAL_PLACES, "scale": SCALE, **data,
+               "rules": RULES, "openItems": OPEN_ITEMS, "runtimeImplemented": False}
+    tmp = out.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(out)
+    return res, out
+
+
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(description="DoDA recreation content catalogs: validate or export.")
+    p.add_argument("command", choices=["validate", "export"])
+    p.add_argument("--root", type=Path, default=None)
+    a = p.parse_args(argv)
+    root = a.root.resolve() if a.root else net.find_project_root(Path(__file__).parent)
+    if a.command == "validate":
+        res = net.Result()
+        validate_recreation_content(root, res)
+        out = None
+    else:
+        res, out = export(root)
+    for w in res.warnings:
+        print("WARNING:", w)
+    for e in res.errors:
+        print("ERROR:", e)
+    print("Rows:", res.stats)
+    if out:
+        print("Exported:", out, "sha256", hashlib.sha256(out.read_bytes()).hexdigest())
+    print("RESULT:", "PASS" if res.valid else "FAIL")
+    return 0 if res.valid else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

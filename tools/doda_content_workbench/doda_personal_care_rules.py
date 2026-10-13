@@ -99,6 +99,10 @@ ACTIVITY_COLUMNS = ACTIVITY_COLUMNS + ["duration_step_minutes", "duration_max_mi
                                        "stress_reduction_level_id", "fatigue_cost_level_id",
                                        "fatigue_cost_level_id_cafe", "hunger_restore_level_id",
                                        "hunger_restore_level_id_cafe"]
+ACTIVITY_COLUMNS = ACTIVITY_COLUMNS + ["energy_restore_level_id", "stress_gain_level_id",
+                                       "stress_gain_delay_min_minutes", "stress_gain_delay_max_minutes"]
+ACTIVITY_COLUMNS = ACTIVITY_COLUMNS + ["intoxication_gain_level_id", "off_duty_only"]
+ACTIVITY_COLUMNS = ACTIVITY_COLUMNS + ["hunger_loss_level_id"]
 DURING_CARE_COLUMNS = ["care_service_id", "action_id", "sort_order", "active"]
 
 INITIATIONS = ("AGENT_INITIATED", "PLAYER_SCHEDULED")
@@ -106,6 +110,7 @@ OCCUPANCY_RULES = ("UNSPECIFIED", "BEDS")
 COMPANY_OPTIONS = ("ALONE", "FRIENDS", "STRANGERS")
 REST_FEATURE = "CAP_REST"
 RECREATION_FEATURE = "CAP_RECREATION"
+ALCOHOL_FEATURE = "CAP_ALCOHOL"
 FATIGUE_STAT = "FATIGUE"
 
 OPEN_ITEMS = {
@@ -370,6 +375,9 @@ EXTENDED_LEVEL_FIELDS = (
     ("fatigue_cost_level_id_cafe", "fatigueCostLevelIdCafe", "FATIGUE_COST"),
     ("hunger_restore_level_id", "hungerRestoreLevelId", "HUNGER_RESTORE"),
     ("hunger_restore_level_id_cafe", "hungerRestoreLevelIdCafe", "HUNGER_RESTORE"),
+    ("energy_restore_level_id", "energyRestoreLevelId", "ENERGY_RESTORE"),
+    ("stress_gain_level_id", "stressGainLevelId", "STRESS_GAIN"),
+    ("hunger_loss_level_id", "hungerLossLevelId", "HUNGER_LOSS"),
 )
 
 
@@ -407,16 +415,118 @@ def _check_extended(r: dict[str, str], ctx: str, minutes: int | None, pid: str,
         ptype = types.get(pid)
         if ptype is not None and not ptype.get("cafePossible"):
             res.warnings.append(f"{ctx}: a cafe-adjusted level is set but place type '{pid}' is not cafe_possible")
+    out.update(_check_stress_gain_delay(r, ctx, tick_minutes, res))
     return out
+
+
+def _check_stress_gain_delay(r: dict, ctx: str, tick_minutes: int, res: net.Result) -> dict:
+    lo = _opt_int(r["stress_gain_delay_min_minutes"], ctx, "stress_gain_delay_min_minutes", res)
+    hi = _opt_int(r["stress_gain_delay_max_minutes"], ctx, "stress_gain_delay_max_minutes", res)
+    if (lo is None) != (hi is None):
+        res.errors.append(f"{ctx}: stress_gain_delay_min_minutes and stress_gain_delay_max_minutes "
+                          "must be set together")
+    elif lo is not None and hi is not None:
+        if not r["stress_gain_level_id"]:
+            res.errors.append(f"{ctx}: a stress-gain delay needs stress_gain_level_id")
+        if lo < 0 or hi < lo:
+            res.errors.append(f"{ctx}: the stress-gain delay needs 0 <= minimum <= maximum")
+        for label, value in (("stress_gain_delay_min_minutes", lo), ("stress_gain_delay_max_minutes", hi)):
+            if value > 0 and tick_minutes > 0 and value % tick_minutes != 0:
+                res.errors.append(f"{ctx}: {label} must be a multiple of the sim tick ({tick_minutes} minutes)")
+    return {"stressGainDelayMinMinutes": lo, "stressGainDelayMaxMinutes": hi}
+
+
+INTOXICATION_SCALE = "INTOXICATION_GAIN"
+
+
+def _check_intoxication(r: dict, ctx: str, minutes: Any, levels: dict[str, set[str]] | None,
+                        res: net.Result) -> dict[str, Any]:
+    level = (r.get("intoxication_gain_level_id") or "").strip()
+    raw = (r.get("off_duty_only") or "").strip().lower()
+    if raw in ("", "false"):
+        off_duty = False
+    elif raw == "true":
+        off_duty = True
+    else:
+        res.errors.append(f"{ctx}: off_duty_only must be true or false")
+        off_duty = False
+    if level:
+        if levels is None:
+            res.errors.append(f"{ctx}: intoxication_gain_level_id is set but effect_levels.csv is missing")
+        elif level not in levels.get(INTOXICATION_SCALE, set()):
+            res.errors.append(f"{ctx}: intoxication_gain_level_id '{level}' is not a level of scale "
+                              f"{INTOXICATION_SCALE}")
+        if not off_duty:
+            res.errors.append(f"{ctx}: an activity that raises intoxication must set off_duty_only to true")
+        if minutes is not None and minutes >= VACATION_MIN_MINUTES:
+            res.warnings.append(f"{ctx}: a vacation (2 days or more) does not track stats, so intoxication "
+                                "gain is ignored; leave it blank")
+    return {"intoxicationGainLevelId": level or None, "offDutyOnly": off_duty}
+
+
+VACATION_MIN_MINUTES = 2880
+
+
+def _read_level_values(src: Path) -> dict:
+    from decimal import Decimal, InvalidOperation
+    path = src / "effect_levels.csv"
+    out: dict = {}
+    if not path.exists():
+        return out
+    with path.open(encoding="utf-8-sig", newline="") as f:
+        for r in csv.DictReader(f):
+            scale = (r.get("scale_id") or "").strip().upper()
+            level = (r.get("level_id") or "").strip()
+            raw = (r.get("value") or "").strip()
+            if not raw:
+                continue
+            try:
+                out[(scale, level)] = (Decimal(raw), (r.get("unit") or "").strip().upper())
+            except InvalidOperation:
+                continue
+    return out
+
+
+def _check_energy_and_vacation(r: dict, ctx: str, minutes: Any, energy: Any, level_values: dict,
+                               tick_minutes: int, res: net.Result) -> None:
+    from decimal import Decimal
+    if minutes is None:
+        return
+    if minutes >= VACATION_MIN_MINUTES:
+        if any(r[f] for f in ("stress_reduction_level_id", "fatigue_cost_level_id",
+                              "fatigue_cost_level_id_cafe")):
+            res.warnings.append(f"{ctx}: a vacation (2 days or more) does not track stats, so its stress "
+                                "and fatigue levels are ignored; leave them blank")
+        return
+    level = r["fatigue_cost_level_id"]
+    entry = level_values.get(("FATIGUE_COST", level)) if level else None
+    if entry is None:
+        return
+    value, unit = entry
+    longest = minutes
+    try:
+        longest = max(minutes, int(r["duration_max_minutes"] or 0))
+    except (KeyError, ValueError):
+        pass
+    if unit == "PER_STRATEGIC_MINUTE":
+        cost = value * longest
+    else:
+        cost = value * (Decimal(longest) / Decimal(max(tick_minutes, 1)))
+    have = Decimal(str(energy)) if energy is not None else Decimal(0)
+    if have < cost:
+        res.errors.append(f"{ctx}: energy_required_to_start ({float(have):g}) must be at least the "
+                          f"fatigue this activity uses ({float(cost):.1f})")
 
 
 def _validate_activities(src: Path, types: dict[str, dict[str, Any]], type_links: list[dict[str, Any]],
                          res: net.Result) -> list[dict[str, Any]]:
     rows = net.read_table(src / ACTIVITIES_FILE, ACTIVITY_COLUMNS, "recreation_activities", res) or []
     recreational = {l["placeTypeId"] for l in type_links if l["featureId"] == RECREATION_FEATURE}
+    alcohol_places = {l["placeTypeId"] for l in type_links if l["featureId"] == ALCOHOL_FEATURE}
     fatigue_max = _fatigue_max(src)
     tick_minutes = _sim_tick_minutes(src)
     levels = _read_levels(src)
+    level_values = _read_level_values(src)
     extended_map: dict[str, dict[str, Any]] = {}
     out: dict[str, dict[str, Any]] = {}
     for r in rows:
@@ -430,8 +540,9 @@ def _validate_activities(src: Path, types: dict[str, dict[str, Any]], type_links
         active = net._bool(r["active"], ctx, res)
         if pid not in types:
             res.errors.append(f"{ctx}: unknown place_type_id '{pid}'")
-        elif pid not in recreational:
-            res.errors.append(f"{ctx}: place type '{pid}' does not offer {RECREATION_FEATURE}")
+        elif pid not in recreational and not (r.get("intoxication_gain_level_id") and pid in alcohol_places):
+            res.errors.append(f"{ctx}: place type '{pid}' does not offer {RECREATION_FEATURE} "
+                              f"(an alcohol activity may use {ALCOHOL_FEATURE} instead)")
         elif active and not types[pid]["active"]:
             res.errors.append(f"{ctx}: active activity uses inactive place type '{pid}'")
         minutes = net._int(r["duration_minutes"], ctx, "duration_minutes", res) if r["duration_minutes"] else None
@@ -446,6 +557,8 @@ def _validate_activities(src: Path, types: dict[str, dict[str, Any]], type_links
         if energy is not None and not 0 <= energy <= fatigue_max:
             res.errors.append(f"{ctx}: energy_required_to_start must be 0 to {fatigue_max} (the Fatigue range)")
         extended_map[aid] = _check_extended(r, ctx, minutes, pid, types, levels, tick_minutes, res)
+        extended_map[aid].update(_check_intoxication(r, ctx, minutes, levels, res))
+        _check_energy_and_vacation(r, ctx, minutes, energy, level_values, tick_minutes, res)
         company = [c.upper() for c in _split(r["company_options"])]
         bad = [c for c in company if c not in COMPANY_OPTIONS]
         if bad:
@@ -460,7 +573,8 @@ def _validate_activities(src: Path, types: dict[str, dict[str, Any]], type_links
                     "energyRequiredToStart": energy,
                     "hungerReductionPerTick": rates["hunger_reduction_per_tick"],
                     "sourceReference": r["source_reference"] or None,
-                    "sortOrder": net._int(r["sort_order"], ctx, "sort_order", res), "active": active}
+                    "sortOrder": net._int(r["sort_order"], ctx, "sort_order", res), "active": active,
+                    "vacation": minutes is not None and minutes >= VACATION_MIN_MINUTES}
     for _aid, _ext in extended_map.items():
         if _aid in out:
             out[_aid].update(_ext)
@@ -511,7 +625,14 @@ def export(root: Path) -> tuple[net.Result, Path | None]:
                              "duringCare": "CARE_SERVICE_PROVIDES_LINKED_ACTIONS",
                              "cost": "FREE_NO_AGENT_FINANCES",
                              "energy": {"definition": "FATIGUE_MAX_MINUS_FATIGUE", "fatigueStatId": FATIGUE_STAT,
-                                        "startRule": "ENERGY_AT_OR_ABOVE_REQUIRED"},
+                                        "startRule": "ENERGY_AT_OR_ABOVE_REQUIRED",
+                                        "requiredAtLeastFatigueUsed": True},
+                             "vacation": {"minimumMinutes": VACATION_MIN_MINUTES, "requiresOffDutyAndOnVacation": True,
+                                          "statsTracked": False,
+                                          "setToBestOnReturn": ["FATIGUE", "NUTRITION", "STRESS", "WORKLOAD", "INTOXICATION"],
+                                          "loyalty": "INCREASES_INDIRECTLY_WITH_CONDITION"},
+                             "timing": {"stressAndFatigueRateUnit": "PER_STRATEGIC_MINUTE",
+                                        "simTickSetting": "SIM_TICK_STRATEGIC_MINUTES"},
                              "safeHouseOccupancy": "BEDS",
                              "recreationPlacement": "RANDOMIZED_IN_TERRITORY_TRAVEL_MAY_BE_REQUIRED"},
                "openItems": OPEN_ITEMS, "runtimeImplemented": False}

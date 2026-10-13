@@ -24,6 +24,7 @@ import os
 import subprocess
 import sys
 import tkinter as tk
+from doda_task_flow_preview_ui import open_task_flow_preview
 from datetime import datetime
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
@@ -41,9 +42,11 @@ from doda_facility_capabilities_editor import install_facility_capabilities_edit
 from doda_capability_staffing_rules_editor import install_capability_staffing_rules_editor
 from doda_facility_capability_staffing_overrides_editor import install_facility_capability_staffing_overrides_editor
 from doda_task_templates_editor import install_task_templates_editor
+from doda_task_draft_policy import task_draft_dirty, allow_task_project_change, install_task_draft_close_guard
 from doda_foims_x_preview import FoimsXPreview
 from doda_network_editor import install_network_editor, network_editors_dirty
 from doda_navigation import install_grouped_navigation
+from doda_ui_enhancements import install_tree_autosize
 import doda_network_rules
 import doda_equipment_rules
 import doda_care_rules
@@ -52,7 +55,21 @@ import doda_agent_attribute_rules
 import doda_personal_care_rules
 import doda_time_rules
 import doda_recreation_content_rules
+import doda_sobriety_rules
+import doda_territory_rules
+import doda_weapon_rules
+import doda_hostile_rules
+import doda_progression_identity_rules
+import doda_authored_mission_rules
 import doda_zscript_catalog
+import doda_resource_rules
+import doda_task_flow_rules
+import doda_task_staffing_rules
+import doda_collection_rules
+import doda_collection_model_rules
+import doda_evidence_instance_rules
+import doda_task_prerequisite_rules
+import doda_vehicle_rules
 
 
 APP_TITLE = "DoDA Content Workbench"
@@ -250,7 +267,9 @@ class ContentWorkbenchApp(tk.Tk):
         install_facility_capability_staffing_overrides_editor(self)
         install_task_templates_editor(self)
         install_network_editor(self)
+        install_task_draft_close_guard(self, messagebox)
         install_grouped_navigation(self)
+        install_tree_autosize(self)
         self.refresh_all(show_message=False)
 
     def _configure_styles(self) -> None:
@@ -595,6 +614,11 @@ class ContentWorkbenchApp(tk.Tk):
             label="Refresh FOIMS-X Monitor",
             command=self.refresh_foims_preview,
         )
+        self.preview_menu.add_separator()
+        self.preview_menu.add_command(
+            label="Task Resource Flow Preview (Saved Source)",
+            command=lambda: open_task_flow_preview(self),
+        )
 
         self.view_menu = tk.Menu(self, **menu_options)
         self.view_menu.add_command(
@@ -866,7 +890,7 @@ class ContentWorkbenchApp(tk.Tk):
         ).grid(row=1, column=1, sticky=tk.W, pady=(4, 0))
 
         tab_navigation = ttk.Frame(outer)
-        tab_navigation.pack(fill=tk.X, pady=(0, 4))
+        # Editor tab row removed: the grouped sidebar replaces it.
 
         ttk.Label(
             tab_navigation,
@@ -1546,6 +1570,9 @@ class ContentWorkbenchApp(tk.Tk):
             self.set_detail(self.flavor_detail, row)
 
     def run_validation(self) -> None:
+        task_editor = getattr(self, "task_templates_editor", None)
+        if task_editor is not None and getattr(task_editor, "dirty", False):
+            self.log("Task Templates note: applied drafts are not included; this action uses saved source. Save to Source first to include them.")
         if not self.validator_path.is_file():
             messagebox.showerror(
                 APP_TITLE,
@@ -1573,6 +1600,9 @@ class ContentWorkbenchApp(tk.Tk):
             messagebox.showinfo(APP_TITLE, "Validate All passed. See the Activity Log for warnings.")
 
     def run_export(self) -> None:
+        task_editor = getattr(self, "task_templates_editor", None)
+        if task_editor is not None and getattr(task_editor, "dirty", False):
+            self.log("Task Templates note: applied drafts are not included; this action uses saved source. Save to Source first to include them.")
         if not self.exporter_path.is_file():
             messagebox.showerror(
                 APP_TITLE,
@@ -1617,6 +1647,46 @@ class ContentWorkbenchApp(tk.Tk):
                     self.log("Rules-only export reuses generated/data/department_content.json; "
                              "use Export All to include saved facility/capability changes.")
                 result, out_path = doda_network_rules.export(self.project_root)
+                resource_result, resource_path = doda_resource_rules.export(self.project_root)
+                result.errors += resource_result.errors
+                result.warnings += resource_result.warnings
+                flow_result, flow_path = doda_task_flow_rules.export(self.project_root)
+                result.errors += flow_result.errors
+                result.warnings += flow_result.warnings
+                staffing_result, staffing_path = doda_task_staffing_rules.export(self.project_root)
+                result.errors += staffing_result.errors
+                result.warnings += staffing_result.warnings
+                collection_result, collection_path = doda_collection_rules.export(self.project_root)
+                result.errors += collection_result.errors
+                result.warnings += collection_result.warnings
+                collection_models_result, collection_models_path = doda_collection_model_rules.export(self.project_root)
+                result.errors += collection_models_result.errors
+                result.warnings += collection_models_result.warnings
+                evidence_result, evidence_path = doda_evidence_instance_rules.export(self.project_root)
+                result.errors += evidence_result.errors
+                result.warnings += evidence_result.warnings
+                prerequisite_result, prerequisite_path = doda_task_prerequisite_rules.export(self.project_root)
+                result.errors += prerequisite_result.errors
+                result.warnings += prerequisite_result.warnings
+                vehicle_result, vehicle_path = doda_vehicle_rules.export(self.project_root)
+                result.errors += vehicle_result.errors
+                result.warnings += vehicle_result.warnings
+                if vehicle_path is not None:
+                    self.log(f"Vehicle catalog exported: {vehicle_path}")
+                if prerequisite_path is not None:
+                    self.log(f"Task prerequisites exported: {prerequisite_path}")
+                if evidence_path is not None:
+                    self.log(f"Evidence type instances exported: {evidence_path}")
+                if collection_models_path is not None:
+                    self.log(f"Collection models exported: {collection_models_path}")
+                if collection_path is not None:
+                    self.log(f"Collection receptacles exported: {collection_path}")
+                if staffing_path is not None:
+                    self.log(f"Task staffing rules exported: {staffing_path}")
+                if flow_path is not None:
+                    self.log(f"Task resource flows exported: {flow_path}")
+                if resource_path is not None:
+                    self.log(f"Resource catalog exported: {resource_path}")
                 if result.valid:
                     equipment_result, equipment_path = doda_equipment_rules.export(self.project_root)
                     result.errors += equipment_result.errors
@@ -1653,6 +1723,36 @@ class ContentWorkbenchApp(tk.Tk):
                     result.warnings += rc_result.warnings
                     if rc_path is not None:
                         self.log(f"Recreation content catalog exported: {rc_path}")
+                    sobriety_result, sobriety_path = doda_sobriety_rules.export(self.project_root)
+                    result.errors += sobriety_result.errors
+                    result.warnings += sobriety_result.warnings
+                    if sobriety_path is not None:
+                        self.log(f"Sobriety catalog exported: {sobriety_path}")
+                    territory_result, territory_path = doda_territory_rules.export(self.project_root)
+                    result.errors += territory_result.errors
+                    result.warnings += territory_result.warnings
+                    if territory_path is not None:
+                        self.log(f"Territory catalog exported: {territory_path}")
+                    weapon_result, weapon_path = doda_weapon_rules.export(self.project_root)
+                    result.errors += weapon_result.errors
+                    result.warnings += weapon_result.warnings
+                    if weapon_path is not None:
+                        self.log(f"Weapon catalog exported: {weapon_path}")
+                    hostile_result, hostile_path = doda_hostile_rules.export(self.project_root)
+                    result.errors += hostile_result.errors
+                    result.warnings += hostile_result.warnings
+                    if hostile_path is not None:
+                        self.log(f"Hostile catalog exported: {hostile_path}")
+                    identity_result, identity_path = doda_progression_identity_rules.export(self.project_root)
+                    result.errors += identity_result.errors
+                    result.warnings += identity_result.warnings
+                    if identity_path is not None:
+                        self.log(f"Progression identity catalog exported: {identity_path}")
+                    mission_result, mission_path = doda_authored_mission_rules.export(self.project_root)
+                    result.errors += mission_result.errors
+                    result.warnings += mission_result.warnings
+                    if mission_path is not None:
+                        self.log(f"Authored mission catalog exported: {mission_path}")
                     if (equipment_result.valid and care_result.valid and condition_result.valid
                             and attribute_result.valid and pcare_result.valid and time_result.valid and rc_result.valid):
                         catalog_path, catalog_sha, included = doda_zscript_catalog.generate(self.project_root)
@@ -1670,6 +1770,20 @@ class ContentWorkbenchApp(tk.Tk):
                 doda_personal_care_rules.validate_personal_care(self.project_root, result)
                 doda_time_rules.validate_time_settings(self.project_root, result)
                 doda_recreation_content_rules.validate_recreation_content(self.project_root, result)
+                doda_sobriety_rules.validate_sobriety(self.project_root, result)
+                doda_territory_rules.validate_territory(self.project_root, result)
+                doda_weapon_rules.validate_weapons(self.project_root, result)
+                doda_hostile_rules.validate_hostiles(self.project_root, result)
+                doda_progression_identity_rules.validate_identities(self.project_root, result)
+                doda_authored_mission_rules.validate_authored_missions(self.project_root, result)
+                doda_resource_rules.validate_resources(self.project_root, result)
+                doda_task_flow_rules.validate_flows(self.project_root, result)
+                doda_task_staffing_rules.validate_staffing(self.project_root, result)
+                doda_collection_rules.validate_collection(self.project_root, result)
+                doda_collection_model_rules.validate_models(self.project_root, result)
+                doda_evidence_instance_rules.validate_instances(self.project_root, result)
+                doda_task_prerequisite_rules.validate_prerequisites(self.project_root, result)
+                doda_vehicle_rules.validate_vehicles(self.project_root, result)
                 if result.valid and not doda_zscript_catalog.is_current(self.project_root):
                     result.warnings.append("ZScript catalog is stale; export network rules to regenerate it")
                 out_path = None
@@ -1785,6 +1899,8 @@ class ContentWorkbenchApp(tk.Tk):
             )
 
     def choose_project_root(self) -> None:
+        if not allow_task_project_change(self, messagebox):
+            return
         selected = filedialog.askdirectory(
             title="Choose DoDA Project Root",
             initialdir=str(self.project_root),
@@ -1878,26 +1994,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

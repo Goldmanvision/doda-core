@@ -1,0 +1,4 @@
+rule_id,loyalty_min,max_stage_id,source_reference,description,sort_order,active
+SHIFT_LOYALTY_LOW,0,DRUNK,User decision 2026-10-08 (alcohol and sobriety),Low Loyalty agents may arrive drunk; a sign their Loyalty is dwindling.,10,false
+SHIFT_LOYALTY_MID,25,BUZZED,User decision 2026-10-08 (alcohol and sobriety),Middling Loyalty agents may arrive buzzed.,20,false
+SHIFT_LOYALTY_HIGH,50,SOBER,User decision 2026-10-08 (alcohol and sobriety),Loyal agents arrive sober.,30,false

@@ -1,0 +1,6 @@
+{
+  "doda_inline_bulk_edit.py": "2fef0a606fcd1f9588b66dedf8bda7f0f97f8162023c04ae508d12f368010204",
+  "doda_row_selection.py": "72fa102532e45c19f08eddb73ba58ab0650c7f590788e0af9fe4b56826fecf78",
+  "tests/test_inline_bulk_edit.py": "e5404c49c10a98d6ad346b27acd2f61852a0b7390457da9189c58905d29c6142",
+  "tests/test_common_value_display.py": "7fec9bb3d072115f9e983b18dffba218e76329865be629a9984410211efc7f7a"
+}

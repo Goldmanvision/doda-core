@@ -53,7 +53,7 @@ MODEL_COLUMNS = ["model_id", "display_name", "family_id", "phone_line_kind", "ne
 
 OWNERSHIP = ("PERSONAL", "LOCATION")
 STORAGE_KINDS = ("HDD", "SC", "NONE")
-CONNECTION_KINDS = ("NETWORK", "PHONE_LINE")
+CONNECTION_KINDS = ("NETWORK", "PHONE_LINE", "NONE")
 PHONE_LINE_KINDS = ("LANDLINE", "MOBILE")
 TOTAL_PERSONAL_DEVICE_LIMIT = 8
 CONNECTION_OVERRIDES = ("MOBILE_INTERNET",)
@@ -89,9 +89,9 @@ def validate_equipment(root: Path, res: net.Result) -> dict[str, Any]:
             if sto not in STORAGE_KINDS:
                 res.errors.append(f"{ctx}: storage_kind must be HDD, SC, or NONE")
             if con not in CONNECTION_KINDS:
-                res.errors.append(f"{ctx}: connection_kind must be NETWORK or PHONE_LINE")
-            if con == "PHONE_LINE" and sto != "NONE":
-                res.errors.append(f"{ctx}: phone-line equipment has no HDD/SC storage")
+                res.errors.append(f"{ctx}: connection_kind must be NETWORK, PHONE_LINE, or NONE")
+            if con in ("PHONE_LINE", "NONE") and sto != "NONE":
+                res.errors.append(f"{ctx}: PHONE_LINE/NONE-connected equipment has no HDD/SC storage")
             limit_text = r["per_task_limit"]
             limit = None
             if own == "PERSONAL":
@@ -127,6 +127,9 @@ def validate_equipment(root: Path, res: net.Result) -> dict[str, Any]:
             tier = r["network_tier_id"]
             gen = net._int(r["generation_order"], ctx, "generation_order", res)
             override = r.get("connection_override", "").upper()
+            if fam is not None and fam["connectionKind"] == "NONE":
+                if tier or line_kind or override:
+                    res.errors.append(f"{ctx}: NONE-connected equipment has no network_tier_id, phone_line_kind, or connection_override")
             if override and override not in CONNECTION_OVERRIDES:
                 res.errors.append(f"{ctx}: connection_override must be blank or MOBILE_INTERNET")
             if fam is None:

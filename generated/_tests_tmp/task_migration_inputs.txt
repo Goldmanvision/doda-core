@@ -1,0 +1,2948 @@
+=== FILE: tools\doda_content_workbench\doda_foims_x_preview.py ===
+#!/usr/bin/env python3
+"""
+FOIMS-X High-Resolution Presentation Preview.
+
+The FOIMS-X interface is defined on a 640 x 480 design grid but is drawn
+directly at the final active 4:3 display dimensions. Text, borders, panels,
+and wrap widths therefore scale with the selected presentation target rather
+than being raster-scaled from a small intermediate image.
+"""
+
+from __future__ import annotations
+
+import math
+import tkinter as tk
+import time
+from datetime import datetime, timedelta
+from pathlib import Path
+from tkinter import ttk, messagebox
+from typing import Any
+
+from PIL import Image, ImageDraw, ImageFont, ImageTk
+
+from doda_foims_x_sandbox import FoimsXSandbox
+from doda_foims_x_facility_catalog import FacilityCatalog, status
+from doda_foims_x_reference_catalog import TaskCatalog, QualificationCatalog
+from doda_foims_x_roster import SandboxRoster, AVAILABLE, UNAVAILABLE
+from doda_foims_x_personnel_catalog import PersonnelCatalog
+from doda_foims_x_task_catalog import TasksCatalog
+from doda_foims_x_tasks import TaskBoard
+
+
+DESIGN_SIZE = (640, 480)
+
+# Dual CRT hardware scene dimensions.
+DUAL_CRT_OVERLAY_SIZE = (1920, 1080)
+
+# Physical display openings inside the dual CRT overlay.
+# Format: x, y, width, height.
+LEFT_CRT_APERTURE = (35, 110, 860, 640)
+RIGHT_CRT_APERTURE = (1025, 110, 860, 640)
+
+# Exact 4:3 FOIMS-X viewport inside each 860 x 640 physical opening.
+FOIMS_VIEWPORT_SIZE = (853, 640)
+
+# Compatibility alias for any existing CRT overlay reference.
+CRT_OVERLAY_SIZE = DUAL_CRT_OVERLAY_SIZE
+
+# Native overlay screen opening: x, y, width, height.
+# The bezel is scaled and positioned from this rectangle—not from
+# the outer monitor dimensions—so its opening exactly matches FOIMS-X.
+CRT_SCREEN_APERTURE = (79, 50, 241, 181)
+
+# Insets are applied inside the CRT opening after scaling. They preserve
+# the visible bezel lip and make FOIMS-X appear behind the monitor glass.
+CRT_SCREEN_INSET = (3, 3, 3, 4)
+
+PRESENTATION_SIZES = {
+    "720p (1280 x 720)": (1280, 720),
+    "1080p (1920 x 1080)": (1920, 1080),
+    "1440p (2560 x 1440)": (2560, 1440),
+    "4K (3840 x 2160)": (3840, 2160),
+}
+
+PALETTE = {
+    "desktop": "#07090B",
+    "screen": "#06100B",
+    "screen_alt": "#09190F",
+    "panel": "#0C2417",
+    "panel_alt": "#10301E",
+    "border": "#4C9A6D",
+    "grid": "#123D28",
+    "text": "#B9FFD3",
+    "muted": "#75B994",
+    "accent": "#84FFB4",
+    "shadow": "#000000",
+    "fallback": "#8C939F",
+}
+
+
+def normalize_hex(value: str, fallback: str = PALETTE["fallback"]) -> str:
+    color = value.strip().upper()
+
+    if len(color) != 7 or not color.startswith("#"):
+        return fallback
+
+    allowed = "0123456789ABCDEF"
+
+    if all(character in allowed for character in color[1:]):
+        return color
+
+    return fallback
+
+
+def active_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
+    return [
+        row
+        for row in rows
+        if row.get("active", "TRUE").strip().upper() != "FALSE"
+    ]
+
+
+def numeric_value(value: str, fallback: float = 0.0) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return fallback
+
+
+# FOIMS_X_CANONICAL_CLOCK_1992_02_01
+# Canonical DoDA campaign epoch: February 1, 1992 at 00:00:00.
+# One real second advances one in-game minute.
+FOIMS_X_EPOCH = datetime(1992, 2, 1, 0, 0, 0)
+FOIMS_X_GAME_MINUTES_PER_REAL_SECOND = 1
+FOIMS_X_GAME_DAY_MINUTES = 24 * 60
+
+
+def foims_x_game_clock(elapsed_real_seconds: float) -> dict[str, object]:
+    """Convert monotonic preview elapsed time into FOIMS-X campaign time."""
+    elapsed_game_minutes = max(
+        0,
+        int(elapsed_real_seconds * FOIMS_X_GAME_MINUTES_PER_REAL_SECOND),
+    )
+
+    game_datetime = FOIMS_X_EPOCH + timedelta(minutes=elapsed_game_minutes)
+    day_number = elapsed_game_minutes // FOIMS_X_GAME_DAY_MINUTES + 1
+    minute_of_day = elapsed_game_minutes % FOIMS_X_GAME_DAY_MINUTES
+
+    return {
+        "date": game_datetime.strftime("%Y-%m-%d"),
+        "time": game_datetime.strftime("%H:%M:%S"),
+        "day": day_number,
+        "cycle_percent": minute_of_day / FOIMS_X_GAME_DAY_MINUTES * 100.0,
+    }
+
+
+class FoimsXPreview:
+    """Read-only FOIMS-X authoring preview at high-resolution output."""
+
+    def __init__(self, app: Any) -> None:
+        self.app = app
+        self.window = tk.Toplevel(app)
+        self.window.title("FOIMS-X Local Simulation Preview")
+        self.window.geometry("1400x960")
+        self.window.minsize(900, 680)
+        self.window.configure(background=PALETTE["desktop"])
+
+        self.presentation_size_name = tk.StringVar(
+            value="1080p (1920 x 1080)"
+        )
+        self.status_text = tk.StringVar(
+            value="FOIMS-X native high-resolution preview ready."
+        )
+        self._photo: ImageTk.PhotoImage | None = None
+        self._canvas_image_id: int | None = None
+        self._presented_size: tuple[int, int] | None = None
+        self._pending_resize: str | None = None
+        self.sandbox = FoimsXSandbox(app.tables)
+        self.roster = SandboxRoster(app.tables)
+        self.task_board = TaskBoard(app.tables)
+        self._clock_after_id = None
+        self._frame_snapshot = self.sandbox.snapshot()
+        self._activity_window = None
+        self._activity_tree = None
+        self._activity_signature = None
+
+        self._build_controls()
+        self._build_catalog_controls()
+        self._build_canvas()
+
+        self.window.protocol("WM_DELETE_WINDOW", self.close)
+        self.window.bind("<Control-r>", self.refresh_preview)
+        self.window.bind("<F11>", self.toggle_fullscreen)
+        self.window.bind("<Escape>", self.exit_fullscreen)
+        self.window.bind("<Configure>", self._on_resize)
+        self.window.after_idle(self.refresh_preview)
+        self._clock_after_id = self.window.after(1000, self._clock_tick)
+
+    def is_open(self) -> bool:
+        try:
+            return bool(self.window.winfo_exists())
+        except tk.TclError:
+            return False
+
+    def toggle_debug(self, _event=None):
+        try:
+            visible = bool(self.debug_window.winfo_viewable())
+        except tk.TclError:
+            return "break"
+        if visible:
+            self.hide_debug()
+        else:
+            self.show_debug()
+        return "break"
+
+    def show_debug(self):
+        try:
+            self.debug_window.deiconify()
+            self.debug_window.lift()
+        except tk.TclError:
+            pass
+
+    def hide_debug(self):
+        try:
+            self.debug_window.withdraw()
+        except tk.TclError:
+            pass
+
+    def _current_game_clock(self) -> dict[str, object]:
+        return self._frame_snapshot
+
+    def _clock_tick(self) -> None:
+        self._clock_after_id = None
+        if not self.is_open():
+            return
+        self.sandbox.tick()
+        self.render()
+        self._clock_after_id = self.window.after(1000, self._clock_tick)
+
+    def _toggle_simulation(self) -> None:
+        if self.sandbox.running:
+            self.sandbox.pause()
+        else:
+            self.sandbox.play()
+        self.render()
+
+    def _step_simulation(self) -> None:
+        if self.sandbox.running:
+            return
+        self.sandbox.step(int(self.step_minutes.get()))
+        self.render()
+
+    def _reset_simulation(self) -> None:
+        self.sandbox.reset(self.app.tables)
+        self.roster.reset()
+        self.task_board.reset()
+        self._populate_metric_controls()
+        if hasattr(self, "_facility_catalog"):
+            self._refresh_facility_catalog()
+        self.render()
+
+    def _gather_evidence(self):
+        try:
+            self.sandbox.gather_evidence(self.evidence_amount.get())
+        except ValueError as error:
+            messagebox.showerror("Sandbox Evidence", str(error), parent=self.window)
+            return
+        self.render()
+
+    def _spend_evidence(self):
+        try:
+            self.sandbox.spend_evidence(self.evidence_amount.get())
+        except ValueError as error:
+            messagebox.showerror("Sandbox Evidence", str(error), parent=self.window)
+            return
+        self.render()
+
+    def _populate_metric_controls(self):
+        ids = tuple(r["metric_id"] for r in self.sandbox.metric_rows())
+        self.metric_combo.configure(values=ids)
+        if self.selected_metric.get() not in ids:
+            self.selected_metric.set(ids[0] if ids else "")
+        self._select_metric()
+
+    def _select_metric(self, _event=None):
+        metric_id = self.selected_metric.get()
+        row = next((r for r in self.sandbox.metric_rows()
+                    if r["metric_id"] == metric_id), None)
+        if row is None:
+            self.metric_bounds.set("No active metrics")
+            self.metric_value.set("")
+            return
+        self.metric_bounds.set(
+            f'{row.get("display_name", metric_id)} | '
+            f'{row["internal_min"]} to {row["internal_max"]}'
+        )
+        self.metric_value.set(str(int(self.sandbox.metrics[metric_id])))
+        if hasattr(self, "canvas"):
+            self.render()
+
+    def _apply_metric(self):
+        try:
+            self.sandbox.set_metric(
+                self.selected_metric.get(), self.metric_value.get()
+            )
+        except ValueError as error:
+            messagebox.showerror(
+                "Sandbox metric value", str(error), parent=self.window
+            )
+            return
+        self.metric_value.set(
+            str(int(self.sandbox.metrics[self.selected_metric.get()]))
+        )
+        self.render()
+
+    def _visible_metric_rows(self):
+        selected = self.selected_metric.get()
+        return sorted(
+            self.sandbox.metric_rows(),
+            key=lambda row: row["metric_id"] != selected
+        )[:3]
+
+    def _show_activity(self):
+        if self._activity_window is not None:
+            try:
+                if self._activity_window.winfo_exists():
+                    self._activity_window.lift()
+                    return
+            except tk.TclError:
+                pass
+
+        self._activity_window = tk.Toplevel(self.window)
+        self._activity_window.title("FOIMS-X Sandbox Activity - latest 200 changes")
+        self._activity_window.geometry("900x380")
+        frame = ttk.Frame(self._activity_window, padding=8)
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        columns = ("time", "metric", "before", "after")
+        self._activity_tree = ttk.Treeview(
+            frame, columns=columns, show="headings"
+        )
+        for key, label, width in (
+            ("time", "Strategic time", 180),
+            ("metric", "Metric / Transaction", 220),
+            ("before", "Before", 240),
+            ("after", "After", 240),
+        ):
+            self._activity_tree.heading(key, text=label)
+            self._activity_tree.column(key, width=width)
+
+        scroll = ttk.Scrollbar(
+            frame, orient=tk.VERTICAL, command=self._activity_tree.yview
+        )
+        self._activity_tree.configure(yscrollcommand=scroll.set)
+        scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        self._activity_tree.pack(fill=tk.BOTH, expand=True)
+        self._activity_signature = None
+        self._refresh_activity()
+
+    def _refresh_activity(self):
+        if self._activity_tree is None:
+            return
+        try:
+            if not self._activity_tree.winfo_exists():
+                return
+            entries = self._frame_snapshot.get("activity", [])
+            signature = repr(entries)
+            if signature == self._activity_signature:
+                return
+            children = self._activity_tree.get_children()
+            if children:
+                self._activity_tree.delete(*children)
+            for entry in entries:
+                self._activity_tree.insert(
+                    "", "end", values=self.sandbox.activity_columns(entry)
+                )
+            self._activity_signature = signature
+        except tk.TclError:
+            pass
+
+    def _build_catalog_controls(self):
+        row = ttk.Frame(self.controls)
+        row.pack(fill=tk.X, pady=(8, 0))
+        self.catalog_mode = tk.StringVar(value="Overview")
+        self.catalog_facility_id = tk.StringVar()
+        self.catalog_info = tk.StringVar()
+        self._catalog_detail_page = 0
+        ttk.Label(row, text="FOIMS-X screen:").pack(side=tk.LEFT)
+        mode = ttk.Combobox(
+            row, state="readonly", width=16,
+            values=("Overview", "Facilities", "Task Templates", "Qualifications", "Personnel", "Tasks"), textvariable=self.catalog_mode
+        )
+        mode.pack(side=tk.LEFT, padx=6)
+        mode.bind("<<ComboboxSelected>>", self._catalog_mode_changed)
+        self.catalog_facility_combo = ttk.Combobox(
+            row, state="readonly", width=28,
+            textvariable=self.catalog_facility_id
+        )
+        self.catalog_facility_combo.pack(side=tk.LEFT, padx=6)
+        self.catalog_facility_combo.bind("<<ComboboxSelected>>", self._catalog_selected)
+        ttk.Button(row, text="Previous Entry",
+                   command=lambda: self._catalog_move(-1)).pack(side=tk.LEFT)
+        ttk.Button(row, text="Next Entry",
+                   command=lambda: self._catalog_move(1)).pack(side=tk.LEFT, padx=4)
+        ttk.Button(row, text="Details <",
+                   command=lambda: self._catalog_page(-1)).pack(side=tk.LEFT)
+        ttk.Button(row, text="Details >",
+                   command=lambda: self._catalog_page(1)).pack(side=tk.LEFT, padx=4)
+        ttk.Label(self.controls, textvariable=self.catalog_info).pack(fill=tk.X)
+        roster_row = ttk.Frame(self.controls)
+        roster_row.pack(fill=tk.X, pady=(4, 0))
+        ttk.Label(roster_row, text="Sandbox roster (Personnel screen):").pack(side=tk.LEFT)
+        ttk.Button(roster_row, text="Toggle Availability",
+                   command=self._roster_toggle).pack(side=tk.LEFT, padx=6)
+        ttk.Button(roster_row, text="Reset Roster",
+                   command=self._roster_reset).pack(side=tk.LEFT)
+        task_row = ttk.Frame(self.controls)
+        task_row.pack(fill=tk.X, pady=(4, 0))
+        self.task_template_choice = tk.StringVar()
+        ttk.Label(task_row, text="Sandbox task:").pack(side=tk.LEFT)
+        self.task_template_combo = ttk.Combobox(
+            task_row, state="readonly", width=28,
+            textvariable=self.task_template_choice
+        )
+        self.task_template_combo.pack(side=tk.LEFT, padx=6)
+        ttk.Button(task_row, text="Spawn Task",
+                   command=self._task_spawn).pack(side=tk.LEFT)
+        ttk.Button(task_row, text="Cancel Selected Task",
+                   command=self._task_cancel).pack(side=tk.LEFT, padx=6)
+        ttk.Button(task_row, text="Clear Tasks",
+                   command=self._task_clear).pack(side=tk.LEFT)
+        self._populate_task_templates()
+        quick = ttk.Frame(self.toolbar_frame)
+        quick.pack(side=tk.LEFT, padx=(16, 0))
+        ttk.Label(quick, text="Screen:").pack(side=tk.LEFT)
+        quick_mode = ttk.Combobox(
+            quick, state="readonly", width=16,
+            values=tuple(mode.cget("values")),
+            textvariable=self.catalog_mode
+        )
+        quick_mode.pack(side=tk.LEFT, padx=6)
+        quick_mode.bind("<<ComboboxSelected>>", self._catalog_mode_changed)
+        ttk.Button(quick, text="<", width=3,
+                   command=lambda: self._catalog_move(-1)).pack(side=tk.LEFT)
+        ttk.Button(quick, text=">", width=3,
+                   command=lambda: self._catalog_move(1)).pack(side=tk.LEFT, padx=4)
+        self._refresh_facility_catalog()
+
+    def _refresh_facility_catalog(self):
+        if not hasattr(self, "_catalog_selection_by_mode"):
+            self._catalog_selection_by_mode = {}
+            self._catalog_page_by_mode = {}
+        old_mode = getattr(self, "_catalog_loaded_mode", None)
+        if old_mode is not None:
+            self._catalog_selection_by_mode[old_mode] = self.catalog_facility_id.get()
+            self._catalog_page_by_mode[old_mode] = self._catalog_detail_page
+
+        mode = self.catalog_mode.get()
+        if mode == "Overview":
+            mode = old_mode or "Facilities"
+        classes = {
+            "Facilities": FacilityCatalog,
+            "Task Templates": TaskCatalog,
+            "Qualifications": QualificationCatalog,
+        }
+        self._catalog_loaded_mode = mode
+        if mode == "Personnel":
+            self._facility_catalog = PersonnelCatalog(self.app.tables, self.roster)
+        elif mode == "Tasks":
+            self._facility_catalog = TasksCatalog(
+                self.app.tables, self.task_board, self._task_now
+            )
+        else:
+            self._facility_catalog = classes[mode](self.app.tables)
+        if hasattr(self, "task_template_combo"):
+            self._populate_task_templates()
+        self._catalog_rows = self._facility_catalog.facilities()
+        ids = tuple(row.get("facility_id", "") for row in self._catalog_rows)
+        self.catalog_facility_combo.configure(values=ids)
+        selected = self._catalog_selection_by_mode.get(mode, "")
+        self.catalog_facility_id.set(
+            selected if selected in ids else (ids[0] if ids else "")
+        )
+        self._catalog_detail_page = self._catalog_page_by_mode.get(mode, 0)
+        self._update_catalog_info()
+        if hasattr(self, "canvas"):
+            self.render()
+
+    def _catalog_mode_changed(self, _event=None):
+        self._refresh_facility_catalog()
+
+    def _roster_toggle(self):
+        if self.catalog_mode.get() != "Personnel":
+            return
+        agent = self.roster.get(self.catalog_facility_id.get())
+        if agent is None:
+            return
+        self.roster.set_availability(
+            agent.agent_id,
+            UNAVAILABLE if agent.availability == AVAILABLE else AVAILABLE,
+        )
+        self._refresh_facility_catalog()
+
+    def _roster_reset(self):
+        self.roster.reset()
+        if self.catalog_mode.get() == "Personnel":
+            self._refresh_facility_catalog()
+
+    def _task_now(self):
+        return self.sandbox.snapshot()["strategic_minutes"]
+
+    def _populate_task_templates(self):
+        ids = sorted(
+            row.get("task_template_id", "")
+            for row in self.app.tables.get("task_templates", [])
+            if str(row.get("active", "")).strip().upper() == "TRUE"
+        )
+        self.task_template_combo.configure(values=tuple(ids))
+        if self.task_template_choice.get() not in ids:
+            self.task_template_choice.set(ids[0] if ids else "")
+
+    def _task_changed(self, select=None):
+        if self.catalog_mode.get() == "Tasks":
+            self._refresh_facility_catalog()
+            if select:
+                self.catalog_facility_id.set(select)
+                self._catalog_selected()
+        else:
+            self.render()
+
+    def _task_spawn(self):
+        try:
+            task = self.task_board.spawn(
+                self.task_template_choice.get(), self._task_now()
+            )
+        except ValueError as error:
+            messagebox.showerror("Sandbox Tasks", str(error), parent=self.window)
+            return
+        self._task_changed(task.instance_id)
+
+    def _task_cancel(self):
+        if self.catalog_mode.get() != "Tasks":
+            messagebox.showinfo(
+                "Sandbox Tasks", "Open the Tasks screen and select a task first.",
+                parent=self.window
+            )
+            return
+        try:
+            self.task_board.cancel(self.catalog_facility_id.get())
+        except KeyError:
+            messagebox.showinfo(
+                "Sandbox Tasks", "Select a task first.", parent=self.window
+            )
+            return
+        self._task_changed()
+
+    def _task_clear(self):
+        self.task_board.reset()
+        self._task_changed()
+
+    def _catalog_selected(self, _event=None):
+        self._catalog_detail_page = 0
+        self._update_catalog_info()
+        if hasattr(self, "canvas"):
+            self.render()
+
+    def _catalog_move(self, delta):
+        ids = [row.get("facility_id", "") for row in self._catalog_rows]
+        if not ids:
+            return
+        current = self.catalog_facility_id.get()
+        index = ids.index(current) if current in ids else 0
+        self.catalog_facility_id.set(ids[(index + delta) % len(ids)])
+        self._catalog_selected()
+
+    def _catalog_page(self, delta):
+        pages = self._facility_catalog.pages(self.catalog_facility_id.get())
+        self._catalog_detail_page = max(
+            0, min(len(pages) - 1, self._catalog_detail_page + delta)
+        )
+        self._update_catalog_info()
+        if hasattr(self, "canvas"):
+            self.render()
+
+    def _update_catalog_info(self):
+        selected = self.catalog_facility_id.get()
+        row = next(
+            (r for r in self._catalog_rows if r.get("facility_id") == selected), {}
+        )
+        pages = self._facility_catalog.pages(selected)
+        self._catalog_detail_page = min(self._catalog_detail_page, len(pages) - 1)
+        self.catalog_info.set(
+            f'Catalog: {row.get("display_name", selected) or "No entries"} | '
+            f'{len(self._catalog_rows)} entries | '
+            f'Details {self._catalog_detail_page + 1}/{len(pages)} | Read only'
+        )
+
+    def _render_facility_catalog(self, active_width, active_height):
+        image = Image.new("RGBA", (active_width, active_height), PALETTE["screen"])
+        draw = ImageDraw.Draw(image)
+        scale_x = active_width / DESIGN_SIZE[0]
+        scale_y = active_height / DESIGN_SIZE[1]
+        ui_scale = min(scale_x, scale_y)
+
+        def panel(x0, y0, x1, y1, fill):
+            draw.rectangle(
+                (round(x0 * scale_x), round(y0 * scale_y),
+                 round(x1 * scale_x), round(y1 * scale_y)),
+                fill=fill, outline=PALETTE["border"],
+                width=max(1, round(ui_scale))
+            )
+
+        def label(x, y, value, size=9, color=None):
+            self._draw_text(
+                image, round(x * scale_x), round(y * scale_y), value,
+                max(8, round(size * ui_scale)), color or PALETTE["text"]
+            )
+
+        panel(12, 12, 628, 468, PALETTE["screen"])
+        panel(18, 18, 622, 48, PALETTE["panel"])
+        label(28, 26, "FOIMS-X / " + self.catalog_mode.get().upper() + (" / SANDBOX ROSTER" if self.catalog_mode.get() == "Personnel" else " / READ-ONLY CATALOG"), 11, PALETTE["accent"])
+        panel(18, 58, 198, 446, PALETTE["screen_alt"])
+        panel(206, 58, 622, 446, PALETTE["screen_alt"])
+        label(26, 69, self.catalog_mode.get().upper(), 10, PALETTE["accent"])
+        label(216, 69, "SELECTED ENTRY DETAILS", 10, PALETTE["accent"])
+
+        selected = self.catalog_facility_id.get()
+        ids = [row.get("facility_id", "") for row in self._catalog_rows]
+        index = ids.index(selected) if selected in ids else 0
+        start = index // 8 * 8
+        for offset, row in enumerate(self._catalog_rows[start:start + 8]):
+            y = 92 + offset * 40
+            focused = row.get("facility_id") == selected
+            if focused:
+                panel(22, y - 4, 194, y + 32, PALETTE["panel_alt"])
+            name = row.get("display_name") or row.get("facility_id", "")
+            label(28, y, ("> " if focused else "  ") + name[:20], 8,
+                  PALETTE["accent"] if focused else PALETTE["text"])
+            label(40, y + 16, status(row), 8, PALETTE["muted"])
+
+        if not self._catalog_rows:
+            label(28, 100, "NO CATALOG ENTRIES", 8, PALETTE["muted"])
+
+        pages = self._facility_catalog.pages(selected)
+        page = min(self._catalog_detail_page, len(pages) - 1)
+        for offset, line in enumerate(pages[page]):
+            label(216, 92 + offset * 15, line, 8)
+
+        panel(18, 452, 622, 466, PALETTE["panel"])
+        label(26, 455,
+              f'CATALOG ONLY / DETAILS {page + 1}/{len(pages)} / NO PURCHASES OR STAFFING CHANGES',
+              7, PALETTE["muted"])
+        return image
+
+    def show(self) -> None:
+        if not self.is_open():
+            return
+
+        self.window.deiconify()
+        self.window.lift()
+        self.window.focus_force()
+
+    def close(self) -> None:
+        self.sandbox.pause()
+        for owner, name in ((self.window, "_clock_after_id"), (self.canvas, "_pending_resize")):
+            callback = getattr(self, name, None)
+            if callback is not None:
+                try:
+                    owner.after_cancel(callback)
+                except tk.TclError:
+                    pass
+                setattr(self, name, None)
+        if self.is_open():
+            self.window.destroy()
+
+
+    def toggle_fullscreen(
+        self,
+        _event: tk.Event[Any] | None = None,
+    ) -> str:
+        """
+        Toggle FOIMS-X presentation fullscreen.
+
+        Fullscreen intentionally hides all authoring controls and status
+        readouts, leaving only the FOIMS-X image and CRT overlay visible.
+        """
+        if bool(self.window.attributes("-fullscreen")):
+            self.exit_fullscreen()
+            return "break"
+
+        self.toolbar_frame.pack_forget()
+        self.status_label.pack_forget()
+
+        self.window.attributes("-fullscreen", True)
+        self.window.after_idle(self._render_fullscreen_presentation)
+
+        return "break"
+
+    def exit_fullscreen(
+        self,
+        _event: tk.Event[Any] | None = None,
+    ) -> str:
+        """
+        Exit FOIMS-X presentation fullscreen and restore authoring controls.
+        """
+        if not bool(self.window.attributes("-fullscreen")):
+            return "break"
+
+        self.window.attributes("-fullscreen", False)
+
+        self.toolbar_frame.pack(fill=tk.X, before=self.canvas)
+        self.status_label.pack(fill=tk.X, pady=(0, 6), before=self.canvas)
+
+        self.window.after_idle(self.render)
+
+        return "break"
+
+    def _render_fullscreen_presentation(self) -> None:
+        """Render after Tkinter applies its final fullscreen geometry."""
+        if not self.is_open():
+            return
+
+        if self._pending_resize is not None:
+            self.canvas.after_cancel(self._pending_resize)
+
+        # Tk updates fullscreen canvas metrics asynchronously. Render after
+        # the geometry event has settled, not during the transition frame.
+        self._pending_resize = self.canvas.after(120, self.render)
+
+    def _font_path(self) -> Path:
+        return (
+            self.app.project_root
+            / "tools"
+            / "doda_content_workbench"
+            / "assets"
+            / "fonts"
+            / "perfect_dos_vga_437"
+            / "Perfect DOS VGA 437 Win.ttf"
+        )
+
+    def _overlay_path(self) -> Path:
+        return (
+            self.app.project_root
+            / "tools"
+            / "doda_content_workbench"
+            / "assets"
+            / "crt_overlay.png"
+        )
+
+    def _build_controls(self) -> None:
+        self.debug_window = tk.Toplevel(self.window)
+        self.debug_window.title("FOIMS-X Debug Panel")
+        self.debug_window.geometry("1000x440+60+60")
+        self.debug_window.protocol("WM_DELETE_WINDOW", self.hide_debug)
+        self.debug_window.bind("<F2>", self.toggle_debug)
+        self.window.bind("<F2>", self.toggle_debug)
+        self.controls = ttk.Frame(self.debug_window, padding=(10, 8))
+        self.controls.pack(fill=tk.BOTH, expand=True)
+        self.toolbar_frame = ttk.Frame(self.window, padding=(10, 8))
+        self.toolbar_frame.pack(fill=tk.X)
+        toolbar = self.toolbar_frame
+        controls = toolbar
+        simulation_controls = ttk.Frame(self.controls)
+        simulation_controls.pack(fill=tk.X, pady=(8, 0))
+        self.play_button = ttk.Button(simulation_controls, text="Play", command=self._toggle_simulation)
+        self.play_button.pack(side=tk.LEFT)
+        self.step_minutes = tk.StringVar(value="1")
+        self.step_combo = ttk.Combobox(simulation_controls, state="readonly", width=8,
+                                      values=("1", "10", "60", "1440"), textvariable=self.step_minutes)
+        self.step_combo.pack(side=tk.LEFT, padx=6)
+        ttk.Label(simulation_controls, text="strategic minutes").pack(side=tk.LEFT)
+        self.step_button = ttk.Button(simulation_controls, text="Step", command=self._step_simulation)
+        self.step_button.pack(side=tk.LEFT, padx=6)
+        ttk.Button(simulation_controls, text="Reset Session", command=self._reset_simulation).pack(side=tk.LEFT)
+        self.simulation_status = tk.StringVar()
+        ttk.Label(simulation_controls, textvariable=self.simulation_status).pack(side=tk.LEFT, padx=10)
+        metric_controls = ttk.Frame(self.controls)
+        metric_controls.pack(fill=tk.X, pady=(8, 0))
+        ttk.Label(metric_controls, text="Sandbox metric:").pack(side=tk.LEFT)
+        self.selected_metric = tk.StringVar()
+        self.metric_value = tk.StringVar()
+        self.metric_bounds = tk.StringVar()
+        self.metric_combo = ttk.Combobox(
+            metric_controls, state="readonly", width=23,
+            textvariable=self.selected_metric
+        )
+        self.metric_combo.pack(side=tk.LEFT, padx=6)
+        self.metric_combo.bind("<<ComboboxSelected>>", self._select_metric)
+        ttk.Entry(
+            metric_controls, textvariable=self.metric_value, width=8
+        ).pack(side=tk.LEFT)
+        ttk.Button(
+            metric_controls, text="Apply", command=self._apply_metric
+        ).pack(side=tk.LEFT, padx=6)
+        ttk.Button(
+            metric_controls, text="Activity Log", command=self._show_activity
+        ).pack(side=tk.LEFT)
+        ttk.Label(
+            metric_controls, textvariable=self.metric_bounds
+        ).pack(side=tk.LEFT, padx=10)
+        self._populate_metric_controls()
+        evidence_controls = ttk.Frame(self.controls)
+        evidence_controls.pack(fill=tk.X, pady=(8, 0))
+        ttk.Label(evidence_controls, text="Sandbox Evidence:").pack(side=tk.LEFT)
+        self.evidence_amount = tk.StringVar(value="100")
+        ttk.Entry(
+            evidence_controls, textvariable=self.evidence_amount, width=12
+        ).pack(side=tk.LEFT, padx=6)
+        ttk.Button(
+            evidence_controls, text="Gather", command=self._gather_evidence
+        ).pack(side=tk.LEFT)
+        ttk.Button(
+            evidence_controls, text="Spend", command=self._spend_evidence
+        ).pack(side=tk.LEFT, padx=6)
+        ttk.Label(
+            evidence_controls, text="Manual test transactions; not mission rewards"
+        ).pack(side=tk.LEFT, padx=8)
+        self.evidence_progress_label = tk.StringVar()
+        ttk.Label(
+            self.controls, textvariable=self.evidence_progress_label
+        ).pack(fill=tk.X, pady=(4, 0))
+
+
+        ttk.Label(
+            controls,
+            text="FOIMS-X Local Simulation Preview",
+            font=("Segoe UI", 11, "bold"),
+        ).pack(side=tk.LEFT)
+
+        ttk.Button(
+            controls,
+            text="Refresh Preview",
+            command=self.refresh_preview,
+        ).pack(side=tk.RIGHT)
+
+        ttk.Button(
+            controls,
+            text="Fullscreen (F11)",
+            command=self.toggle_fullscreen,
+        ).pack(side=tk.RIGHT, padx=(0, 8))
+
+        presentation_combo = ttk.Combobox(
+            controls,
+            state="readonly",
+            values=tuple(PRESENTATION_SIZES),
+            textvariable=self.presentation_size_name,
+            width=22,
+        )
+        presentation_combo.pack(side=tk.RIGHT, padx=(0, 8))
+        presentation_combo.bind(
+            "<<ComboboxSelected>>",
+            self._on_presentation_size_change,
+        )
+
+        ttk.Label(
+            controls,
+            text="Presentation:",
+        ).pack(side=tk.RIGHT, padx=(0, 4))
+        ttk.Button(
+            controls,
+            text="Debug Panel (F2)",
+            command=self.toggle_debug,
+        ).pack(side=tk.RIGHT, padx=(0, 8))
+
+        self.status_label = tk.Label(
+            self.window,
+            textvariable=self.status_text,
+            foreground=PALETTE["muted"],
+            background=PALETTE["desktop"],
+            anchor=tk.W,
+            padx=12,
+        )
+        self.status_label.pack(fill=tk.X, pady=(0, 6))
+
+    def _build_canvas(self) -> None:
+        self.canvas = tk.Canvas(
+            self.window,
+            background=PALETTE["desktop"],
+            highlightthickness=0,
+            borderwidth=0,
+        )
+        self.canvas.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
+
+    def _on_presentation_size_change(self, _event: tk.Event[Any]) -> None:
+        """Schedule a rerender after a fullscreen/windowed geometry change."""
+        if not self.is_open():
+            return
+
+        if self._pending_resize is not None:
+            self.canvas.after_cancel(self._pending_resize)
+
+        self._pending_resize = self.canvas.after(90, self.render)
+
+    def _on_resize(self, event: tk.Event[Any]) -> None:
+        """Rerender after a real canvas-size change, with resize debouncing."""
+        if event.widget is not self.window:
+            return
+
+        if not self.is_open():
+            return
+
+        if self._pending_resize is not None:
+            self.canvas.after_cancel(self._pending_resize)
+
+        self._pending_resize = self.canvas.after(90, self.render)
+
+    def refresh_preview(self, _event: tk.Event[Any] | None = None) -> str:
+        try:
+            self.app.refresh_all(show_message=False)
+            self._refresh_facility_catalog()
+            self.status_text.set(
+                "FOIMS-X refreshed from current authoring data."
+            )
+        except Exception as error:
+            self.status_text.set(f"Preview refresh warning: {error}")
+
+        self.render()
+        return "break"
+
+    def render(self) -> None:
+        if not self.is_open():
+            return
+
+        self._pending_resize = None
+        self._frame_snapshot = self.sandbox.snapshot()
+        self._refresh_activity()
+        self.evidence_progress_label.set(self.sandbox.evidence_progress_text())
+        state = self._frame_snapshot
+        self.play_button.configure(text="Pause" if state["running"] else "Play")
+        self.step_button.configure(state="disabled" if state["running"] else "normal")
+        self.simulation_status.set(
+            f'{"RUNNING" if state["running"] else "PAUSED"} | '
+            f'Evidence {state["available_evidence"]} / lifetime {state["lifetime_evidence"]} | Funding: unconfigured'
+        )
+
+        try:
+            left_screen = self._render_foims_screen(
+                FOIMS_VIEWPORT_SIZE[0],
+                FOIMS_VIEWPORT_SIZE[1],
+            )
+            right_screen = self._render_secondary_console(
+                FOIMS_VIEWPORT_SIZE[0],
+                FOIMS_VIEWPORT_SIZE[1],
+            )
+
+            dual_crt_scene = self._compose_dual_crt(
+                left_screen,
+                right_screen,
+            )
+
+            self._present(dual_crt_scene)
+
+        except Exception as error:
+            self.status_text.set(f"FOIMS-X render error: {error}")
+            self._draw_error(str(error))
+    def _render_foims_screen(
+        self,
+        active_width: int,
+        active_height: int,
+    ) -> Image.Image:
+        if self.catalog_mode.get() == "Tasks":
+            self._catalog_rows = self._facility_catalog.facilities()
+        if self.catalog_mode.get() in ("Facilities", "Task Templates", "Qualifications", "Personnel", "Tasks"):
+            return self._render_facility_catalog(active_width, active_height)
+        image = Image.new(
+            "RGBA",
+            (active_width, active_height),
+            PALETTE["screen"],
+        )
+        draw = ImageDraw.Draw(image)
+
+        scale_x = active_width / DESIGN_SIZE[0]
+        scale_y = active_height / DESIGN_SIZE[1]
+        ui_scale = min(scale_x, scale_y)
+
+        def sx(value: float) -> int:
+            return round(value * scale_x)
+
+        def sy(value: float) -> int:
+            return round(value * scale_y)
+
+        def border_width(value: int = 1) -> int:
+            return max(1, round(value * ui_scale))
+
+        def rectangle(
+            left: float,
+            top: float,
+            right: float,
+            bottom: float,
+            fill: str,
+            outline: str | None = None,
+            width: int = 1,
+        ) -> None:
+            draw.rectangle(
+                (
+                    sx(left),
+                    sy(top),
+                    sx(right),
+                    sy(bottom),
+                ),
+                fill=fill,
+                outline=outline,
+                width=border_width(width),
+            )
+
+        def line(
+            left: float,
+            top: float,
+            right: float,
+            bottom: float,
+            fill: str,
+            width: int = 1,
+        ) -> None:
+            draw.line(
+                (
+                    sx(left),
+                    sy(top),
+                    sx(right),
+                    sy(bottom),
+                ),
+                fill=fill,
+                width=border_width(width),
+            )
+
+        def text(
+            left: float,
+            top: float,
+            value: str,
+            size: int,
+            color: str = PALETTE["text"],
+            align: str = "left",
+            max_width: float | None = None,
+        ) -> None:
+            self._draw_text(
+                image=image,
+                left=sx(left),
+                top=sy(top),
+                value=value,
+                pixel_size=max(8, round(size * ui_scale)),
+                color=color,
+                align=align,
+                max_width=(
+                    sx(max_width)
+                    if max_width is not None
+                    else None
+                ),
+            )
+
+        grid_step = max(8, sx(16))
+
+        for grid_x in range(sx(16), active_width, grid_step):
+            draw.line(
+                (grid_x, sy(16), grid_x, sy(464)),
+                fill=PALETTE["grid"],
+                width=border_width(),
+            )
+
+        for grid_y in range(sy(16), sy(464), max(8, sy(16))):
+            draw.line(
+                (sx(16), grid_y, sx(624), grid_y),
+                fill=PALETTE["grid"],
+                width=border_width(),
+            )
+
+        rectangle(12, 12, 628, 468, PALETTE["screen"], PALETTE["border"])
+        rectangle(18, 18, 622, 48, PALETTE["panel"], PALETTE["border"])
+
+        text(
+            28,
+            25,
+            "F.O.I.M.S.-X // FEDERAL OPERATIONAL INFORMATION",
+            12,
+            PALETTE["accent"],
+        )
+        clock = self._current_game_clock()
+
+        text(
+            612,
+            26,
+            f'{clock["date"]} // {clock["time"]} // D{clock["day"]:03d}',
+            8,
+            PALETTE["muted"],
+            "right",
+        )
+
+        metrics = self.sandbox.metric_rows()
+        tiers = active_rows(self.app.tables.get("metric_tiers", []))
+        facilities = active_rows(self.app.tables.get("facilities", []))
+        flavors = active_rows(self.app.tables.get("flavor_text", []))
+
+        metric_left = 18
+        metric_top = 58
+        metric_right = 376
+        metric_bottom = 450
+
+        facility_left = 384
+        facility_top = 58
+        facility_right = 622
+        facility_bottom = 450
+
+        rectangle(
+            metric_left,
+            metric_top,
+            metric_right,
+            metric_bottom,
+            PALETTE["screen_alt"],
+            PALETTE["border"],
+        )
+        rectangle(
+            facility_left,
+            facility_top,
+            facility_right,
+            facility_bottom,
+            PALETTE["screen_alt"],
+            PALETTE["border"],
+        )
+
+        text(
+            metric_left + 10,
+            metric_top + 10,
+            "DEPARTMENT STATUS",
+            12,
+            PALETTE["accent"],
+        )
+        text(
+            facility_left + 10,
+            facility_top + 10,
+            "FACILITY MONITOR",
+            12,
+            PALETTE["accent"],
+        )
+
+        selected_metrics = self._visible_metric_rows()
+        selected_facilities = facilities[:4]
+
+        if selected_metrics:
+            card_height = 112
+
+            for index, metric in enumerate(selected_metrics):
+                self._draw_metric_card(
+                    image=image,
+                    metric=metric,
+                    tiers=tiers,
+                    flavors=flavors,
+                    left=metric_left + 8,
+                    top=metric_top + 32 + index * card_height,
+                    width=metric_right - metric_left - 16,
+                    height=card_height - 6,
+                    scale_x=scale_x,
+                    scale_y=scale_y,
+                    ui_scale=ui_scale,
+                )
+        else:
+            text(
+                metric_left + 10,
+                metric_top + 40,
+                "NO ACTIVE METRICS",
+                11,
+                PALETTE["fallback"],
+            )
+
+        if selected_facilities:
+            for index, facility in enumerate(selected_facilities):
+                self._draw_facility_row(
+                    image=image,
+                    facility=facility,
+                    left=facility_left + 8,
+                    top=facility_top + 34 + index * 47,
+                    width=facility_right - facility_left - 16,
+                    height=42,
+                    index=index,
+                    scale_x=scale_x,
+                    scale_y=scale_y,
+                    ui_scale=ui_scale,
+                )
+        else:
+            text(
+                facility_left + 10,
+                facility_top + 40,
+                "NO ACTIVE FACILITIES",
+                10,
+                PALETTE["fallback"],
+            )
+
+        directive_top = facility_top + 236
+
+        rectangle(
+            facility_left + 8,
+            directive_top,
+            facility_right - 8,
+            facility_bottom - 8,
+            PALETTE["panel"],
+            PALETTE["border"],
+        )
+
+        directive = flavors[0] if flavors else {}
+
+        text(
+            facility_left + 16,
+            directive_top + 10,
+            "CURRENT DIRECTIVE",
+            10,
+            PALETTE["accent"],
+        )
+        text(
+            facility_left + 16,
+            directive_top + 31,
+            directive.get("title", "NO ACTIVE DIRECTIVE"),
+            11,
+            PALETTE["text"],
+            max_width=facility_right - facility_left - 32,
+        )
+        text(
+            facility_left + 16,
+            directive_top + 55,
+            directive.get(
+                "body",
+                "ADD ACTIVE FLAVOR TEXT TO POPULATE THIS PANEL.",
+            ),
+            9,
+            PALETTE["muted"],
+            max_width=facility_right - facility_left - 32,
+        )
+
+        rectangle(18, 454, 622, 466, PALETTE["panel"], PALETTE["border"])
+
+        text(
+            26,
+            456,
+            "FOIMS-X // LOCAL SIMULATION // PREVIEW ONLY",
+            8,
+            PALETTE["muted"],
+        )
+        text(
+            614,
+            456,
+            (
+                f"M:{len(metrics):02d} "
+                f"T:{len(tiers):02d} "
+                f"F:{len(facilities):02d}"
+            ),
+            8,
+            PALETTE["muted"],
+            "right",
+        )
+
+        return image
+
+    def _render_secondary_console(
+        self,
+        active_width: int,
+        active_height: int,
+    ) -> Image.Image:
+        """Render a stable, independent FOIMS-X secondary operations panel."""
+        image = Image.new(
+            "RGBA",
+            (active_width, active_height),
+            PALETTE["screen"],
+        )
+        draw = ImageDraw.Draw(image)
+
+        scale_x = active_width / DESIGN_SIZE[0]
+        scale_y = active_height / DESIGN_SIZE[1]
+        ui_scale = min(scale_x, scale_y)
+
+        def sx(value: float) -> int:
+            return round(value * scale_x)
+
+        def sy(value: float) -> int:
+            return round(value * scale_y)
+
+        def line_width() -> int:
+            return max(1, round(ui_scale))
+
+        def panel(
+            left: float,
+            top: float,
+            right: float,
+            bottom: float,
+            fill: str = PALETTE["panel_alt"],
+        ) -> None:
+            draw.rectangle(
+                (sx(left), sy(top), sx(right), sy(bottom)),
+                fill=fill,
+                outline=PALETTE["border"],
+                width=line_width(),
+            )
+
+        def text(
+            left: float,
+            top: float,
+            value: str,
+            size: int,
+            color: str = PALETTE["text"],
+            align: str = "left",
+            max_width: float | None = None,
+        ) -> None:
+            self._draw_text(
+                image=image,
+                left=sx(left),
+                top=sy(top),
+                value=value,
+                pixel_size=max(8, round(size * ui_scale)),
+                color=color,
+                align=align,
+                max_width=sx(max_width) if max_width is not None else None,
+            )
+
+        for grid_x in range(sx(16), active_width, max(8, sx(16))):
+            draw.line(
+                (grid_x, sy(16), grid_x, sy(464)),
+                fill=PALETTE["grid"],
+                width=line_width(),
+            )
+
+        for grid_y in range(sy(16), sy(464), max(8, sy(16))):
+            draw.line(
+                (sx(16), grid_y, sx(624), grid_y),
+                fill=PALETTE["grid"],
+                width=line_width(),
+            )
+
+        panel(12, 12, 628, 468, PALETTE["screen"])
+        panel(18, 18, 622, 48, PALETTE["panel"])
+
+        text(
+            28,
+            25,
+            "F.O.I.M.S.-X // OPERATIONS CONSOLE",
+            12,
+            PALETTE["accent"],
+        )
+        clock = self._current_game_clock()
+
+        text(
+            612,
+            26,
+            f'TEMPORAL LINK // {clock["time"]} // D{clock["day"]:03d}',
+            8,
+            PALETTE["muted"],
+            "right",
+        )
+
+        panel(18, 58, 622, 198)
+        panel(18, 208, 622, 342)
+        panel(18, 352, 622, 450)
+
+        text(30, 70, "SECONDARY SYSTEM STATUS", 12, PALETTE["accent"])
+
+        status_rows = (
+            ("CAMPAIGN DATE", str(clock["date"])),
+            ("24-HOUR TIME", str(clock["time"])),
+            ("CAMPAIGN DAY", f'DAY {clock["day"]:03d}'),
+            (
+                "DAY CYCLE",
+                f'{clock["cycle_percent"]:05.2f}% // 01 GAME MIN / REAL SEC',
+            ),
+        )
+
+        for index, (label, value) in enumerate(status_rows):
+            top = 101 + index * 21
+            panel(34, top, 606, top + 16, PALETTE["panel"])
+            text(44, top + 3, label, 8, PALETTE["muted"])
+            text(594, top + 2, value, 9, PALETTE["accent"], "right")
+
+        text(30, 220, "FOIMS-X TELEMETRY", 12, PALETTE["accent"])
+
+        telemetry_rows = (
+            ("DISPLAY MODE", "LOCAL SIMULATION / DUAL CRT"),
+            ("LEFT CHANNEL", "DEPARTMENT OPERATIONS"),
+            ("RIGHT CHANNEL", "OPERATIONS CONSOLE"),
+            ("SESSION STATE", "RUNNING" if clock["running"] else "PAUSED"),
+        )
+
+        for index, (label, value) in enumerate(telemetry_rows):
+            top = 250 + index * 20
+            text(40, top, label, 8, PALETTE["muted"])
+            text(594, top, value, 8, PALETTE["text"], "right")
+
+        text(30, 364, "SANDBOX ACTIVITY", 12, PALETTE["accent"])
+        recent = clock.get("activity", [])[-2:]
+        if not recent:
+            text(40, 397, "NO METRIC CHANGES IN THIS SESSION", 9, PALETTE["text"])
+        for index, entry in enumerate(recent):
+            text(
+                40, 393 + index * 23,
+                self.sandbox.activity_line(entry),
+                8, PALETTE["text"], max_width=550
+            )
+
+        panel(18, 454, 622, 466, PALETTE["panel"])
+        text(
+            26,
+            456,
+            "FOIMS-X // SECONDARY OPERATIONS DISPLAY",
+            8,
+            PALETTE["muted"],
+        )
+        text(
+            614,
+            456,
+            "DUAL DISPLAY MODE",
+            8,
+            PALETTE["muted"],
+            "right",
+        )
+
+        return image
+
+    def _draw_metric_card(
+        self,
+        image: Image.Image,
+        metric: dict[str, str],
+        tiers: list[dict[str, str]],
+        flavors: list[dict[str, str]],
+        left: int,
+        top: int,
+        width: int,
+        height: int,
+        scale_x: float,
+        scale_y: float,
+        ui_scale: float,
+    ) -> None:
+        draw = ImageDraw.Draw(image)
+
+        def sx(value: float) -> int:
+            return round(value * scale_x)
+
+        def sy(value: float) -> int:
+            return round(value * scale_y)
+
+        def line_width(value: int = 1) -> int:
+            return max(1, round(value * ui_scale))
+
+        metric_id = metric.get("metric_id", "")
+        metric_name = metric.get("display_name", metric_id)
+        value = self._frame_snapshot["metrics"].get(metric_id, numeric_value(metric.get("default_value", "0")))
+        minimum = numeric_value(metric.get("internal_min", "0"))
+        maximum = numeric_value(metric.get("internal_max", "100"))
+
+        if maximum <= minimum:
+            maximum = minimum + 1
+
+        progress = min(max((value - minimum) / (maximum - minimum), 0.0), 1.0)
+        tier = self._tier_for_value(metric_id, value, tiers)
+        color = normalize_hex(tier.get("ui_color", PALETTE["fallback"]))
+        tier_label = tier.get("display_label", "UNCLASSIFIED")
+        short_status = tier.get("short_status", "")
+        flavor = self._flavor_for_tier(tier, flavors)
+
+        draw.rectangle(
+            (sx(left), sy(top), sx(left + width), sy(top + height)),
+            fill=PALETTE["panel_alt"],
+            outline=PALETTE["border"],
+            width=line_width(),
+        )
+        draw.rectangle(
+            (sx(left), sy(top), sx(left + 5), sy(top + height)),
+            fill=color,
+        )
+
+        self._draw_text(
+            image,
+            sx(left + 12),
+            sy(top + 10),
+            metric_name,
+            max(8, round(10 * ui_scale)),
+            PALETTE["text"],
+        )
+        self._draw_text(
+            image,
+            sx(left + width - 10),
+            sy(top + 10),
+            f"{int(value):04d}/{int(maximum):04d}",
+            max(8, round(9 * ui_scale)),
+            PALETTE["muted"],
+            "right",
+        )
+        self._draw_text(
+            image,
+            sx(left + 12),
+            sy(top + 28),
+            tier_label,
+            max(9, round(13 * ui_scale)),
+            color,
+        )
+
+        bar_left = left + 12
+        bar_top = top + 53
+        bar_width = width - 24
+        bar_height = 11
+
+        draw.rectangle(
+            (
+                sx(bar_left),
+                sy(bar_top),
+                sx(bar_left + bar_width),
+                sy(bar_top + bar_height),
+            ),
+            fill=PALETTE["screen"],
+            outline=PALETTE["border"],
+            width=line_width(),
+        )
+        draw.rectangle(
+            (
+                sx(bar_left),
+                sy(bar_top),
+                sx(bar_left + max(1, bar_width * progress)),
+                sy(bar_top + bar_height),
+            ),
+            fill=color,
+        )
+
+        message = short_status or flavor.get("title", "")
+
+        if message:
+            self._draw_text(
+                image,
+                sx(left + 12),
+                sy(top + 73),
+                message,
+                max(7, round(8 * ui_scale)),
+                PALETTE["muted"],
+                max_width=sx(width - 24),
+            )
+
+    def _draw_facility_row(
+        self,
+        image: Image.Image,
+        facility: dict[str, str],
+        left: int,
+        top: int,
+        width: int,
+        height: int,
+        index: int,
+        scale_x: float,
+        scale_y: float,
+        ui_scale: float,
+    ) -> None:
+        draw = ImageDraw.Draw(image)
+
+        def sx(value: float) -> int:
+            return round(value * scale_x)
+
+        def sy(value: float) -> int:
+            return round(value * scale_y)
+
+        def line_width(value: int = 1) -> int:
+            return max(1, round(value * ui_scale))
+
+        facility_name = facility.get(
+            "display_name",
+            facility.get("facility_id", "UNKNOWN"),
+        )
+        panel_id = facility.get("foims_panel_id", "UNASSIGNED")
+        tier = facility.get("initial_tier_id", "UNCLASSIFIED")
+
+        colors = (
+            PALETTE["accent"],
+            "#77D8FF",
+            "#F4B942",
+            "#EF5B5B",
+        )
+        color = colors[index % len(colors)]
+
+        draw.rectangle(
+            (sx(left), sy(top), sx(left + width), sy(top + height)),
+            fill=PALETTE["panel_alt"],
+            outline=PALETTE["border"],
+            width=line_width(),
+        )
+        draw.rectangle(
+            (sx(left), sy(top), sx(left + 4), sy(top + height)),
+            fill=color,
+        )
+
+        self._draw_text(
+            image,
+            sx(left + 9),
+            sy(top + 8),
+            facility_name,
+            max(7, round(9 * ui_scale)),
+            PALETTE["text"],
+            max_width=sx(width - 78),
+        )
+        self._draw_text(
+            image,
+            sx(left + width - 8),
+            sy(top + 8),
+            tier,
+            max(7, round(8 * ui_scale)),
+            color,
+            "right",
+        )
+        self._draw_text(
+            image,
+            sx(left + 9),
+            sy(top + 25),
+            panel_id,
+            max(6, round(7 * ui_scale)),
+            PALETTE["muted"],
+            max_width=sx(width - 18),
+        )
+
+    def _draw_text(
+        self,
+        image: Image.Image,
+        left: int,
+        top: int,
+        value: str,
+        pixel_size: int,
+        color: str,
+        align: str = "left",
+        max_width: int | None = None,
+    ) -> None:
+        font = ImageFont.truetype(
+            self._font_path(),
+            max(8, pixel_size),
+        )
+        draw = ImageDraw.Draw(image)
+        text_value = value.upper()
+
+        if max_width is not None:
+            text_value = self._wrap_text(
+                text_value,
+                font,
+                max_width,
+            )
+
+        bounds = draw.multiline_textbbox(
+            (0, 0),
+            text_value,
+            font=font,
+            spacing=max(2, pixel_size // 3),
+        )
+        text_width = bounds[2] - bounds[0]
+
+        if align == "right":
+            left -= text_width
+
+        shadow_offset = max(1, pixel_size // 10)
+
+        draw.multiline_text(
+            (left + shadow_offset, top + shadow_offset),
+            text_value,
+            font=font,
+            fill=PALETTE["shadow"],
+            spacing=max(2, pixel_size // 3),
+        )
+        draw.multiline_text(
+            (left, top),
+            text_value,
+            font=font,
+            fill=color,
+            spacing=max(2, pixel_size // 3),
+        )
+
+    @staticmethod
+    def _wrap_text(
+        value: str,
+        font: ImageFont.FreeTypeFont,
+        max_width: int,
+    ) -> str:
+        lines: list[str] = []
+        current = ""
+
+        for word in value.split():
+            candidate = f"{current} {word}".strip()
+
+            if current and font.getlength(candidate) > max_width:
+                lines.append(current)
+                current = word
+            else:
+                current = candidate
+
+        if current:
+            lines.append(current)
+
+        return "\n".join(lines)
+
+    def _compose_dual_crt(
+        self,
+        left_screen: Image.Image,
+        right_screen: Image.Image,
+    ) -> Image.Image:
+        """Compose two native FOIMS-X screens beneath a front CRT bezel."""
+        composition = Image.new(
+            "RGBA",
+            DUAL_CRT_OVERLAY_SIZE,
+            PALETTE["desktop"],
+        )
+
+        left_x, left_y, left_width, left_height = LEFT_CRT_APERTURE
+        right_x, right_y, right_width, right_height = RIGHT_CRT_APERTURE
+        viewport_width, viewport_height = FOIMS_VIEWPORT_SIZE
+
+        left_viewport_x = left_x + (left_width - viewport_width) // 2
+        left_viewport_y = left_y + (left_height - viewport_height) // 2
+        right_viewport_x = right_x + (right_width - viewport_width) // 2
+        right_viewport_y = right_y + (right_height - viewport_height) // 2
+
+        # Layer 1: FOIMS-X UI screens, rendered at final native dimensions.
+        composition.alpha_composite(
+            left_screen,
+            (left_viewport_x, left_viewport_y),
+        )
+        composition.alpha_composite(
+            right_screen,
+            (right_viewport_x, right_viewport_y),
+        )
+
+        # Layer 2: CRT hardware overlay, closest to the viewer.
+        overlay = Image.open(self._overlay_path()).convert("RGBA")
+
+        if overlay.size != DUAL_CRT_OVERLAY_SIZE:
+            overlay = overlay.resize(
+                DUAL_CRT_OVERLAY_SIZE,
+                Image.Resampling.NEAREST,
+            )
+
+        overlay_alpha = overlay.getchannel("A")
+        aperture_draw = ImageDraw.Draw(overlay_alpha)
+
+        # The asset contains white display regions. Clear them to alpha
+        # so FOIMS-X remains visible behind the front monitor hardware.
+        aperture_draw.rectangle(
+            (
+                left_x,
+                left_y,
+                left_x + left_width - 1,
+                left_y + left_height - 1,
+            ),
+            fill=0,
+        )
+        aperture_draw.rectangle(
+            (
+                right_x,
+                right_y,
+                right_x + right_width - 1,
+                right_y + right_height - 1,
+            ),
+            fill=0,
+        )
+
+        overlay.putalpha(overlay_alpha)
+        composition.alpha_composite(overlay, (0, 0))
+
+        return composition
+    def _present(self, presentation: Image.Image) -> None:
+        """FOIMS_X_PERSISTENT_CANVAS_CLOCK_REPAIR: update one canvas image in place."""
+        self.canvas.update_idletasks()
+
+        canvas_width = max(self.canvas.winfo_width(), 1)
+        canvas_height = max(self.canvas.winfo_height(), 1)
+
+        source_width, source_height = presentation.size
+
+        if source_width <= 0 or source_height <= 0:
+            raise ValueError("FOIMS-X presentation image has invalid dimensions.")
+
+        # A single uniform scale factor preserves the 1920x1080 dual-CRT bezel.
+        scale = min(
+            canvas_width / source_width,
+            canvas_height / source_height,
+        )
+
+        output_width = max(1, round(source_width * scale))
+        output_height = max(1, round(source_height * scale))
+
+        if (output_width, output_height) == presentation.size:
+            output = presentation
+        else:
+            output = presentation.resize(
+                (output_width, output_height),
+                Image.Resampling.LANCZOS,
+            )
+
+        offset_x = (canvas_width - output_width) // 2
+        offset_y = (canvas_height - output_height) // 2
+
+        size_changed = self._presented_size != output.size
+
+        if self._photo is None or self._canvas_image_id is None or size_changed:
+            # Rebuild only on first presentation or a real window-size change.
+            self.canvas.delete("all")
+            self._photo = ImageTk.PhotoImage(output)
+            self._canvas_image_id = self.canvas.create_image(
+                offset_x,
+                offset_y,
+                image=self._photo,
+                anchor=tk.NW,
+            )
+            self._presented_size = output.size
+        else:
+            # Clock updates retain the existing canvas image and avoid blank frames.
+            self._photo.paste(output)
+            self.canvas.coords(
+                self._canvas_image_id,
+                offset_x,
+                offset_y,
+            )
+
+        mode = "FULLSCREEN" if bool(self.window.attributes("-fullscreen")) else "WINDOWED"
+
+        self.status_text.set(
+            f"{mode}: {output_width}x{output_height} of "
+            f"{canvas_width}x{canvas_height} // "
+            "SCENE: UNIFORM 16:9 // UI: RASTER RENDER"
+        )
+
+    def _draw_error(self, message: str) -> None:
+        canvas_width = max(self.canvas.winfo_width(), 1)
+        canvas_height = max(self.canvas.winfo_height(), 1)
+
+        self.canvas.create_text(
+            canvas_width / 2,
+            canvas_height / 2,
+            text=(
+                "FOIMS-X PREVIEW ERROR\n\n"
+                f"{message}\n\n"
+                "Check the authoring data and local font asset."
+            ),
+            fill="#EF5B5B",
+            font=("Consolas", 11),
+            justify=tk.CENTER,
+            anchor=tk.CENTER,
+        )
+
+    @staticmethod
+    def _tier_for_value(
+        metric_id: str,
+        value: float,
+        tiers: list[dict[str, str]],
+    ) -> dict[str, str]:
+        matching = [
+            tier
+            for tier in tiers
+            if tier.get("metric_id", "") == metric_id
+        ]
+
+        matching.sort(
+            key=lambda tier: numeric_value(
+                tier.get("min_inclusive", "0")
+            )
+        )
+
+        for tier in matching:
+            minimum = numeric_value(tier.get("min_inclusive", "0"))
+            maximum_text = tier.get("max_inclusive", "").strip()
+            maximum = numeric_value(maximum_text, math.inf)
+
+            if minimum <= value <= maximum:
+                return tier
+
+        return matching[-1] if matching else {}
+
+    @staticmethod
+    def _flavor_for_tier(
+        tier: dict[str, str],
+        flavors: list[dict[str, str]],
+    ) -> dict[str, str]:
+        flavor_id = tier.get("flavor_text_id", "")
+
+        for flavor in flavors:
+            if flavor.get("flavor_text_id", "") == flavor_id:
+                return flavor
+
+        return {}
+
+
+
+
+
+
+
+
+
+
+
+=== FILE: tools\doda_content_workbench\doda_foims_x_tasks.py ===
+"""Sandbox task instances. In-memory only; never written to CSV."""
+from dataclasses import dataclass, replace
+
+OPEN = "OPEN"
+OVERDUE = "OVERDUE"
+CANCELLED = "CANCELLED"
+
+def is_true(row):
+    return str(row.get("active", "")).strip().upper() == "TRUE"
+
+def positive_minutes(row, key):
+    raw = str(row.get(key, "")).strip()
+    try:
+        value = int(raw)
+    except ValueError:
+        raise ValueError(key + " must be an integer; found '" + raw + "'.")
+    if value < 1:
+        raise ValueError(key + " must be at least 1.")
+    return value
+
+@dataclass(frozen=True)
+class TaskInstance:
+    instance_id: str
+    template_id: str
+    display_name: str
+    capability_id: str
+    priority: str
+    target_effort_minutes: int
+    created_minute: int
+    deadline_minute: int
+    cancelled: bool = False
+
+class TaskBoard:
+    def __init__(self, tables):
+        self.tables = tables
+        self._tasks = {}
+        self._next = 1
+
+    def _unique(self, table, key, value):
+        rows = [r for r in self.tables.get(table, []) if r.get(key) == value]
+        return rows[0] if len(rows) == 1 else None
+
+    def spawn(self, template_id, now_minute):
+        if int(now_minute) < 0:
+            raise ValueError("now_minute cannot be negative.")
+        template = self._unique("task_templates", "task_template_id", template_id)
+        if template is None:
+            raise ValueError("Unknown or duplicate task template: " + str(template_id))
+        if not is_true(template):
+            raise ValueError("Task template is inactive: " + template_id)
+        capability_id = template.get("capability_id", "")
+        capability = self._unique("capabilities", "capability_id", capability_id)
+        if capability is None or not is_true(capability):
+            raise ValueError("Capability missing or inactive: " + str(capability_id))
+        effort = positive_minutes(template, "default_target_effort_minutes")
+        deadline = positive_minutes(template, "default_deadline_minutes")
+        instance_id = "TASK_%04d" % self._next
+        self._next += 1
+        task = TaskInstance(
+            instance_id=instance_id,
+            template_id=template_id,
+            display_name=template.get("display_name") or template_id,
+            capability_id=capability_id,
+            priority=template.get("priority", ""),
+            target_effort_minutes=effort,
+            created_minute=int(now_minute),
+            deadline_minute=int(now_minute) + deadline,
+        )
+        self._tasks[instance_id] = task
+        return task
+
+    def cancel(self, instance_id):
+        if instance_id not in self._tasks:
+            raise KeyError("Unknown task: " + instance_id)
+        self._tasks[instance_id] = replace(self._tasks[instance_id], cancelled=True)
+
+    @staticmethod
+    def state(task, now_minute):
+        if task.cancelled:
+            return CANCELLED
+        return OVERDUE if int(now_minute) > task.deadline_minute else OPEN
+
+    def view(self, now_minute):
+        rows = []
+        for iid in sorted(self._tasks):
+            task = self._tasks[iid]
+            rows.append({
+                "instance_id": task.instance_id,
+                "template_id": task.template_id,
+                "display_name": task.display_name,
+                "capability_id": task.capability_id,
+                "priority": task.priority,
+                "target_effort_minutes": task.target_effort_minutes,
+                "created_minute": task.created_minute,
+                "deadline_minute": task.deadline_minute,
+                "state": self.state(task, now_minute),
+                "remaining_minutes": (
+                    None if task.cancelled
+                    else task.deadline_minute - int(now_minute)
+                ),
+            })
+        return rows
+
+    def reset(self):
+        self._tasks = {}
+        self._next = 1
+
+=== FILE: tools\doda_content_workbench\doda_foims_x_task_catalog.py ===
+"""Projection of sandbox task instances for the FOIMS-X catalog browser."""
+from datetime import timedelta
+from doda_foims_x_facility_catalog import order
+from doda_foims_x_reference_catalog import (
+    ReferenceCatalog, reference_label, staffing_line
+)
+from doda_foims_x_sandbox import EPOCH
+
+def stamp(minute):
+    return (EPOCH + timedelta(minutes=minute)).strftime("%Y-%m-%d %H:%M")
+
+class TasksCatalog(ReferenceCatalog):
+    table = "sandbox_tasks"
+    identity = "instance_id"
+
+    def __init__(self, tables, board, now_fn):
+        super().__init__(tables)
+        board.tables = tables
+        self.board = board
+        self.now_fn = now_fn
+
+    def _view(self):
+        return self.board.view(self.now_fn())
+
+    def facilities(self):
+        return [
+            {
+                "facility_id": row["instance_id"],
+                "instance_id": row["instance_id"],
+                "display_name": row["instance_id"] + " " + row["state"],
+                "active": "TRUE",
+            }
+            for row in self._view()
+        ]
+
+    def selected(self, identity):
+        return next(
+            (r for r in self._view() if r["instance_id"] == identity), None
+        )
+
+    def describe(self, identity):
+        row = self.selected(identity)
+        if row is None:
+            return ["Task instance missing; spawn one from the Debug Panel."]
+        remaining = row["remaining_minutes"]
+        if row["state"] == "CANCELLED":
+            timing = "Cancelled; deadline no longer applies."
+        elif row["state"] == "OVERDUE":
+            timing = "OVERDUE by %d strategic minutes" % (-remaining)
+        else:
+            timing = "Remaining: %d strategic minutes" % remaining
+        lines = [
+            row["display_name"],
+            "ID: " + row["instance_id"],
+            "State: " + row["state"],
+            "SANDBOX ONLY - not authored data and not assigned.",
+            "", "TIMING",
+            "Created: minute %d (%s)" % (
+                row["created_minute"], stamp(row["created_minute"])),
+            "Deadline: minute %d (%s)" % (
+                row["deadline_minute"], stamp(row["deadline_minute"])),
+            timing,
+            "Target effort: %d minutes (work effort, not completion time)"
+            % row["target_effort_minutes"],
+            "Overdue is flagged only; the task stays open.",
+            "", "TEMPLATE",
+            reference_label(
+                self.tables, "task_templates", "task_template_id",
+                row["template_id"]),
+            "Priority: " + (row["priority"] or "UNCONFIGURED"),
+            "", "CAPABILITY",
+            reference_label(
+                self.tables, "capabilities", "capability_id",
+                row["capability_id"]),
+            "", "QUALIFICATIONS VIA GLOBAL STAFFING RULES",
+        ]
+        rules = sorted(
+            [r for r in self.tables.get("capability_staffing_rules", [])
+             if r.get("capability_id") == row["capability_id"]],
+            key=lambda r: order(r, "qualification_id")
+        )
+        if not rules:
+            lines.append("No staffing rules authored for this capability.")
+        for rule in rules:
+            lines.append(reference_label(
+                self.tables, "qualification_catalog", "qualification_id",
+                rule.get("qualification_id", "")))
+            lines.append(staffing_line(rule))
+        return lines
+
+=== FILE: tools\doda_content_workbench\doda_task_templates_editor.py ===
+from __future__ import annotations
+
+import csv
+import hashlib
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import tkinter as tk
+from datetime import datetime
+from pathlib import Path
+from tkinter import messagebox, ttk
+from uuid import uuid4
+
+from doda_content_workbench import TABLE_SPECS
+
+
+FIELDS = (
+    "task_template_id", "display_name", "description", "capability_id",
+    "priority", "default_target_effort_minutes", "default_deadline_minutes",
+    "auto_allocate", "sort_order", "active",
+)
+FILES = tuple(spec["filename"] for spec in TABLE_SPECS.values())
+
+
+class TaskTemplatesEditor:
+    def __init__(self, app):
+        self.app = app
+        self.editing_id = None
+        self.snapshot_hash = None
+        self.loaded_rows = []
+        self.vars = {
+            field: tk.StringVar(master=app)
+            for field in FIELDS
+            if field != "description"
+        }
+        self.widgets = {}
+        self.build()
+
+    def source_path(self):
+        return self.app.source_directory / "task_templates.csv"
+
+    def backup_directory(self):
+        return (
+            self.app.project_root / "data_authoring"
+            / "backups" / "task_templates"
+        )
+
+    @staticmethod
+    def digest(path):
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+
+    def choices(self, field):
+        if field == "capability_id":
+            return sorted({
+                row["capability_id"]
+                for row in self.app.tables.get("capabilities", [])
+                if row.get("active", "").upper() == "TRUE"
+            })
+        if field == "priority":
+            rows = [
+                row for row in self.app.tables.get("enum_catalog", [])
+                if row.get("enum_group") == "TASK_PRIORITY"
+                and row.get("active", "").upper() == "TRUE"
+            ]
+            return [
+                row["enum_value"]
+                for row in sorted(rows, key=lambda row: int(row["sort_order"]))
+            ]
+        return []
+
+    def build(self):
+        tab = self.app.task_templates_tab
+        for child in tab.winfo_children():
+            child.destroy()
+        tab.columnconfigure(0, weight=3)
+        tab.columnconfigure(1, weight=2)
+        tab.rowconfigure(0, weight=1)
+
+        left = ttk.LabelFrame(tab, text="Task Templates", padding=8)
+        right = ttk.LabelFrame(tab, text="Task Template Editor", padding=10)
+        left.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
+        right.grid(row=0, column=1, sticky="nsew")
+        left.columnconfigure(0, weight=1)
+        left.rowconfigure(0, weight=1)
+        right.columnconfigure(1, weight=1)
+
+        columns = ("task_template_id", "display_name", "priority",
+                   "default_target_effort_minutes", "default_deadline_minutes")
+        self.tree = ttk.Treeview(
+            left, columns=columns, show="headings", selectmode="browse"
+        )
+        for field, title in zip(
+            columns, ("Template ID", "Name", "Priority", "Effort", "Deadline")
+        ):
+            self.tree.heading(field, text=title)
+            self.tree.column(field, width=140, minwidth=60)
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        vertical = ttk.Scrollbar(left, command=self.tree.yview)
+        vertical.grid(row=0, column=1, sticky="ns")
+        horizontal = ttk.Scrollbar(
+            left, orient="horizontal", command=self.tree.xview
+        )
+        horizontal.grid(row=1, column=0, sticky="ew")
+        self.tree.configure(
+            yscrollcommand=vertical.set, xscrollcommand=horizontal.set
+        )
+        self.tree.bind("<<TreeviewSelect>>", self.on_select)
+
+        labels = (
+            "Template ID", "Display Name", "Description", "Capability",
+            "Priority", "Target Effort (minutes)", "Deadline (minutes)",
+            "Auto Allocate", "Sort Order", "Active",
+        )
+        for index, (field, label) in enumerate(zip(FIELDS, labels)):
+            ttk.Label(right, text=label + ":").grid(
+                row=index, column=0, sticky="nw", padx=(0, 8), pady=4
+            )
+            if field == "description":
+                widget = tk.Text(
+                    right, height=4, wrap="word",
+                    background="#0d1117", foreground="#e6edf3",
+                    insertbackground="#e6edf3"
+                )
+                self.description = widget
+            elif field in {"capability_id", "priority"}:
+                widget = ttk.Combobox(
+                    right, textvariable=self.vars[field], state="readonly"
+                )
+            elif field in {"active", "auto_allocate"}:
+                widget = ttk.Checkbutton(
+                    right, variable=self.vars[field],
+                    onvalue="TRUE", offvalue="FALSE"
+                )
+            else:
+                widget = ttk.Entry(right, textvariable=self.vars[field])
+            widget.grid(row=index, column=1, sticky="ew", pady=4)
+            self.widgets[field] = widget
+
+        buttons = ttk.Frame(right)
+        buttons.grid(row=10, column=0, columnspan=2, sticky="ew", pady=8)
+        for index, (text, command) in enumerate((
+            ("New Template", self.new),
+            ("Save Template", self.save),
+            ("Remove Template", self.remove),
+            ("Revert Form", self.revert),
+            ("Open Backups", self.open_backups),
+        )):
+            ttk.Button(buttons, text=text, command=command).grid(
+                row=index // 3, column=index % 3, padx=3, pady=3, sticky="ew"
+            )
+
+        ttk.Label(
+            right,
+            text=(
+                "IDs are immutable after creation. Effort and deadline must "
+                "each be positive; effort may exceed deadline. Active tasks "
+                "require an active capability installation. Saves validate "
+                "the complete candidate project before replacing the CSV."
+            ),
+            wraplength=380, foreground="#9da7b3"
+        ).grid(row=11, column=0, columnspan=2, sticky="ew", pady=8)
+        self.new()
+
+    def update(self):
+        path = self.source_path()
+        before = self.digest(path)
+        with path.open(encoding="utf-8-sig", newline="") as handle:
+            rows = [
+                dict(row) for row in csv.DictReader(handle)
+                if any(row.values())
+            ]
+        if before != self.digest(path):
+            raise ValueError("Task CSV changed during refresh. Refresh again.")
+        self.loaded_rows = rows
+        self.snapshot_hash = before
+        for field in ("capability_id", "priority"):
+            self.widgets[field].configure(values=self.choices(field))
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        for row in sorted(rows, key=lambda r: (
+            int(r["sort_order"]), r["task_template_id"]
+        )):
+            self.tree.insert(
+                "", "end", iid=row["task_template_id"],
+                values=tuple(row[field] for field in self.tree["columns"])
+            )
+        if self.editing_id and self.tree.exists(self.editing_id):
+            self.tree.selection_set(self.editing_id)
+
+    def new(self):
+        self.tree.selection_remove(*self.tree.selection())
+        self.editing_id = None
+        self.widgets["task_template_id"].configure(state="normal")
+        for variable in self.vars.values():
+            variable.set("")
+        self.description.delete("1.0", "end")
+        for field in ("capability_id", "priority"):
+            choices = self.choices(field)
+            self.vars[field].set(
+                "NORMAL" if field == "priority" and "NORMAL" in choices
+                else choices[0] if choices else ""
+            )
+        self.vars["default_target_effort_minutes"].set("1")
+        self.vars["default_deadline_minutes"].set("1")
+        self.vars["sort_order"].set(str(max(
+            (int(row["sort_order"]) for row in self.loaded_rows), default=0
+        ) + 1))
+        self.vars["auto_allocate"].set("TRUE")
+        self.vars["active"].set("TRUE")
+
+    def on_select(self, _event=None):
+        selected = self.tree.selection()
+        if not selected:
+            return
+        if _event is not None and selected[0] == self.editing_id:
+            return
+        row = next(
+            (r for r in self.loaded_rows
+             if r["task_template_id"] == selected[0]), None
+        )
+        if row is None:
+            return
+        self.editing_id = row["task_template_id"]
+        for field, variable in self.vars.items():
+            variable.set(row[field])
+        self.description.delete("1.0", "end")
+        self.description.insert("1.0", row["description"])
+        self.widgets["task_template_id"].configure(state="disabled")
+
+    def revert(self):
+        if self.editing_id and self.tree.exists(self.editing_id):
+            self.tree.selection_set(self.editing_id)
+            self.on_select()
+        else:
+            self.new()
+
+    def record(self):
+        row = {field: var.get().strip() for field, var in self.vars.items()}
+        row["description"] = self.description.get("1.0", "end").strip()
+        if not re.fullmatch(r"[A-Z][A-Z0-9_]*", row["task_template_id"]):
+            raise ValueError("Template ID must be uppercase letters/digits/underscores, starting with a letter.")
+        for field in ("display_name", "description"):
+            if not row[field]:
+                raise ValueError(f"{field} is required.")
+        for field in ("capability_id", "priority"):
+            if row[field] not in self.choices(field):
+                raise ValueError(f"Select a valid {field}.")
+        for field in (
+            "default_target_effort_minutes", "default_deadline_minutes",
+            "sort_order",
+        ):
+            if int(row[field]) < 1:
+                raise ValueError(f"{field} must be an integer of at least 1.")
+        return row
+
+    def candidate_valid(self, candidate):
+        with tempfile.TemporaryDirectory(prefix="doda-task-") as temporary:
+            root = Path(temporary)
+            destination = root / "data_authoring" / "source"
+            destination.mkdir(parents=True)
+            for filename in FILES:
+                shutil.copy2(
+                    candidate if filename == "task_templates.csv"
+                    else self.app.source_directory / filename,
+                    destination / filename
+                )
+            done = subprocess.run(
+                [sys.executable, str(self.app.validator_path),
+                 "--root", str(root), "validate"],
+                cwd=root, text=True, encoding="utf-8",
+                errors="replace", capture_output=True
+            )
+            return done.returncode == 0, done.stdout + "\n" + done.stderr
+
+    def commit(self, rows):
+        path = self.source_path()
+        if self.snapshot_hash is None or self.digest(path) != self.snapshot_hash:
+            raise ValueError("Task CSV changed externally. Refresh before saving.")
+        temporary = path.with_name(f".tasks-{uuid4().hex}.tmp.csv")
+        try:
+            with temporary.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(
+                    handle, fieldnames=FIELDS, lineterminator="\n"
+                )
+                writer.writeheader()
+                writer.writerows(sorted(rows, key=lambda row: (
+                    int(row["sort_order"]), row["task_template_id"]
+                )))
+            valid, output = self.candidate_valid(temporary)
+            self.app.log(output)
+            if not valid:
+                raise ValueError("Candidate validation failed. CSV unchanged; see Activity Log.")
+            if self.digest(path) != self.snapshot_hash:
+                raise ValueError("Task CSV changed during validation. CSV unchanged.")
+            folder = self.backup_directory()
+            folder.mkdir(parents=True, exist_ok=True)
+            backup = folder / (
+                "task_templates_" + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+                + ".csv"
+            )
+            shutil.copy2(path, backup)
+            os.replace(temporary, path)
+            self.app.log(f"Task Templates saved. Backup: {backup}")
+            self.app.refresh_all(False)
+            messagebox.showinfo(
+                "Task Templates", f"Candidate validation passed.\nBackup: {backup}",
+                parent=self.app
+            )
+        finally:
+            if temporary.exists():
+                temporary.unlink()
+
+    def save(self):
+        try:
+            row = self.record()
+            key = row["task_template_id"]
+            if self.editing_id and key != self.editing_id:
+                raise ValueError("Template ID cannot change after creation.")
+            if not self.editing_id and any(
+                r["task_template_id"] == key for r in self.loaded_rows
+            ):
+                raise ValueError("Template ID already exists.")
+            rows = [
+                dict(r) for r in self.loaded_rows
+                if r["task_template_id"] != key
+            ] + [row]
+            self.commit(rows)
+            self.editing_id = key
+            self.tree.selection_set(key)
+            self.on_select()
+        except (OSError, ValueError) as error:
+            messagebox.showerror("Task Templates", str(error), parent=self.app)
+
+    def remove(self):
+        if not self.editing_id:
+            messagebox.showwarning(
+                "Task Templates", "Select a template first.", parent=self.app
+            )
+            return
+        key = self.editing_id
+        if not messagebox.askyesno(
+            "Remove Template?", f"Remove '{key}'?\nA CSV backup will be created.",
+            default=messagebox.NO, icon="warning", parent=self.app
+        ):
+            return
+        try:
+            self.commit([
+                dict(row) for row in self.loaded_rows
+                if row["task_template_id"] != key
+            ])
+            self.new()
+        except (OSError, ValueError) as error:
+            messagebox.showerror("Task Templates", str(error), parent=self.app)
+
+    def open_backups(self):
+        self.backup_directory().mkdir(parents=True, exist_ok=True)
+        self.app.open_folder(self.backup_directory())
+
+
+def install_task_templates_editor(app):
+    app.task_templates_editor = TaskTemplatesEditor(app)
+=== FILE: tools\doda_content_workbench\doda_resource_rules.py ===
+"""Resource definitions only. Balances and entity counts are runtime state."""
+import argparse
+import json
+import re
+from datetime import datetime, timezone
+from pathlib import Path
+import doda_network_rules as net
+
+TOOL_VERSION = "0.1.0"
+RESOURCES_FILE = "resources.csv"
+RESOURCE_COLUMNS = [
+    "resource_id", "display_name", "description", "resource_kind",
+    "tracks_lifetime", "sort_order", "active",
+]
+RESOURCE_KINDS = ("STOCKPILE", "HOLDING", "HEADCOUNT")
+
+def validate_resources(root, res):
+    path = Path(root) / "data_authoring/source" / RESOURCES_FILE
+    rows = net.read_table(path, RESOURCE_COLUMNS, "resources", res)
+    if rows is None:
+        return {"resources": []}
+    items, seen = [], set()
+    for row in rows:
+        ctx = "[resources] Line " + str(row.get("_line", "?"))
+        rid = row["resource_id"]
+        if not re.fullmatch(r"[A-Z][A-Z0-9_]*", rid) or rid in seen:
+            res.errors.append(ctx + ": invalid or duplicate resource_id " + rid)
+        seen.add(rid)
+        for field in ("display_name", "description"):
+            if not row[field]:
+                res.errors.append(ctx + ": " + field + " is required")
+        kind = row["resource_kind"].upper()
+        if kind not in RESOURCE_KINDS:
+            res.errors.append(ctx + ": invalid resource_kind " + kind)
+        lifetime = net._bool(row["tracks_lifetime"], ctx, res)
+        active = net._bool(row["active"], ctx, res)
+        order = net._int(row["sort_order"], ctx, "sort_order", res)
+        if order is not None and order < 0:
+            res.errors.append(ctx + ": sort_order must be nonnegative")
+        if kind != "STOCKPILE" and lifetime:
+            res.errors.append(ctx + ": lifetime tracking applies only to STOCKPILE")
+        items.append({
+            "resourceId": rid,
+            "displayName": row["display_name"],
+            "description": row["description"],
+            "resourceKind": kind,
+            "tracksLifetime": lifetime,
+            "sortOrder": order,
+            "active": active,
+        })
+    return {"resources": sorted(
+        items, key=lambda r: (r["sortOrder"] or 0, r["resourceId"])
+    )}
+
+def export(root):
+    root = Path(root)
+    res = net.Result()
+    data = validate_resources(root, res)
+    if not res.valid:
+        return res, None
+    path = root / "generated/data/resource_catalog.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schema": "doda.resource_catalog",
+        "toolVersion": TOOL_VERSION,
+        "generatedAtUtc": datetime.now(timezone.utc).isoformat(),
+        **data,
+        "runtimeImplemented": False,
+        "rules": {
+            "stockpilesAreBalances": True,
+            "holdingsCountOwnedEntities": True,
+            "headcountsDerivedFromPersonnel": True,
+            "catalogStoresNoCurrentValues": True,
+            "lifetimeCountsCreditsNotCurrentBalance": True,
+        },
+    }
+    temporary = path.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    temporary.replace(path)
+    return res, path
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("command", choices=("validate", "export"))
+    parser.add_argument("--root", type=Path, required=True)
+    args = parser.parse_args(argv)
+    if args.command == "export":
+        res, path = export(args.root)
+    else:
+        res = net.Result()
+        validate_resources(args.root, res)
+        path = None
+    for message in res.errors:
+        print("ERROR:", message)
+    for message in res.warnings:
+        print("WARNING:", message)
+    if path:
+        print("Exported:", path)
+    print("RESULT:", "PASS" if res.valid else "FAIL")
+    return 0 if res.valid else 1
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+
+=== FILE: tools\doda_content_workbench\tests\test_foims_x_tasks.py ===
+import sys
+import unittest
+from copy import deepcopy
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from doda_foims_x_tasks import TaskBoard, OPEN, OVERDUE, CANCELLED
+
+def tables():
+    return {
+        "task_templates": [
+            {"task_template_id": "REVIEW", "display_name": "Signal Review",
+             "capability_id": "ANALYSIS", "priority": "HIGH",
+             "default_target_effort_minutes": "240",
+             "default_deadline_minutes": "120", "active": "TRUE"},
+            {"task_template_id": "DRAFT", "display_name": "Draft",
+             "capability_id": "ANALYSIS", "priority": "NORMAL",
+             "default_target_effort_minutes": "10",
+             "default_deadline_minutes": "10", "active": "FALSE"},
+            {"task_template_id": "ORPHAN", "display_name": "Orphan",
+             "capability_id": "GONE", "priority": "NORMAL",
+             "default_target_effort_minutes": "10",
+             "default_deadline_minutes": "10", "active": "TRUE"},
+            {"task_template_id": "BAD", "display_name": "Bad",
+             "capability_id": "ANALYSIS", "priority": "NORMAL",
+             "default_target_effort_minutes": "abc",
+             "default_deadline_minutes": "10", "active": "TRUE"},
+            {"task_template_id": "ZERO", "display_name": "Zero",
+             "capability_id": "ANALYSIS", "priority": "NORMAL",
+             "default_target_effort_minutes": "10",
+             "default_deadline_minutes": "0", "active": "TRUE"},
+        ],
+        "capabilities": [
+            {"capability_id": "ANALYSIS", "active": "TRUE"},
+        ],
+    }
+
+class TaskBoardTests(unittest.TestCase):
+    def test_spawn_copies_template(self):
+        task = TaskBoard(tables()).spawn("REVIEW", 100)
+        self.assertEqual(task.instance_id, "TASK_0001")
+        self.assertEqual(task.capability_id, "ANALYSIS")
+        self.assertEqual(task.priority, "HIGH")
+        self.assertEqual(task.target_effort_minutes, 240)
+        self.assertEqual(task.created_minute, 100)
+        self.assertEqual(task.deadline_minute, 220)
+
+    def test_ids_sequential_and_not_reused(self):
+        board = TaskBoard(tables())
+        board.spawn("REVIEW", 0)
+        board.cancel("TASK_0001")
+        self.assertEqual(board.spawn("REVIEW", 0).instance_id, "TASK_0002")
+
+    def test_unknown_or_inactive_template_rejected(self):
+        board = TaskBoard(tables())
+        with self.assertRaises(ValueError):
+            board.spawn("NOPE", 0)
+        with self.assertRaises(ValueError):
+            board.spawn("DRAFT", 0)
+        self.assertEqual(board.view(0), [])
+
+    def test_inactive_or_missing_capability_rejected(self):
+        board = TaskBoard(tables())
+        with self.assertRaises(ValueError):
+            board.spawn("ORPHAN", 0)
+        board.tables["capabilities"][0]["active"] = "FALSE"
+        with self.assertRaises(ValueError):
+            board.spawn("REVIEW", 0)
+
+    def test_invalid_minutes_rejected(self):
+        board = TaskBoard(tables())
+        with self.assertRaises(ValueError):
+            board.spawn("BAD", 0)
+        with self.assertRaises(ValueError):
+            board.spawn("ZERO", 0)
+        with self.assertRaises(ValueError):
+            board.spawn("REVIEW", -1)
+
+    def test_overdue_is_derived(self):
+        board = TaskBoard(tables())
+        board.spawn("REVIEW", 0)
+        self.assertEqual(board.view(120)[0]["state"], OPEN)
+        self.assertEqual(board.view(120)[0]["remaining_minutes"], 0)
+        self.assertEqual(board.view(121)[0]["state"], OVERDUE)
+        self.assertEqual(board.view(121)[0]["remaining_minutes"], -1)
+        self.assertEqual(board.view(50)[0]["state"], OPEN)
+
+    def test_cancel(self):
+        board = TaskBoard(tables())
+        board.spawn("REVIEW", 0)
+        board.cancel("TASK_0001")
+        row = board.view(9999)[0]
+        self.assertEqual(row["state"], CANCELLED)
+        self.assertIsNone(row["remaining_minutes"])
+        with self.assertRaises(KeyError):
+            board.cancel("TASK_0099")
+
+    def test_reset_restarts_ids(self):
+        board = TaskBoard(tables())
+        board.spawn("REVIEW", 0)
+        board.reset()
+        self.assertEqual(board.view(0), [])
+        self.assertEqual(board.spawn("REVIEW", 0).instance_id, "TASK_0001")
+
+    def test_tables_not_mutated_and_effort_may_exceed_deadline(self):
+        t = tables()
+        before = deepcopy(t)
+        board = TaskBoard(t)
+        task = board.spawn("REVIEW", 5)
+        board.view(5)
+        self.assertGreater(task.target_effort_minutes, task.deadline_minute - task.created_minute)
+        self.assertEqual(t, before)
+
+if __name__ == "__main__":
+    unittest.main()
+
+=== FILE: tools\doda_content_workbench\tests\test_foims_x_task_catalog.py ===
+import ast
+import sys
+import unittest
+from copy import deepcopy
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from doda_foims_x_task_catalog import TasksCatalog
+from doda_foims_x_tasks import TaskBoard
+
+def tables():
+    return {
+        "task_templates": [
+            {"task_template_id": "REVIEW", "display_name": "Signal Review",
+             "capability_id": "ANALYSIS", "priority": "HIGH",
+             "default_target_effort_minutes": "240",
+             "default_deadline_minutes": "120", "active": "TRUE"},
+        ],
+        "capabilities": [
+            {"capability_id": "ANALYSIS", "display_name": "Analysis", "active": "TRUE"}
+        ],
+        "capability_staffing_rules": [
+            {"capability_id": "ANALYSIS", "qualification_id": "SIGNALS_ANALYSIS",
+             "min_contributors": "1", "preferred_contributors": "2",
+             "max_contributors": "3", "active": "TRUE"}
+        ],
+        "qualification_catalog": [
+            {"qualification_id": "SIGNALS_ANALYSIS",
+             "display_name": "Signals Analysis", "active": "TRUE"}
+        ],
+    }
+
+def build(now=0):
+    t = tables()
+    clock = [now]
+    board = TaskBoard(t)
+    return t, clock, board, TasksCatalog(t, board, lambda: clock[0])
+
+def text(catalog, identity="TASK_0001"):
+    return "\n".join(catalog.describe(identity))
+
+class TasksCatalogTests(unittest.TestCase):
+    def test_rows_follow_clock(self):
+        _, clock, board, catalog = build()
+        board.spawn("REVIEW", 0)
+        self.assertEqual(catalog.facilities()[0]["display_name"], "TASK_0001 OPEN")
+        clock[0] = 500
+        self.assertEqual(catalog.facilities()[0]["display_name"], "TASK_0001 OVERDUE")
+
+    def test_timing_lines(self):
+        _, clock, board, catalog = build()
+        board.spawn("REVIEW", 100)
+        clock[0] = 150
+        out = text(catalog)
+        self.assertIn("Created: minute 100 (1992-02-01 01:40)", out)
+        self.assertIn("Deadline: minute 220 (1992-02-01 03:40)", out)
+        self.assertIn("Remaining: 70 strategic minutes", out)
+        self.assertIn("Target effort: 240 minutes", out)
+        clock[0] = 225
+        self.assertIn("OVERDUE by 5 strategic minutes", text(catalog))
+        board.cancel("TASK_0001")
+        self.assertIn("Cancelled; deadline no longer applies.", text(catalog))
+
+    def test_template_capability_qualification(self):
+        _, _, board, catalog = build()
+        board.spawn("REVIEW", 0)
+        out = text(catalog)
+        self.assertIn("Signal Review / REVIEW [ACTIVE]", out)
+        self.assertIn("Analysis / ANALYSIS [ACTIVE]", out)
+        self.assertIn("Signals Analysis / SIGNALS_ANALYSIS [ACTIVE]", out)
+        self.assertIn("1/2/3", out)
+        self.assertIn("Priority: HIGH", out)
+
+    def test_empty_and_unknown(self):
+        _, _, _, catalog = build()
+        self.assertEqual(catalog.facilities(), [])
+        self.assertIn("missing", text(catalog, "").lower())
+        self.assertIn("missing", text(catalog, "TASK_0099").lower())
+
+    def test_board_follows_refreshed_tables(self):
+        t, clock, board, _ = build()
+        fresh = deepcopy(t)
+        TasksCatalog(fresh, board, lambda: clock[0])
+        self.assertIs(board.tables, fresh)
+
+    def test_read_only_and_pages(self):
+        t, clock, board, catalog = build()
+        board.spawn("REVIEW", 0)
+        before = deepcopy(t)
+        pages = catalog.pages("TASK_0001", width=52, page_size=3)
+        self.assertGreater(len(pages), 1)
+        self.assertTrue(all(len(p) <= 3 for p in pages))
+        self.assertTrue(all(len(line) <= 52 for p in pages for line in p))
+        self.assertEqual(t, before)
+        self.assertEqual(len(board.view(0)), 1)
+
+    def test_preview_integration_structure(self):
+        source = (Path(__file__).resolve().parents[1]
+                  / "doda_foims_x_preview.py").read_text(encoding="utf-8-sig")
+        tree = ast.parse(source)
+        cls = next(n for n in tree.body
+                   if isinstance(n, ast.ClassDef) and n.name == "FoimsXPreview")
+        names = {n.name for n in cls.body if isinstance(n, ast.FunctionDef)}
+        for name in ("_task_now", "_populate_task_templates", "_task_spawn",
+                     "_task_cancel", "_task_clear"):
+            self.assertIn(name, names)
+        self.assertIn("self.task_board.reset()", source)
+        self.assertIn('"Tasks"', source)
+
+if __name__ == "__main__":
+    unittest.main()
+
+=== FILE: tools\doda_content_workbench\tests\test_foims_x_debug_panel.py ===
+import ast
+import unittest
+from pathlib import Path
+
+SOURCE = (Path(__file__).resolve().parents[1] / "doda_foims_x_preview.py").read_text(
+    encoding="utf-8-sig"
+)
+
+def preview_class():
+    tree = ast.parse(SOURCE)
+    return next(
+        n for n in tree.body
+        if isinstance(n, ast.ClassDef) and n.name == "FoimsXPreview"
+    )
+
+class DebugPanelStructureTests(unittest.TestCase):
+    def test_panel_methods_exist(self):
+        names = {n.name for n in preview_class().body if isinstance(n, ast.FunctionDef)}
+        for name in ("toggle_debug", "show_debug", "hide_debug", "is_open"):
+            self.assertIn(name, names)
+
+    def test_controls_live_in_debug_window(self):
+        self.assertIn("self.controls = ttk.Frame(self.debug_window", SOURCE)
+        self.assertIn("self.toolbar_frame = ttk.Frame(self.window", SOURCE)
+
+    def test_fullscreen_uses_toolbar_not_controls(self):
+        self.assertIn("self.toolbar_frame.pack_forget()", SOURCE)
+        self.assertNotIn("self.controls.pack_forget", SOURCE)
+        self.assertNotIn("self.controls.pack(fill=tk.X", SOURCE)
+
+if __name__ == "__main__":
+    unittest.main()
+
+=== FILE: data_authoring\source\task_templates.csv ===
+task_template_id,display_name,description,capability_id,priority,default_target_effort_minutes,default_deadline_minutes,auto_allocate,sort_order,active
+SIGNAL_REVIEW,Priority Signal Review,Analyze and classify urgent signal interference.,ELECTRONIC_SURVEILLANCE,HIGH,240,120,TRUE,10,TRUE
+
+=== FILE: data_authoring\source\enum_catalog.csv ===
+"enum_group","enum_value","display_label","description","sort_order","active"
+"FACILITY_TIER","UNBUILT","Unbuilt","No dedicated facility exists","0","TRUE"
+"FACILITY_TIER","OPERATIONAL","Operational","Basic staffed capability is available","1","TRUE"
+"FACILITY_TIER","MODERNIZED","Modernized","Improved capacity reliability and workflow","2","TRUE"
+"FACILITY_TIER","CUTTING_EDGE","Cutting-Edge","Advanced capability with additional institutional complexity","3","TRUE"
+"METRIC_POLARITY","HIGHER_IS_BETTER","Higher Is Better","Improvement increases the metric","1","TRUE"
+"METRIC_POLARITY","LOWER_IS_BETTER","Lower Is Better","Improvement decreases the metric","2","TRUE"
+"METRIC_DISPLAY_MODE","TIERED_BAR","Tiered Bar","Show a tier label and normalized progress bar","1","TRUE"
+"TRACK_ID","EVIDENCE_HANDLING","Evidence Handling","Chain of custody laboratory processing and evidence storage","1","TRUE"
+"TRACK_ID","FIELD_OPERATIONS","Field Operations","Deployment doctrine logistics and field readiness","2","TRUE"
+"TRACK_ID","INTELLIGENCE","Intelligence and Analysis","Lead correlation signal analysis and case linkage","3","TRUE"
+"TRACK_ID","PUBLIC_COMMUNICATION","Public Communication and Liaison","Witness care public trust and institutional communication","4","TRUE"
+"TRACK_ID","INTERNAL_AFFAIRS","Internal Affairs and Ethics","Accountability oversight and corruption prevention","5","TRUE"
+"TRACK_ID","TECHNICAL_INFRASTRUCTURE","Technical Infrastructure","FOIMS-X technical systems data security and specialized tools","6","TRUE"
+"METRIC_POLARITY","MIDDLE_IS_BETTER","Media Attention","The Fifth Estate is on a need to know basis.","0","TRUE"
+"FACILITY_TIER","OUTDATED","Outdated","Legacy facility infrastructure with reduced effectiveness.","10","TRUE"
+"METRIC_DISPLAY_MODE","NUMERIC","Numeric","Metric displays numerically","10","TRUE"
+"METRIC_DISPLAY_MODE","PERCENTAGE","Perrcent","Metric is displayed in a percentage.","20","TRUE"
+"METRIC_DISPLAY_MODE","HIDDEN","Hidden","Metric is NOT displayed.","30","TRUE"
+"TASK_PRIORITY","LOW","Low","Routine work with limited urgency.","10","TRUE"
+"TASK_PRIORITY","NORMAL","Normal","Standard Department work priority.","20","TRUE"
+"TASK_PRIORITY","HIGH","High","Urgent work requiring timely attention.","30","TRUE"
+"TASK_PRIORITY","CRITICAL","Critical","Immediate high-consequence work.","40","TRUE"
+"ALLOCATION_POLICY","AUTO","Automatic","Normal scheduler control.","10","TRUE"
+"ALLOCATION_POLICY","PREFER","Preferred","Use aggressively when qualified.","20","TRUE"
+"ALLOCATION_POLICY","PROTECT","Protected","Preserve where practical; use only when necessary.","30","TRUE"
+"ALLOCATION_POLICY","RESERVE","Reserve","Hold for player-directed contingency use.","40","TRUE"
+"ALLOCATION_POLICY","MANUAL_ONLY","Manual Only","Never allocate automatically.","50","TRUE"
+
+=== FILE: data_authoring\source\capabilities.csv ===
+"capability_id","display_name","description","standing_operation_label","sort_order","active"
+"ELECTRONIC_SURVEILLANCE","Electronic Surveillance","Authorized collection and analysis of electronic signals.","Signal Monitoring","10","TRUE"
+"OCCULT_RESPONSE","Occult Response","Specialized investigation and containment of anomalous threats.","Response Readiness","20","TRUE"
+"CAP_EMERGENCY_TRANSPORT","Emergency Transport","V107 draft: Supports emergency retrieval and medical transport. Staffing and facility mapping are not yet configured.","","70","FALSE"
+"CAP_RESEARCH","Research Facility","V107 draft: Supports evidence analysis and research tasks. Staffing and facility mapping are not yet configured.","","80","FALSE"
+"CAP_EVIDENCE_STORAGE","Evidence Storage","V107 draft: Supports custody and warehouse workflows. Staffing and facility mapping are not yet configured.","","90","FALSE"
+"CAP_ANOMALOUS_CONTAINMENT","Anomalous Containment","V107 draft: Supports anomalous evidence or entity containment. Staffing and facility mapping are not yet configured.","","100","FALSE"
+
+=== FILE: data_authoring\source\qualification_catalog.csv ===
+"qualification_id","display_name","description","sort_order","active"
+"SIGNALS_ANALYSIS","Signals Analysis","Interprets and validates electronic signal intelligence.","10","TRUE"
+"DATA_SYSTEMS","Data Systems","Operates Department information and monitoring systems.","20","TRUE"
+"FIELD_RESPONSE","Field Response","Conducts routine Department field operations.","30","TRUE"
+"OCCULT_RESPONSE","Occult Response","Operates safely during anomalous field incidents.","40","TRUE"
+
+=== FILE: data_authoring\source\capability_staffing_rules.csv ===
+"capability_id","qualification_id","min_contributors","preferred_contributors","max_contributors","sort_order","active"
+"ELECTRONIC_SURVEILLANCE","SIGNALS_ANALYSIS","1","2","2","10","TRUE"
+"ELECTRONIC_SURVEILLANCE","DATA_SYSTEMS","0","1","1","20","TRUE"
+"OCCULT_RESPONSE","FIELD_RESPONSE","1","2","2","10","TRUE"
+"OCCULT_RESPONSE","OCCULT_RESPONSE","0","1","2","20","TRUE"
+
+=== FILE: data_authoring\source\facility_capabilities.csv ===
+facility_id,capability_id,display_name_override,max_concurrent_personnel,initial_tier_id,foims_panel_id,sort_order,active
+FIELD_OPERATIONS_ROOM,OCCULT_RESPONSE,Occult Task Force,2,UNBUILT,FOIMS_FIELD_OCCULT_RESPONSE,10,TRUE
+TECHOPS_HUB,ELECTRONIC_SURVEILLANCE,,2,UNBUILT,FOIMS_TECHOPS_SURVEILLANCE,10,TRUE
+
+=== FILE: data_authoring\source\facility_capability_staffing_overrides.csv ===
+facility_id,capability_id,qualification_id,min_contributors,preferred_contributors,max_contributors,sort_order,active
+FIELD_OPERATIONS_ROOM,OCCULT_RESPONSE,OCCULT_RESPONSE,1,2,2,1,TRUE
+TECHOPS_HUB,ELECTRONIC_SURVEILLANCE,SIGNALS_ANALYSIS,1,2,2,1,TRUE
+TECHOPS_HUB,ELECTRONIC_SURVEILLANCE,DATA_SYSTEMS,0,1,1,2,TRUE
+
+=== FILE: data_authoring\source\resources.csv ===
+resource_id,display_name,description,resource_kind,tracks_lifetime,sort_order,active
+EVIDENCE_PAPER,Paper Evidence,"Notes, letters, documents and receipts.",STOCKPILE,false,10,true
+EVIDENCE_PHOTOGRAPHIC,Photographic Evidence,Photographs and photographic evidence.,STOCKPILE,false,20,true
+EVIDENCE_DIGITAL,Digital Evidence,Computer and internet evidence.,STOCKPILE,false,30,true
+EVIDENCE_AUDIO,Audio Evidence,"Tapes, audio reels, CDs and other audio evidence.",STOCKPILE,false,40,true
+EVIDENCE_VIDEO,Video Evidence,"VHS, DVDs, film stock and other video evidence.",STOCKPILE,false,50,true
+EVIDENCE_CHEMICAL,Chemical Evidence,Chemical and biological evidence.,STOCKPILE,false,60,true
+ADMISSIBLE_EVIDENCE,Admissible Evidence,Pooled processed evidence. Lifetime credits drive mission-tier thresholds.,STOCKPILE,true,70,true
+RESEARCH_POINTS,Research Points,Tech Development output for explicitly research-unlockable equipment.,STOCKPILE,false,80,true
+DEPARTMENT_FUNDING,Department Funding,Department funds with current balance and lifetime credits.,STOCKPILE,true,90,true
+LEADS,Leads,"Owned lead records, counted from their authoritative state.",HOLDING,false,100,true
+OPERATIONAL_TERRITORIES,Operational Territories,"Owned operational territories, counted from campaign territory state.",HOLDING,false,110,true
+AGENTS,Agents,Current agent headcount derived from personnel records.,HEADCOUNT,false,120,true
+ANALYSTS,Analysts,Current analyst headcount derived from personnel records.,HEADCOUNT,false,130,true
+CONFIDENTIAL_INFORMANTS,Confidential Informants,Current confidential informant count derived from personnel records.,HEADCOUNT,false,140,true
+
+=== ACTIVE CODE REFERENCES TO OLD TASK MODEL ===
+tools\doda_content_workbench\doda_content_export.py:82: "default_target_effort_minutes",
+tools\doda_content_workbench\doda_content_export.py:83: "default_deadline_minutes",
+tools\doda_content_workbench\doda_content_export.py:99: "task_templates": {"auto_allocate", "active"},
+tools\doda_content_workbench\doda_content_workbench.py:197: "default_target_effort_minutes",
+tools\doda_content_workbench\doda_content_workbench.py:198: "default_deadline_minutes",
+tools\doda_content_workbench\doda_content_workbench.py:199: "auto_allocate",
+tools\doda_content_workbench\doda_content_workbench.py:852: "default_target_effort_minutes",
+tools\doda_content_workbench\doda_content_workbench.py:858: "default_deadline_minutes",
+tools\doda_content_workbench\doda_content_workbench.py:865: "default_target_effort_minutes must be greater than 0"
+tools\doda_content_workbench\doda_content_workbench.py:871: "default_deadline_minutes must be greater than 0"
+tools\doda_content_workbench\doda_content_workbench.py:874: parse_bool("task_templates", row, "auto_allocate", result)
+tools\doda_content_workbench\doda_foims_x_preview.py:28: from doda_foims_x_task_catalog import TasksCatalog
+tools\doda_content_workbench\doda_foims_x_preview.py:29: from doda_foims_x_tasks import TaskBoard
+tools\doda_content_workbench\doda_foims_x_preview.py:159: self.task_board = TaskBoard(app.tables)
+tools\doda_content_workbench\doda_foims_x_preview.py:449: self._facility_catalog = TasksCatalog(
+tools\doda_content_workbench\doda_foims_x_tasks.py:33: class TaskBoard:
+tools\doda_content_workbench\doda_foims_x_tasks.py:55: effort = positive_minutes(template, "default_target_effort_minutes")
+tools\doda_content_workbench\doda_foims_x_tasks.py:56: deadline = positive_minutes(template, "default_deadline_minutes")
+tools\doda_content_workbench\doda_foims_x_task_catalog.py:12: class TasksCatalog(ReferenceCatalog):
+tools\doda_content_workbench\doda_task_templates_editor.py:22: "priority", "default_target_effort_minutes", "default_deadline_minutes",
+tools\doda_content_workbench\doda_task_templates_editor.py:23: "auto_allocate", "sort_order", "active",
+tools\doda_content_workbench\doda_task_templates_editor.py:91: "default_target_effort_minutes", "default_deadline_minutes")
+tools\doda_content_workbench\doda_task_templates_editor.py:132: elif field in {"active", "auto_allocate"}:
+tools\doda_content_workbench\doda_task_templates_editor.py:206: self.vars["default_target_effort_minutes"].set("1")
+tools\doda_content_workbench\doda_task_templates_editor.py:207: self.vars["default_deadline_minutes"].set("1")
+tools\doda_content_workbench\doda_task_templates_editor.py:211: self.vars["auto_allocate"].set("TRUE")
+tools\doda_content_workbench\doda_task_templates_editor.py:252: "default_target_effort_minutes", "default_deadline_minutes",
+tools\doda_content_workbench\doda_zscript_catalog.py:145: for field in ("default_target_effort_minutes", "default_deadline_minutes"):
+tools\doda_content_workbench\doda_zscript_catalog.py:148: if type(row["auto_allocate"]) is not bool:
+tools\doda_content_workbench\doda_zscript_catalog.py:149: raise ValueError(f"Task-template auto_allocate must be boolean: {key}")
+tools\doda_content_workbench\doda_zscript_catalog.py:159: for suffix, key in (("TargetEffortMinutes", "default_target_effort_minutes"),
+tools\doda_content_workbench\doda_zscript_catalog.py:160: ("DeadlineMinutes", "default_deadline_minutes")):
+tools\doda_content_workbench\doda_zscript_catalog.py:162: parts.append(int_lookup("TaskTemplateAutoAllocate", [int(r["auto_allocate"]) for r in templates]))
+tools\doda_content_workbench\doda_zscript_catalog.py:384: '            Console.PrintF("DODA_CATALOG TASK_TEMPLATE %s %s priority=%s effort=%d deadline=%d auto=%d", DoDAWorkbenchCatalog.TaskTemplateId(tt), DoDAWorkbenchCatalog.TaskTemplateCapabilityId(tt), DoDAWorkbenchCatalog.TaskTemplatePriority(tt), DoDAWorkbenchCatalog.TaskTemplateTargetEffortMinutes(tt), DoDAWorkbenchCatalog.TaskTemplateDeadlineMinutes(tt), DoDAWorkbenchCatalog.TaskTemplateAutoAllocate(tt));',
+tools\doda_content_workbench\doda_zscript_catalog.py:410: f"priority={r['priority']} effort={r['default_target_effort_minutes']} "
+tools\doda_content_workbench\doda_zscript_catalog.py:411: f"deadline={r['default_deadline_minutes']} auto={int(r['auto_allocate'])}" for r in templates]
+tools\doda_content_workbench\tests\test_foims_x_reference_catalog.py:13: "capability_id": "C", "default_target_effort_minutes": "240",
+tools\doda_content_workbench\tests\test_foims_x_reference_catalog.py:14: "default_deadline_minutes": "120", "auto_allocate": "true",
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:6: from doda_foims_x_tasks import TaskBoard, OPEN, OVERDUE, CANCELLED
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:13: "default_target_effort_minutes": "240",
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:14: "default_deadline_minutes": "120", "active": "TRUE"},
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:17: "default_target_effort_minutes": "10",
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:18: "default_deadline_minutes": "10", "active": "FALSE"},
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:21: "default_target_effort_minutes": "10",
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:22: "default_deadline_minutes": "10", "active": "TRUE"},
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:25: "default_target_effort_minutes": "abc",
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:26: "default_deadline_minutes": "10", "active": "TRUE"},
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:29: "default_target_effort_minutes": "10",
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:30: "default_deadline_minutes": "0", "active": "TRUE"},
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:37: class TaskBoardTests(unittest.TestCase):
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:39: task = TaskBoard(tables()).spawn("REVIEW", 100)
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:48: board = TaskBoard(tables())
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:54: board = TaskBoard(tables())
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:62: board = TaskBoard(tables())
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:70: board = TaskBoard(tables())
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:79: board = TaskBoard(tables())
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:88: board = TaskBoard(tables())
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:98: board = TaskBoard(tables())
+tools\doda_content_workbench\tests\test_foims_x_tasks.py:107: board = TaskBoard(t)
+tools\doda_content_workbench\tests\test_foims_x_task_catalog.py:7: from doda_foims_x_task_catalog import TasksCatalog
+tools\doda_content_workbench\tests\test_foims_x_task_catalog.py:8: from doda_foims_x_tasks import TaskBoard
+tools\doda_content_workbench\tests\test_foims_x_task_catalog.py:15: "default_target_effort_minutes": "240",
+tools\doda_content_workbench\tests\test_foims_x_task_catalog.py:16: "default_deadline_minutes": "120", "active": "TRUE"},
+tools\doda_content_workbench\tests\test_foims_x_task_catalog.py:35: board = TaskBoard(t)
+tools\doda_content_workbench\tests\test_foims_x_task_catalog.py:36: return t, clock, board, TasksCatalog(t, board, lambda: clock[0])
+tools\doda_content_workbench\tests\test_foims_x_task_catalog.py:41: class TasksCatalogTests(unittest.TestCase):
+tools\doda_content_workbench\tests\test_foims_x_task_catalog.py:82: TasksCatalog(fresh, board, lambda: clock[0])
+tools\doda_content_workbench\tests\test_zscript_catalog.py:50: "capability_id": "C", "priority": "HIGH", "default_target_effort_minutes": 240,
+tools\doda_content_workbench\tests\test_zscript_catalog.py:51: "default_deadline_minutes": 120, "auto_allocate": True, "sort_order": 1,
+tools\doda_content_workbench\tests\test_zscript_catalog.py:214: for field, value in (("priority", "UNKNOWN"), ("default_target_effort_minutes", 0),
+tools\doda_content_workbench\tests\test_zscript_catalog.py:215: ("default_deadline_minutes", -1), ("auto_allocate", "TRUE")):
+tools\doda_content_workbench\tests\test_zscript_catalog.py:232: d["tables"]["task_templates"][0]["default_deadline_minutes"] = 60

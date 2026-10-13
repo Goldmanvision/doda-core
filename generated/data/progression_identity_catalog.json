@@ -1,0 +1,80 @@
+{
+  "schema": "doda.progression_identity_catalog",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-13T03:47:56.141296+00:00",
+  "upgrades": [],
+  "plotMilestones": [
+    {
+      "id": "PLOT_NECRONOMICON_COLLECTED",
+      "displayName": "Necronomicon Collected",
+      "sourceReference": "User decision 2026-10-08 (PLOT-01)",
+      "description": "The player has collected the Necronomicon. Permanent record even if the item is later lost or consumed.",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "id": "PLOT_NECRONOMICON_PROCESSED",
+      "displayName": "Necronomicon Forensically Processed",
+      "sourceReference": "User decision 2026-10-08 (PLOT-01)",
+      "description": "The collected Necronomicon has been processed forensically.",
+      "sortOrder": 20,
+      "active": false
+    }
+  ],
+  "plotItems": [
+    {
+      "id": "PLOT_ITEM_NECRONOMICON",
+      "displayName": "Necronomicon",
+      "sourceReference": "User decision 2026-10-08 (PLOT-01)",
+      "description": "The book itself. Not a gate requirement: collection and processing are milestones so losing or consuming the item cannot lock Tier 6.",
+      "sortOrder": 10,
+      "active": false
+    }
+  ],
+  "missionTierRequirements": [
+    {
+      "requirementId": "REQ_TIER6_NECRONOMICON_COLLECTED",
+      "tierId": "TIER_6",
+      "requirementType": "MILESTONE_COMPLETED",
+      "referenceId": "PLOT_NECRONOMICON_COLLECTED",
+      "sourceReference": "User decision 2026-10-08 (PLOT-01)",
+      "description": "Tier 6 gate requirement. Inactive draft until the gate is activated.",
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "requirementId": "REQ_TIER6_NECRONOMICON_PROCESSED",
+      "tierId": "TIER_6",
+      "requirementType": "MILESTONE_COMPLETED",
+      "referenceId": "PLOT_NECRONOMICON_PROCESSED",
+      "sourceReference": "User decision 2026-10-08 (PLOT-01)",
+      "description": "Tier 6 gate requirement. Inactive draft until the gate is activated.",
+      "sortOrder": 20,
+      "active": false
+    }
+  ],
+  "finalGateReferenceStatus": {
+    "configured": false,
+    "missingConfiguration": [
+      "REQUIRED_UPGRADE_REFERENCES",
+      "REQUIRED_PLOT_MILESTONE_OR_ITEM_REFERENCES"
+    ],
+    "isCampaignEligibilityResult": false
+  },
+  "rules": {
+    "upgradeMeaning": "PURCHASED_OR_UNLOCKED_BENEFIT_ABILITY_STATS_OR_ACCESS",
+    "upgradeDefinitionIsNotEquipmentOwnership": true,
+    "milestoneCheck": "COMPLETED_PERSISTENT_RECORD",
+    "plotItemCheck": "CURRENTLY_HELD_AT_CAPSTONE_PURCHASE",
+    "requirementsCombine": "ALL_ACTIVE_REQUIREMENTS",
+    "definitionActiveIsNotCampaignAcquired": true,
+    "emptyRequiredReferenceSet": "UNCONFIGURED_NOT_AUTOMATICALLY_SATISFIED"
+  },
+  "openItems": {
+    "PID-OPEN-01": "Actual upgrade, milestone and plot-item definitions.",
+    "PID-OPEN-02": "Which major upgrades and plot requirements gate Tier 6.",
+    "PID-OPEN-03": "Upgrade acquisition costs, prerequisites and benefits.",
+    "PID-OPEN-04": "Capstone mission definition and its stable mission reference."
+  },
+  "runtimeImplemented": false
+}

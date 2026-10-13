@@ -1,0 +1,63 @@
+.....................................................................................................................................................................................................................................................E.E..EE............................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+======================================================================
+ERROR: test_content_failure_stops_chain (test_export_chain.ExportChainTests.test_content_failure_stops_chain)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\tests\test_export_chain.py", line 33, in test_content_failure_stops_chain
+    self.fn(self.app)
+    ~~~~~~~^^^^^^^^^^
+  File "E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_content_gui.py", line 1602, in run_export
+    if task_draft_dirty(self):
+       ^^^^^^^^^^^^^^^^
+NameError: name 'task_draft_dirty' is not defined
+
+======================================================================
+ERROR: test_missing_exporter_stops_chain (test_export_chain.ExportChainTests.test_missing_exporter_stops_chain)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\tests\test_export_chain.py", line 53, in test_missing_exporter_stops_chain
+    self.fn(self.app)
+    ~~~~~~~^^^^^^^^^^
+  File "E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_content_gui.py", line 1602, in run_export
+    if task_draft_dirty(self):
+       ^^^^^^^^^^^^^^^^
+NameError: name 'task_draft_dirty' is not defined
+
+======================================================================
+ERROR: test_rules_failure_does_not_report_full_success (test_export_chain.ExportChainTests.test_rules_failure_does_not_report_full_success)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\tests\test_export_chain.py", line 39, in test_rules_failure_does_not_report_full_success
+    self.fn(self.app)
+    ~~~~~~~^^^^^^^^^^
+  File "E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_content_gui.py", line 1602, in run_export
+    if task_draft_dirty(self):
+       ^^^^^^^^^^^^^^^^
+NameError: name 'task_draft_dirty' is not defined
+
+======================================================================
+ERROR: test_success_announced_only_at_end (test_export_chain.ExportChainTests.test_success_announced_only_at_end)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\tests\test_export_chain.py", line 45, in test_success_announced_only_at_end
+    self.fn(self.app)
+    ~~~~~~~^^^^^^^^^^
+  File "E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_content_gui.py", line 1602, in run_export
+    if task_draft_dirty(self):
+       ^^^^^^^^^^^^^^^^
+NameError: name 'task_draft_dirty' is not defined
+
+----------------------------------------------------------------------
+Ran 808 tests in 4.780s
+
+FAILED (errors=4)
+Wrote E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\zc_0ef4dc4933e04731896605f09d54791e\DoDA\Generated\WorkbenchCatalog.zs sha256 08185cac004030ac037759159d057453ac7f5e1db4b25322f87b365d0abe2026
+Wrote E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\zc_0ef4dc4933e04731896605f09d54791e\generated\data\workbench_catalog_expected_dump.txt
+zscript.txt include present: yes
+RESULT: PASS
+RESULT: PASS (catalog current)
+Wrote E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\zc_75a4f73b67094c84bfb68db5575a128c\DoDA\Generated\WorkbenchCatalog.zs sha256 08185cac004030ac037759159d057453ac7f5e1db4b25322f87b365d0abe2026
+Wrote E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\zc_75a4f73b67094c84bfb68db5575a128c\generated\data\workbench_catalog_expected_dump.txt
+zscript.txt include present: yes
+RESULT: PASS
+RESULT: FAIL (catalog stale or missing)

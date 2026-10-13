@@ -1,0 +1,4 @@
+model_id,display_name,collection_kind,collection_type_id,brand,model_name,evidence_types,evidence_value_multiplier,description,sort_order,active
+COLL_BAGS_DEFAULT,Default Evidence Bags,RECEPTACLE,EVIDENCE_BAGS,,,EVIDENCE_PAPER;EVIDENCE_DIGITAL;EVIDENCE_AUDIO;EVIDENCE_VIDEO;EVIDENCE_PHYSICAL,1,Default 1x model. Evidence selections await authoring.,10,false
+COLL_CHEMICAL_KIT_INITIAL,Initial Chemical Collection Kit,RECEPTACLE,CHEMICAL_COLLECTION_KIT,,,EVIDENCE_CHEMICAL,3,Provisional 3x starting model; brand/version unspecified.,20,false
+COLL_FILM_CAMERA_INITIAL,Initial Film Camera,DEVICE,FILM_CAMERA,,,EVIDENCE_PHOTOGRAPHIC,2,Provisional 2x starting model; brand/version unspecified.,30,false

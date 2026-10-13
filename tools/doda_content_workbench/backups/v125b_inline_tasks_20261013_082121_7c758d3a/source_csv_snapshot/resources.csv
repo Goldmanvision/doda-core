@@ -1,0 +1,16 @@
+resource_id,display_name,description,resource_kind,tracks_lifetime,sort_order,active
+EVIDENCE_PAPER,Paper Evidence,"Notes, letters, documents and receipts.",STOCKPILE,false,10,true
+EVIDENCE_PHOTOGRAPHIC,Photographic Evidence,Photographs and photographic evidence.,STOCKPILE,false,20,true
+EVIDENCE_DIGITAL,Digital Evidence,Computer and internet evidence.,STOCKPILE,false,30,true
+EVIDENCE_AUDIO,Audio Evidence,"Tapes, audio reels, CDs and other audio evidence.",STOCKPILE,false,40,true
+EVIDENCE_VIDEO,Video Evidence,"VHS, DVDs, film stock and other video evidence.",STOCKPILE,false,50,true
+EVIDENCE_CHEMICAL,Chemical Evidence,Chemical and biological evidence.,STOCKPILE,false,60,true
+ADMISSIBLE_EVIDENCE,Admissible Evidence,Pooled processed evidence. Lifetime credits drive mission-tier thresholds.,STOCKPILE,true,70,true
+RESEARCH_POINTS,Research Points,Tech Development output for explicitly research-unlockable equipment.,STOCKPILE,false,80,true
+DEPARTMENT_FUNDING,Department Funding,Department funds with current balance and lifetime credits.,STOCKPILE,true,90,true
+LEADS,Leads,"Owned lead records, counted from their authoritative state.",HOLDING,false,100,true
+OPERATIONAL_TERRITORIES,Operational Territories,"Owned operational territories, counted from campaign territory state.",HOLDING,false,110,true
+AGENTS,Agents,Current agent headcount derived from personnel records.,HEADCOUNT,false,120,true
+ANALYSTS,Analysts,Current analyst headcount derived from personnel records.,HEADCOUNT,false,130,true
+CONFIDENTIAL_INFORMANTS,Confidential Informants,Current confidential informant count derived from personnel records.,HEADCOUNT,false,140,true
+EVIDENCE_PHYSICAL,Physical Evidence,"Weapons, clothing and miscellaneous objects that do not fit another evidence category.",STOCKPILE,false,65,true

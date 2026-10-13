@@ -1,10 +1,10 @@
 {
   "toolVersion": "0.1.0",
-  "generatedAtUtc": "2026-10-08T06:13:16.448978+00:00",
+  "generatedAtUtc": "2026-10-13T04:59:03.188639+00:00",
   "projectRoot": "E:\\Dev\\uzdoom_src\\doda-core",
   "valid": true,
   "errorCount": 0,
-  "warningCount": 0,
+  "warningCount": 25,
   "stats": {
     "enum_catalog": 27,
     "department_tracks": 6,
@@ -17,8 +17,43 @@
     "facility_capabilities": 2,
     "capability_staffing_rules": 4,
     "facility_capability_staffing_overrides": 3,
-    "task_templates": 2
+    "task_templates": 13,
+    "task_template_flows": 44,
+    "resources": 15,
+    "task_staffing_rules": 13,
+    "collection_receptacles": 2,
+    "collection_device_types": 1,
+    "collection_models": 3,
+    "evidence_type_instances": 12,
+    "task_prerequisites": 3,
+    "vehicle_types": 2
   },
   "errors": [],
-  "warnings": []
+  "warnings": [
+    "[task_templates] Line 2: draft task requirements/timing are not fully configured",
+    "[task_templates] Line 3: draft task requirements/timing are not fully configured",
+    "[task_templates] Line 4: draft task requirements/timing are not fully configured",
+    "[task_templates] Line 5: draft task requirements/timing are not fully configured",
+    "[task_templates] Line 6: draft task requirements/timing are not fully configured",
+    "[task_templates] Line 7: draft task requirements/timing are not fully configured",
+    "[task_templates] Line 8: draft task requirements/timing are not fully configured",
+    "[task_templates] Line 9: draft task requirements/timing are not fully configured",
+    "[task_templates] Line 10: draft task requirements/timing are not fully configured",
+    "[task_templates] Line 11: draft task requirements/timing are not fully configured",
+    "[task_templates] Line 12: draft task requirements/timing are not fully configured",
+    "[task_templates] Line 13: draft task requirements/timing are not fully configured",
+    "[task_templates] Line 14: draft task requirements/timing are not fully configured",
+    "[task_template_flows] FIELD_SURVEILLANCE: draft amounts/weights unconfigured",
+    "[task_template_flows] INVESTIGATE: draft amounts/weights unconfigured",
+    "[task_template_flows] PROCESS_EVIDENCE_AUDIO: draft amounts/weights unconfigured",
+    "[task_template_flows] PROCESS_EVIDENCE_CHEMICAL: draft amounts/weights unconfigured",
+    "[task_template_flows] PROCESS_EVIDENCE_DIGITAL: draft amounts/weights unconfigured",
+    "[task_template_flows] PROCESS_EVIDENCE_PAPER: draft amounts/weights unconfigured",
+    "[task_template_flows] PROCESS_EVIDENCE_PHOTOGRAPHIC: draft amounts/weights unconfigured",
+    "[task_template_flows] PROCESS_EVIDENCE_VIDEO: draft amounts/weights unconfigured",
+    "[task_template_flows] TECH_DEVELOPMENT: draft amounts/weights unconfigured",
+    "[task_template_flows] UNDERCOVER_14_DAY: draft amounts/weights unconfigured",
+    "[task_template_flows] UNDERCOVER_31_DAY: draft amounts/weights unconfigured",
+    "[task_template_flows] UNDERCOVER_7_DAY: draft amounts/weights unconfigured"
+  ]
 }

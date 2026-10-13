@@ -1,0 +1,2 @@
+mission_id,display_name,kind,chain_id,chain_position,tier_id,unlocks_tier_id,territory_id,map_id,player_only,source_reference,description,sort_order,active
+MISSION_TIER5_CAPSTONE_01,"Savannah River Site Nuclear Research Facility, South Carolina",TIER_CAPSTONE,CHAIN_TIER5_CAPSTONE,1,TIER_5,TIER_6,TERR_SRS_NUCLEAR_FACILITY,,true,User decision 2026-10-08 (CAP-01 to CAP-05),"First mission of the Tier 5 capstone chain. Map, objectives and further chain missions are not yet designed. Real-name use pending legal review.",10,false

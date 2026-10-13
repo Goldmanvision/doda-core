@@ -1,0 +1,456 @@
+{
+  "schema": "doda.task_resource_flows",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-13T03:47:56.001397+00:00",
+  "flows": [
+    {
+      "taskTemplateId": "FIELD_SURVEILLANCE",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_PHOTOGRAPHIC",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 380,
+      "active": false
+    },
+    {
+      "taskTemplateId": "FIELD_SURVEILLANCE",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_AUDIO",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 400,
+      "active": false
+    },
+    {
+      "taskTemplateId": "FIELD_SURVEILLANCE",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_VIDEO",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 410,
+      "active": false
+    },
+    {
+      "taskTemplateId": "INVESTIGATE",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_PAPER",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 130,
+      "active": false
+    },
+    {
+      "taskTemplateId": "INVESTIGATE",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_PHOTOGRAPHIC",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 140,
+      "active": false
+    },
+    {
+      "taskTemplateId": "INVESTIGATE",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_DIGITAL",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 150,
+      "active": false
+    },
+    {
+      "taskTemplateId": "INVESTIGATE",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_AUDIO",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 160,
+      "active": false
+    },
+    {
+      "taskTemplateId": "INVESTIGATE",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_VIDEO",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 170,
+      "active": false
+    },
+    {
+      "taskTemplateId": "INVESTIGATE",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_CHEMICAL",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 180,
+      "active": false
+    },
+    {
+      "taskTemplateId": "INVESTIGATE",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_PHYSICAL",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 440,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_AUDIO",
+      "direction": "IN",
+      "resourceId": "EVIDENCE_AUDIO",
+      "flowMode": "FIXED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 70,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_AUDIO",
+      "direction": "OUT",
+      "resourceId": "ADMISSIBLE_EVIDENCE",
+      "flowMode": "FIXED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 80,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_CHEMICAL",
+      "direction": "IN",
+      "resourceId": "EVIDENCE_CHEMICAL",
+      "flowMode": "FIXED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 110,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_CHEMICAL",
+      "direction": "OUT",
+      "resourceId": "ADMISSIBLE_EVIDENCE",
+      "flowMode": "FIXED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 120,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_DIGITAL",
+      "direction": "IN",
+      "resourceId": "EVIDENCE_DIGITAL",
+      "flowMode": "FIXED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 50,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_DIGITAL",
+      "direction": "OUT",
+      "resourceId": "ADMISSIBLE_EVIDENCE",
+      "flowMode": "FIXED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 60,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_PAPER",
+      "direction": "IN",
+      "resourceId": "EVIDENCE_PAPER",
+      "flowMode": "FIXED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 10,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_PAPER",
+      "direction": "OUT",
+      "resourceId": "ADMISSIBLE_EVIDENCE",
+      "flowMode": "FIXED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 20,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_PHOTOGRAPHIC",
+      "direction": "IN",
+      "resourceId": "EVIDENCE_PHOTOGRAPHIC",
+      "flowMode": "FIXED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 30,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_PHOTOGRAPHIC",
+      "direction": "OUT",
+      "resourceId": "ADMISSIBLE_EVIDENCE",
+      "flowMode": "FIXED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 40,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_VIDEO",
+      "direction": "IN",
+      "resourceId": "EVIDENCE_VIDEO",
+      "flowMode": "FIXED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 90,
+      "active": false
+    },
+    {
+      "taskTemplateId": "PROCESS_EVIDENCE_VIDEO",
+      "direction": "OUT",
+      "resourceId": "ADMISSIBLE_EVIDENCE",
+      "flowMode": "FIXED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 100,
+      "active": false
+    },
+    {
+      "taskTemplateId": "TECH_DEVELOPMENT",
+      "direction": "OUT",
+      "resourceId": "RESEARCH_POINTS",
+      "flowMode": "FIXED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 430,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_14_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_PAPER",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 250,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_14_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_PHOTOGRAPHIC",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 260,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_14_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_DIGITAL",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 270,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_14_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_AUDIO",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 280,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_14_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_VIDEO",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 290,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_14_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_CHEMICAL",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 300,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_14_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_PHYSICAL",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 460,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_31_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_PAPER",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 310,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_31_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_PHOTOGRAPHIC",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 320,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_31_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_DIGITAL",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 330,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_31_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_AUDIO",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 340,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_31_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_VIDEO",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 350,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_31_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_CHEMICAL",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 360,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_31_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_PHYSICAL",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 470,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_7_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_PAPER",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 190,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_7_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_PHOTOGRAPHIC",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 200,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_7_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_DIGITAL",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 210,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_7_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_AUDIO",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 220,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_7_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_VIDEO",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 230,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_7_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_CHEMICAL",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 240,
+      "active": false
+    },
+    {
+      "taskTemplateId": "UNDERCOVER_7_DAY",
+      "direction": "OUT",
+      "resourceId": "EVIDENCE_PHYSICAL",
+      "flowMode": "WEIGHTED",
+      "amount": null,
+      "weight": null,
+      "sortOrder": 450,
+      "active": false
+    }
+  ],
+  "runtimeImplemented": false,
+  "rules": {
+    "inputMode": "FIXED",
+    "weightedOutputSelection": "ONE_RESOURCE_TYPE_PER_UNIT",
+    "weightedAmount": "TOTAL_UNITS_SELECTED_PER_CREDIT_EVENT",
+    "weightMeaning": "RELATIVE_WEIGHT_NOT_PERCENT",
+    "creditTiming": "OWNED_BY_TASK_EXECUTION",
+    "draftRowsExecute": false
+  }
+}

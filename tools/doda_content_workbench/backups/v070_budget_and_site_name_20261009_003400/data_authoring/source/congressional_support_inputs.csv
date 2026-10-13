@@ -1,0 +1,4 @@
+input_id,display_name,source_type,metric_id,scale,floor_value,cap_value,weight,source_reference,description,sort_order,active
+CS_INPUT_EVIDENCE,Lifetime Evidence,LIFETIME_EVIDENCE,,LOG10,,,,User decision 2026-10-09 (CONG-01 to CONG-05),"Lifetime Evidence component. Log scale is proposed; floor, cap and weight are undecided.",10,false
+CS_INPUT_PREPAREDNESS,Department Preparedness,METRIC,PREPAREDNESS,LINEAR,,,,User decision 2026-10-09 (CONG-01 to CONG-05),"PREPAREDNESS metric component. Floor, cap and weight are undecided. The top metric tier is Overextended, so higher is not always better; how to score it is undecided.",20,false
+CS_INPUT_SUCCESS_RATE,Mission Success Rate,MISSION_SUCCESS_RATE,,LINEAR,,,,User decision 2026-10-09 (CONG-01 to CONG-05),Percentage of successful missions. The threshold is modeled as the floor; cap and weight are undecided.,30,false

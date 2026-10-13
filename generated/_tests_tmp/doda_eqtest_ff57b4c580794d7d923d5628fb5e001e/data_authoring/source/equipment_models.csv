@@ -1,0 +1,4 @@
+model_id,display_name,family_id,phone_line_kind,network_tier_id,connection_override,generation_order,description,sort_order,active
+DK,Desk,DESKTOP,,T1,,1,,1,true
+RP,Rot,PHONE,LANDLINE,,,1,,2,true
+FX,Fax,FAX,,,,1,,3,true

@@ -1,0 +1,2 @@
+tier_id,display_name,network_type,generation,description,sort_order,active
+DIAL_1,Dial,DIALUP,1,,1,true

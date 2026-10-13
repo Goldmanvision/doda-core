@@ -1,0 +1,2 @@
+6d66c1b95db202acba5941c855447f2a1ff67646af482465024eced889ead03f  tools/doda_content_workbench/doda_territory_rules.py
+afa722d0f76680f30f9aef518fafd9fb85cf0b51a5dc9d37578b6339d82fed94  docs/workbench/spec/DESIGN_DECISIONS_2026-10-08.md

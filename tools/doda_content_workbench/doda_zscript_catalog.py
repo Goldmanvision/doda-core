@@ -13,13 +13,14 @@ String static const arrays are avoided because local docs only show int arrays.
 """
 from __future__ import annotations
 
+import doda_task_schema as task_schema
 import argparse
 import hashlib
 import json
 import sys
 from pathlib import Path
 
-GENERATOR_VERSION = "0.4.0"
+GENERATOR_VERSION = "0.5.0"
 NETWORK_JSON = Path("generated/data/network_transfer_rules.json")
 EQUIPMENT_JSON = Path("generated/data/equipment_catalog.json")
 DEPARTMENT_JSON = Path("generated/data/department_content.json")
@@ -126,27 +127,24 @@ def department_catalog(dept):
 
 
 def task_template_catalog(tables, capability_ids, facility_pairs):
-    """Authored templates only. Effort, deadline, and auto-allocation stay metadata."""
-    priorities = {r["enum_value"] for r in _active(tables["enum_catalog"])
+    priorities = {r["enum_value"] for r in _active(tables.get("enum_catalog", []))
                   if r["enum_group"] == "TASK_PRIORITY"}
     installed = {pair[1] for pair in facility_pairs}
-    templates = sorted(_active(tables["task_templates"]),
+    templates = sorted(_active(tables.get("task_templates", [])),
                        key=lambda r: (r["sort_order"], r["task_template_id"]))
     seen = set()
     for row in templates:
         key = row["task_template_id"]
         if not key or key in seen:
-            raise ValueError(f"Invalid/duplicate active task-template ID: {key}")
+            raise ValueError("Invalid/duplicate active task-template ID: " + key)
         seen.add(key)
         if row["capability_id"] not in capability_ids or row["capability_id"] not in installed:
-            raise ValueError(f"Task template references unavailable authored capability: {key}")
-        if row["priority"] not in priorities:
-            raise ValueError(f"Unknown task priority: {key}")
-        for field in ("default_target_effort_minutes", "default_deadline_minutes"):
-            if type(row[field]) is not int or row[field] <= 0:
-                raise ValueError(f"Task-template {field} must be a positive integer: {key}")
-        if type(row["auto_allocate"]) is not bool:
-            raise ValueError(f"Task-template auto_allocate must be boolean: {key}")
+            raise ValueError("Task references unavailable authored capability: " + key)
+        problems = task_schema.errors(row, priorities)
+        if type(row.get("loop_task")) is not bool:
+            problems.append("loop_task export must be Boolean")
+        if problems:
+            raise ValueError(key + ": " + "; ".join(problems))
     return templates
 
 
@@ -154,12 +152,13 @@ def task_template_lookups(templates):
     parts = []
     for suffix, key in (("Id", "task_template_id"), ("DisplayName", "display_name"),
                         ("Description", "description"), ("CapabilityId", "capability_id"),
-                        ("Priority", "priority")):
+                        ("Priority", "priority"), ("TargetType", "target_type"),
+                        ("TargetFamilyId", "target_family_id"), ("RewardMode", "reward_mode")):
         parts.append(string_lookup("TaskTemplate" + suffix, [r[key] for r in templates]))
-    for suffix, key in (("TargetEffortMinutes", "default_target_effort_minutes"),
-                        ("DeadlineMinutes", "default_deadline_minutes")):
+    for suffix, key in (("TimeToCompleteMinutes", "time_to_complete_minutes"),
+                        ("PayoutCount", "payout_count")):
         parts.append(int_lookup("TaskTemplate" + suffix, [r[key] for r in templates]))
-    parts.append(int_lookup("TaskTemplateAutoAllocate", [int(r["auto_allocate"]) for r in templates]))
+    parts.append(int_lookup("TaskTemplateLoopTask", [int(r["loop_task"]) for r in templates]))
     parts.append(find_fn("FindTaskTemplate", "TASK_TEMPLATE_COUNT", "TaskTemplateId"))
     return "\n".join(parts)
 
@@ -381,7 +380,7 @@ def build(net, eq, net_hash, eq_hash, dept):
         '            Console.PrintF("DODA_CATALOG STAFFING_EFFECTIVE %s %s %s global=%d/%d/%d effective=%d/%d/%d source=%s", DoDAWorkbenchCatalog.FacilityStaffingFacilityId(se), DoDAWorkbenchCatalog.FacilityStaffingCapabilityId(se), DoDAWorkbenchCatalog.FacilityStaffingQualificationId(se), DoDAWorkbenchCatalog.FacilityStaffingGlobalMin(se), DoDAWorkbenchCatalog.FacilityStaffingGlobalPreferred(se), DoDAWorkbenchCatalog.FacilityStaffingGlobalMax(se), DoDAWorkbenchCatalog.FacilityStaffingMin(se), DoDAWorkbenchCatalog.FacilityStaffingPreferred(se), DoDAWorkbenchCatalog.FacilityStaffingMax(se), DoDAWorkbenchCatalog.FacilityStaffingSource(se));',
         '        Console.PrintF("DODA_CATALOG TASK_TEMPLATES count=%d", DoDAWorkbenchCatalog.TASK_TEMPLATE_COUNT);',
         "        for (int tt = 0; tt < DoDAWorkbenchCatalog.TASK_TEMPLATE_COUNT; tt++)",
-        '            Console.PrintF("DODA_CATALOG TASK_TEMPLATE %s %s priority=%s effort=%d deadline=%d auto=%d", DoDAWorkbenchCatalog.TaskTemplateId(tt), DoDAWorkbenchCatalog.TaskTemplateCapabilityId(tt), DoDAWorkbenchCatalog.TaskTemplatePriority(tt), DoDAWorkbenchCatalog.TaskTemplateTargetEffortMinutes(tt), DoDAWorkbenchCatalog.TaskTemplateDeadlineMinutes(tt), DoDAWorkbenchCatalog.TaskTemplateAutoAllocate(tt));',
+        '            Console.PrintF("DODA_CATALOG TASK_TEMPLATE %s %s priority=%s target=%s loop=%d duration=%d payouts=%d reward=%s", DoDAWorkbenchCatalog.TaskTemplateId(tt), DoDAWorkbenchCatalog.TaskTemplateCapabilityId(tt), DoDAWorkbenchCatalog.TaskTemplatePriority(tt), DoDAWorkbenchCatalog.TaskTemplateTargetType(tt), DoDAWorkbenchCatalog.TaskTemplateLoopTask(tt), DoDAWorkbenchCatalog.TaskTemplateTimeToCompleteMinutes(tt), DoDAWorkbenchCatalog.TaskTemplatePayoutCount(tt), DoDAWorkbenchCatalog.TaskTemplateRewardMode(tt));',
         '        Console.PrintF("DODA_CATALOG END");',
         "    }",
         "}",
@@ -407,8 +406,9 @@ def build(net, eq, net_hash, eq_hash, dept):
              f"source={r['provenance']}" for r in effective]
     dump += [f"DODA_CATALOG TASK_TEMPLATES count={len(templates)}"]
     dump += [f"DODA_CATALOG TASK_TEMPLATE {r['task_template_id']} {r['capability_id']} "
-             f"priority={r['priority']} effort={r['default_target_effort_minutes']} "
-             f"deadline={r['default_deadline_minutes']} auto={int(r['auto_allocate'])}" for r in templates]
+             f"priority={r['priority']} target={r['target_type']} loop={int(r['loop_task'])} "
+             f"duration={r['time_to_complete_minutes'] if r['time_to_complete_minutes'] is not None else -1} "
+             f"payouts={r['payout_count']} reward={r['reward_mode']}" for r in templates]
     dump.append("DODA_CATALOG END")
     return "\n".join(out), "\n".join(dump) + "\n"
 

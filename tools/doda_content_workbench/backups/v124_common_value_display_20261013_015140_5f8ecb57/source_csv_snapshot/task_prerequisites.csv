@@ -1,0 +1,4 @@
+prerequisite_id,task_template_id,requirement_kind,scope,personnel_role,requirement_value,min_quantity,description,sort_order,active
+PRE_INVESTIGATE_PISTOL,INVESTIGATE,WEAPON_TYPE,PER_ASSIGNED_AGENT,AGENT,PISTOL,1,Each assigned agent carries a pistol; no brand/model restriction.,10,false
+PRE_INVESTIGATE_RECEPTACLE,INVESTIGATE,APPLICABLE_COLLECTION_RECEPTACLE,PER_ASSIGNED_AGENT,AGENT,,1,Each assigned agent carries a receptacle whose model collects the evidence category; missing-category selection policy remains open.,20,false
+PRE_INVESTIGATE_VEHICLE,INVESTIGATE,MOTOR_VEHICLE,TASK,,,1,One shared motor vehicle per Investigation task assignment. Standard vehicle supports teams up to 4; van supports teams up to 6. Staffing limits remain separate. Generic vehicle types are cataloged; runtime capacity enforcement and allocation are not implemented.,30,false

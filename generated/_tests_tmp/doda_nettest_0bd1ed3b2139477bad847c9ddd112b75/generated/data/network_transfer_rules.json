@@ -1,0 +1,222 @@
+{
+  "schema": "doda.network_transfer_rules",
+  "toolVersion": "0.1.0",
+  "generatedAtUtc": "2026-10-10T15:57:31.902925+00:00",
+  "tiers": [
+    {
+      "tierId": "DIAL_1",
+      "displayName": "Dial",
+      "networkType": "DIALUP",
+      "generation": "1",
+      "description": "",
+      "sortOrder": 1,
+      "active": true
+    }
+  ],
+  "hardwareModels": [
+    {
+      "modelId": "M1",
+      "displayName": "Modem",
+      "hardwareKind": "MODEM",
+      "tierId": "DIAL_1",
+      "description": "",
+      "sortOrder": 1,
+      "active": true
+    },
+    {
+      "modelId": "R1",
+      "displayName": "Router",
+      "hardwareKind": "ROUTER",
+      "tierId": "DIAL_1",
+      "description": "",
+      "sortOrder": 2,
+      "active": true
+    }
+  ],
+  "contract": {
+    "contractVersion": "2026-10-07.1",
+    "ruleFlags": {
+      "router_modem_exact_match": true,
+      "device_modem_exact_match": true,
+      "shared_bandwidth_contention": false,
+      "modem_selection": "AUTO_WITH_PLAYER_OVERRIDE",
+      "completion_requires_signoff": true,
+      "awaiting_signoff_expires": false,
+      "global_pause_all": false,
+      "player_manual_pause_scope": "PER_DEVICE",
+      "pause_task_occupies_task_slot": true,
+      "signoff_occupies_task_slot": true,
+      "paused_transfer_resume": "FROM_STORED_PROGRESS",
+      "signoff_resume_by_other": "RESTART",
+      "signoff_starter_permanently_unavailable": "WAIT_FOR_RESTART",
+      "technician_both_ends": "ONLY_IF_CAN_TRAVEL_BETWEEN_LOCATIONS"
+    },
+    "transferStates": [
+      {
+        "state": "QUEUED",
+        "description": "Created; waiting for a compatible link and an attending person.",
+        "terminal": false
+      },
+      {
+        "state": "ACTIVE",
+        "description": "Data is moving. Vulnerable to link failure (INT-03).",
+        "terminal": false
+      },
+      {
+        "state": "PAUSED_MANUAL",
+        "description": "Paused by a staff task or per-device player action. Protected from link loss; resumes where stopped (INT-07).",
+        "terminal": false
+      },
+      {
+        "state": "AWAITING_SIGNOFF",
+        "description": "Delivered. Waits indefinitely for sign-off (INT-01).",
+        "terminal": false
+      },
+      {
+        "state": "SIGNOFF_IN_PROGRESS",
+        "description": "An agent/analyst is verifying (occupies their task slot).",
+        "terminal": false
+      },
+      {
+        "state": "SIGNOFF_PAUSED",
+        "description": "Sign-off interrupted; progress kept for its starter only (INT-02, INT-05).",
+        "terminal": false
+      },
+      {
+        "state": "COMPLETED",
+        "description": "Signed off. Evidence counts as processed.",
+        "terminal": true
+      },
+      {
+        "state": "LOST",
+        "description": "Link failed while ACTIVE. Unresolved value recorded as lost evidence.",
+        "terminal": true
+      }
+    ],
+    "transferTransitions": [
+      {
+        "from": "QUEUED",
+        "to": "ACTIVE",
+        "trigger": "start",
+        "notes": "Requires exact device-router-modem tier match (NET-01)."
+      },
+      {
+        "from": "ACTIVE",
+        "to": "PAUSED_MANUAL",
+        "trigger": "manual_pause",
+        "notes": "Staff pause task or per-device player action (INT-06)."
+      },
+      {
+        "from": "PAUSED_MANUAL",
+        "to": "ACTIVE",
+        "trigger": "resume",
+        "notes": "Resumes from stored progress (INT-07)."
+      },
+      {
+        "from": "ACTIVE",
+        "to": "LOST",
+        "trigger": "link_failure",
+        "notes": "Modem/router failure or disconnect (INT-03)."
+      },
+      {
+        "from": "PAUSED_MANUAL",
+        "to": "PAUSED_MANUAL",
+        "trigger": "link_failure",
+        "notes": "Paused transfers survive link loss (INT-03)."
+      },
+      {
+        "from": "ACTIVE",
+        "to": "AWAITING_SIGNOFF",
+        "trigger": "delivered",
+        "notes": "Not yet complete (NET-03)."
+      },
+      {
+        "from": "AWAITING_SIGNOFF",
+        "to": "SIGNOFF_IN_PROGRESS",
+        "trigger": "begin_signoff",
+        "notes": "Agent/analyst only (INT-04)."
+      },
+      {
+        "from": "SIGNOFF_IN_PROGRESS",
+        "to": "SIGNOFF_PAUSED",
+        "trigger": "interrupt",
+        "notes": "Progress kept, bound to starter (INT-02, INT-05)."
+      },
+      {
+        "from": "SIGNOFF_PAUSED",
+        "to": "SIGNOFF_IN_PROGRESS",
+        "trigger": "resume_by_starter",
+        "notes": "Keeps progress (INT-05)."
+      },
+      {
+        "from": "SIGNOFF_PAUSED",
+        "to": "SIGNOFF_IN_PROGRESS",
+        "trigger": "restart_by_other",
+        "notes": "Progress reset to zero (INT-05, INT-10)."
+      },
+      {
+        "from": "SIGNOFF_IN_PROGRESS",
+        "to": "COMPLETED",
+        "trigger": "signoff_complete",
+        "notes": "Evidence counted as processed."
+      }
+    ],
+    "rolePermissions": {
+      "signoff": {
+        "allowed_roles": [
+          "AGENT",
+          "ANALYST"
+        ],
+        "requires_presence": true
+      },
+      "pause_transfer_task": {
+        "allowed_roles": [
+          "AGENT",
+          "ANALYST",
+          "TECHNICIAN"
+        ],
+        "requires_presence": true,
+        "remote_allowed_roles": [
+          "TECHNICIAN"
+        ]
+      }
+    },
+    "evidenceAccounting": {
+      "processedOn": "COMPLETED",
+      "lostOn": "LOST",
+      "pendingExcludedFromRatios": [
+        "QUEUED",
+        "ACTIVE",
+        "PAUSED_MANUAL",
+        "AWAITING_SIGNOFF",
+        "SIGNOFF_IN_PROGRESS",
+        "SIGNOFF_PAUSED"
+      ]
+    },
+    "taskInterruption": {
+      "processing": {
+        "shift_end": "PAUSE_RESUME_NEXT_SHIFT_UNLESS_PLAYER_REASSIGNS",
+        "incapacity": "FAIL_DESTROY_UNRESOLVED",
+        "player_cancel": "WAIT_PARTLY_PROCESSED",
+        "takeover_by_qualified": "KEEP_PROGRESS",
+        "equipment_unavailable": "REDUCED_OR_PAUSE_NO_DESTRUCTION"
+      },
+      "system_update": {
+        "any_interruption": "RESTART",
+        "overdue_risk_through_restart": "KEEPS_BUILDING_UNTIL_COMPLETE"
+      }
+    },
+    "permanentUnavailabilityCauses": [
+      "DEATH",
+      "DISMISSAL",
+      "DEFECTION",
+      "RETIREMENT"
+    ],
+    "openItems": {
+      "NET-04": "Individual device bandwidth upgrades.",
+      "NET-05": "Department-wide transfer efficiency formula.",
+      "NET-06": "Partly settled: diagram speed labels kept verbatim; file sizes deliberately exaggerated. Numeric units/conversion for timing still open."
+    },
+    "runtimeImplemented": false
+  }
+}

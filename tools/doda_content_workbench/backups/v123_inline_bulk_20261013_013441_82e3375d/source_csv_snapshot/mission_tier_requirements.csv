@@ -1,0 +1,3 @@
+requirement_id,tier_id,upgrade_id,milestone_id,plot_item_id,source_reference,description,sort_order,active
+REQ_TIER6_NECRONOMICON_COLLECTED,TIER_6,,PLOT_NECRONOMICON_COLLECTED,,User decision 2026-10-08 (PLOT-01),Tier 6 gate requirement. Inactive draft until the gate is activated.,10,false
+REQ_TIER6_NECRONOMICON_PROCESSED,TIER_6,,PLOT_NECRONOMICON_PROCESSED,,User decision 2026-10-08 (PLOT-01),Tier 6 gate requirement. Inactive draft until the gate is activated.,20,false

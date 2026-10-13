@@ -1,0 +1,2 @@
+device_type_id,display_name,description,sort_order,active
+FILM_CAMERA,Film Camera,Photographic evidence collection device; not a receptacle.,10,true

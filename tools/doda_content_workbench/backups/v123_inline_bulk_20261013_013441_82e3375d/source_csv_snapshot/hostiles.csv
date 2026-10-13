@@ -1,0 +1,5 @@
+hostile_id,display_name,engine_class,weapon_id,tier_id,authored_only,placeholder,source_reference,description,sort_order,active
+HOSTILE_SAILOR,Sailor,,,,false,true,User decision 2026-10-08 (HOST-01),Freedoom Phase 2 blue uniformed enemy. Primary hostile for now. Class name and weapon blank until confirmed.,10,false
+HOSTILE_ZOMBIE,Zombie,,,,false,true,User decision 2026-10-08 (HOST-01),Freedoom placeholder. Lower tier hostile.,20,false
+HOSTILE_SHOTGUN_ZOMBIE,Shotgun Zombie,,,,false,true,User decision 2026-10-08 (HOST-01),Freedoom placeholder. Lower tier hostile.,30,false
+HOSTILE_MINIGUN_ZOMBIE,Minigun Zombie,,,,false,true,User decision 2026-10-08 (HOST-01),Freedoom placeholder. Lower tier hostile.,40,false

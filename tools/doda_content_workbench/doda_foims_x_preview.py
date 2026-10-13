@@ -15,10 +15,17 @@ import tkinter as tk
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from typing import Any
 
 from PIL import Image, ImageDraw, ImageFont, ImageTk
+
+from doda_foims_x_sandbox import FoimsXSandbox
+from doda_foims_x_facility_catalog import FacilityCatalog, status
+from doda_foims_x_reference_catalog import TaskCatalog, QualificationCatalog
+from doda_foims_x_catalog_layout import detail_pages, sidebar_pages, header_layout
+from doda_foims_x_roster import SandboxRoster, AVAILABLE, UNAVAILABLE
+from doda_foims_x_personnel_catalog import PersonnelCatalog
 
 
 DESIGN_SIZE = (640, 480)
@@ -131,7 +138,7 @@ class FoimsXPreview:
     def __init__(self, app: Any) -> None:
         self.app = app
         self.window = tk.Toplevel(app)
-        self.window.title("FOIMS-X Preview Monitor")
+        self.window.title("FOIMS-X Local Simulation Preview")
         self.window.geometry("1400x960")
         self.window.minsize(900, 680)
         self.window.configure(background=PALETTE["desktop"])
@@ -146,9 +153,16 @@ class FoimsXPreview:
         self._canvas_image_id: int | None = None
         self._presented_size: tuple[int, int] | None = None
         self._pending_resize: str | None = None
-        self._clock_started_at = time.monotonic()
+        self.sandbox = FoimsXSandbox(app.tables)
+        self.roster = SandboxRoster(app.tables)
+        self._clock_after_id = None
+        self._frame_snapshot = self.sandbox.snapshot()
+        self._activity_window = None
+        self._activity_tree = None
+        self._activity_signature = None
 
         self._build_controls()
+        self._build_catalog_controls()
         self._build_canvas()
 
         self.window.protocol("WM_DELETE_WINDOW", self.close)
@@ -157,7 +171,7 @@ class FoimsXPreview:
         self.window.bind("<Escape>", self.exit_fullscreen)
         self.window.bind("<Configure>", self._on_resize)
         self.window.after_idle(self.refresh_preview)
-        self.window.after(1000, self._clock_tick)
+        self._clock_after_id = self.window.after(1000, self._clock_tick)
 
     def is_open(self) -> bool:
         try:
@@ -165,17 +179,444 @@ class FoimsXPreview:
         except tk.TclError:
             return False
 
+    def toggle_debug(self, _event=None):
+        try:
+            visible = bool(self.debug_window.winfo_viewable())
+        except tk.TclError:
+            return "break"
+        if visible:
+            self.hide_debug()
+        else:
+            self.show_debug()
+        return "break"
+
+    def show_debug(self):
+        try:
+            self.debug_window.deiconify()
+            self.debug_window.lift()
+        except tk.TclError:
+            pass
+
+    def hide_debug(self):
+        try:
+            self.debug_window.withdraw()
+        except tk.TclError:
+            pass
+
     def _current_game_clock(self) -> dict[str, object]:
-        """Return the canonical campaign time for this preview session."""
-        return foims_x_game_clock(time.monotonic() - self._clock_started_at)
+        return self._frame_snapshot
 
     def _clock_tick(self) -> None:
-        """Rerender the preview once per real second while the window exists."""
+        self._clock_after_id = None
         if not self.is_open():
             return
-
+        self.sandbox.tick()
         self.render()
-        self.window.after(1000, self._clock_tick)
+        self._clock_after_id = self.window.after(1000, self._clock_tick)
+
+    def _toggle_simulation(self) -> None:
+        if self.sandbox.running:
+            self.sandbox.pause()
+        else:
+            self.sandbox.play()
+        self.render()
+
+    def _step_simulation(self) -> None:
+        if self.sandbox.running:
+            return
+        self.sandbox.step(int(self.step_minutes.get()))
+        self.render()
+
+    def _reset_simulation(self) -> None:
+        self.sandbox.reset(self.app.tables)
+        self.roster.reset()
+        self._populate_metric_controls()
+        if hasattr(self, "_facility_catalog"):
+            self._refresh_facility_catalog()
+        self.render()
+
+    def _gather_evidence(self):
+        try:
+            self.sandbox.gather_evidence(self.evidence_amount.get())
+        except ValueError as error:
+            messagebox.showerror("Sandbox Evidence", str(error), parent=self.window)
+            return
+        self.render()
+
+    def _spend_evidence(self):
+        try:
+            self.sandbox.spend_evidence(self.evidence_amount.get())
+        except ValueError as error:
+            messagebox.showerror("Sandbox Evidence", str(error), parent=self.window)
+            return
+        self.render()
+
+    def _populate_metric_controls(self):
+        ids = tuple(r["metric_id"] for r in self.sandbox.metric_rows())
+        self.metric_combo.configure(values=ids)
+        if self.selected_metric.get() not in ids:
+            self.selected_metric.set(ids[0] if ids else "")
+        self._select_metric()
+
+    def _select_metric(self, _event=None):
+        metric_id = self.selected_metric.get()
+        row = next((r for r in self.sandbox.metric_rows()
+                    if r["metric_id"] == metric_id), None)
+        if row is None:
+            self.metric_bounds.set("No active metrics")
+            self.metric_value.set("")
+            return
+        self.metric_bounds.set(
+            f'{row.get("display_name", metric_id)} | '
+            f'{row["internal_min"]} to {row["internal_max"]}'
+        )
+        self.metric_value.set(str(int(self.sandbox.metrics[metric_id])))
+        if hasattr(self, "canvas"):
+            self.render()
+
+    def _apply_metric(self):
+        try:
+            self.sandbox.set_metric(
+                self.selected_metric.get(), self.metric_value.get()
+            )
+        except ValueError as error:
+            messagebox.showerror(
+                "Sandbox metric value", str(error), parent=self.window
+            )
+            return
+        self.metric_value.set(
+            str(int(self.sandbox.metrics[self.selected_metric.get()]))
+        )
+        self.render()
+
+    def _visible_metric_rows(self):
+        selected = self.selected_metric.get()
+        return sorted(
+            self.sandbox.metric_rows(),
+            key=lambda row: row["metric_id"] != selected
+        )[:3]
+
+    def _show_activity(self):
+        if self._activity_window is not None:
+            try:
+                if self._activity_window.winfo_exists():
+                    self._activity_window.lift()
+                    return
+            except tk.TclError:
+                pass
+
+        self._activity_window = tk.Toplevel(self.window)
+        self._activity_window.title("FOIMS-X Sandbox Activity - latest 200 changes")
+        self._activity_window.geometry("900x380")
+        frame = ttk.Frame(self._activity_window, padding=8)
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        columns = ("time", "metric", "before", "after")
+        self._activity_tree = ttk.Treeview(
+            frame, columns=columns, show="headings"
+        )
+        for key, label, width in (
+            ("time", "Strategic time", 180),
+            ("metric", "Metric / Transaction", 220),
+            ("before", "Before", 240),
+            ("after", "After", 240),
+        ):
+            self._activity_tree.heading(key, text=label)
+            self._activity_tree.column(key, width=width)
+
+        scroll = ttk.Scrollbar(
+            frame, orient=tk.VERTICAL, command=self._activity_tree.yview
+        )
+        self._activity_tree.configure(yscrollcommand=scroll.set)
+        scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        self._activity_tree.pack(fill=tk.BOTH, expand=True)
+        self._activity_signature = None
+        self._refresh_activity()
+
+    def _refresh_activity(self):
+        if self._activity_tree is None:
+            return
+        try:
+            if not self._activity_tree.winfo_exists():
+                return
+            entries = self._frame_snapshot.get("activity", [])
+            signature = repr(entries)
+            if signature == self._activity_signature:
+                return
+            children = self._activity_tree.get_children()
+            if children:
+                self._activity_tree.delete(*children)
+            for entry in entries:
+                self._activity_tree.insert(
+                    "", "end", values=self.sandbox.activity_columns(entry)
+                )
+            self._activity_signature = signature
+        except tk.TclError:
+            pass
+
+    def _build_catalog_controls(self):
+        row = ttk.Frame(self.controls)
+        row.pack(fill=tk.X, pady=(8, 0))
+        self.catalog_mode = tk.StringVar(value="Overview")
+        self.catalog_facility_id = tk.StringVar()
+        self.catalog_info = tk.StringVar()
+        self._catalog_detail_page = 0
+        ttk.Label(row, text="FOIMS-X screen:").pack(side=tk.LEFT)
+        mode = ttk.Combobox(
+            row, state="readonly", width=16,
+            values=("Overview", "Facilities", "Task Templates", "Qualifications", "Personnel"), textvariable=self.catalog_mode
+        )
+        mode.pack(side=tk.LEFT, padx=6)
+        mode.bind("<<ComboboxSelected>>", self._catalog_mode_changed)
+        self.catalog_facility_combo = ttk.Combobox(
+            row, state="readonly", width=28,
+            textvariable=self.catalog_facility_id
+        )
+        self.catalog_facility_combo.pack(side=tk.LEFT, padx=6)
+        self.catalog_facility_combo.bind("<<ComboboxSelected>>", self._catalog_selected)
+        ttk.Button(row, text="Previous Entry",
+                   command=lambda: self._catalog_move(-1)).pack(side=tk.LEFT)
+        ttk.Button(row, text="Next Entry",
+                   command=lambda: self._catalog_move(1)).pack(side=tk.LEFT, padx=4)
+        ttk.Button(row, text="Details <",
+                   command=lambda: self._catalog_page(-1)).pack(side=tk.LEFT)
+        ttk.Button(row, text="Details >",
+                   command=lambda: self._catalog_page(1)).pack(side=tk.LEFT, padx=4)
+        ttk.Label(self.controls, textvariable=self.catalog_info).pack(fill=tk.X)
+        roster_row = ttk.Frame(self.controls)
+        roster_row.pack(fill=tk.X, pady=(4, 0))
+        ttk.Label(roster_row, text="Sandbox roster (Personnel screen):").pack(side=tk.LEFT)
+        ttk.Button(roster_row, text="Toggle Availability",
+                   command=self._roster_toggle).pack(side=tk.LEFT, padx=6)
+        ttk.Button(roster_row, text="Reset Roster",
+                   command=self._roster_reset).pack(side=tk.LEFT)
+        quick = ttk.Frame(self.toolbar_frame)
+        quick.pack(side=tk.LEFT, padx=(16, 0))
+        ttk.Label(quick, text="Screen:").pack(side=tk.LEFT)
+        quick_mode = ttk.Combobox(
+            quick, state="readonly", width=16,
+            values=tuple(mode.cget("values")),
+            textvariable=self.catalog_mode
+        )
+        quick_mode.pack(side=tk.LEFT, padx=6)
+        quick_mode.bind("<<ComboboxSelected>>", self._catalog_mode_changed)
+        ttk.Button(quick, text="<", width=3,
+                   command=lambda: self._catalog_move(-1)).pack(side=tk.LEFT)
+        ttk.Button(quick, text=">", width=3,
+                   command=lambda: self._catalog_move(1)).pack(side=tk.LEFT, padx=4)
+        self._refresh_facility_catalog()
+
+    def _refresh_facility_catalog(self):
+        if not hasattr(self, "_catalog_selection_by_mode"):
+            self._catalog_selection_by_mode = {}
+            self._catalog_page_by_mode = {}
+        old_mode = getattr(self, "_catalog_loaded_mode", None)
+        if old_mode is not None:
+            self._catalog_selection_by_mode[old_mode] = self.catalog_facility_id.get()
+            self._catalog_page_by_mode[old_mode] = self._catalog_detail_page
+
+        mode = self.catalog_mode.get()
+        if mode == "Overview":
+            mode = old_mode or "Facilities"
+        classes = {
+            "Facilities": FacilityCatalog,
+            "Task Templates": TaskCatalog,
+            "Qualifications": QualificationCatalog,
+        }
+        self._catalog_loaded_mode = mode
+        if mode == "Personnel":
+            self._facility_catalog = PersonnelCatalog(self.app.tables, self.roster)
+        else:
+            self._facility_catalog = classes[mode](self.app.tables)
+        self._catalog_rows = self._facility_catalog.facilities()
+        ids = tuple(row.get("facility_id", "") for row in self._catalog_rows)
+        self.catalog_facility_combo.configure(values=ids)
+        selected = self._catalog_selection_by_mode.get(mode, "")
+        self.catalog_facility_id.set(
+            selected if selected in ids else (ids[0] if ids else "")
+        )
+        self._catalog_detail_page = self._catalog_page_by_mode.get(mode, 0)
+        self._update_catalog_info()
+        if hasattr(self, "canvas"):
+            self.render()
+
+    def _catalog_mode_changed(self, _event=None):
+        self._refresh_facility_catalog()
+
+    def _roster_toggle(self):
+        if self.catalog_mode.get() != "Personnel":
+            return
+        agent = self.roster.get(self.catalog_facility_id.get())
+        if agent is None:
+            return
+        self.roster.set_availability(
+            agent.agent_id,
+            UNAVAILABLE if agent.availability == AVAILABLE else AVAILABLE,
+        )
+        self._refresh_facility_catalog()
+
+    def _roster_reset(self):
+        self.roster.reset()
+        if self.catalog_mode.get() == "Personnel":
+            self._refresh_facility_catalog()
+
+
+
+
+
+
+
+    def _catalog_selected(self, _event=None):
+        self._catalog_detail_page = 0
+        self._update_catalog_info()
+        if hasattr(self, "canvas"):
+            self.render()
+
+    def _catalog_move(self, delta):
+        ids = [row.get("facility_id", "") for row in self._catalog_rows]
+        if not ids:
+            return
+        current = self.catalog_facility_id.get()
+        index = ids.index(current) if current in ids else 0
+        self.catalog_facility_id.set(ids[(index + delta) % len(ids)])
+        self._catalog_selected()
+
+    def _catalog_page(self, delta):
+        pages = self._catalog_pages(self.catalog_facility_id.get())
+        self._catalog_detail_page = max(
+            0, min(len(pages) - 1, self._catalog_detail_page + delta)
+        )
+        self._update_catalog_info()
+        if hasattr(self, "canvas"):
+            self.render()
+
+    def _catalog_pages(self, selected, active_width=FOIMS_VIEWPORT_SIZE[0],
+                       active_height=FOIMS_VIEWPORT_SIZE[1]):
+        geometry = self._catalog_geometry(active_width, active_height)
+        return detail_pages(
+            self._facility_catalog.describe(selected),
+            geometry["text_measure"], 394 * geometry["scale_x"],
+            page_size=geometry["detail_page_size"]
+        )
+
+    def _catalog_geometry(self, active_width, active_height):
+        scale_x = active_width / DESIGN_SIZE[0]
+        scale_y = active_height / DESIGN_SIZE[1]
+        ui_scale = min(scale_x, scale_y)
+
+        def measure_at(size):
+            font = ImageFont.truetype(
+                self._font_path(), max(8, round(size * ui_scale))
+            )
+            return lambda value: font.getlength(value.upper())
+
+        suffix = (" / SANDBOX ROSTER" if self.catalog_mode.get() == "Personnel"
+                  else " / READ-ONLY CATALOG")
+        geometry = header_layout(
+            "FOIMS-X / " + self.catalog_mode.get().upper() + suffix,
+            self.catalog_mode.get().upper(),
+            "SELECTED ENTRY DETAILS",
+            measure_at(11), measure_at(10),
+            584 * scale_x, 160 * scale_x, 394 * scale_x
+        )
+        geometry.update(
+            scale_x=scale_x, scale_y=scale_y, ui_scale=ui_scale,
+            text_measure=measure_at(8)
+        )
+        return geometry
+
+    def _update_catalog_info(self):
+        selected = self.catalog_facility_id.get()
+        row = next(
+            (r for r in self._catalog_rows if r.get("facility_id") == selected), {}
+        )
+        pages = self._catalog_pages(selected)
+        self._catalog_detail_page = max(
+            0, min(self._catalog_detail_page, len(pages) - 1)
+        )
+        self.catalog_info.set(
+            f'Catalog: {row.get("display_name", selected) or "No entries"} | '
+            f'{len(self._catalog_rows)} entries | '
+            f'Details {self._catalog_detail_page + 1}/{len(pages)} | Read only'
+        )
+
+    def _render_facility_catalog(self, active_width, active_height):
+        image = Image.new("RGBA", (active_width, active_height), PALETTE["screen"])
+        draw = ImageDraw.Draw(image)
+        geometry = self._catalog_geometry(active_width, active_height)
+        scale_x = geometry["scale_x"]
+        scale_y = geometry["scale_y"]
+        ui_scale = geometry["ui_scale"]
+
+        def panel(x0, y0, x1, y1, fill):
+            draw.rectangle(
+                (round(x0 * scale_x), round(y0 * scale_y),
+                 round(x1 * scale_x), round(y1 * scale_y)),
+                fill=fill, outline=PALETTE["border"],
+                width=max(1, round(ui_scale))
+            )
+
+        def label(x, y, value, size=9, color=None):
+            self._draw_text(
+                image, round(x * scale_x), round(y * scale_y), value,
+                max(8, round(size * ui_scale)), color or PALETTE["text"]
+            )
+
+        panel(12, 12, 628, 468, PALETTE["screen"])
+        panel(18, 18, 622, geometry["banner_bottom"], PALETTE["panel"])
+        for offset, line in enumerate(geometry["title_lines"]):
+            label(28, 26 + offset * 16, line, 11, PALETTE["accent"])
+
+        panel_top = geometry["panel_top"]
+        panel(18, panel_top, 198, 446, PALETTE["screen_alt"])
+        panel(206, panel_top, 622, 446, PALETTE["screen_alt"])
+
+        for offset, line in enumerate(geometry["left_lines"]):
+            label(26, geometry["heading_top"] + offset * 16,
+                  line, 10, PALETTE["accent"])
+        for offset, line in enumerate(geometry["right_lines"]):
+            label(216, geometry["heading_top"] + offset * 16,
+                  line, 10, PALETTE["accent"])
+
+        selected = self.catalog_facility_id.get()
+        lists = sidebar_pages(
+            self._catalog_rows, geometry["text_measure"], 154 * scale_x,
+            height=geometry["sidebar_height"]
+        )
+        list_index = next(
+            (i for i, entries in enumerate(lists)
+             if any(row.get("facility_id") == selected
+                    for row, _, _ in entries)),
+            0
+        )
+        y = geometry["body_top"]
+        for row, lines, height in lists[list_index]:
+            focused = row.get("facility_id") == selected
+            if focused:
+                panel(22, y - 4, 194, y + height - 5, PALETTE["panel_alt"])
+            for offset, line in enumerate(lines):
+                color = PALETTE["accent"] if focused else PALETTE["text"]
+                if offset == 0:
+                    label(28, y, ("> " if focused else "  ") + line, 8, color)
+                else:
+                    label(40, y + offset * 14, line, 8, color)
+            label(40, y + len(lines) * 14, status(row), 8, PALETTE["muted"])
+            y += height
+
+        if not self._catalog_rows:
+            label(28, geometry["body_top"], "NO CATALOG ENTRIES",
+                  8, PALETTE["muted"])
+
+        pages = self._catalog_pages(selected, active_width, active_height)
+        page = max(0, min(self._catalog_detail_page, len(pages) - 1))
+        for offset, line in enumerate(pages[page]):
+            label(216, geometry["body_top"] + offset * 15, line, 8)
+
+        panel(18, 452, 622, 466, PALETTE["panel"])
+        label(26, 455,
+              f'LIST {list_index + 1}/{len(lists)} / DETAILS {page + 1}/{len(pages)} / PREVIEW ONLY',
+              7, PALETTE["muted"])
+        return image
 
     def show(self) -> None:
         if not self.is_open():
@@ -186,6 +627,15 @@ class FoimsXPreview:
         self.window.focus_force()
 
     def close(self) -> None:
+        self.sandbox.pause()
+        for owner, name in ((self.window, "_clock_after_id"), (self.canvas, "_pending_resize")):
+            callback = getattr(self, name, None)
+            if callback is not None:
+                try:
+                    owner.after_cancel(callback)
+                except tk.TclError:
+                    pass
+                setattr(self, name, None)
         if self.is_open():
             self.window.destroy()
 
@@ -204,7 +654,7 @@ class FoimsXPreview:
             self.exit_fullscreen()
             return "break"
 
-        self.controls.pack_forget()
+        self.toolbar_frame.pack_forget()
         self.status_label.pack_forget()
 
         self.window.attributes("-fullscreen", True)
@@ -224,7 +674,7 @@ class FoimsXPreview:
 
         self.window.attributes("-fullscreen", False)
 
-        self.controls.pack(fill=tk.X, before=self.canvas)
+        self.toolbar_frame.pack(fill=tk.X, before=self.canvas)
         self.status_label.pack(fill=tk.X, pady=(0, 6), before=self.canvas)
 
         self.window.after_idle(self.render)
@@ -264,13 +714,82 @@ class FoimsXPreview:
         )
 
     def _build_controls(self) -> None:
-        self.controls = ttk.Frame(self.window, padding=(10, 8))
-        self.controls.pack(fill=tk.X)
-        controls = self.controls
+        self.debug_window = tk.Toplevel(self.window)
+        self.debug_window.title("FOIMS-X Debug Panel")
+        self.debug_window.geometry("1000x440+60+60")
+        self.debug_window.protocol("WM_DELETE_WINDOW", self.hide_debug)
+        self.debug_window.bind("<F2>", self.toggle_debug)
+        self.window.bind("<F2>", self.toggle_debug)
+        self.controls = ttk.Frame(self.debug_window, padding=(10, 8))
+        self.controls.pack(fill=tk.BOTH, expand=True)
+        self.toolbar_frame = ttk.Frame(self.window, padding=(10, 8))
+        self.toolbar_frame.pack(fill=tk.X)
+        toolbar = self.toolbar_frame
+        controls = toolbar
+        simulation_controls = ttk.Frame(self.controls)
+        simulation_controls.pack(fill=tk.X, pady=(8, 0))
+        self.play_button = ttk.Button(simulation_controls, text="Play", command=self._toggle_simulation)
+        self.play_button.pack(side=tk.LEFT)
+        self.step_minutes = tk.StringVar(value="1")
+        self.step_combo = ttk.Combobox(simulation_controls, state="readonly", width=8,
+                                      values=("1", "10", "60", "1440"), textvariable=self.step_minutes)
+        self.step_combo.pack(side=tk.LEFT, padx=6)
+        ttk.Label(simulation_controls, text="strategic minutes").pack(side=tk.LEFT)
+        self.step_button = ttk.Button(simulation_controls, text="Step", command=self._step_simulation)
+        self.step_button.pack(side=tk.LEFT, padx=6)
+        ttk.Button(simulation_controls, text="Reset Session", command=self._reset_simulation).pack(side=tk.LEFT)
+        self.simulation_status = tk.StringVar()
+        ttk.Label(simulation_controls, textvariable=self.simulation_status).pack(side=tk.LEFT, padx=10)
+        metric_controls = ttk.Frame(self.controls)
+        metric_controls.pack(fill=tk.X, pady=(8, 0))
+        ttk.Label(metric_controls, text="Sandbox metric:").pack(side=tk.LEFT)
+        self.selected_metric = tk.StringVar()
+        self.metric_value = tk.StringVar()
+        self.metric_bounds = tk.StringVar()
+        self.metric_combo = ttk.Combobox(
+            metric_controls, state="readonly", width=23,
+            textvariable=self.selected_metric
+        )
+        self.metric_combo.pack(side=tk.LEFT, padx=6)
+        self.metric_combo.bind("<<ComboboxSelected>>", self._select_metric)
+        ttk.Entry(
+            metric_controls, textvariable=self.metric_value, width=8
+        ).pack(side=tk.LEFT)
+        ttk.Button(
+            metric_controls, text="Apply", command=self._apply_metric
+        ).pack(side=tk.LEFT, padx=6)
+        ttk.Button(
+            metric_controls, text="Activity Log", command=self._show_activity
+        ).pack(side=tk.LEFT)
+        ttk.Label(
+            metric_controls, textvariable=self.metric_bounds
+        ).pack(side=tk.LEFT, padx=10)
+        self._populate_metric_controls()
+        evidence_controls = ttk.Frame(self.controls)
+        evidence_controls.pack(fill=tk.X, pady=(8, 0))
+        ttk.Label(evidence_controls, text="Sandbox Evidence:").pack(side=tk.LEFT)
+        self.evidence_amount = tk.StringVar(value="100")
+        ttk.Entry(
+            evidence_controls, textvariable=self.evidence_amount, width=12
+        ).pack(side=tk.LEFT, padx=6)
+        ttk.Button(
+            evidence_controls, text="Gather", command=self._gather_evidence
+        ).pack(side=tk.LEFT)
+        ttk.Button(
+            evidence_controls, text="Spend", command=self._spend_evidence
+        ).pack(side=tk.LEFT, padx=6)
+        ttk.Label(
+            evidence_controls, text="Manual test transactions; not mission rewards"
+        ).pack(side=tk.LEFT, padx=8)
+        self.evidence_progress_label = tk.StringVar()
+        ttk.Label(
+            self.controls, textvariable=self.evidence_progress_label
+        ).pack(fill=tk.X, pady=(4, 0))
+
 
         ttk.Label(
             controls,
-            text="FOIMS-X High-Resolution Presentation Preview",
+            text="FOIMS-X Local Simulation Preview",
             font=("Segoe UI", 11, "bold"),
         ).pack(side=tk.LEFT)
 
@@ -303,6 +822,11 @@ class FoimsXPreview:
             controls,
             text="Presentation:",
         ).pack(side=tk.RIGHT, padx=(0, 4))
+        ttk.Button(
+            controls,
+            text="Debug Panel (F2)",
+            command=self.toggle_debug,
+        ).pack(side=tk.RIGHT, padx=(0, 8))
 
         self.status_label = tk.Label(
             self.window,
@@ -349,6 +873,7 @@ class FoimsXPreview:
     def refresh_preview(self, _event: tk.Event[Any] | None = None) -> str:
         try:
             self.app.refresh_all(show_message=False)
+            self._refresh_facility_catalog()
             self.status_text.set(
                 "FOIMS-X refreshed from current authoring data."
             )
@@ -363,6 +888,16 @@ class FoimsXPreview:
             return
 
         self._pending_resize = None
+        self._frame_snapshot = self.sandbox.snapshot()
+        self._refresh_activity()
+        self.evidence_progress_label.set(self.sandbox.evidence_progress_text())
+        state = self._frame_snapshot
+        self.play_button.configure(text="Pause" if state["running"] else "Play")
+        self.step_button.configure(state="disabled" if state["running"] else "normal")
+        self.simulation_status.set(
+            f'{"RUNNING" if state["running"] else "PAUSED"} | '
+            f'Evidence {state["available_evidence"]} / lifetime {state["lifetime_evidence"]} | Funding: unconfigured'
+        )
 
         try:
             left_screen = self._render_foims_screen(
@@ -389,6 +924,8 @@ class FoimsXPreview:
         active_width: int,
         active_height: int,
     ) -> Image.Image:
+        if self.catalog_mode.get() in ("Facilities", "Task Templates", "Qualifications", "Personnel"):
+            return self._render_facility_catalog(active_width, active_height)
         image = Image.new(
             "RGBA",
             (active_width, active_height),
@@ -510,7 +1047,7 @@ class FoimsXPreview:
             "right",
         )
 
-        metrics = active_rows(self.app.tables.get("metrics", []))
+        metrics = self.sandbox.metric_rows()
         tiers = active_rows(self.app.tables.get("metric_tiers", []))
         facilities = active_rows(self.app.tables.get("facilities", []))
         flavors = active_rows(self.app.tables.get("flavor_text", []))
@@ -557,7 +1094,7 @@ class FoimsXPreview:
             PALETTE["accent"],
         )
 
-        selected_metrics = metrics[:3]
+        selected_metrics = self._visible_metric_rows()
         selected_facilities = facilities[:4]
 
         if selected_metrics:
@@ -654,7 +1191,7 @@ class FoimsXPreview:
         text(
             26,
             456,
-            "FOIMS-X // AUTHORING PREVIEW // NATIVE UI SCALE",
+            "FOIMS-X // LOCAL SIMULATION // PREVIEW ONLY",
             8,
             PALETTE["muted"],
         )
@@ -793,10 +1330,10 @@ class FoimsXPreview:
         text(30, 220, "FOIMS-X TELEMETRY", 12, PALETTE["accent"])
 
         telemetry_rows = (
-            ("DISPLAY MODE", "DUAL CRT"),
+            ("DISPLAY MODE", "LOCAL SIMULATION / DUAL CRT"),
             ("LEFT CHANNEL", "DEPARTMENT OPERATIONS"),
             ("RIGHT CHANNEL", "OPERATIONS CONSOLE"),
-            ("RENDER PATH", "NATIVE UI"),
+            ("SESSION STATE", "RUNNING" if clock["running"] else "PAUSED"),
         )
 
         for index, (label, value) in enumerate(telemetry_rows):
@@ -804,9 +1341,16 @@ class FoimsXPreview:
             text(40, top, label, 8, PALETTE["muted"])
             text(594, top, value, 8, PALETTE["text"], "right")
 
-        text(30, 364, "SYSTEM QUEUE", 12, PALETTE["accent"])
-        text(40, 397, "NO PENDING OPERATIONAL ALERTS", 9, PALETTE["text"])
-        text(40, 417, "SECONDARY MONITOR ACTIVE", 9, PALETTE["muted"])
+        text(30, 364, "SANDBOX ACTIVITY", 12, PALETTE["accent"])
+        recent = clock.get("activity", [])[-2:]
+        if not recent:
+            text(40, 397, "NO METRIC CHANGES IN THIS SESSION", 9, PALETTE["text"])
+        for index, entry in enumerate(recent):
+            text(
+                40, 393 + index * 23,
+                self.sandbox.activity_line(entry),
+                8, PALETTE["text"], max_width=550
+            )
 
         panel(18, 454, 622, 466, PALETTE["panel"])
         text(
@@ -854,7 +1398,7 @@ class FoimsXPreview:
 
         metric_id = metric.get("metric_id", "")
         metric_name = metric.get("display_name", metric_id)
-        value = numeric_value(metric.get("default_value", "0"))
+        value = self._frame_snapshot["metrics"].get(metric_id, numeric_value(metric.get("default_value", "0")))
         minimum = numeric_value(metric.get("internal_min", "0"))
         maximum = numeric_value(metric.get("internal_max", "100"))
 

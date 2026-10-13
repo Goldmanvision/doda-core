@@ -27,9 +27,9 @@ def base_levels():
     for i, (lid, name) in enumerate(NAMES):
         rows.append(_lv("HUNGER_RESTORE", lid, name, HUNGER[i], "PERCENT_OF_NUTRITION_RANGE", (i + 1) * 10))
     for i, (lid, name) in enumerate(NAMES):
-        rows.append(_lv("STRESS_REDUCTION", lid, name, "", "PER_TICK", (i + 1) * 10))
+        rows.append(_lv("STRESS_REDUCTION", lid, name, "", "PER_STRATEGIC_MINUTE", (i + 1) * 10))
     for i, (lid, name) in enumerate(NAMES):
-        rows.append(_lv("FATIGUE_COST", lid, name, "", "PER_TICK", (i + 1) * 10))
+        rows.append(_lv("FATIGUE_COST", lid, name, "", "PER_STRATEGIC_MINUTE", (i + 1) * 10))
     return rows
 
 

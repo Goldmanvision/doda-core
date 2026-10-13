@@ -1,0 +1,2 @@
+plot_item_id,display_name,source_reference,description,sort_order,active
+PLOT_ITEM_NECRONOMICON,Necronomicon,User decision 2026-10-08 (PLOT-01),The book itself. Not a gate requirement: collection and processing are milestones so losing or consuming the item cannot lock Tier 6.,10,false
