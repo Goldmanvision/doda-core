@@ -1,0 +1,1491 @@
+===== DODA v127 FACILITY STAFFING OVERRIDES — LOCAL INSPECTION =====
+Time: 2026-10-13T14:13:28.4413232-04:00
+Repository: E:\Dev\uzdoom_src\doda-core
+Branch: feature/workbench-data-bridge
+HEAD: 1dad639bd2f36e73ff9038bd88aee964c1eafcb0
+Scope: source inspection only. No patches, GUI launch, or tests.
+
+===== TRACKED WORKTREE STATUS =====
+
+===== FULL SOURCE: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_facility_capability_staffing_overrides_editor.py =====
+SHA256: 1370E9779F63CA35A23F8442EC4CC178773AF05D746214D55D8B01333689BBCF
+    1: from __future__ import annotations
+    2: 
+    3: import csv
+    4: import os
+    5: import shutil
+    6: import subprocess
+    7: import sys
+    8: import tempfile
+    9: import tkinter as tk
+   10: from datetime import datetime
+   11: from pathlib import Path
+   12: from tkinter import messagebox, ttk
+   13: from typing import Any
+   14: from uuid import uuid4
+   15: 
+   16: 
+   17: FIELDS = (
+   18:     "facility_id",
+   19:     "capability_id",
+   20:     "qualification_id",
+   21:     "min_contributors",
+   22:     "preferred_contributors",
+   23:     "max_contributors",
+   24:     "sort_order",
+   25:     "active",
+   26: )
+   27: 
+   28: FILES = (
+   29:     "enum_catalog.csv",
+   30:     "department_tracks.csv",
+   31:     "metrics.csv",
+   32:     "metric_tiers.csv",
+   33:     "facilities.csv",
+   34:     "flavor_text.csv",
+   35:     "qualification_catalog.csv",
+   36:     "capabilities.csv",
+   37:     "facility_capabilities.csv",
+   38:     "capability_staffing_rules.csv",
+   39:     "facility_capability_staffing_overrides.csv",
+   40:     "task_templates.csv",
+   41: )
+   42: FILES = tuple(FILES) + ("equipment_families.csv",)
+   43: FILES = tuple(dict.fromkeys(tuple(FILES) + ("resources.csv", "task_template_flows.csv")))
+   44: 
+   45: 
+   46: class FacilityCapabilityStaffingOverridesEditor:
+   47:     def __init__(self, app: Any) -> None:
+   48:         self.app = app
+   49:         self.editing_key: tuple[str, str, str] | None = None
+   50: 
+   51:         self.installation_choice = tk.StringVar()
+   52:         self.qualification_id = tk.StringVar()
+   53:         self.minimum = tk.StringVar()
+   54:         self.preferred = tk.StringVar()
+   55:         self.maximum = tk.StringVar()
+   56:         self.sort_order = tk.StringVar()
+   57:         self.active = tk.BooleanVar(value=True)
+   58:         self.baseline_text = tk.StringVar(
+   59:             value="Select an installation and qualification to view its global baseline."
+   60:         )
+   61: 
+   62:         self.build()
+   63: 
+   64:     def source_path(self) -> Path:
+   65:         return (
+   66:             self.app.source_directory
+   67:             / "facility_capability_staffing_overrides.csv"
+   68:         )
+   69: 
+   70:     def backup_directory(self) -> Path:
+   71:         return (
+   72:             self.app.project_root
+   73:             / "data_authoring"
+   74:             / "backups"
+   75:             / "facility_capability_staffing_overrides"
+   76:         )
+   77: 
+   78:     def rows(self) -> list[dict[str, str]]:
+   79:         return [
+   80:             dict(row)
+   81:             for row in self.app.tables.get(
+   82:                 "facility_capability_staffing_overrides",
+   83:                 [],
+   84:             )
+   85:         ]
+   86: 
+   87:     @staticmethod
+   88:     def integer_or_default(value: str, default: int) -> int:
+   89:         try:
+   90:             return int((value or "").strip())
+   91:         except ValueError:
+   92:             return default
+   93: 
+   94:     def active_facility_ids(self) -> set[str]:
+   95:         return {
+   96:             row.get("facility_id", "")
+   97:             for row in self.app.tables.get("facilities", [])
+   98:             if row.get("facility_id", "")
+   99:             and row.get("active", "").upper() == "TRUE"
+  100:         }
+  101: 
+  102:     def active_capability_ids(self) -> set[str]:
+  103:         return {
+  104:             row.get("capability_id", "")
+  105:             for row in self.app.tables.get("capabilities", [])
+  106:             if row.get("capability_id", "")
+  107:             and row.get("active", "").upper() == "TRUE"
+  108:         }
+  109: 
+  110:     def active_qualification_ids(self) -> set[str]:
+  111:         return {
+  112:             row.get("qualification_id", "")
+  113:             for row in self.app.tables.get("qualification_catalog", [])
+  114:             if row.get("qualification_id", "")
+  115:             and row.get("active", "").upper() == "TRUE"
+  116:         }
+  117: 
+  118:     def active_installations(self) -> list[dict[str, str]]:
+  119:         active_facilities = self.active_facility_ids()
+  120:         active_capabilities = self.active_capability_ids()
+  121: 
+  122:         rows = [
+  123:             row
+  124:             for row in self.app.tables.get("facility_capabilities", [])
+  125:             if row.get("facility_id", "") in active_facilities
+  126:             and row.get("capability_id", "") in active_capabilities
+  127:             and row.get("active", "").upper() == "TRUE"
+  128:         ]
+  129: 
+  130:         return sorted(
+  131:             rows,
+  132:             key=lambda row: (
+  133:                 row.get("facility_id", ""),
+  134:                 self.integer_or_default(row.get("sort_order", ""), 999999),
+  135:                 row.get("capability_id", ""),
+  136:             ),
+  137:         )
+  138: 
+  139:     def installation_key(self, facility_id: str, capability_id: str) -> str:
+  140:         return f"{facility_id}::{capability_id}"
+  141: 
+  142:     def selected_installation_parts(self) -> tuple[str, str]:
+  143:         value = self.installation_choice.get().strip()
+  144: 
+  145:         if "::" not in value:
+  146:             return "", ""
+  147: 
+  148:         return tuple(value.split("::", 1))
+  149: 
+  150:     def installation_choices(self) -> list[str]:
+  151:         return [
+  152:             self.installation_key(
+  153:                 row.get("facility_id", ""),
+  154:                 row.get("capability_id", ""),
+  155:             )
+  156:             for row in self.active_installations()
+  157:         ]
+  158: 
+  159:     def installation_labels(self) -> dict[str, str]:
+  160:         facility_names = {
+  161:             row.get("facility_id", ""): row.get("display_name", "")
+  162:             for row in self.app.tables.get("facilities", [])
+  163:         }
+  164:         capability_names = {
+  165:             row.get("capability_id", ""): row.get("display_name", "")
+  166:             for row in self.app.tables.get("capabilities", [])
+  167:         }
+  168: 
+  169:         labels: dict[str, str] = {}
+  170: 
+  171:         for row in self.active_installations():
+  172:             facility_id = row.get("facility_id", "")
+  173:             capability_id = row.get("capability_id", "")
+  174:             key = self.installation_key(facility_id, capability_id)
+  175: 
+  176:             labels[key] = (
+  177:                 f"{facility_id} — {facility_names.get(facility_id, '')}"
+  178:                 f"\n{capability_id} — {capability_names.get(capability_id, '')}"
+  179:             )
+  180: 
+  181:         return labels
+  182: 
+  183:     def active_global_rules(self) -> list[dict[str, str]]:
+  184:         active_capabilities = self.active_capability_ids()
+  185:         active_qualifications = self.active_qualification_ids()
+  186: 
+  187:         rows = [
+  188:             row
+  189:             for row in self.app.tables.get("capability_staffing_rules", [])
+  190:             if row.get("capability_id", "") in active_capabilities
+  191:             and row.get("qualification_id", "") in active_qualifications
+  192:             and row.get("active", "").upper() == "TRUE"
+  193:         ]
+  194: 
+  195:         return sorted(
+  196:             rows,
+  197:             key=lambda row: (
+  198:                 row.get("capability_id", ""),
+  199:                 self.integer_or_default(row.get("sort_order", ""), 999999),
+  200:                 row.get("qualification_id", ""),
+  201:             ),
+  202:         )
+  203: 
+  204:     def rule_for(
+  205:         self,
+  206:         capability_id: str,
+  207:         qualification_id: str,
+  208:     ) -> dict[str, str] | None:
+  209:         return next(
+  210:             (
+  211:                 row
+  212:                 for row in self.active_global_rules()
+  213:                 if row.get("capability_id", "") == capability_id
+  214:                 and row.get("qualification_id", "") == qualification_id
+  215:             ),
+  216:             None,
+  217:         )
+  218: 
+  219:     def qualification_choices_for_selected_installation(self) -> list[str]:
+  220:         _, capability_id = self.selected_installation_parts()
+  221: 
+  222:         if not capability_id:
+  223:             return []
+  224: 
+  225:         return [
+  226:             row.get("qualification_id", "")
+  227:             for row in self.active_global_rules()
+  228:             if row.get("capability_id", "") == capability_id
+  229:         ]
+  230: 
+  231:     def qualification_display_values(self) -> dict[str, str]:
+  232:         return {
+  233:             row.get("qualification_id", ""): (
+  234:                 f"{row.get('qualification_id', '')} — {row.get('display_name', '')}"
+  235:             )
+  236:             for row in self.app.tables.get("qualification_catalog", [])
+  237:             if row.get("qualification_id", "")
+  238:         }
+  239: 
+  240:     def installation_is_valid(
+  241:         self,
+  242:         facility_id: str,
+  243:         capability_id: str,
+  244:     ) -> bool:
+  245:         return any(
+  246:             row.get("facility_id", "") == facility_id
+  247:             and row.get("capability_id", "") == capability_id
+  248:             for row in self.active_installations()
+  249:         )
+  250: 
+  251:     def next_sort_order(self, facility_id: str, capability_id: str) -> int:
+  252:         values: list[int] = []
+  253: 
+  254:         for row in self.rows():
+  255:             if (
+  256:                 row.get("facility_id", "") != facility_id
+  257:                 or row.get("capability_id", "") != capability_id
+  258:             ):
+  259:                 continue
+  260: 
+  261:             try:
+  262:                 values.append(int(row.get("sort_order", "")))
+  263:             except ValueError:
+  264:                 pass
+  265: 
+  266:         return max(values, default=0) + 1
+  267: 
+  268:     def build(self) -> None:
+  269:         for child in self.app.staffing_overrides_tab.winfo_children():
+  270:             child.destroy()
+  271: 
+  272:         tab = self.app.staffing_overrides_tab
+  273:         tab.columnconfigure(0, weight=3)
+  274:         tab.columnconfigure(1, weight=2)
+  275:         tab.rowconfigure(0, weight=1)
+  276: 
+  277:         list_frame = ttk.LabelFrame(
+  278:             tab,
+  279:             text="Facility Capability Staffing Overrides",
+  280:             padding=8,
+  281:         )
+  282:         editor_frame = ttk.LabelFrame(
+  283:             tab,
+  284:             text="Staffing Override Editor",
+  285:             padding=10,
+  286:         )
+  287: 
+  288:         list_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=(0, 6))
+  289:         editor_frame.grid(row=0, column=1, sticky=tk.NSEW)
+  290: 
+  291:         list_frame.columnconfigure(0, weight=1)
+  292:         list_frame.rowconfigure(0, weight=1)
+  293:         editor_frame.columnconfigure(1, weight=1)
+  294: 
+  295:         self.tree = ttk.Treeview(
+  296:             list_frame,
+  297:             columns=(
+  298:                 "facility",
+  299:                 "capability",
+  300:                 "qualification",
+  301:                 "minimum",
+  302:                 "preferred",
+  303:                 "maximum",
+  304:                 "sort",
+  305:                 "active",
+  306:             ),
+  307:             show="headings",
+  308:             selectmode="browse",
+  309:         )
+  310: 
+  311:         columns = (
+  312:             ("facility", "Facility", 165),
+  313:             ("capability", "Capability", 180),
+  314:             ("qualification", "Qualification", 165),
+  315:             ("minimum", "Min", 55),
+  316:             ("preferred", "Preferred", 80),
+  317:             ("maximum", "Max", 55),
+  318:             ("sort", "Sort", 55),
+  319:             ("active", "Active", 70),
+  320:         )
+  321: 
+  322:         for key, title, width in columns:
+  323:             self.tree.heading(key, text=title)
+  324:             self.tree.column(key, width=width, anchor=tk.W)
+  325: 
+  326:         scrollbar = ttk.Scrollbar(
+  327:             list_frame,
+  328:             orient=tk.VERTICAL,
+  329:             command=self.tree.yview,
+  330:         )
+  331: 
+  332:         self.tree.configure(yscrollcommand=scrollbar.set)
+  333:         self.tree.grid(row=0, column=0, sticky=tk.NSEW)
+  334:         scrollbar.grid(row=0, column=1, sticky=tk.NS)
+  335:         self.tree.bind("<<TreeviewSelect>>", self.on_select)
+  336: 
+  337:         def label(text: str, row: int) -> None:
+  338:             ttk.Label(
+  339:                 editor_frame,
+  340:                 text=text,
+  341:                 style="Section.TLabel",
+  342:             ).grid(
+  343:                 row=row,
+  344:                 column=0,
+  345:                 sticky=tk.NW,
+  346:                 padx=(0, 8),
+  347:                 pady=(0, 8),
+  348:             )
+  349: 
+  350:         label("Installation:", 0)
+  351: 
+  352:         self.installation_combo = ttk.Combobox(
+  353:             editor_frame,
+  354:             textvariable=self.installation_choice,
+  355:             state="readonly",
+  356:             values=self.installation_choices(),
+  357:         )
+  358:         self.installation_combo.grid(
+  359:             row=0,
+  360:             column=1,
+  361:             sticky=tk.EW,
+  362:             pady=(0, 8),
+  363:         )
+  364:         self.installation_combo.bind(
+  365:             "<<ComboboxSelected>>",
+  366:             self.on_installation_changed,
+  367:         )
+  368: 
+  369:         self.installation_hint = ttk.Label(
+  370:             editor_frame,
+  371:             text="Select an active Facility Capability installation.",
+  372:             foreground="#9da7b3",
+  373:             justify=tk.LEFT,
+  374:             wraplength=360,
+  375:         )
+  376:         self.installation_hint.grid(
+  377:             row=1,
+  378:             column=1,
+  379:             sticky=tk.W,
+  380:             pady=(0, 10),
+  381:         )
+  382: 
+  383:         label("Qualification:", 2)
+  384: 
+  385:         self.qualification_combo = ttk.Combobox(
+  386:             editor_frame,
+  387:             textvariable=self.qualification_id,
+  388:             state="readonly",
+  389:             values=[],
+  390:         )
+  391:         self.qualification_combo.grid(
+  392:             row=2,
+  393:             column=1,
+  394:             sticky=tk.EW,
+  395:             pady=(0, 8),
+  396:         )
+  397:         self.qualification_combo.bind(
+  398:             "<<ComboboxSelected>>",
+  399:             self.on_qualification_changed,
+  400:         )
+  401: 
+  402:         ttk.Label(
+  403:             editor_frame,
+  404:             text=(
+  405:                 "Installation + Qualification are immutable after creation. "
+  406:                 "Only global-rule qualifications are offered."
+  407:             ),
+  408:             foreground="#9da7b3",
+  409:             wraplength=360,
+  410:         ).grid(
+  411:             row=3,
+  412:             column=1,
+  413:             sticky=tk.W,
+  414:             pady=(0, 10),
+  415:         )
+  416: 
+  417:         label("Global Baseline:", 4)
+  418: 
+  419:         ttk.Label(
+  420:             editor_frame,
+  421:             textvariable=self.baseline_text,
+  422:             foreground="#9da7b3",
+  423:             justify=tk.LEFT,
+  424:             wraplength=360,
+  425:         ).grid(
+  426:             row=4,
+  427:             column=1,
+  428:             sticky=tk.W,
+  429:             pady=(0, 10),
+  430:         )
+  431: 
+  432:         label("Override Range:", 5)
+  433: 
+  434:         range_frame = ttk.Frame(editor_frame)
+  435:         range_frame.grid(
+  436:             row=5,
+  437:             column=1,
+  438:             sticky=tk.W,
+  439:             pady=(0, 8),
+  440:         )
+  441: 
+  442:         ttk.Label(range_frame, text="Min").grid(row=0, column=0)
+  443:         ttk.Entry(
+  444:             range_frame,
+  445:             textvariable=self.minimum,
+  446:             width=8,
+  447:         ).grid(row=0, column=1, padx=(4, 10))
+  448: 
+  449:         ttk.Label(range_frame, text="Preferred").grid(row=0, column=2)
+  450:         ttk.Entry(
+  451:             range_frame,
+  452:             textvariable=self.preferred,
+  453:             width=8,
+  454:         ).grid(row=0, column=3, padx=(4, 10))
+  455: 
+  456:         ttk.Label(range_frame, text="Max").grid(row=0, column=4)
+  457:         ttk.Entry(
+  458:             range_frame,
+  459:             textvariable=self.maximum,
+  460:             width=8,
+  461:         ).grid(row=0, column=5, padx=(4, 0))
+  462: 
+  463:         ttk.Label(
+  464:             editor_frame,
+  465:             text="Required range: 0 ≤ Min ≤ Preferred ≤ Max.",
+  466:             foreground="#9da7b3",
+  467:         ).grid(
+  468:             row=6,
+  469:             column=1,
+  470:             sticky=tk.W,
+  471:             pady=(0, 10),
+  472:         )
+  473: 
+  474:         label("Sort Order:", 7)
+  475: 
+  476:         ttk.Entry(
+  477:             editor_frame,
+  478:             textvariable=self.sort_order,
+  479:             width=10,
+  480:         ).grid(
+  481:             row=7,
+  482:             column=1,
+  483:             sticky=tk.W,
+  484:             pady=(0, 8),
+  485:         )
+  486: 
+  487:         label("Active:", 8)
+  488: 
+  489:         ttk.Checkbutton(
+  490:             editor_frame,
+  491:             text="This facility-specific override is active",
+  492:             variable=self.active,
+  493:         ).grid(
+  494:             row=8,
+  495:             column=1,
+  496:             sticky=tk.W,
+  497:             pady=(0, 8),
+  498:         )
+  499: 
+  500:         buttons = ttk.Frame(editor_frame)
+  501:         buttons.grid(
+  502:             row=9,
+  503:             column=0,
+  504:             columnspan=2,
+  505:             sticky=tk.EW,
+  506:             pady=(8, 0),
+  507:         )
+  508: 
+  509:         ttk.Button(
+  510:             buttons,
+  511:             text="Add Override",
+  512:             command=self.new,
+  513:         ).pack(side=tk.LEFT)
+  514: 
+  515:         ttk.Button(
+  516:             buttons,
+  517:             text="Save Override",
+  518:             command=self.save,
+  519:         ).pack(side=tk.LEFT, padx=6)
+  520: 
+  521:         ttk.Button(
+  522:             buttons,
+  523:             text="Remove Override",
+  524:             command=self.remove,
+  525:         ).pack(side=tk.LEFT, padx=6)
+  526: 
+  527:         ttk.Button(
+  528:             buttons,
+  529:             text="Revert Form",
+  530:             command=self.revert,
+  531:         ).pack(side=tk.LEFT, padx=6)
+  532: 
+  533:         ttk.Button(
+  534:             buttons,
+  535:             text="Open Backups",
+  536:             command=self.open_backups,
+  537:         ).pack(side=tk.RIGHT)
+  538: 
+  539:         ttk.Label(
+  540:             editor_frame,
+  541:             text=(
+  542:                 "Overrides are optional. They must refer to an active Facility "
+  543:                 "Capability installation and an active global staffing rule."
+  544:             ),
+  545:             foreground="#9da7b3",
+  546:             wraplength=390,
+  547:         ).grid(
+  548:             row=10,
+  549:             column=0,
+  550:             columnspan=2,
+  551:             sticky=tk.EW,
+  552:             pady=(12, 0),
+  553:         )
+  554: 
+  555:         self.new()
+  556: 
+  557:     def update(self) -> None:
+  558:         selected = self.editing_key
+  559: 
+  560:         self.installation_combo.configure(
+  561:             values=self.installation_choices()
+  562:         )
+  563: 
+  564:         for item in self.tree.get_children():
+  565:             self.tree.delete(item)
+  566: 
+  567:         rows = sorted(
+  568:             self.rows(),
+  569:             key=lambda row: (
+  570:                 row.get("facility_id", ""),
+  571:                 row.get("capability_id", ""),
+  572:                 self.integer_or_default(row.get("sort_order", ""), 999999),
+  573:                 row.get("qualification_id", ""),
+  574:             ),
+  575:         )
+  576: 
+  577:         for row in rows:
+  578:             facility_id = row.get("facility_id", "")
+  579:             capability_id = row.get("capability_id", "")
+  580:             qualification_id = row.get("qualification_id", "")
+  581:             key = f"{facility_id}::{capability_id}::{qualification_id}"
+  582: 
+  583:             self.tree.insert(
+  584:                 "",
+  585:                 tk.END,
+  586:                 iid=key,
+  587:                 values=(
+  588:                     facility_id,
+  589:                     capability_id,
+  590:                     qualification_id,
+  591:                     row.get("min_contributors", ""),
+  592:                     row.get("preferred_contributors", ""),
+  593:                     row.get("max_contributors", ""),
+  594:                     row.get("sort_order", ""),
+  595:                     row.get("active", ""),
+  596:                 ),
+  597:             )
+  598: 
+  599:         if selected:
+  600:             key = f"{selected[0]}::{selected[1]}::{selected[2]}"
+  601: 
+  602:             if self.tree.exists(key):
+  603:                 self.tree.selection_set(key)
+  604:                 self.tree.focus(key)
+  605: 
+  606:         self.refresh_dependent_fields()
+  607: 
+  608:     def refresh_dependent_fields(self) -> None:
+  609:         facility_id, capability_id = self.selected_installation_parts()
+  610:         qualifications = self.qualification_choices_for_selected_installation()
+  611: 
+  612:         self.qualification_combo.configure(values=qualifications)
+  613: 
+  614:         if self.qualification_id.get().strip() not in qualifications:
+  615:             self.qualification_id.set(
+  616:                 qualifications[0] if qualifications else ""
+  617:             )
+  618: 
+  619:         labels = self.installation_labels()
+  620:         selected_key = self.installation_choice.get().strip()
+  621: 
+  622:         if selected_key:
+  623:             self.installation_hint.configure(
+  624:                 text=labels.get(selected_key, selected_key)
+  625:             )
+  626:         else:
+  627:             self.installation_hint.configure(
+  628:                 text="Select an active Facility Capability installation."
+  629:             )
+  630: 
+  631:         rule = self.rule_for(
+  632:             capability_id,
+  633:             self.qualification_id.get().strip(),
+  634:         )
+  635: 
+  636:         if rule is None:
+  637:             self.baseline_text.set(
+  638:                 "No active global staffing baseline is available."
+  639:             )
+  640:         else:
+  641:             self.baseline_text.set(
+  642:                 "Global rule: "
+  643:                 f"Min {rule.get('min_contributors', '')}, "
+  644:                 f"Preferred {rule.get('preferred_contributors', '')}, "
+  645:                 f"Max {rule.get('max_contributors', '')}."
+  646:             )
+  647: 
+  648:     def on_installation_changed(self, _event: Any = None) -> None:
+  649:         facility_id, capability_id = self.selected_installation_parts()
+  650: 
+  651:         self.qualification_id.set("")
+  652:         self.refresh_dependent_fields()
+  653: 
+  654:         if facility_id and capability_id:
+  655:             self.sort_order.set(
+  656:                 str(self.next_sort_order(facility_id, capability_id))
+  657:             )
+  658: 
+  659:     def on_qualification_changed(self, _event: Any = None) -> None:
+  660:         self.refresh_dependent_fields()
+  661: 
+  662:     def new(self) -> None:
+  663:         self.editing_key = None
+  664: 
+  665:         self.installation_combo.configure(state="readonly")
+  666:         self.qualification_combo.configure(state="readonly")
+  667: 
+  668:         installations = self.installation_choices()
+  669: 
+  670:         self.installation_choice.set(
+  671:             installations[0] if installations else ""
+  672:         )
+  673:         self.qualification_id.set("")
+  674:         self.minimum.set("0")
+  675:         self.preferred.set("1")
+  676:         self.maximum.set("1")
+  677:         self.active.set(True)
+  678: 
+  679:         self.refresh_dependent_fields()
+  680: 
+  681:         facility_id, capability_id = self.selected_installation_parts()
+  682: 
+  683:         self.sort_order.set(
+  684:             str(self.next_sort_order(facility_id, capability_id))
+  685:             if facility_id and capability_id
+  686:             else "1"
+  687:         )
+  688: 
+  689:         self.installation_combo.focus_set()
+  690: 
+  691:     def on_select(self, _event: Any = None) -> None:
+  692:         selection = self.tree.selection()
+  693: 
+  694:         if not selection:
+  695:             return
+  696: 
+  697:         facility_id, capability_id, qualification_id = selection[0].split(
+  698:             "::",
+  699:             2,
+  700:         )
+  701: 
+  702:         row = next(
+  703:             (
+  704:                 item
+  705:                 for item in self.rows()
+  706:                 if item.get("facility_id", "") == facility_id
+  707:                 and item.get("capability_id", "") == capability_id
+  708:                 and item.get("qualification_id", "") == qualification_id
+  709:             ),
+  710:             None,
+  711:         )
+  712: 
+  713:         if row is None:
+  714:             return
+  715: 
+  716:         self.editing_key = (
+  717:             facility_id,
+  718:             capability_id,
+  719:             qualification_id,
+  720:         )
+  721: 
+  722:         self.installation_combo.configure(state=tk.DISABLED)
+  723:         self.qualification_combo.configure(state=tk.DISABLED)
+  724: 
+  725:         self.installation_choice.set(
+  726:             self.installation_key(facility_id, capability_id)
+  727:         )
+  728:         self.qualification_id.set(qualification_id)
+  729:         self.minimum.set(row.get("min_contributors", ""))
+  730:         self.preferred.set(row.get("preferred_contributors", ""))
+  731:         self.maximum.set(row.get("max_contributors", ""))
+  732:         self.sort_order.set(row.get("sort_order", ""))
+  733:         self.active.set(row.get("active", "").upper() == "TRUE")
+  734: 
+  735:         self.refresh_dependent_fields()
+  736: 
+  737:     def revert(self) -> None:
+  738:         if self.editing_key:
+  739:             key = (
+  740:                 f"{self.editing_key[0]}::{self.editing_key[1]}::"
+  741:                 f"{self.editing_key[2]}"
+  742:             )
+  743: 
+  744:             if self.tree.exists(key):
+  745:                 self.tree.selection_set(key)
+  746:                 self.on_select()
+  747:                 return
+  748: 
+  749:         self.new()
+  750: 
+  751:     def record(self) -> dict[str, str] | None:
+  752:         facility_id, capability_id = self.selected_installation_parts()
+  753: 
+  754:         row = {
+  755:             "facility_id": facility_id,
+  756:             "capability_id": capability_id,
+  757:             "qualification_id": self.qualification_id.get().strip(),
+  758:             "min_contributors": self.minimum.get().strip(),
+  759:             "preferred_contributors": self.preferred.get().strip(),
+  760:             "max_contributors": self.maximum.get().strip(),
+  761:             "sort_order": self.sort_order.get().strip(),
+  762:             "active": "TRUE" if self.active.get() else "FALSE",
+  763:         }
+  764: 
+  765:         errors: list[str] = []
+  766: 
+  767:         if not self.installation_is_valid(
+  768:             row["facility_id"],
+  769:             row["capability_id"],
+  770:         ):
+  771:             errors.append(
+  772:                 "Select a valid active Facility Capability installation."
+  773:             )
+  774: 
+  775:         if row["qualification_id"] not in self.active_qualification_ids():
+  776:             errors.append("Select a valid active Qualification.")
+  777: 
+  778:         if self.rule_for(
+  779:             row["capability_id"],
+  780:             row["qualification_id"],
+  781:         ) is None:
+  782:             errors.append(
+  783:                 "The selected Qualification has no active global staffing "
+  784:                 "rule for the selected Capability."
+  785:             )
+  786: 
+  787:         try:
+  788:             minimum = int(row["min_contributors"])
+  789:             preferred = int(row["preferred_contributors"])
+  790:             maximum = int(row["max_contributors"])
+  791: 
+  792:             if not 0 <= minimum <= preferred <= maximum:
+  793:                 errors.append(
+  794:                     "Contributor counts must satisfy "
+  795:                     "0 ≤ Min ≤ Preferred ≤ Max."
+  796:                 )
+  797:         except ValueError:
+  798:             errors.append(
+  799:                 "Min, Preferred, and Max Contributors must be whole numbers."
+  800:             )
+  801: 
+  802:         try:
+  803:             sort_order = int(row["sort_order"])
+  804: 
+  805:             if sort_order < 1:
+  806:                 errors.append("Sort Order must be at least 1.")
+  807:         except ValueError:
+  808:             errors.append("Sort Order must be an integer.")
+  809: 
+  810:         if errors:
+  811:             messagebox.showerror(
+  812:                 "DoDA Content Workbench",
+  813:                 "Correct before saving:\n\n- " + "\n- ".join(errors),
+  814:             )
+  815:             return None
+  816: 
+  817:         return row
+  818: 
+  819:     def write(self, path: Path, rows: list[dict[str, str]]) -> None:
+  820:         with path.open("w", encoding="utf-8", newline="") as handle:
+  821:             writer = csv.DictWriter(
+  822:                 handle,
+  823:                 fieldnames=FIELDS,
+  824:                 lineterminator="\n",
+  825:             )
+  826:             writer.writeheader()
+  827: 
+  828:             for row in rows:
+  829:                 writer.writerow(
+  830:                     {
+  831:                         field: row.get(field, "")
+  832:                         for field in FIELDS
+  833:                     }
+  834:                 )
+  835: 
+  836:     def candidate_valid(self, candidate: Path) -> tuple[bool, str]:
+  837:         with tempfile.TemporaryDirectory(
+  838:             prefix="doda-staffing-override-"
+  839:         ) as temporary:
+  840:             root = Path(temporary)
+  841:             destination = root / "data_authoring" / "source"
+  842:             destination.mkdir(parents=True)
+  843: 
+  844:             for filename in FILES:
+  845:                 source = (
+  846:                     candidate
+  847:                     if filename == (
+  848:                         "facility_capability_staffing_overrides.csv"
+  849:                     )
+  850:                     else self.app.source_directory / filename
+  851:                 )
+  852:                 shutil.copy2(source, destination / filename)
+  853: 
+  854:             command = [
+  855:                 sys.executable,
+  856:                 str(self.app.validator_path),
+  857:                 "--root",
+  858:                 str(root),
+  859:                 "validate",
+  860:             ]
+  861: 
+  862:             completed = subprocess.run(
+  863:                 command,
+  864:                 cwd=root,
+  865:                 text=True,
+  866:                 encoding="utf-8",
+  867:                 errors="replace",
+  868:                 capture_output=True,
+  869:             )
+  870: 
+  871:             output = (
+  872:                 completed.stdout
+  873:                 + ("\n" if completed.stdout and completed.stderr else "")
+  874:                 + completed.stderr
+  875:             ).strip()
+  876: 
+  877:             return completed.returncode == 0, output
+  878: 
+  879:     def post_validate(self) -> tuple[bool, str]:
+  880:         command = [
+  881:             sys.executable,
+  882:             str(self.app.validator_path),
+  883:             "--root",
+  884:             str(self.app.project_root),
+  885:             "validate",
+  886:         ]
+  887: 
+  888:         completed = subprocess.run(
+  889:             command,
+  890:             cwd=self.app.project_root,
+  891:             text=True,
+  892:             encoding="utf-8",
+  893:             errors="replace",
+  894:             capture_output=True,
+  895:         )
+  896: 
+  897:         output = (
+  898:             completed.stdout
+  899:             + ("\n" if completed.stdout and completed.stderr else "")
+  900:             + completed.stderr
+  901:         ).strip()
+  902: 
+  903:         return completed.returncode == 0, output
+  904: 
+  905:     def save(self) -> None:
+  906:         row = self.record()
+  907: 
+  908:         if row is None:
+  909:             return
+  910: 
+  911:         rows = self.rows()
+  912: 
+  913:         if self.editing_key:
+  914:             if (
+  915:                 row["facility_id"] != self.editing_key[0]
+  916:                 or row["capability_id"] != self.editing_key[1]
+  917:                 or row["qualification_id"] != self.editing_key[2]
+  918:             ):
+  919:                 messagebox.showerror(
+  920:                     "DoDA Content Workbench",
+  921:                     (
+  922:                         "Facility, Capability, and Qualification cannot "
+  923:                         "change after creation."
+  924:                     ),
+  925:                 )
+  926:                 return
+  927: 
+  928:             rows = [
+  929:                 row
+  930:                 if (
+  931:                     item.get("facility_id", "") == self.editing_key[0]
+  932:                     and item.get("capability_id", "") == self.editing_key[1]
+  933:                     and item.get("qualification_id", "") == self.editing_key[2]
+  934:                 )
+  935:                 else item
+  936:                 for item in rows
+  937:             ]
+  938:             action = "updated"
+  939:         else:
+  940:             if any(
+  941:                 item.get("facility_id", "") == row["facility_id"]
+  942:                 and item.get("capability_id", "") == row["capability_id"]
+  943:                 and item.get("qualification_id", "") == row["qualification_id"]
+  944:                 for item in rows
+  945:             ):
+  946:                 messagebox.showerror(
+  947:                     "DoDA Content Workbench",
+  948:                     "This Facility Capability Qualification override already exists.",
+  949:                 )
+  950:                 return
+  951: 
+  952:             rows.append(row)
+  953:             action = "added"
+  954: 
+  955:         rows.sort(
+  956:             key=lambda item: (
+  957:                 item.get("facility_id", ""),
+  958:                 item.get("capability_id", ""),
+  959:                 self.integer_or_default(item.get("sort_order", ""), 999999),
+  960:                 item.get("qualification_id", ""),
+  961:             )
+  962:         )
+  963: 
+  964:         temporary = self.app.source_directory / (
+  965:             f".facility-capability-staffing-overrides-{uuid4().hex}.tmp.csv"
+  966:         )
+  967: 
+  968:         self.app.config(cursor="watch")
+  969:         self.app.update_idletasks()
+  970: 
+  971:         try:
+  972:             self.write(temporary, rows)
+  973: 
+  974:             valid, output = self.candidate_valid(temporary)
+  975: 
+  976:             self.app.log(
+  977:                 "Facility Capability Staffing Override candidate validation output:"
+  978:             )
+  979: 
+  980:             for line in output.splitlines():
+  981:                 self.app.log(" " + line)
+  982: 
+  983:             if not valid:
+  984:                 messagebox.showerror(
+  985:                     "DoDA Content Workbench",
+  986:                     (
+  987:                         "Staffing Override candidate validation failed. "
+  988:                         "Source CSV was unchanged.\n\nReview Activity Log for "
+  989:                         "details."
+  990:                     ),
+  991:                 )
+  992:                 return
+  993: 
+  994:             folder = self.backup_directory()
+  995:             folder.mkdir(parents=True, exist_ok=True)
+  996: 
+  997:             backup = folder / (
+  998:                 "facility_capability_staffing_overrides_"
+  999:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+ 1000:                 + ".csv"
+ 1001:             )
+ 1002: 
+ 1003:             shutil.copy2(self.source_path(), backup)
+ 1004:             os.replace(temporary, self.source_path())
+ 1005: 
+ 1006:             self.editing_key = (
+ 1007:                 row["facility_id"],
+ 1008:                 row["capability_id"],
+ 1009:                 row["qualification_id"],
+ 1010:             )
+ 1011: 
+ 1012:             self.app.log(
+ 1013:                 f"Created Facility Capability Staffing Override backup: {backup}"
+ 1014:             )
+ 1015:             self.app.log(
+ 1016:                 "Facility Capability Staffing Override "
+ 1017:                 f"{action}: {row['facility_id']} / "
+ 1018:                 f"{row['capability_id']} / {row['qualification_id']}"
+ 1019:             )
+ 1020: 
+ 1021:             self.app.refresh_all(False)
+ 1022: 
+ 1023:             valid, output = self.post_validate()
+ 1024: 
+ 1025:             for line in output.splitlines():
+ 1026:                 self.app.log(" " + line)
+ 1027: 
+ 1028:             self.app.refresh_all(False)
+ 1029: 
+ 1030:             if valid:
+ 1031:                 messagebox.showinfo(
+ 1032:                     "DoDA Content Workbench",
+ 1033:                     (
+ 1034:                         "Facility Capability Staffing Override "
+ 1035:                         f"'{row['facility_id']} / {row['capability_id']} / "
+ 1036:                         f"{row['qualification_id']}' {action}.\n\n"
+ 1037:                         f"Backup created:\n{backup}\n\n"
+ 1038:                         "Project validation passed."
+ 1039:                     ),
+ 1040:                 )
+ 1041:             else:
+ 1042:                 messagebox.showwarning(
+ 1043:                     "DoDA Content Workbench",
+ 1044:                     (
+ 1045:                         "Staffing Override "
+ 1046:                         f"{action}, but post-save validation failed.\n\n"
+ 1047:                         f"Backup:\n{backup}"
+ 1048:                     ),
+ 1049:                 )
+ 1050: 
+ 1051:         except (OSError, ValueError) as error:
+ 1052:             self.app.log(f"STAFFING OVERRIDE SAVE ERROR: {error}")
+ 1053:             messagebox.showerror(
+ 1054:                 "DoDA Content Workbench",
+ 1055:                 f"Unable to save Staffing Override.\n\n{error}",
+ 1056:             )
+ 1057:         finally:
+ 1058:             if temporary.exists():
+ 1059:                 temporary.unlink()
+ 1060: 
+ 1061:             self.app.config(cursor="")
+ 1062:             self.app.update_idletasks()
+ 1063: 
+ 1064:     def remove(self) -> None:
+ 1065:         if not self.editing_key:
+ 1066:             messagebox.showwarning(
+ 1067:                 "DoDA Content Workbench",
+ 1068:                 "Select an existing Staffing Override before using Remove.",
+ 1069:             )
+ 1070:             return
+ 1071: 
+ 1072:         facility_id, capability_id, qualification_id = self.editing_key
+ 1073: 
+ 1074:         confirmed = messagebox.askyesno(
+ 1075:             "Remove Staffing Override?",
+ 1076:             (
+ 1077:                 "ARE YOU SURE you want to remove this facility-specific "
+ 1078:                 "staffing override?\n\n"
+ 1079:                 f"Facility: {facility_id}\n"
+ 1080:                 f"Capability: {capability_id}\n"
+ 1081:                 f"Qualification: {qualification_id}\n\n"
+ 1082:                 "A timestamped backup will be created before removal."
+ 1083:             ),
+ 1084:             icon="warning",
+ 1085:             default=messagebox.NO,
+ 1086:         )
+ 1087: 
+ 1088:         if not confirmed:
+ 1089:             self.app.log(
+ 1090:                 "Remove Staffing Override cancelled for "
+ 1091:                 f"'{facility_id} / {capability_id} / {qualification_id}'."
+ 1092:             )
+ 1093:             return
+ 1094: 
+ 1095:         rows = [
+ 1096:             row
+ 1097:             for row in self.rows()
+ 1098:             if not (
+ 1099:                 row.get("facility_id", "") == facility_id
+ 1100:                 and row.get("capability_id", "") == capability_id
+ 1101:                 and row.get("qualification_id", "") == qualification_id
+ 1102:             )
+ 1103:         ]
+ 1104: 
+ 1105:         temporary = self.app.source_directory / (
+ 1106:             f".facility-capability-staffing-overrides-remove-{uuid4().hex}.tmp.csv"
+ 1107:         )
+ 1108: 
+ 1109:         self.app.config(cursor="watch")
+ 1110:         self.app.update_idletasks()
+ 1111: 
+ 1112:         try:
+ 1113:             self.write(temporary, rows)
+ 1114: 
+ 1115:             valid, output = self.candidate_valid(temporary)
+ 1116: 
+ 1117:             self.app.log(
+ 1118:                 "Facility Capability Staffing Override removal candidate "
+ 1119:                 f"validation output for '{facility_id} / {capability_id} / "
+ 1120:                 f"{qualification_id}':"
+ 1121:             )
+ 1122: 
+ 1123:             for line in output.splitlines():
+ 1124:                 self.app.log(" " + line)
+ 1125: 
+ 1126:             if not valid:
+ 1127:                 messagebox.showerror(
+ 1128:                     "DoDA Content Workbench",
+ 1129:                     (
+ 1130:                         "Staffing Override removal was blocked by validation.\n\n"
+ 1131:                         "Source CSV was unchanged."
+ 1132:                     ),
+ 1133:                 )
+ 1134:                 return
+ 1135: 
+ 1136:             folder = self.backup_directory()
+ 1137:             folder.mkdir(parents=True, exist_ok=True)
+ 1138: 
+ 1139:             backup = folder / (
+ 1140:                 "facility_capability_staffing_overrides_before_remove_"
+ 1141:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+ 1142:                 + ".csv"
+ 1143:             )
+ 1144: 
+ 1145:             shutil.copy2(self.source_path(), backup)
+ 1146:             os.replace(temporary, self.source_path())
+ 1147: 
+ 1148:             self.editing_key = None
+ 1149: 
+ 1150:             self.app.log(
+ 1151:                 "Created pre-removal Facility Capability Staffing Override "
+ 1152:                 f"backup: {backup}"
+ 1153:             )
+ 1154:             self.app.log(
+ 1155:                 "Removed Facility Capability Staffing Override: "
+ 1156:                 f"{facility_id} / {capability_id} / {qualification_id}"
+ 1157:             )
+ 1158: 
+ 1159:             self.app.refresh_all(False)
+ 1160:             self.new()
+ 1161: 
+ 1162:             valid, output = self.post_validate()
+ 1163: 
+ 1164:             for line in output.splitlines():
+ 1165:                 self.app.log(" " + line)
+ 1166: 
+ 1167:             self.app.refresh_all(False)
+ 1168: 
+ 1169:             if valid:
+ 1170:                 messagebox.showinfo(
+ 1171:                     "DoDA Content Workbench",
+ 1172:                     (
+ 1173:                         "Facility Capability Staffing Override "
+ 1174:                         f"'{facility_id} / {capability_id} / "
+ 1175:                         f"{qualification_id}' removed.\n\n"
+ 1176:                         f"Backup created:\n{backup}\n\n"
+ 1177:                         "Project validation passed."
+ 1178:                     ),
+ 1179:                 )
+ 1180:             else:
+ 1181:                 messagebox.showwarning(
+ 1182:                     "DoDA Content Workbench",
+ 1183:                     (
+ 1184:                         "Staffing Override removed, but post-save validation "
+ 1185:                         f"failed.\n\nBackup:\n{backup}"
+ 1186:                     ),
+ 1187:                 )
+ 1188: 
+ 1189:         except (OSError, ValueError) as error:
+ 1190:             self.app.log(f"STAFFING OVERRIDE REMOVE ERROR: {error}")
+ 1191:             messagebox.showerror(
+ 1192:                 "DoDA Content Workbench",
+ 1193:                 f"Unable to remove Staffing Override.\n\n{error}",
+ 1194:             )
+ 1195:         finally:
+ 1196:             if temporary.exists():
+ 1197:                 temporary.unlink()
+ 1198: 
+ 1199:             self.app.config(cursor="")
+ 1200:             self.app.update_idletasks()
+ 1201: 
+ 1202:     def open_backups(self) -> None:
+ 1203:         self.backup_directory().mkdir(parents=True, exist_ok=True)
+ 1204:         self.app.open_folder(self.backup_directory())
+ 1205: 
+ 1206: 
+ 1207: def install_facility_capability_staffing_overrides_editor(app: Any) -> None:
+ 1208:     editor = FacilityCapabilityStaffingOverridesEditor(app)
+ 1209:     app.facility_capability_staffing_overrides_editor = editor
+
+===== BOUNDED GUI INTEGRATION: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_content_gui.py =====
+SHA256: 828522DB74281FF5E9D4E5078B39AD4724A2A62AB30F9DD638B605ED554F06D0
+    ...
+   38: from doda_enum_catalog_editor import install_enum_catalog_editor
+   39: from doda_qualification_catalog_editor import install_qualification_catalog_editor
+   40: from doda_capabilities_editor import install_capabilities_editor
+   41: from doda_facility_capabilities_editor import install_facility_capabilities_editor
+   42: from doda_capability_staffing_rules_editor import install_capability_staffing_rules_editor
+   43: from doda_capability_staffing_draft_policy import allow_capability_staffing_project_change, install_capability_staffing_draft_close_guard
+   44: from doda_facility_capability_staffing_overrides_editor import install_facility_capability_staffing_overrides_editor
+   45: from doda_task_templates_editor import install_task_templates_editor
+   46: from doda_task_draft_policy import task_draft_dirty, allow_task_project_change, install_task_draft_close_guard
+   47: from doda_foims_x_preview import FoimsXPreview
+   48: from doda_network_editor import install_network_editor, network_editors_dirty
+   49: from doda_navigation import install_grouped_navigation
+   50: from doda_ui_enhancements import install_tree_autosize
+   51: import doda_network_rules
+   52: import doda_equipment_rules
+   53: import doda_care_rules
+   54: import doda_condition_rules
+    ...
+   85:     "flavor_text": "flavor_text.csv",
+   86:     "qualification_catalog": "qualification_catalog.csv",
+   87:     "capabilities": "capabilities.csv",
+   88:     "facility_capabilities": "facility_capabilities.csv",
+   89:     "capability_staffing_rules": "capability_staffing_rules.csv",
+   90:     "facility_capability_staffing_overrides": (
+   91:         "facility_capability_staffing_overrides.csv"
+   92:     ),
+   93:     "task_templates": "task_templates.csv",
+   94: }
+   95: 
+   96: 
+   97: def enable_windows_dark_title_bar(window: tk.Tk) -> None:
+   98:     """Request a dark native Windows title bar for the top-level app frame."""
+   99: 
+    ...
+  263:         install_enum_catalog_editor(self)
+  264:         install_qualification_catalog_editor(self)
+  265:         install_capabilities_editor(self)
+  266:         install_facility_capabilities_editor(self)
+  267:         install_capability_staffing_rules_editor(self)
+  268:         install_facility_capability_staffing_overrides_editor(self)
+  269:         install_task_templates_editor(self)
+  270:         install_network_editor(self)
+  271:         install_task_draft_close_guard(self, messagebox)
+  272:         install_capability_staffing_draft_close_guard(self, messagebox)
+  273:         install_grouped_navigation(self)
+  274:         install_tree_autosize(self)
+  275:         self.refresh_all(show_message=False)
+  276: 
+  277:     def _configure_styles(self) -> None:
+  278:         """Apply the standard DoDA dark desktop theme."""
+  279: 
+  280:         palette = {
+    ...
+  935:         self.flavor_tab = ttk.Frame(self.notebook, padding=10)
+  936:         self.qualifications_tab = ttk.Frame(self.notebook, padding=10)
+  937:         self.capabilities_tab = ttk.Frame(self.notebook, padding=10)
+  938:         self.facility_capabilities_tab = ttk.Frame(self.notebook, padding=10)
+  939:         self.capability_staffing_rules_tab = ttk.Frame(self.notebook, padding=10)
+  940:         self.staffing_overrides_tab = ttk.Frame(self.notebook, padding=10)
+  941:         self.task_templates_tab = ttk.Frame(self.notebook, padding=10)
+  942:         self.activity_tab = ttk.Frame(self.notebook, padding=10)
+  943: 
+  944:         self.notebook.add(self.dashboard_tab, text="Dashboard")
+  945:         self.notebook.add(self.tracks_tab, text="Department Tracks — Editor")
+  946:         self.notebook.add(self.metrics_tab, text="Metrics — Editor")
+  947:         self.notebook.add(self.metric_tiers_tab, text="Metric Tiers — Editor")
+  948:         self.notebook.add(self.facilities_tab, text="Facilities — Editor")
+  949:         self.notebook.add(self.flavor_tab, text="Flavor Text — Editor")
+  950:         self.notebook.add(self.qualifications_tab, text="Qualifications — Editor")
+  951:         self.notebook.add(self.capabilities_tab, text="Capabilities — Editor")
+  952:         self.notebook.add(self.facility_capabilities_tab, text="Facility Capabilities — Editor")
+  953:         self.notebook.add(self.capability_staffing_rules_tab, text="Capability Staffing Rules — Editor")
+  954:         self.notebook.add(self.staffing_overrides_tab, text="Facility Staffing Overrides — Editor")
+  955:         self.notebook.add(self.task_templates_tab, text="Task Templates — Editor")
+  956:         self.notebook.add(self.activity_tab, text="Activity Log")
+  957: 
+  958:         self._build_dashboard_tab()
+  959:         self._build_tracks_tab()
+  960:         self._build_metrics_tab()
+  961:         self._build_facilities_tab()
+  962:         self._build_flavor_tab()
+    ...
+ 1227:     def refresh_all(self, show_message: bool = False) -> None:
+ 1228:         try:
+ 1229:             self.tables = {
+ 1230:                 table_name: read_csv(self.source_directory / filename)
+ 1231:                 for table_name, filename in SOURCE_FILES.items()
+ 1232:             }
+ 1233:             if hasattr(self, "metrics_editor"):
+ 1234:                 self.metrics_editor.update()
+ 1235: 
+ 1236:             if hasattr(self, "metric_tiers_editor"):
+ 1237:                 self.metric_tiers_editor.update()
+ 1238: 
+ 1239:             if hasattr(self, "facilities_editor"):
+ 1240:                 self.facilities_editor.update()
+ 1241: 
+ 1242:             if hasattr(self, "enum_catalog_editor"):
+ 1243:                 self.enum_catalog_editor.update()
+ 1244: 
+ 1245:             if hasattr(self, "qualification_catalog_editor"):
+ 1246:                 self.qualification_catalog_editor.update()
+ 1247: 
+ 1248:             if hasattr(self, "capabilities_editor"):
+ 1249:                 self.capabilities_editor.update()
+ 1250: 
+ 1251:             if hasattr(self, "facility_capabilities_editor"):
+ 1252:                 self.facility_capabilities_editor.update()
+ 1253: 
+ 1254:             if hasattr(self, "capability_staffing_rules_editor"):
+ 1255:                 self.capability_staffing_rules_editor.update()
+ 1256: 
+ 1257:             if hasattr(self, "facility_capability_staffing_overrides_editor"):
+ 1258:                 self.facility_capability_staffing_overrides_editor.update()
+ 1259: 
+ 1260:             if hasattr(self, "task_templates_editor"):
+ 1261:                 self.task_templates_editor.update()
+ 1262: 
+ 1263:             for network_editor in getattr(self, "network_editors", []):
+ 1264:                 network_editor.update()
+ 1265: 
+ 1266:             if hasattr(self, "transfer_rules_view"):
+ 1267:                 self.transfer_rules_view.update()
+ 1268: 
+ 1269:             self.load_validation_report()
+ 1270:             self.update_dashboard()
+ 1271:             self.update_tracks()
+ 1272:             self.update_metrics()
+ 1273:             self.update_facilities()
+ 1274:             self.update_flavor_text()
+ 1275:             self.update_status_labels()
+ 1276: 
+ 1277:             self.status_text.set("Source data refreshed successfully.")
+ 1278:             self.log("Source data refreshed.")
+ 1279: 
+ 1280:             if show_message:
+ 1281:                 messagebox.showinfo(
+ 1282:                     APP_TITLE,
+ 1283:                     "Source data was refreshed successfully.",
+ 1284:                 )
+ 1285: 
+ 1286:         except Exception as error:
+ 1287:             self.status_text.set("Refresh failed.")
+ 1288:             self.log(f"REFRESH ERROR: {error}")
+ 1289:             messagebox.showerror(
+ 1290:                 APP_TITLE,
+ 1291:                 f"Unable to refresh source data.\n\n{error}",
+ 1292:             )
+ 1293: 
+    ...
+ 1806:         elif announce:
+ 1807:             messagebox.showinfo(APP_TITLE, f"Network rules {mode} passed ({len(result.warnings)} warnings).")
+ 1808:         return result.valid
+ 1809: 
+ 1810:     def request_close(self) -> None:
+ 1811:         handler = getattr(self, "_network_close_handler", None)
+ 1812:         if handler is not None:
+ 1813:             handler()
+ 1814:         else:
+ 1815:             self.destroy()
+ 1816: 
+ 1817:     def run_command(
+ 1818:         self,
+ 1819:         label: str,
+    ...
+ 1899:                 APP_TITLE,
+ 1900:                 f"Could not open folder.\n\n{folder}\n\n{error}",
+ 1901:             )
+ 1902: 
+ 1903:     def choose_project_root(self) -> None:
+ 1904:         if not allow_capability_staffing_project_change(self, messagebox):
+ 1905:             return
+ 1906:         if not allow_task_project_change(self, messagebox):
+ 1907:             return
+ 1908:         selected = filedialog.askdirectory(
+ 1909:             title="Choose DoDA Project Root",
+ 1910:             initialdir=str(self.project_root),
+ 1911:         )
+ 1912: 
+ 1913:         if not selected:
+ 1914:             return
+ 1915: 
+ 1916:         candidate = Path(selected)
+ 1917: 
+ 1918:         try:
+ 1919:             verified_root = find_project_root(candidate)
+ 1920:         except FileNotFoundError as error:
+ 1921:             messagebox.showerror(APP_TITLE, str(error))
+ 1922:             return
+ 1923: 
+ 1924:         self.project_root = verified_root
+ 1925:         self.workbench_directory = (
+ 1926:             self.project_root / "tools" / "doda_content_workbench"
+ 1927:         )
+ 1928:         self.validator_path = (
+ 1929:             self.workbench_directory / "doda_content_workbench.py"
+ 1930:         )
+ 1931:         self.exporter_path = (
+ 1932:             self.workbench_directory / "doda_content_export.py"
+ 1933:         )
+ 1934:         self.source_directory = self.project_root / "data_authoring" / "source"
+ 1935:         self.generated_directory = self.project_root / "generated"
+ 1936:         self.report_directory = self.generated_directory / "reports"
+ 1937:         self.build_directory = self.project_root / "build"
+ 1938:         self.validation_report_path = (
+ 1939:             self.report_directory / "content_validation_report.json"
+ 1940:         )
+ 1941: 
+ 1942:         self.project_text.set(str(self.project_root))
+ 1943:         self.log(f"Project root changed to: {self.project_root}")
+ 1944:         self.refresh_all(show_message=True)
+ 1945: 
+
+===== OVERRIDE CSV HEADER ONLY =====
+Path: E:\Dev\uzdoom_src\doda-core\data_authoring\source\facility_capability_staffing_overrides.csv
+SHA256: B16CB793EB505241FA206D7A5DAE3E6BE210A09A8D57FAAB95C88CD936FBD647
+facility_id,capability_id,qualification_id,min_contributors,preferred_contributors,max_contributors,sort_order,active
+
+===== RELEVANT TEST DISCOVERY — IMMEDIATE TEST DIRECTORY ONLY =====
+No directly matching test files found. This does not establish absence of broader validation coverage.
+
+===== EXISTING CLOSE POLICY — READ ONLY =====
+
+===== FULL SOURCE: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_capability_staffing_draft_policy.py =====
+SHA256: 0ABFE3D2A4364EA39D4A239AD3819E7FE42FF39845707D1F6B77D61782B91983
+    1: """Capability Staffing applied-draft guards; installed after existing guards."""
+    2: 
+    3: 
+    4: def capability_staffing_draft_dirty(app):
+    5:     editor = getattr(app, "capability_staffing_rules_editor", None)
+    6:     return bool(editor is not None and getattr(editor, "dirty", False))
+    7: 
+    8: 
+    9: def allow_capability_staffing_project_change(app, dialogs):
+   10:     if capability_staffing_draft_dirty(app):
+   11:         dialogs.showwarning(
+   12:             "Capability Staffing Rules",
+   13:             "Save to Source or Revert Draft before switching projects. "
+   14:             "Your Capability Staffing draft is retained.",
+   15:             parent=app,
+   16:         )
+   17:         return False
+   18:     return True
+   19: 
+   20: 
+   21: def install_capability_staffing_draft_close_guard(app, dialogs):
+   22:     if getattr(app, "_capability_staffing_close_guard_installed", False):
+   23:         return
+   24:     previous = getattr(app, "_network_close_handler", None)
+   25: 
+   26:     def on_close():
+   27:         if capability_staffing_draft_dirty(app) and not dialogs.askyesno(
+   28:             "Unsaved Capability Staffing Draft",
+   29:             "Close and discard applied Capability Staffing draft changes?",
+   30:             parent=app,
+   31:         ):
+   32:             return
+   33:         if previous is not None:
+   34:             return previous()
+   35:         return app.destroy()
+   36: 
+   37:     app._network_close_handler = on_close
+   38:     app.protocol("WM_DELETE_WINDOW", on_close)
+   39:     app._capability_staffing_close_guard_installed = True
+
+Inspection completed. No source/CSV edits, tests, or GUI launch.
+Report-only commit/push follows after the log is closed.
