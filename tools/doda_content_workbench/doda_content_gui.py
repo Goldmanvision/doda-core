@@ -40,6 +40,7 @@ from doda_qualification_catalog_editor import install_qualification_catalog_edit
 from doda_capabilities_editor import install_capabilities_editor
 from doda_facility_capabilities_editor import install_facility_capabilities_editor
 from doda_capability_staffing_rules_editor import install_capability_staffing_rules_editor
+from doda_capability_staffing_draft_policy import allow_capability_staffing_project_change, install_capability_staffing_draft_close_guard
 from doda_facility_capability_staffing_overrides_editor import install_facility_capability_staffing_overrides_editor
 from doda_task_templates_editor import install_task_templates_editor
 from doda_task_draft_policy import task_draft_dirty, allow_task_project_change, install_task_draft_close_guard
@@ -268,6 +269,7 @@ class ContentWorkbenchApp(tk.Tk):
         install_task_templates_editor(self)
         install_network_editor(self)
         install_task_draft_close_guard(self, messagebox)
+        install_capability_staffing_draft_close_guard(self, messagebox)
         install_grouped_navigation(self)
         install_tree_autosize(self)
         self.refresh_all(show_message=False)
@@ -1899,6 +1901,8 @@ class ContentWorkbenchApp(tk.Tk):
             )
 
     def choose_project_root(self) -> None:
+        if not allow_capability_staffing_project_change(self, messagebox):
+            return
         if not allow_task_project_change(self, messagebox):
             return
         selected = filedialog.askdirectory(
