@@ -1,0 +1,41 @@
+===== DODA v127 FINAL VERIFICATION CHECKPOINT =====
+Created: 2026-10-13T15:02:47.2101539-04:00
+Branch: feature/workbench-data-bridge
+HEAD at creation: 9153672edf459bbb388641c66292d198ea9c969f
+
+Task: Facility Staffing Overrides draft and inline multi-row editing.
+Installation: successful; source hashes verified at checkpoint creation.
+Candidate syntax: passed.
+Targeted v127 automated tests: 47 passed; exit code 0.
+Full Workbench suite: 961 passed; exit code 0.
+Previous full suite: 914; increase: 47, matching the v127 test module.
+
+Manual evidence:
+User reported "test successful. please continue" on 2026-10-13 at 14:59 EDT.
+Recorded as user-reported successful v127 manual GUI verification.
+Individual observations were not separately supplied.
+
+Automated evidence:
+Local log: E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v127_install_20261013_145703_a0e09ba0\v127_install_and_tests.txt
+Log SHA256: D91A3F8963DC7063BA690541905981003B23B0C8729D24BC8029D74DA6B87CB9
+Published installation report commit: 9153672edf459bbb388641c66292d198ea9c969f
+Published manifest: temp_push/DoDA_v127_Install_20261013_145703_a0e09ba0_manifest.txt
+
+Limitations:
+No automated tests were rerun after the manual session.
+Any authored CSV edits made during the manual session are not separately validated by this checkpoint.
+Python test success is not native-engine or in-game validation.
+Implementation source is not committed by this report publication.
+No next implementation task is approved by this checkpoint.
+
+===== VERIFIED SOURCE HASHES =====
+doda_capability_staffing_rules_editor.py SHA256: 7DE49B1E3EAF45A8E0EDBB01B9718E21FD9718E49B704F93888CAD691DEE851C
+doda_content_gui.py SHA256: 239B5EB21D3C2739D9D4B5B4A85C7CD09AD1AF5427A9E817B20F4D398EB2ED6F
+doda_facility_capability_staffing_overrides_editor.py SHA256: 12C64A516E8EDD9866E64532F4CAF042C772344587143DC342B0EEFD8F19707C
+doda_facility_staffing_overrides_draft_policy.py SHA256: E7F992A595D4A355F40235E696C1D52381E3911F8C0506CCB47675AC4B8B1BDF
+tests\test_facility_staffing_overrides_v127.py SHA256: C56B76F0BDAC32B7C2372432C7491D344B31EBC8C1F0CC4987BBAB1F1F76DD6A
+
+===== TRACKED WORKTREE STATUS =====
+ M data_authoring/source/facility_capability_staffing_overrides.csv
+ M tools/doda_content_workbench/doda_content_gui.py
+ M tools/doda_content_workbench/doda_facility_capability_staffing_overrides_editor.py
