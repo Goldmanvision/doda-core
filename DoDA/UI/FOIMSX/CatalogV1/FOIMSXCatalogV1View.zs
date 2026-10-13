@@ -486,11 +486,11 @@ class DoDAFOIMSXCatalogV1View : Object
             clipLeft, clipTop, clipRight, clipBottom);
         DetailLine(2, "PRIORITY:", DoDAWorkbenchCatalog.TaskTemplatePriority(i),
             clipLeft, clipTop, clipRight, clipBottom);
-        DetailLine(3, "EFFORT (MIN):", IntOrNone(DoDAWorkbenchCatalog.TaskTemplateTargetEffortMinutes(i)),
+        DetailLine(3, "TIME (MIN):", IntOrNone(DoDAWorkbenchCatalog.TaskTemplateTimeToCompleteMinutes(i)),
             clipLeft, clipTop, clipRight, clipBottom);
-        DetailLine(4, "DEADLINE (MIN):", IntOrNone(DoDAWorkbenchCatalog.TaskTemplateDeadlineMinutes(i)),
+        DetailLine(4, "TARGET:", DoDAWorkbenchCatalog.TaskTemplateTargetType(i),
             clipLeft, clipTop, clipRight, clipBottom);
-        DetailLine(5, "AUTO-ALLOCATE:", DoDAWorkbenchCatalog.TaskTemplateAutoAllocate(i) == 1 ? "YES (AUTHORED)" : "NO (AUTHORED)",
+        DetailLine(5, "LOOP TASK:", DoDAWorkbenchCatalog.TaskTemplateLoopTask(i) == 1 ? "YES (AUTHORED)" : "NO (AUTHORED)",
             clipLeft, clipTop, clipRight, clipBottom);
 
         String description = DoDAWorkbenchCatalog.TaskTemplateDescription(i);
@@ -531,7 +531,7 @@ class DoDAFOIMSXCatalogV1View : Object
                 clipLeft, clipTop, clipRight, clipBottom);
         }
         DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_YELLOW, 330, 352,
-            "EFFORT IS NOT ELAPSED DEADLINE TIME",
+            "AUTHORED TEMPLATE - NOT LIVE STATUS",
             clipLeft, clipTop, clipRight, clipBottom);
         DoDAFOIMSXDrawingHelpers.DrawClippedText(NewSmallFont, Font.CR_YELLOW, 330, 364,
             "TEMPLATE ONLY - NO TASKS CREATED",

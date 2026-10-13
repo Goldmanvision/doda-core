@@ -1,0 +1,1039 @@
+﻿===== DODA v126 FINAL PRE-PATCH CAPTURE =====
+Time: 2026-10-13T11:26:16.4000252-04:00
+Branch: feature/workbench-data-bridge
+Source inspection only; no patches or tests.
+
+===== SOURCE: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_task_inline_bulk_edit.py =====
+SHA256: 2207DACC56756795C3309B7C8494F919742C39141F08737609F33D0607056AE8
+    1: """Task Templates inline multi-row editing; no editor popup and no source writes."""
+    2: import csv
+    3: import re
+    4: import doda_task_schema as schema
+    5: from doda_row_selection import MULTIPLE_VALUES, selection_display, set_form_state
+    6: 
+    7: DROPDOWNS = {"capability_id", "priority", "target_type", "target_family_id", "reward_mode", "loop_task", "active"}
+    8: BOOLEANS = {"loop_task", "active"}
+    9: 
+   10: 
+   11: class TaskInlineEditor:
+   12:     def __init__(self, editor):
+   13:         self.editor = editor
+   14:         self.active = False
+   15:         self.loading = False
+   16:         self.selection = ()
+   17:         self.original = []
+   18:         self.changes = {}
+   19:         self.description_seen = ""
+   20:         for name, variable in editor.vars.items():
+   21:             variable.trace_add("write", lambda *_args, n=name: self.changed(n))
+   22:             if name == "task_template_id":
+   23:                 continue
+   24:             widget = editor.widgets[name]
+   25:             if name in DROPDOWNS:
+   26:                 widget.bind("<<ComboboxSelected>>", lambda _e, n=name: self.changed(n), add="+")
+   27:             else:
+   28:                 widget.bind("<FocusIn>", lambda _e, n=name: self.focus(n), add="+")
+   29:                 widget.bind("<ButtonRelease-1>", lambda _e, n=name: self.focus(n), add="+")
+   30:         editor.description.bind("<<Modified>>", self.description_modified, add="+")
+   31:         editor.description.bind("<FocusIn>", lambda _e: self.focus("description"), add="+")
+   32:         editor.description.bind("<ButtonRelease-1>", lambda _e: self.focus("description"), add="+")
+   33: 
+   34:     def same_session(self, selected):
+   35:         return self.active and tuple(selected) == self.selection and self.editor.loaded_rows == self.original
+   36: 
+   37:     def refresh_choices(self, multiple):
+   38:         for name in DROPDOWNS & set(self.editor.vars):
+   39:             values = ("TRUE", "FALSE") if name in BOOLEANS else tuple(self.editor.choices(name))
+   40:             if multiple:
+   41:                 values = tuple(dict.fromkeys(("",) + tuple(values)))
+   42:             self.editor.widgets[name].configure(values=values, state="readonly")
+   43: 
+   44:     def begin(self, selected, force=False):
+   45:         if not force and self.same_session(selected):
+   46:             return
+   47:         selected = tuple(selected)
+   48:         by_id = {row["task_template_id"]: row for row in self.editor.loaded_rows}
+   49:         if len(selected) < 2 or len(selected) != len(set(selected)) or any(key not in by_id for key in selected):
+   50:             raise ValueError("Selection no longer matches the task draft. Reselect the rows.")
+   51:         self.active = False
+   52:         self.loading = True
+   53:         try:
+   54:             self.selection = selected
+   55:             self.original = [dict(row) for row in self.editor.loaded_rows]
+   56:             rows = [by_id[key] for key in selected]
+   57:             self.changes = {}
+   58:             set_form_state(self.editor, False)
+   59:             self.refresh_choices(True)
+   60:             for name, variable in self.editor.vars.items():
+   61:                 variable.set(selection_display(rows, name, show_common=True))
+   62:             self.editor.widgets["task_template_id"].configure(state="disabled")
+   63:             self.editor.description.configure(state="normal")
+   64:             text = selection_display(rows, "description", show_common=True)
+   65:             self.editor.description.delete("1.0", "end")
+   66:             self.editor.description.insert("1.0", text)
+   67:             self.description_seen = self.editor.description.get("1.0", "end-1c")
+   68:             self.editor.description.edit_modified(False)
+   69:             self.active = True
+   70:         finally:
+   71:             self.loading = False
+   72:         self.editor._set_status(f"{len(selected)} templates selected - edit fields, then Apply to List. Untouched fields are preserved.")
+   73: 
+   74:     def end(self):
+   75:         self.active = False
+   76:         self.changes = {}
+   77:         self.selection = ()
+   78:         self.original = []
+   79:         self.refresh_choices(False)
+   80: 
+   81:     def changed(self, name):
+   82:         if not self.active or self.loading or name == "task_template_id":
+   83:             return
+   84:         self.changes[name] = self.editor.vars[name].get()
+   85:         self.note_changes()
+   86: 
+   87:     def note_changes(self):
+   88:         self.editor._set_status(f"{len(self.selection)} templates selected; {len(self.changes)} edited field(s) ready for Apply to List.")
+   89: 
+   90:     def description_modified(self, _event=None):
+   91:         widget = self.editor.description
+   92:         if not widget.edit_modified():
+   93:             return
+   94:         widget.edit_modified(False)
+   95:         self.flush_description()
+   96: 
+   97:     def flush_description(self):
+   98:         current = self.editor.description.get("1.0", "end-1c")
+   99:         if self.active and not self.loading and current != self.description_seen:
+  100:             self.changes["description"] = current
+  101:             self.note_changes()
+  102:         self.description_seen = current
+  103: 
+  104:     def focus(self, name):
+  105:         if not self.active or name in self.changes or name == "task_template_id":
+  106:             return
+  107:         widget = self.editor.description if name == "description" else self.editor.widgets[name]
+  108:         def select_placeholder():
+  109:             if not self.active or name in self.changes:
+  110:                 return
+  111:             value = self.editor.description.get("1.0", "end-1c") if name == "description" else self.editor.vars[name].get()
+  112:             if value != MULTIPLE_VALUES:
+  113:                 return
+  114:             if name == "description":
+  115:                 widget.tag_add("sel", "1.0", "end-1c")
+  116:                 widget.mark_set("insert", "end-1c")
+  117:             else:
+  118:                 widget.selection_range(0, "end")
+  119:                 widget.icursor("end")
+  120:         widget.after_idle(select_placeholder)
+  121: 
+  122:     def apply(self):
+  123:         self.flush_description()
+  124:         if not self.active:
+  125:             raise ValueError("Select the task rows before editing.")
+  126:         if tuple(self.editor.tree.selection()) != self.selection or self.editor.loaded_rows != self.original:
+  127:             raise ValueError("Task draft or selection changed. Reselect rows before applying.")
+  128:         if not self.changes:
+  129:             self.editor._set_status("No deliberately edited fields. Task draft unchanged.")
+  130:             return False
+  131:         changes = dict(self.changes)
+  132:         allowed = set(self.editor.vars) | {"description"}
+  133:         for name, value in changes.items():
+  134:             if name not in allowed or name == "task_template_id":
+  135:                 raise ValueError("Task identity fields cannot be batch-edited.")
+  136:             if not isinstance(value, str) or value.strip() == MULTIPLE_VALUES:
+  137:                 raise ValueError("Placeholder text cannot be applied as task data.")
+  138:         candidate = [dict(row) for row in self.original]
+  139:         priorities = set(self.editor.choices("priority"))
+  140:         capabilities = set(self.editor.choices("capability_id"))
+  141:         families = set(self.editor.choices("target_family_id"))
+  142:         for row in candidate:
+  143:             if row["task_template_id"] not in self.selection:
+  144:                 continue
+  145:             row.update({name: value.strip() for name, value in changes.items()})
+  146:             if not re.fullmatch(r"[A-Z][A-Z0-9_]*", row["task_template_id"]):
+  147:                 raise ValueError("Invalid task identity in draft.")
+  148:             problems = schema.errors(row, priorities)
+  149:             if row.get("capability_id") and row["capability_id"] not in capabilities:
+  150:                 problems.append("unknown capability_id")
+  151:             if row.get("target_family_id", "") not in families:
+  152:                 problems.append("unknown LOCATION station family")
+  153:             if problems:
+  154:                 raise ValueError(row["task_template_id"] + ": " + "; ".join(problems))
+  155:         keys = [row["task_template_id"] for row in candidate]
+  156:         if len(keys) != len(set(keys)):
+  157:             raise ValueError("Duplicate task IDs in draft.")
+  158:         self.editor._validate_rows(candidate)
+  159:         if tuple(self.editor.tree.selection()) != self.selection or self.editor.loaded_rows != self.original:
+  160:             raise ValueError("Task draft changed during validation. No batch rows applied.")
+  161:         self.editor.loaded_rows = candidate
+  162:         self.editor.dirty = True
+  163:         for key in self.selection:
+  164:             row = next(row for row in candidate if row["task_template_id"] == key)
+  165:             self.editor.tree.item(key, values=tuple(row[field] for field in self.editor.tree["columns"]))
+  166:         count = len(self.selection)
+  167:         self.begin(self.selection, force=True)
+  168:         self.editor._set_status(f"Updated {count} task draft rows; {len(changes)} field(s). UNSAVED CHANGES.")
+  169:         return True
+  170: 
+  171: 
+  172: def install_task_inline(editor):
+  173:     controller = getattr(editor, "_task_inline", None)
+  174:     if controller is None:
+  175:         controller = TaskInlineEditor(editor)
+  176:         editor._task_inline = controller
+  177:     return controller
+  178: 
+  179: 
+  180: def end_task_inline(editor):
+  181:     controller = getattr(editor, "_task_inline", None)
+  182:     if controller is not None:
+  183:         controller.end()
+  184: 
+  185: 
+  186: def apply_task_inline(editor):
+  187:     controller = getattr(editor, "_task_inline", None)
+  188:     try:
+  189:         if controller is None:
+  190:             raise ValueError("Reselect multiple task rows before editing.")
+  191:         return controller.apply()
+  192:     except (OSError, UnicodeError, csv.Error, ValueError) as error:
+  193:         editor.app.log(f"Task Templates batch Apply blocked; draft retained: {error}")
+  194:         editor._set_status("Batch Apply blocked: " + str(error).splitlines()[0] + " See Activity Log.")
+  195:         return False
+
+===== SOURCE: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_row_selection.py =====
+SHA256: 72FA102532E45C19F08EDDB73BA58AB0650C7F590788E0AF9FE4B56826FECF78
+    1: """Selection-only support; bulk data application is a separate slice."""
+    2: MULTIPLE_VALUES = "Multiple values"
+    3: 
+    4: 
+    5: def selection_count(editor):
+    6:     selected = editor.tree.selection()
+    7:     return len(selected) if isinstance(selected, (tuple, list)) else 0
+    8: 
+    9: 
+   10: def selection_display(rows, field, show_common=False):
+   11:     values = [row.get(field, "") for row in rows]
+   12:     if show_common and values and all(value == values[0] for value in values):
+   13:         return values[0]
+   14:     return MULTIPLE_VALUES if any(values) else ""
+   15: 
+   16: 
+   17: def set_form_state(editor, readonly):
+   18:     states = getattr(editor, "_selection_widget_states", None)
+   19:     if states is None:
+   20:         states = {
+   21:             name: widget.cget("state")
+   22:             for name, widget in editor.widgets.items()
+   23:         }
+   24:         editor._selection_widget_states = states
+   25:     for name, widget in editor.widgets.items():
+   26:         widget.configure(state="disabled" if readonly else states[name])
+   27: 
+   28: 
+   29: def require_single(editor, action, dialogs):
+   30:     if selection_count(editor) > 1:
+   31:         dialogs.showwarning(
+   32:             editor.title if hasattr(editor, "title") else "Task Templates",
+   33:             action + " is a single-record action. Select one row. "
+   34:             "Bulk Apply is not enabled in this selection-only slice.",
+   35:         )
+   36:         return False
+   37:     return True
+
+===== SOURCE: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\tests\test_task_template_drafts.py =====
+SHA256: 8061A9DCC8B19060CDD1D3BC6A4658902150EDCFB49F006D3B0BBC080099890B
+    1: import copy
+    2: import csv
+    3: import inspect
+    4: import tempfile
+    5: import unittest
+    6: from pathlib import Path
+    7: from types import SimpleNamespace as NS
+    8: from unittest.mock import Mock, patch
+    9: 
+   10: import doda_task_templates_editor as tasks
+   11: import doda_task_draft_policy as policy
+   12: import doda_content_gui as gui
+   13: 
+   14: 
+   15: class Variable:
+   16:     def __init__(self, value=""):
+   17:         self.value=value
+   18:     def set(self, value):
+   19:         self.value=value
+   20:     def get(self):
+   21:         return self.value
+   22: 
+   23: 
+   24: class TaskTemplateDraftTests(unittest.TestCase):
+   25:     def setUp(self):
+   26:         self.temp=tempfile.TemporaryDirectory(prefix="doda-task-draft-test-")
+   27:         self.addCleanup(self.temp.cleanup)
+   28:         self.root=Path(self.temp.name)
+   29:         self.path=self.root / "task_templates.csv"
+   30:         self.row={field:"" for field in tasks.FIELDS}
+   31:         self.row.update(task_template_id="A",display_name="One",description="Description",priority="NORMAL",target_type="TERRITORY",loop_task="FALSE",reward_mode="CONTINUOUS",payout_count="0",sort_order="1",active="FALSE")
+   32:         self.write_source([self.row])
+   33:         self.editor=tasks.TaskTemplatesEditor.__new__(tasks.TaskTemplatesEditor)
+   34:         e=self.editor
+   35:         e.app=NS(log=Mock(),refresh_all=Mock())
+   36:         e.status=Variable()
+   37:         e.tree=Mock()
+   38:         e.tree.selection.return_value=("A",)
+   39:         e.loaded_rows=[dict(self.row)]
+   40:         e.editing_id="A"
+   41:         e.dirty=False
+   42:         e.loaded_path=self.path.resolve()
+   43:         e.snapshot_hash=e.digest(self.path)
+   44:         e.source_path=lambda:self.path
+   45:         e.backup_directory=lambda:self.root / "backups"
+   46:         e.record=Mock(return_value={**self.row,"display_name":"Changed"})
+   47:         e._render_draft=Mock()
+   48:         e.on_select=Mock()
+   49:         e.new=Mock()
+   50:         e._validate_rows=Mock()
+   51:         e.candidate_valid=Mock(return_value=(True,"PASS"))
+   52:         e.choices=Mock(return_value=[])
+   53:         e.widgets={field:Mock() for field in tasks.FIELDS}
+   54: 
+   55:     def write_source(self, rows):
+   56:         with self.path.open("w",encoding="utf-8",newline="") as handle:
+   57:             writer=csv.DictWriter(handle,fieldnames=tasks.FIELDS)
+   58:             writer.writeheader()
+   59:             writer.writerows(rows)
+   60: 
+   61:     def test_apply_updates_only_draft(self):
+   62:         before=self.path.read_bytes()
+   63:         self.editor.commit=Mock()
+   64:         self.editor.apply_record()
+   65:         self.assertEqual(self.path.read_bytes(),before)
+   66:         self.assertEqual(self.editor.loaded_rows[0]["display_name"],"Changed")
+   67:         self.assertTrue(self.editor.dirty)
+   68:         self.editor.commit.assert_not_called()
+   69: 
+   70:     def test_apply_validation_failure_is_atomic(self):
+   71:         before=copy.deepcopy(self.editor.loaded_rows)
+   72:         self.editor._validate_rows.side_effect=ValueError("invalid candidate")
+   73:         with patch.object(tasks.messagebox,"showerror"):
+   74:             self.editor.apply_record()
+   75:         self.assertEqual(self.editor.loaded_rows,before)
+   76:         self.assertFalse(self.editor.dirty)
+   77: 
+   78:     def test_apply_identity_change_blocked(self):
+   79:         self.editor.record.return_value={**self.row,"task_template_id":"B"}
+   80:         with patch.object(tasks.messagebox,"showerror"):
+   81:             self.editor.apply_record()
+   82:         self.assertEqual(self.editor.loaded_rows,[self.row])
+   83:         self.editor._validate_rows.assert_not_called()
+   84: 
+   85:     def test_new_duplicate_id_blocked(self):
+   86:         self.editor.editing_id=None
+   87:         with patch.object(tasks.messagebox,"showerror"):
+   88:             self.editor.apply_record()
+   89:         self.assertFalse(self.editor.dirty)
+   90:         self.editor._validate_rows.assert_not_called()
+   91: 
+   92:     def test_new_unique_row_is_draft_only(self):
+   93:         self.editor.editing_id=None
+   94:         self.editor.record.return_value={**self.row,"task_template_id":"B","sort_order":"2"}
+   95:         before=self.path.read_bytes()
+   96:         self.editor.apply_record()
+   97:         self.assertEqual(len(self.editor.loaded_rows),2)
+   98:         self.assertEqual(self.path.read_bytes(),before)
+   99: 
+  100:     def test_multi_apply_routes_to_inline_controller_without_single_record_save(self):
+  101:         self.editor.tree.selection.return_value=("A","B")
+  102:         with patch.object(tasks,"apply_task_inline") as apply:
+  103:             self.editor.apply_record()
+  104:         apply.assert_called_once_with(self.editor)
+  105:         self.editor.record.assert_not_called()
+  106: 
+  107:     def test_delete_is_draft_only(self):
+  108:         before=self.path.read_bytes()
+  109:         self.editor.commit=Mock()
+  110:         with patch.object(tasks.messagebox,"askyesno",return_value=True):
+  111:             self.editor.remove()
+  112:         self.assertEqual(self.editor.loaded_rows,[])
+  113:         self.assertTrue(self.editor.dirty)
+  114:         self.assertEqual(self.path.read_bytes(),before)
+  115:         self.editor.commit.assert_not_called()
+  116: 
+  117:     def test_delete_validation_failure_preserves_draft(self):
+  118:         self.editor._validate_rows.side_effect=ValueError("referenced task")
+  119:         with patch.object(tasks.messagebox,"askyesno",return_value=True), patch.object(tasks.messagebox,"showerror"):
+  120:             self.editor.remove()
+  121:         self.assertEqual(self.editor.loaded_rows,[self.row])
+  122:         self.assertFalse(self.editor.dirty)
+  123: 
+  124:     def test_delete_cancel_changes_nothing(self):
+  125:         with patch.object(tasks.messagebox,"askyesno",return_value=False):
+  126:             self.editor.remove()
+  127:         self.assertEqual(self.editor.loaded_rows,[self.row])
+  128:         self.editor._validate_rows.assert_not_called()
+  129: 
+  130:     def test_refresh_keeps_dirty_draft_and_hash(self):
+  131:         self.editor.dirty=True
+  132:         self.editor.loaded_rows[0]["display_name"]="Draft"
+  133:         saved_hash=self.editor.snapshot_hash
+  134:         self.write_source([{**self.row,"display_name":"External"}])
+  135:         self.editor.update()
+  136:         self.assertEqual(self.editor.loaded_rows[0]["display_name"],"Draft")
+  137:         self.assertEqual(self.editor.snapshot_hash,saved_hash)
+  138:         self.assertTrue(self.editor.dirty)
+  139:         self.editor._render_draft.assert_not_called()
+  140: 
+  141:     def test_clean_refresh_loads_source(self):
+  142:         self.write_source([{**self.row,"display_name":"External"}])
+  143:         self.editor.update()
+  144:         self.assertEqual(self.editor.loaded_rows[0]["display_name"],"External")
+  145:         self.assertFalse(self.editor.dirty)
+  146:         self.assertEqual(self.editor.snapshot_hash,self.editor.digest(self.path))
+  147: 
+  148:     def test_dirty_cross_project_refresh_blocked(self):
+  149:         self.editor.dirty=True
+  150:         self.editor.loaded_path=(self.root / "another_project.csv").resolve()
+  151:         with self.assertRaises(ValueError):
+  152:             self.editor.update()
+  153:         self.assertTrue(self.editor.dirty)
+  154:         self.assertEqual(self.editor.loaded_rows,[self.row])
+  155: 
+  156:     def test_revert_cancel_keeps_dirty_draft(self):
+  157:         self.editor.dirty=True
+  158:         self.editor.update=Mock()
+  159:         with patch.object(tasks.messagebox,"askyesno",return_value=False):
+  160:             self.editor.revert_source()
+  161:         self.editor.update.assert_not_called()
+  162:         self.assertTrue(self.editor.dirty)
+  163: 
+  164:     def test_revert_reloads_source_without_writing(self):
+  165:         self.editor.dirty=True
+  166:         self.editor.loaded_rows[0]["display_name"]="Draft"
+  167:         before=self.path.read_bytes()
+  168:         with patch.object(tasks.messagebox,"askyesno",return_value=True):
+  169:             self.editor.revert_source()
+  170:         self.assertFalse(self.editor.dirty)
+  171:         self.assertEqual(self.editor.loaded_rows[0]["display_name"],"One")
+  172:         self.assertEqual(self.path.read_bytes(),before)
+  173: 
+  174:     def test_revert_read_error_keeps_dirty_draft(self):
+  175:         self.editor.dirty=True
+  176:         self.path.unlink()
+  177:         with patch.object(tasks.messagebox,"askyesno",return_value=True),patch.object(tasks.messagebox,"showerror"):
+  178:             self.editor.revert_source()
+  179:         self.assertTrue(self.editor.dirty)
+  180:         self.assertEqual(self.editor.loaded_rows,[self.row])
+  181: 
+  182:     def test_save_without_apply_does_not_commit_form(self):
+  183:         self.editor.commit=Mock()
+  184:         self.editor.save()
+  185:         self.editor.commit.assert_not_called()
+  186:         self.editor.record.assert_not_called()
+  187: 
+  188:     def test_save_uses_draft_even_with_multiple_selection(self):
+  189:         self.editor.dirty=True
+  190:         self.editor.tree.selection.return_value=("A","B")
+  191:         self.editor.commit=Mock()
+  192:         self.editor.save()
+  193:         self.editor.commit.assert_called_once_with(self.editor.loaded_rows)
+  194:         self.editor.record.assert_not_called()
+  195: 
+  196:     def test_successful_source_save_creates_backup(self):
+  197:         original=self.path.read_bytes()
+  198:         self.editor.loaded_rows[0]["display_name"]="Draft"
+  199:         self.editor.dirty=True
+  200:         with patch.object(tasks.messagebox,"showinfo"):
+  201:             self.editor.save()
+  202:         self.assertFalse(self.editor.dirty)
+  203:         self.assertEqual(self.editor.snapshot_hash,self.editor.digest(self.path))
+  204:         backups=list((self.root / "backups").glob("*.csv"))
+  205:         self.assertEqual(len(backups),1)
+  206:         self.assertEqual(backups[0].read_bytes(),original)
+  207:         with self.path.open(newline="") as handle:
+  208:             self.assertEqual(next(csv.DictReader(handle))["display_name"],"Draft")
+  209:         self.assertEqual(list(self.root.glob(".tasks-*.tmp.csv")),[])
+  210: 
+  211:     def test_pre_validation_hash_conflict_preserves_source(self):
+  212:         self.editor.dirty=True
+  213:         self.write_source([{**self.row,"display_name":"External"}])
+  214:         external=self.path.read_bytes()
+  215:         with patch.object(tasks.messagebox,"showerror"):
+  216:             self.editor.save()
+  217:         self.assertEqual(self.path.read_bytes(),external)
+  218:         self.assertTrue(self.editor.dirty)
+  219:         self.editor.candidate_valid.assert_not_called()
+  220: 
+  221:     def test_validation_failure_keeps_dirty_draft(self):
+  222:         self.editor.dirty=True
+  223:         self.editor.candidate_valid.return_value=(False,"FAIL")
+  224:         before=self.path.read_bytes()
+  225:         with patch.object(tasks.messagebox,"showerror"):
+  226:             self.editor.save()
+  227:         self.assertEqual(self.path.read_bytes(),before)
+  228:         self.assertTrue(self.editor.dirty)
+  229:         self.assertEqual(list(self.root.glob(".tasks-*.tmp.csv")),[])
+  230: 
+  231:     def test_source_changed_during_validation_is_not_overwritten(self):
+  232:         self.editor.dirty=True
+  233:         def validation(_candidate):
+  234:             self.write_source([{**self.row,"display_name":"External"}])
+  235:             return True,"PASS"
+  236:         self.editor.candidate_valid.side_effect=validation
+  237:         with patch.object(tasks.messagebox,"showerror"):
+  238:             self.editor.save()
+  239:         self.assertTrue(self.editor.dirty)
+  240:         with self.path.open(newline="") as handle:
+  241:             self.assertEqual(next(csv.DictReader(handle))["display_name"],"External")
+  242:         self.assertFalse((self.root / "backups").exists())
+  243: 
+  244:     def test_source_changed_during_backup_is_not_overwritten(self):
+  245:         self.editor.dirty=True
+  246:         real_copy=tasks.shutil.copy2
+  247:         def backup(source,destination):
+  248:             result=real_copy(source,destination)
+  249:             self.write_source([{**self.row,"display_name":"External"}])
+  250:             return result
+  251:         with patch.object(tasks.shutil,"copy2",side_effect=backup), patch.object(tasks.messagebox,"showerror"):
+  252:             self.editor.save()
+  253:         self.assertTrue(self.editor.dirty)
+  254:         with self.path.open(newline="") as handle:
+  255:             self.assertEqual(next(csv.DictReader(handle))["display_name"],"External")
+  256: 
+  257:     def test_backup_error_retains_draft(self):
+  258:         self.editor.dirty=True
+  259:         before=self.path.read_bytes()
+  260:         with patch.object(tasks.shutil,"copy2",side_effect=OSError("backup failed")),patch.object(tasks.messagebox,"showerror"):
+  261:             self.editor.save()
+  262:         self.assertTrue(self.editor.dirty)
+  263:         self.assertEqual(self.path.read_bytes(),before)
+  264:         self.assertEqual(list(self.root.glob(".tasks-*.tmp.csv")),[])
+  265: 
+  266:     def test_write_error_retains_draft(self):
+  267:         self.editor.dirty=True
+  268:         before=self.path.read_bytes()
+  269:         with patch.object(tasks.os,"replace",side_effect=OSError("write failed")),patch.object(tasks.messagebox,"showerror"):
+  270:             self.editor.save()
+  271:         self.assertTrue(self.editor.dirty)
+  272:         self.assertEqual(self.path.read_bytes(),before)
+  273:         self.assertEqual(list(self.root.glob(".tasks-*.tmp.csv")),[])
+  274: 
+  275:     def test_save_read_error_retains_draft(self):
+  276:         self.editor.dirty=True
+  277:         with patch.object(self.editor,"digest",side_effect=OSError("read failed")),patch.object(tasks.messagebox,"showerror"):
+  278:             self.editor.save()
+  279:         self.assertTrue(self.editor.dirty)
+  280:         self.editor.candidate_valid.assert_not_called()
+  281: 
+  282:     def test_candidate_validation_uses_temp_file_only(self):
+  283:         before=self.path.read_bytes()
+  284:         paths=[]
+  285:         def validation(path):
+  286:             paths.append(path)
+  287:             self.assertTrue(path.is_file())
+  288:             self.assertNotEqual(path,self.path)
+  289:             return True,"PASS"
+  290:         self.editor.candidate_valid.side_effect=validation
+  291:         tasks.TaskTemplatesEditor._validate_rows(self.editor,[self.row])
+  292:         self.assertEqual(self.path.read_bytes(),before)
+  293:         self.assertFalse(paths[0].exists())
+  294: 
+  295: 
+  296: class TaskDraftPolicyTests(unittest.TestCase):
+  297:     def setUp(self):
+  298:         self.previous=Mock()
+  299:         self.app=NS(task_templates_editor=NS(dirty=True),_network_close_handler=self.previous,protocol=Mock(),destroy=Mock())
+  300:         self.dialogs=Mock()
+  301: 
+  302:     def test_close_cancel_preserves_task_draft(self):
+  303:         self.dialogs.askyesno.return_value=False
+  304:         policy.install_task_draft_close_guard(self.app,self.dialogs)
+  305:         self.app._network_close_handler()
+  306:         self.previous.assert_not_called()
+  307:         self.assertTrue(self.app.task_templates_editor.dirty)
+  308: 
+  309:     def test_close_confirm_delegates_to_shared_guard(self):
+  310:         self.dialogs.askyesno.return_value=True
+  311:         policy.install_task_draft_close_guard(self.app,self.dialogs)
+  312:         self.app._network_close_handler()
+  313:         self.previous.assert_called_once()
+  314:         self.app.destroy.assert_not_called()
+  315: 
+  316:     def test_clean_task_close_does_not_add_prompt(self):
+  317:         self.app.task_templates_editor.dirty=False
+  318:         policy.install_task_draft_close_guard(self.app,self.dialogs)
+  319:         self.app._network_close_handler()
+  320:         self.dialogs.askyesno.assert_not_called()
+  321:         self.previous.assert_called_once()
+  322: 
+  323:     def test_dirty_task_blocks_project_change(self):
+  324:         self.assertFalse(policy.allow_task_project_change(self.app,self.dialogs))
+  325:         self.dialogs.showwarning.assert_called_once()
+  326:         self.assertTrue(self.app.task_templates_editor.dirty)
+  327: 
+  328:     def test_clean_task_allows_project_change(self):
+  329:         self.app.task_templates_editor.dirty=False
+  330:         self.assertTrue(policy.allow_task_project_change(self.app,self.dialogs))
+  331:         self.dialogs.showwarning.assert_not_called()
+  332: 
+  333:     def test_close_guard_installation_is_idempotent(self):
+  334:         policy.install_task_draft_close_guard(self.app,self.dialogs)
+  335:         first=self.app._network_close_handler
+  336:         policy.install_task_draft_close_guard(self.app,self.dialogs)
+  337:         self.assertIs(self.app._network_close_handler,first)
+  338:         self.app.protocol.assert_called_once()
+  339: 
+  340:     def test_project_change_guard_runs_before_folder_picker(self):
+  341:         with patch.object(gui,"allow_task_project_change",return_value=False),patch.object(gui.filedialog,"askdirectory") as picker:
+  342:             gui.ContentWorkbenchApp.choose_project_root(self.app)
+  343:         picker.assert_not_called()
+  344: 
+  345:     def test_file_exit_uses_wrapped_close_handler(self):
+  346:         self.dialogs.askyesno.return_value=False
+  347:         policy.install_task_draft_close_guard(self.app,self.dialogs)
+  348:         gui.ContentWorkbenchApp.request_close(self.app)
+  349:         self.previous.assert_not_called()
+
+===== SOURCE: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\tests\test_task_inline_bulk_edit.py =====
+SHA256: 9378945BB949BB4FBFC328231FB367A43FD3638DF5C28AC4CC98B4305582975C
+    1: import ast
+    2: import copy
+    3: import inspect
+    4: import textwrap
+    5: import unittest
+    6: from types import SimpleNamespace as NS
+    7: from unittest.mock import Mock
+    8: 
+    9: import doda_task_templates_editor as tasks
+   10: import doda_task_inline_bulk_edit as inline
+   11: 
+   12: 
+   13: class Variable:
+   14:     def __init__(self):
+   15:         self.value=""
+   16:         self.callbacks=[]
+   17:     def get(self):
+   18:         return self.value
+   19:     def set(self,value):
+   20:         self.value=value
+   21:         for callback in self.callbacks:
+   22:             callback()
+   23:     def trace_add(self,mode,callback):
+   24:         self.callbacks.append(callback)
+   25:         return str(len(self.callbacks))
+   26: 
+   27: 
+   28: class Widget:
+   29:     def __init__(self,state="normal"):
+   30:         self.state=state
+   31:         self.values=()
+   32:         self.selection_range=Mock()
+   33:         self.icursor=Mock()
+   34:         self.bindings={}
+   35:     def cget(self,name):
+   36:         return self.state if name=="state" else self.values
+   37:     def configure(self,**kwargs):
+   38:         self.state=kwargs.get("state",self.state)
+   39:         self.values=kwargs.get("values",self.values)
+   40:     def bind(self,event,callback,**kwargs):
+   41:         self.bindings[event]=callback
+   42:     def after_idle(self,callback):
+   43:         callback()
+   44: 
+   45: 
+   46: class Text(Widget):
+   47:     def __init__(self):
+   48:         super().__init__()
+   49:         self.text=""
+   50:         self.modified=False
+   51:         self.tag_add=Mock()
+   52:         self.mark_set=Mock()
+   53:     def get(self,*args):
+   54:         return self.text
+   55:     def delete(self,*args):
+   56:         self.text=""
+   57:         self.modified=True
+   58:     def insert(self,index,text):
+   59:         self.text=text
+   60:         self.modified=True
+   61:     def edit_modified(self,value=None):
+   62:         if value is not None:
+   63:             self.modified=bool(value)
+   64:         return self.modified
+   65: 
+   66: 
+   67: class Tree:
+   68:     def __init__(self):
+   69:         self.selected=("A","B")
+   70:         self.item=Mock()
+   71:     def selection(self):
+   72:         return self.selected
+   73:     def __getitem__(self,name):
+   74:         return ("task_template_id","display_name","priority","target_type","loop_task")
+   75:     def selection_remove(self,*args):
+   76:         self.selected=()
+   77:     def selection_set(self,*args):
+   78:         self.selected=tuple(args)
+   79: 
+   80: 
+   81: class TaskInlineBulkTests(unittest.TestCase):
+   82:     def setUp(self):
+   83:         self.editor=tasks.TaskTemplatesEditor.__new__(tasks.TaskTemplatesEditor)
+   84:         e=self.editor
+   85:         self.base=dict(task_template_id="A",display_name="One",description="First",capability_id="",priority="NORMAL",target_type="TERRITORY",target_family_id="",loop_task="FALSE",time_to_complete_minutes="",reward_mode="CONTINUOUS",payout_count="0",sort_order="1",active="FALSE")
+   86:         e.loaded_rows=[dict(self.base),{**self.base,"task_template_id":"B","display_name":"Two","description":"Second","sort_order":"2"},{**self.base,"task_template_id":"C","display_name":"Three","sort_order":"3"}]
+   87:         e.vars={name:Variable() for name in tasks.FIELDS if name!="description"}
+   88:         e.widgets={name:Widget("readonly" if name in inline.DROPDOWNS else "normal") for name in e.vars}
+   89:         e.description=Text()
+   90:         e.widgets["description"]=e.description
+   91:         e.tree=Tree()
+   92:         e.dirty=False
+   93:         e.editing_id=None
+   94:         e._multi_selection=True
+   95:         e._set_status=Mock()
+   96:         e.app=NS(log=Mock())
+   97:         e._validate_rows=Mock()
+   98:         e.commit=Mock()
+   99:         e._render_draft=Mock()
+  100:         choices={"capability_id":["","CAP_TEST"],"priority":["NORMAL","HIGH"],"target_type":["STATION","TERRITORY","MISSION_AREA"],"target_family_id":["","TECH_LAB"],"reward_mode":["CONTINUOUS","PERIODIC_LUMP_SUM"]}
+  101:         e.choices=lambda name:choices.get(name,[])
+  102:         self.controller=inline.install_task_inline(e)
+  103:         self.controller.begin(e.tree.selection())
+  104: 
+  105:     def apply(self):
+  106:         return inline.apply_task_inline(self.editor)
+  107: 
+  108:     def test_non_identity_fields_are_editable(self):
+  109:         self.assertEqual(self.editor.widgets["task_template_id"].state,"disabled")
+  110:         self.assertEqual(self.editor.widgets["display_name"].state,"normal")
+  111:         self.assertEqual(self.editor.description.state,"normal")
+  112:         self.assertEqual(self.editor.widgets["active"].state,"readonly")
+  113: 
+  114:     def test_common_values_are_visible(self):
+  115:         self.assertEqual(self.editor.vars["priority"].get(),"NORMAL")
+  116:         self.assertEqual(self.editor.vars["payout_count"].get(),"0")
+  117:         self.assertEqual(self.editor.vars["active"].get(),"FALSE")
+  118: 
+  119:     def test_mixed_values_use_placeholder(self):
+  120:         self.assertEqual(self.editor.vars["display_name"].get(),"Multiple values")
+  121:         self.assertEqual(self.editor.description.get(),"Multiple values")
+  122: 
+  123:     def test_all_blank_remains_blank(self):
+  124:         self.assertEqual(self.editor.vars["capability_id"].get(),"")
+  125:         self.assertEqual(self.editor.vars["time_to_complete_minutes"].get(),"")
+  126: 
+  127:     def test_display_does_not_create_edits(self):
+  128:         self.assertEqual(self.controller.changes,{})
+  129:         self.assertFalse(self.editor.dirty)
+  130: 
+  131:     def test_focus_entry_does_not_change_data(self):
+  132:         self.controller.focus("display_name")
+  133:         self.editor.widgets["display_name"].selection_range.assert_called_once_with(0,"end")
+  134:         self.assertEqual(self.controller.changes,{})
+  135: 
+  136:     def test_focus_description_selects_placeholder_without_edit(self):
+  137:         self.controller.focus("description")
+  138:         self.editor.description.tag_add.assert_called_once_with("sel","1.0","end-1c")
+  139:         self.assertEqual(self.controller.changes,{})
+  140: 
+  141:     def test_typing_tracks_only_the_changed_field(self):
+  142:         self.editor.vars["display_name"].set("New")
+  143:         self.assertEqual(self.controller.changes,{"display_name":"New"})
+  144:         self.assertFalse(self.editor.dirty)
+  145: 
+  146:     def test_description_modified_event_tracks_text_only(self):
+  147:         self.editor.description.insert("1.0","New description")
+  148:         self.controller.description_modified()
+  149:         self.assertEqual(self.controller.changes,{"description":"New description"})
+  150:         self.assertFalse(self.editor.description.modified)
+  151: 
+  152:     def test_programmatic_description_events_do_not_become_edits(self):
+  153:         self.controller.description_modified()
+  154:         self.assertEqual(self.controller.changes,{})
+  155: 
+  156:     def test_last_description_edit_is_flushed_on_apply(self):
+  157:         self.editor.description.insert("1.0","New description")
+  158:         self.assertTrue(self.apply())
+  159:         self.assertEqual([row["description"] for row in self.editor.loaded_rows], ["New description","New description","First"])
+  160: 
+  161:     def test_untouched_apply_skips_validation(self):
+  162:         before=copy.deepcopy(self.editor.loaded_rows)
+  163:         self.assertFalse(self.apply())
+  164:         self.assertEqual(self.editor.loaded_rows,before)
+  165:         self.editor._validate_rows.assert_not_called()
+  166: 
+  167:     def test_apply_changes_only_selected_field_and_rows(self):
+  168:         before=copy.deepcopy(self.editor.loaded_rows)
+  169:         self.editor.vars["display_name"].set("New")
+  170:         self.assertTrue(self.apply())
+  171:         for old,row in zip(before,self.editor.loaded_rows):
+  172:             for field in tasks.FIELDS:
+  173:                 if row["task_template_id"] in ("A","B") and field=="display_name":
+  174:                     self.assertEqual(row[field],"New")
+  175:                 else:
+  176:                     self.assertEqual(row[field],old[field])
+  177:         self.assertTrue(self.editor.dirty)
+  178:         self.editor.commit.assert_not_called()
+  179: 
+  180:     def test_apply_reloads_common_display_without_new_edits(self):
+  181:         self.editor.vars["display_name"].set("New")
+  182:         self.assertTrue(self.apply())
+  183:         self.assertEqual(self.editor.vars["display_name"].get(),"New")
+  184:         self.assertEqual(self.controller.changes,{})
+  185:         self.assertFalse(self.apply())
+  186: 
+  187:     def test_boolean_edit_is_explicit_not_automatic_activation(self):
+  188:         self.editor.vars["loop_task"].set("TRUE")
+  189:         self.assertTrue(self.apply())
+  190:         self.assertEqual([r["loop_task"] for r in self.editor.loaded_rows],["TRUE","TRUE","FALSE"])
+  191:         self.assertEqual([r["active"] for r in self.editor.loaded_rows],["FALSE","FALSE","FALSE"])
+  192: 
+  193:     def test_blank_field_accepts_new_value(self):
+  194:         self.editor.vars["time_to_complete_minutes"].set("10")
+  195:         self.assertTrue(self.apply())
+  196:         self.assertEqual([r["time_to_complete_minutes"] for r in self.editor.loaded_rows],["10","10",""])
+  197: 
+  198:     def test_explicit_clear_of_optional_field(self):
+  199:         self.editor.loaded_rows[0]["time_to_complete_minutes"]="10"
+  200:         self.controller.begin(("A","B"),force=True)
+  201:         self.editor.vars["time_to_complete_minutes"].set("")
+  202:         self.assertTrue(self.apply())
+  203:         self.assertEqual(self.editor.loaded_rows[0]["time_to_complete_minutes"],"")
+  204: 
+  205:     def test_required_description_clear_is_atomic(self):
+  206:         before=copy.deepcopy(self.editor.loaded_rows)
+  207:         self.editor.description.delete("1.0","end")
+  208:         self.assertFalse(self.apply())
+  209:         self.assertEqual(self.editor.loaded_rows,before)
+  210:         self.assertEqual(self.controller.changes,{"description":""})
+  211: 
+  212:     def test_invalid_integer_is_atomic(self):
+  213:         before=copy.deepcopy(self.editor.loaded_rows)
+  214:         self.editor.vars["sort_order"].set("1.5")
+  215:         self.assertFalse(self.apply())
+  216:         self.assertEqual(self.editor.loaded_rows,before)
+  217:         self.assertFalse(self.editor.dirty)
+  218: 
+  219:     def test_invalid_boolean_is_atomic(self):
+  220:         before=copy.deepcopy(self.editor.loaded_rows)
+  221:         self.editor.vars["loop_task"].set("maybe")
+  222:         self.assertFalse(self.apply())
+  223:         self.assertEqual(self.editor.loaded_rows,before)
+  224: 
+  225:     def test_placeholder_is_never_applied(self):
+  226:         self.editor.vars["display_name"].set("Multiple values")
+  227:         self.assertFalse(self.apply())
+  228:         self.assertEqual(self.editor.loaded_rows[0]["display_name"],"One")
+  229: 
+  230:     def test_identity_trace_is_ignored_and_identity_injection_rejected(self):
+  231:         self.editor.vars["task_template_id"].set("NEW")
+  232:         self.assertEqual(self.controller.changes,{})
+  233:         self.controller.changes["task_template_id"]="NEW"
+  234:         self.assertFalse(self.apply())
+  235:         self.assertEqual([r["task_template_id"] for r in self.editor.loaded_rows],["A","B","C"])
+  236: 
+  237:     def test_unknown_capability_is_atomic(self):
+  238:         self.editor.vars["capability_id"].set("MISSING")
+  239:         self.assertFalse(self.apply())
+  240:         self.assertEqual(self.editor.loaded_rows[0]["capability_id"],"")
+  241: 
+  242:     def test_cross_field_validation_failure_on_one_row_blocks_all(self):
+  243:         self.editor.loaded_rows[1].update(active="TRUE",capability_id="CAP_TEST")
+  244:         self.controller.begin(("A","B"),force=True)
+  245:         before=copy.deepcopy(self.editor.loaded_rows)
+  246:         self.editor.vars["loop_task"].set("TRUE")
+  247:         self.assertFalse(self.apply())
+  248:         self.assertEqual(self.editor.loaded_rows,before)
+  249:         self.editor._validate_rows.assert_not_called()
+  250: 
+  251:     def test_full_candidate_validation_failure_keeps_prior_dirty_draft(self):
+  252:         self.editor.dirty=True
+  253:         before=copy.deepcopy(self.editor.loaded_rows)
+  254:         self.editor.vars["display_name"].set("New")
+  255:         self.editor._validate_rows.side_effect=ValueError("project invalid")
+  256:         self.assertFalse(self.apply())
+  257:         self.assertEqual(self.editor.loaded_rows,before)
+  258:         self.assertTrue(self.editor.dirty)
+  259:         self.assertEqual(self.controller.changes,{"display_name":"New"})
+  260: 
+  261:     def test_candidate_read_error_is_atomic(self):
+  262:         before=copy.deepcopy(self.editor.loaded_rows)
+  263:         self.editor.vars["display_name"].set("New")
+  264:         self.editor._validate_rows.side_effect=OSError("read failed")
+  265:         self.assertFalse(self.apply())
+  266:         self.assertEqual(self.editor.loaded_rows,before)
+  267: 
+  268:     def test_stale_selection_is_rejected(self):
+  269:         self.editor.vars["display_name"].set("New")
+  270:         self.editor.tree.selected=("B","C")
+  271:         self.assertFalse(self.apply())
+  272:         self.assertEqual(self.editor.loaded_rows[0]["display_name"],"One")
+  273: 
+  274:     def test_stale_draft_is_not_overwritten(self):
+  275:         self.editor.vars["display_name"].set("New")
+  276:         self.editor.loaded_rows[0]["display_name"]="External"
+  277:         self.assertFalse(self.apply())
+  278:         self.assertEqual(self.editor.loaded_rows[0]["display_name"],"External")
+  279: 
+  280:     def test_change_during_validation_is_not_overwritten(self):
+  281:         self.editor.vars["display_name"].set("New")
+  282:         def validate(_rows):
+  283:             self.editor.loaded_rows[0]["display_name"]="External"
+  284:         self.editor._validate_rows.side_effect=validate
+  285:         self.assertFalse(self.apply())
+  286:         self.assertEqual(self.editor.loaded_rows[0]["display_name"],"External")
+  287:         self.assertEqual(self.editor.loaded_rows[1]["display_name"],"Two")
+  288: 
+  289:     def test_same_selection_keeps_pending_edits(self):
+  290:         self.editor.vars["display_name"].set("New")
+  291:         self.controller.begin(("A","B"))
+  292:         self.assertEqual(self.controller.changes,{"display_name":"New"})
+  293: 
+  294:     def test_revert_form_resets_inputs_not_draft(self):
+  295:         before=copy.deepcopy(self.editor.loaded_rows)
+  296:         self.editor.vars["display_name"].set("New")
+  297:         self.editor.revert()
+  298:         self.assertEqual(self.controller.changes,{})
+  299:         self.assertEqual(self.editor.loaded_rows,before)
+  300:         self.assertEqual(self.editor.vars["display_name"].get(),"Multiple values")
+  301: 
+  302:     def test_return_to_single_restores_values_and_protected_id(self):
+  303:         self.editor.tree.selected=("B",)
+  304:         self.editor.on_select()
+  305:         self.assertFalse(self.controller.active)
+  306:         self.assertEqual(self.editor.vars["display_name"].get(),"Two")
+  307:         self.assertEqual(self.editor.description.get(),"Second")
+  308:         self.assertEqual(self.editor.widgets["task_template_id"].state,"disabled")
+  309:         self.assertEqual(self.editor.widgets["active"].values,("TRUE","FALSE"))
+  310: 
+  311:     def test_deselect_does_not_change_rows(self):
+  312:         before=copy.deepcopy(self.editor.loaded_rows)
+  313:         self.editor.tree.selected=()
+  314:         self.editor.on_select()
+  315:         self.assertFalse(self.controller.active)
+  316:         self.assertEqual(self.editor.loaded_rows,before)
+  317: 
+  318:     def test_apply_keeps_multi_selection(self):
+  319:         self.editor.vars["display_name"].set("New")
+  320:         self.assertTrue(self.apply())
+  321:         self.assertEqual(self.editor.tree.selection(),("A","B"))
+  322:         self.editor._render_draft.assert_not_called()
+  323:         self.assertEqual(self.editor.tree.item.call_count,2)
+  324: 
+  325:     def test_boolean_controls_are_dropdowns(self):
+  326:         tree=ast.parse(textwrap.dedent(inspect.getsource(tasks.TaskTemplatesEditor.build)))
+  327:         self.assertFalse(any(isinstance(node,ast.Attribute) and node.attr=="Checkbutton" for node in ast.walk(tree)))
+  328: 
+  329:     def test_no_bulk_window_is_created(self):
+  330:         tree=ast.parse(inspect.getsource(inline))
+  331:         self.assertFalse(any(isinstance(node,ast.Attribute) and node.attr=="Toplevel" for node in ast.walk(tree)))
+
+===== SOURCE: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_network_editor.py =====
+SHA256: 2F764A4F126D9BE5714B97D88D986DBA12841B2F77F045B5F1FE4B823203D6F6
+===== BOUNDED CLOSE / DRAFT INTEGRATION EXCERPTS =====
+    ...
+  802:         lines += ["", "RULE FLAGS"]
+  803:         lines += [f"  {k:<42} {v}" for k, v in c["ruleFlags"].items()]
+  804:         lines += ["", "ROLE PERMISSIONS", json.dumps(c["rolePermissions"], indent=2)]
+  805:         lines += ["", "TASK AND UPDATE INTERRUPTION", json.dumps(c["taskInterruption"], indent=2)]
+  806:         lines += ["", "PERMANENT UNAVAILABILITY CAUSES", "  " + ", ".join(c["permanentUnavailabilityCauses"])]
+  807:         lines += ["", "OPEN ITEMS"] + [f"  {k}: {v}" for k, v in c["openItems"].items()]
+  808:         self.text.configure(state=tk.NORMAL)
+  809:         self.text.delete("1.0", tk.END)
+  810:         self.text.insert("1.0", "\n".join(lines))
+  811:         self.text.configure(state=tk.DISABLED)
+  812: 
+  813: 
+  814: def network_editors_dirty(app: Any) -> list[str]:
+  815:     return [e.title for e in getattr(app, "network_editors", []) if e.dirty]
+  816: 
+  817: 
+  818: def install_network_editor(app: Any) -> None:
+  819:     tiers_tab = ttk.Frame(app.notebook, padding=10)
+  820:     hw_tab = ttk.Frame(app.notebook, padding=10)
+  821:     rules_tab = ttk.Frame(app.notebook, padding=10)
+  822:     app.notebook.add(tiers_tab, text="Network Tiers — Editor")
+  823:     app.notebook.add(hw_tab, text="Modems and Routers — Editor")
+  824:     app.notebook.add(rules_tab, text="Transfer and Interruption Rules — Reference")
+  825:     app.network_tiers_tab, app.network_hardware_tab, app.transfer_rules_tab = tiers_tab, hw_tab, rules_tab
+  826: 
+  827:     tiers = NetworkTableEditor(app, tiers_tab, "network_tiers", "Network Tiers")
+  828:     hw = NetworkTableEditor(app, hw_tab, "network_hardware_models", "Modems and Routers")
+  829:     app.network_editors = [tiers, hw]
+  830:     app.transfer_rules_view = TransferRulesView(app, rules_tab)
+  831:     fam_tab = ttk.Frame(app.notebook, padding=10)
+  832:     mod_tab = ttk.Frame(app.notebook, padding=10)
+  833:     app.notebook.add(fam_tab, text="Equipment Families — Editor")
+  834:     app.notebook.add(mod_tab, text="Equipment Models — Editor")
+  835:     app.equipment_families_tab, app.equipment_models_tab = fam_tab, mod_tab
+  836:     app.network_editors += [
+  837:         NetworkTableEditor(app, fam_tab, "equipment_families", "Equipment Families"),
+  838:         NetworkTableEditor(app, mod_tab, "equipment_models", "Equipment Models"),
+  839:     ]
+  840:     care_tab = ttk.Frame(app.notebook, padding=10)
+  841:     app.notebook.add(care_tab, text="Care Services — Editor")
+  842:     app.care_services_tab = care_tab
+  843:     app.network_editors.append(NetworkTableEditor(app, care_tab, "care_services", "Care Services"))
+  844:     for table, title in (("care_location_features", "Care Locations"),
+  845:                          ("care_service_locations", "Care Service Locations"),
+  846:                          ("condition_stats", "Condition Stats"),
+  847:                          ("condition_bands", "Condition Bands"),
+  848:                          ("personnel_traits", "Traits"),
+  849:                          ("training_catalog", "Training"),
+  850:                          ("personal_care_actions", "Personal Care"),
+  851:                          ("personal_care_features", "Personal Care Places"),
+  852:                          ("personal_care_locations", "Personal Care Place Links"),
+  853:                          ("personal_care_trainings", "Personal Care Trainings"),
+  854:                          ("personal_care_place_types", "Place Types"),
+  855:                          ("personal_care_place_type_features", "Place Type Features"),
+  856:                          ("recreation_activities", "Recreation Activities"),
+  857:                          ("personal_care_during_care", "Personal Care During Care"),
+  858:                          ("time_settings", "Time Settings"),
+  859:                          ("effect_levels", "Effect Levels"),
+  860:                          ("book_titles", "Book Titles"),
+  861:                          ("sobriety_stages", "Sobriety Stages"),
+  862:                          ("sobriety_settings", "Sobriety Settings"),
+  863:                          ("sobriety_shift_rules", "Sobriety Shift Rules"),
+  864:                          ("territories", "Territories"),
+  865:                          ("territory_settings", "Territory Settings"),
+  866:                          ("mission_tiers", "Mission Tiers"),
+  867:                          ("map_formats", "Map Formats"),
+  868:                          ("maps", "Maps"),
+  869:                          ("weapons", "Weapons"),
+  870:                          ("hostiles", "Hostiles"),
+  871:                          ("upgrades", "Upgrades"),
+  872:                          ("plot_milestones", "Plot Milestones"),
+  873:                          ("plot_items", "Plot Items"),
+  874:                          ("mission_tier_requirements", "Mission Tier Requirements"),
+  875:                          ("authored_missions", "Authored Missions"),
+  876:                          ("authored_mission_objectives", "Mission Objectives"),
+  877:         ("greater_territories", "Greater Territories"),
+  878:         ("greater_territory_tags", "Greater Territory Tags"),
+  879:         ("greater_territory_tag_links", "Greater Territory Tag Links"),
+    ...
+  916:     prerequisite_tab = ttk.Frame(app.notebook, padding=10)
+  917:     app.notebook.add(prerequisite_tab, text="Task Prerequisites — Editor")
+  918:     app.network_editors.append(NetworkTableEditor(
+  919:         app, prerequisite_tab, "task_prerequisites", "Task Prerequisites"))
+  920:     vehicle_tab = ttk.Frame(app.notebook, padding=10)
+  921:     app.notebook.add(vehicle_tab, text="Vehicle Types — Editor")
+  922:     app.vehicle_types_tab = vehicle_tab
+  923:     app.network_editors.append(NetworkTableEditor(
+  924:         app, vehicle_tab, "vehicle_types", "Vehicle Types"))
+  925:     for e in app.network_editors:
+  926:         e.load()
+  927: 
+  928:     def on_close() -> None:
+  929:         dirty = network_editors_dirty(app)
+  930:         if dirty and not messagebox.askyesno(
+  931:                 "DoDA Content Workbench",
+  932:                 "Unsaved network changes in: " + ", ".join(dirty) + "\n\nClose anyway and discard them?"):
+  933:             return
+  934:         app.destroy()
+  935: 
+  936:     app._network_close_handler = on_close
+  937:     app.protocol("WM_DELETE_WINDOW", on_close)
+
+===== IMMEDIATE CAPABILITY STAFFING TEST FILES =====
+No Capability Staffing-specific test filenames found in the immediate tests directory.
+
+===== END CAPTURE =====
