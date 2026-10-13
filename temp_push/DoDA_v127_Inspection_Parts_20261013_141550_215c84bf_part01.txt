@@ -1,0 +1,255 @@
+===== DODA v127 FACILITY STAFFING OVERRIDES — LOCAL INSPECTION =====
+Time: 2026-10-13T14:13:28.4413232-04:00
+Repository: E:\Dev\uzdoom_src\doda-core
+Branch: feature/workbench-data-bridge
+HEAD: 1dad639bd2f36e73ff9038bd88aee964c1eafcb0
+Scope: source inspection only. No patches, GUI launch, or tests.
+
+===== TRACKED WORKTREE STATUS =====
+
+===== FULL SOURCE: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_facility_capability_staffing_overrides_editor.py =====
+SHA256: 1370E9779F63CA35A23F8442EC4CC178773AF05D746214D55D8B01333689BBCF
+    1: from __future__ import annotations
+    2: 
+    3: import csv
+    4: import os
+    5: import shutil
+    6: import subprocess
+    7: import sys
+    8: import tempfile
+    9: import tkinter as tk
+   10: from datetime import datetime
+   11: from pathlib import Path
+   12: from tkinter import messagebox, ttk
+   13: from typing import Any
+   14: from uuid import uuid4
+   15: 
+   16: 
+   17: FIELDS = (
+   18:     "facility_id",
+   19:     "capability_id",
+   20:     "qualification_id",
+   21:     "min_contributors",
+   22:     "preferred_contributors",
+   23:     "max_contributors",
+   24:     "sort_order",
+   25:     "active",
+   26: )
+   27: 
+   28: FILES = (
+   29:     "enum_catalog.csv",
+   30:     "department_tracks.csv",
+   31:     "metrics.csv",
+   32:     "metric_tiers.csv",
+   33:     "facilities.csv",
+   34:     "flavor_text.csv",
+   35:     "qualification_catalog.csv",
+   36:     "capabilities.csv",
+   37:     "facility_capabilities.csv",
+   38:     "capability_staffing_rules.csv",
+   39:     "facility_capability_staffing_overrides.csv",
+   40:     "task_templates.csv",
+   41: )
+   42: FILES = tuple(FILES) + ("equipment_families.csv",)
+   43: FILES = tuple(dict.fromkeys(tuple(FILES) + ("resources.csv", "task_template_flows.csv")))
+   44: 
+   45: 
+   46: class FacilityCapabilityStaffingOverridesEditor:
+   47:     def __init__(self, app: Any) -> None:
+   48:         self.app = app
+   49:         self.editing_key: tuple[str, str, str] | None = None
+   50: 
+   51:         self.installation_choice = tk.StringVar()
+   52:         self.qualification_id = tk.StringVar()
+   53:         self.minimum = tk.StringVar()
+   54:         self.preferred = tk.StringVar()
+   55:         self.maximum = tk.StringVar()
+   56:         self.sort_order = tk.StringVar()
+   57:         self.active = tk.BooleanVar(value=True)
+   58:         self.baseline_text = tk.StringVar(
+   59:             value="Select an installation and qualification to view its global baseline."
+   60:         )
+   61: 
+   62:         self.build()
+   63: 
+   64:     def source_path(self) -> Path:
+   65:         return (
+   66:             self.app.source_directory
+   67:             / "facility_capability_staffing_overrides.csv"
+   68:         )
+   69: 
+   70:     def backup_directory(self) -> Path:
+   71:         return (
+   72:             self.app.project_root
+   73:             / "data_authoring"
+   74:             / "backups"
+   75:             / "facility_capability_staffing_overrides"
+   76:         )
+   77: 
+   78:     def rows(self) -> list[dict[str, str]]:
+   79:         return [
+   80:             dict(row)
+   81:             for row in self.app.tables.get(
+   82:                 "facility_capability_staffing_overrides",
+   83:                 [],
+   84:             )
+   85:         ]
+   86: 
+   87:     @staticmethod
+   88:     def integer_or_default(value: str, default: int) -> int:
+   89:         try:
+   90:             return int((value or "").strip())
+   91:         except ValueError:
+   92:             return default
+   93: 
+   94:     def active_facility_ids(self) -> set[str]:
+   95:         return {
+   96:             row.get("facility_id", "")
+   97:             for row in self.app.tables.get("facilities", [])
+   98:             if row.get("facility_id", "")
+   99:             and row.get("active", "").upper() == "TRUE"
+  100:         }
+  101: 
+  102:     def active_capability_ids(self) -> set[str]:
+  103:         return {
+  104:             row.get("capability_id", "")
+  105:             for row in self.app.tables.get("capabilities", [])
+  106:             if row.get("capability_id", "")
+  107:             and row.get("active", "").upper() == "TRUE"
+  108:         }
+  109: 
+  110:     def active_qualification_ids(self) -> set[str]:
+  111:         return {
+  112:             row.get("qualification_id", "")
+  113:             for row in self.app.tables.get("qualification_catalog", [])
+  114:             if row.get("qualification_id", "")
+  115:             and row.get("active", "").upper() == "TRUE"
+  116:         }
+  117: 
+  118:     def active_installations(self) -> list[dict[str, str]]:
+  119:         active_facilities = self.active_facility_ids()
+  120:         active_capabilities = self.active_capability_ids()
+  121: 
+  122:         rows = [
+  123:             row
+  124:             for row in self.app.tables.get("facility_capabilities", [])
+  125:             if row.get("facility_id", "") in active_facilities
+  126:             and row.get("capability_id", "") in active_capabilities
+  127:             and row.get("active", "").upper() == "TRUE"
+  128:         ]
+  129: 
+  130:         return sorted(
+  131:             rows,
+  132:             key=lambda row: (
+  133:                 row.get("facility_id", ""),
+  134:                 self.integer_or_default(row.get("sort_order", ""), 999999),
+  135:                 row.get("capability_id", ""),
+  136:             ),
+  137:         )
+  138: 
+  139:     def installation_key(self, facility_id: str, capability_id: str) -> str:
+  140:         return f"{facility_id}::{capability_id}"
+  141: 
+  142:     def selected_installation_parts(self) -> tuple[str, str]:
+  143:         value = self.installation_choice.get().strip()
+  144: 
+  145:         if "::" not in value:
+  146:             return "", ""
+  147: 
+  148:         return tuple(value.split("::", 1))
+  149: 
+  150:     def installation_choices(self) -> list[str]:
+  151:         return [
+  152:             self.installation_key(
+  153:                 row.get("facility_id", ""),
+  154:                 row.get("capability_id", ""),
+  155:             )
+  156:             for row in self.active_installations()
+  157:         ]
+  158: 
+  159:     def installation_labels(self) -> dict[str, str]:
+  160:         facility_names = {
+  161:             row.get("facility_id", ""): row.get("display_name", "")
+  162:             for row in self.app.tables.get("facilities", [])
+  163:         }
+  164:         capability_names = {
+  165:             row.get("capability_id", ""): row.get("display_name", "")
+  166:             for row in self.app.tables.get("capabilities", [])
+  167:         }
+  168: 
+  169:         labels: dict[str, str] = {}
+  170: 
+  171:         for row in self.active_installations():
+  172:             facility_id = row.get("facility_id", "")
+  173:             capability_id = row.get("capability_id", "")
+  174:             key = self.installation_key(facility_id, capability_id)
+  175: 
+  176:             labels[key] = (
+  177:                 f"{facility_id} — {facility_names.get(facility_id, '')}"
+  178:                 f"\n{capability_id} — {capability_names.get(capability_id, '')}"
+  179:             )
+  180: 
+  181:         return labels
+  182: 
+  183:     def active_global_rules(self) -> list[dict[str, str]]:
+  184:         active_capabilities = self.active_capability_ids()
+  185:         active_qualifications = self.active_qualification_ids()
+  186: 
+  187:         rows = [
+  188:             row
+  189:             for row in self.app.tables.get("capability_staffing_rules", [])
+  190:             if row.get("capability_id", "") in active_capabilities
+  191:             and row.get("qualification_id", "") in active_qualifications
+  192:             and row.get("active", "").upper() == "TRUE"
+  193:         ]
+  194: 
+  195:         return sorted(
+  196:             rows,
+  197:             key=lambda row: (
+  198:                 row.get("capability_id", ""),
+  199:                 self.integer_or_default(row.get("sort_order", ""), 999999),
+  200:                 row.get("qualification_id", ""),
+  201:             ),
+  202:         )
+  203: 
+  204:     def rule_for(
+  205:         self,
+  206:         capability_id: str,
+  207:         qualification_id: str,
+  208:     ) -> dict[str, str] | None:
+  209:         return next(
+  210:             (
+  211:                 row
+  212:                 for row in self.active_global_rules()
+  213:                 if row.get("capability_id", "") == capability_id
+  214:                 and row.get("qualification_id", "") == qualification_id
+  215:             ),
+  216:             None,
+  217:         )
+  218: 
+  219:     def qualification_choices_for_selected_installation(self) -> list[str]:
+  220:         _, capability_id = self.selected_installation_parts()
+  221: 
+  222:         if not capability_id:
+  223:             return []
+  224: 
+  225:         return [
+  226:             row.get("qualification_id", "")
+  227:             for row in self.active_global_rules()
+  228:             if row.get("capability_id", "") == capability_id
+  229:         ]
+  230: 
+  231:     def qualification_display_values(self) -> dict[str, str]:
+  232:         return {
+  233:             row.get("qualification_id", ""): (
+  234:                 f"{row.get('qualification_id', '')} — {row.get('display_name', '')}"
+  235:             )
+  236:             for row in self.app.tables.get("qualification_catalog", [])
+  237:             if row.get("qualification_id", "")
+  238:         }
+  239: 
+  240:     def installation_is_valid(
+  241:         self,
+  242:         facility_id: str,
+  243:         capability_id: str,
+  244
