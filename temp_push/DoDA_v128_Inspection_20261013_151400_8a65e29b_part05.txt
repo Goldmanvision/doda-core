@@ -1,0 +1,197 @@
+affing_rules_editor import install_capability_staffing_rules_editor
+   43: from doda_capability_staffing_draft_policy import allow_capability_staffing_project_change, install_capability_staffing_draft_close_guard
+   44: from doda_facility_capability_staffing_overrides_editor import install_facility_capability_staffing_overrides_editor
+   45: from doda_facility_staffing_overrides_draft_policy import allow_facility_staffing_overrides_project_change, install_facility_staffing_overrides_draft_close_guard
+   46: from doda_task_templates_editor import install_task_templates_editor
+   47: from doda_task_draft_policy import task_draft_dirty, allow_task_project_change, install_task_draft_close_guard
+   48: from doda_foims_x_preview import FoimsXPreview
+   49: from doda_network_editor import install_network_editor, network_editors_dirty
+   50: from doda_navigation import install_grouped_navigation
+   51: from doda_ui_enhancements import install_tree_autosize
+   52: import doda_network_rules
+   53: import doda_equipment_rules
+   54: import doda_care_rules
+   55: import doda_condition_rules
+    ...
+  260:         install_metrics_editor(self)
+  261:         install_metric_tiers_editor(self)
+  262:         install_facilities_editor(self)
+  263:         install_flavor_text_editor(self)
+  264:         install_enum_catalog_editor(self)
+  265:         install_qualification_catalog_editor(self)
+  266:         install_capabilities_editor(self)
+  267:         install_facility_capabilities_editor(self)
+  268:         install_capability_staffing_rules_editor(self)
+  269:         install_facility_capability_staffing_overrides_editor(self)
+  270:         install_task_templates_editor(self)
+  271:         install_network_editor(self)
+  272:         install_task_draft_close_guard(self, messagebox)
+  273:         install_capability_staffing_draft_close_guard(self, messagebox)
+  274:         install_facility_staffing_overrides_draft_close_guard(self, messagebox)
+  275:         install_grouped_navigation(self)
+  276:         install_tree_autosize(self)
+  277:         self.refresh_all(show_message=False)
+  278: 
+  279:     def _configure_styles(self) -> None:
+  280:         """Apply the standard DoDA dark desktop theme."""
+  281: 
+  282:         palette = {
+    ...
+  933:         self.tracks_tab = ttk.Frame(self.notebook, padding=10)
+  934:         self.metrics_tab = ttk.Frame(self.notebook, padding=10)
+  935:         self.metric_tiers_tab = ttk.Frame(self.notebook, padding=10)
+  936:         self.facilities_tab = ttk.Frame(self.notebook, padding=10)
+  937:         self.flavor_tab = ttk.Frame(self.notebook, padding=10)
+  938:         self.qualifications_tab = ttk.Frame(self.notebook, padding=10)
+  939:         self.capabilities_tab = ttk.Frame(self.notebook, padding=10)
+  940:         self.facility_capabilities_tab = ttk.Frame(self.notebook, padding=10)
+  941:         self.capability_staffing_rules_tab = ttk.Frame(self.notebook, padding=10)
+  942:         self.staffing_overrides_tab = ttk.Frame(self.notebook, padding=10)
+  943:         self.task_templates_tab = ttk.Frame(self.notebook, padding=10)
+  944:         self.activity_tab = ttk.Frame(self.notebook, padding=10)
+  945: 
+  946:         self.notebook.add(self.dashboard_tab, text="Dashboard")
+  947:         self.notebook.add(self.tracks_tab, text="Department Tracks — Editor")
+  948:         self.notebook.add(self.metrics_tab, text="Metrics — Editor")
+  949:         self.notebook.add(self.metric_tiers_tab, text="Metric Tiers — Editor")
+  950:         self.notebook.add(self.facilities_tab, text="Facilities — Editor")
+  951:         self.notebook.add(self.flavor_tab, text="Flavor Text — Editor")
+  952:         self.notebook.add(self.qualifications_tab, text="Qualifications — Editor")
+  953:         self.notebook.add(self.capabilities_tab, text="Capabilities — Editor")
+  954:         self.notebook.add(self.facility_capabilities_tab, text="Facility Capabilities — Editor")
+  955:         self.notebook.add(self.capability_staffing_rules_tab, text="Capability Staffing Rules — Editor")
+  956:         self.notebook.add(self.staffing_overrides_tab, text="Facility Staffing Overrides — Editor")
+  957:         self.notebook.add(self.task_templates_tab, text="Task Templates — Editor")
+  958:         self.notebook.add(self.activity_tab, text="Activity Log")
+  959: 
+  960:         self._build_dashboard_tab()
+    ...
+ 1229:     def refresh_all(self, show_message: bool = False) -> None:
+ 1230:         try:
+ 1231:             self.tables = {
+ 1232:                 table_name: read_csv(self.source_directory / filename)
+ 1233:                 for table_name, filename in SOURCE_FILES.items()
+ 1234:             }
+ 1235:             if hasattr(self, "metrics_editor"):
+ 1236:                 self.metrics_editor.update()
+ 1237: 
+ 1238:             if hasattr(self, "metric_tiers_editor"):
+ 1239:                 self.metric_tiers_editor.update()
+ 1240: 
+ 1241:             if hasattr(self, "facilities_editor"):
+ 1242:                 self.facilities_editor.update()
+ 1243: 
+ 1244:             if hasattr(self, "enum_catalog_editor"):
+ 1245:                 self.enum_catalog_editor.update()
+ 1246: 
+ 1247:             if hasattr(self, "qualification_catalog_editor"):
+ 1248:                 self.qualification_catalog_editor.update()
+ 1249: 
+ 1250:             if hasattr(self, "capabilities_editor"):
+ 1251:                 self.capabilities_editor.update()
+ 1252: 
+ 1253:             if hasattr(self, "facility_capabilities_editor"):
+ 1254:                 self.facility_capabilities_editor.update()
+ 1255: 
+ 1256:             if hasattr(self, "capability_staffing_rules_editor"):
+ 1257:                 self.capability_staffing_rules_editor.update()
+ 1258: 
+ 1259:             if hasattr(self, "facility_capability_staffing_overrides_editor"):
+ 1260:                 self.facility_capability_staffing_overrides_editor.update()
+ 1261: 
+ 1262:             if hasattr(self, "task_templates_editor"):
+ 1263:                 self.task_templates_editor.update()
+ 1264: 
+ 1265:             for network_editor in getattr(self, "network_editors", []):
+ 1266:                 network_editor.update()
+ 1267: 
+ 1268:             if hasattr(self, "transfer_rules_view"):
+ 1269:                 self.transfer_rules_view.update()
+ 1270: 
+ 1271:             self.load_validation_report()
+ 1272:             self.update_dashboard()
+ 1273:             self.update_tracks()
+ 1274:             self.update_metrics()
+ 1275:             self.update_facilities()
+ 1276:             self.update_flavor_text()
+ 1277:             self.update_status_labels()
+ 1278: 
+ 1279:             self.status_text.set("Source data refreshed successfully.")
+ 1280:             self.log("Source data refreshed.")
+ 1281: 
+ 1282:             if show_message:
+ 1283:                 messagebox.showinfo(
+ 1284:                     APP_TITLE,
+ 1285:                     "Source data was refreshed successfully.",
+ 1286:                 )
+ 1287: 
+ 1288:         except Exception as error:
+ 1289:             self.status_text.set("Refresh failed.")
+ 1290:             self.log(f"REFRESH ERROR: {error}")
+ 1291:             messagebox.showerror(
+ 1292:                 APP_TITLE,
+ 1293:                 f"Unable to refresh source data.\n\n{error}",
+ 1294:             )
+ 1295: 
+    ...
+ 1808:         elif announce:
+ 1809:             messagebox.showinfo(APP_TITLE, f"Network rules {mode} passed ({len(result.warnings)} warnings).")
+ 1810:         return result.valid
+ 1811: 
+ 1812:     def request_close(self) -> None:
+ 1813:         handler = getattr(self, "_network_close_handler", None)
+ 1814:         if handler is not None:
+ 1815:             handler()
+ 1816:         else:
+ 1817:             self.destroy()
+ 1818: 
+ 1819:     def run_command(
+ 1820:         self,
+ 1821:         label: str,
+    ...
+ 1901:                 APP_TITLE,
+ 1902:                 f"Could not open folder.\n\n{folder}\n\n{error}",
+ 1903:             )
+ 1904: 
+ 1905:     def choose_project_root(self) -> None:
+ 1906:         if not allow_facility_staffing_overrides_project_change(self, messagebox):
+ 1907:             return
+ 1908:         if not allow_capability_staffing_project_change(self, messagebox):
+ 1909:             return
+ 1910:         if not allow_task_project_change(self, messagebox):
+ 1911:             return
+ 1912:         selected = filedialog.askdirectory(
+ 1913:             title="Choose DoDA Project Root",
+ 1914:             initialdir=str(self.project_root),
+ 1915:         )
+ 1916: 
+ 1917:         if not selected:
+ 1918:             return
+ 1919: 
+ 1920:         candidate = Path(selected)
+ 1921: 
+ 1922:         try:
+ 1923:             verified_root = find_project_root(candidate)
+ 1924:         except FileNotFoundError as error:
+ 1925:             messagebox.showerror(APP_TITLE, str(error))
+ 1926:             return
+ 1927: 
+ 1928:         self.project_root = verified_root
+ 1929:         self.workbench_directory = (
+ 1930:             self.project_root / "tools" / "doda_content_workbench"
+ 1931:         )
+ 1932:         self.validator_path = (
+ 1933:             self.workbench_directory / "doda_content_workbench.py"
+ 1934:         )
+ 1935:         self.exporter_path = (
+ 1936:             self.workbench_directory / "doda_content_export.py"
+ 1937:         )
+ 1938:         self.source_directory = self.project_root / "data_authoring" / "source"
+ 1939:         self.generated_directory = self.project_root / "generated"
+ 1940:         self.report_directory = self.generated_directory / "reports"
+ 1941:         self.build_directory = self.project_root / "build"
+ 1942:         self.validation_report_path = (
+ 1943:             self.report_directory / "content_validation_report.json"
+ 1944:         )
+ 1945: 
+ 1946:         self.project_tex

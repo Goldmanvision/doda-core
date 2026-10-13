@@ -1,0 +1,268 @@
+(row.get("sort_order", "999999")),
+  288:                 row.get("qualification_id", ""),
+  289:             ),
+  290:         )
+  291: 
+  292:         for row in rows:
+  293:             qualification_id = row.get("qualification_id", "")
+  294: 
+  295:             self.tree.insert(
+  296:                 "",
+  297:                 tk.END,
+  298:                 iid=qualification_id,
+  299:                 values=(
+  300:                     qualification_id,
+  301:                     row.get("display_name", ""),
+  302:                     row.get("sort_order", ""),
+  303:                     row.get("active", ""),
+  304:                 ),
+  305:             )
+  306: 
+  307:         if selected and self.tree.exists(selected):
+  308:             self.tree.selection_set(selected)
+  309:             self.tree.focus(selected)
+  310: 
+  311:     def next_sort_order(self) -> int:
+  312:         values: list[int] = []
+  313: 
+  314:         for row in self.rows():
+  315:             try:
+  316:                 values.append(int(row.get("sort_order", "")))
+  317:             except ValueError:
+  318:                 pass
+  319: 
+  320:         return max(values, default=0) + 1
+  321: 
+  322:     def new(self) -> None:
+  323:         self.editing_id = None
+  324:         self.id_entry.configure(state=tk.NORMAL)
+  325: 
+  326:         self.qualification_id.set("")
+  327:         self.display_name.set("")
+  328:         self.sort_order.set(str(self.next_sort_order()))
+  329:         self.active.set(True)
+  330: 
+  331:         self.description.delete("1.0", tk.END)
+  332:         self.id_entry.focus_set()
+  333: 
+  334:     def on_select(self, _event: Any = None) -> None:
+  335:         selection = self.tree.selection()
+  336: 
+  337:         if not selection:
+  338:             return
+  339: 
+  340:         row = next(
+  341:             (
+  342:                 item
+  343:                 for item in self.rows()
+  344:                 if item.get("qualification_id") == selection[0]
+  345:             ),
+  346:             None,
+  347:         )
+  348: 
+  349:         if row is None:
+  350:             return
+  351: 
+  352:         self.editing_id = row["qualification_id"]
+  353: 
+  354:         self.id_entry.configure(state=tk.NORMAL)
+  355:         self.qualification_id.set(row.get("qualification_id", ""))
+  356:         self.id_entry.configure(state=tk.DISABLED)
+  357: 
+  358:         self.display_name.set(row.get("display_name", ""))
+  359:         self.sort_order.set(row.get("sort_order", ""))
+  360:         self.active.set(row.get("active", "").upper() == "TRUE")
+  361: 
+  362:         self.description.delete("1.0", tk.END)
+  363:         self.description.insert("1.0", row.get("description", ""))
+  364: 
+  365:     def revert(self) -> None:
+  366:         if self.editing_id and self.tree.exists(self.editing_id):
+  367:             self.tree.selection_set(self.editing_id)
+  368:             self.on_select()
+  369:         else:
+  370:             self.new()
+  371: 
+  372:     def record(self) -> dict[str, str] | None:
+  373:         row = {
+  374:             "qualification_id": self.qualification_id.get().strip(),
+  375:             "display_name": self.display_name.get().strip(),
+  376:             "description": self.description.get("1.0", tk.END).strip(),
+  377:             "sort_order": self.sort_order.get().strip(),
+  378:             "active": "TRUE" if self.active.get() else "FALSE",
+  379:         }
+  380: 
+  381:         errors: list[str] = []
+  382: 
+  383:         if not ID_PATTERN.fullmatch(row["qualification_id"]):
+  384:             errors.append(
+  385:                 "Qualification ID must begin with an uppercase letter and use "
+  386:                 "only uppercase letters, digits, or underscores."
+  387:             )
+  388: 
+  389:         if not row["display_name"]:
+  390:             errors.append("Display Name is required.")
+  391: 
+  392:         if not row["description"]:
+  393:             errors.append("Description is required.")
+  394: 
+  395:         try:
+  396:             sort_order = int(row["sort_order"])
+  397: 
+  398:             if sort_order < 1:
+  399:                 errors.append("Sort Order must be at least 1.")
+  400:         except ValueError:
+  401:             errors.append("Sort Order must be an integer.")
+  402: 
+  403:         if errors:
+  404:             messagebox.showerror(
+  405:                 "DoDA Content Workbench",
+  406:                 "Correct before saving:\n\n- " + "\n- ".join(errors),
+  407:             )
+  408:             return None
+  409: 
+  410:         return row
+  411: 
+  412:     def write(self, path: Path, rows: list[dict[str, str]]) -> None:
+  413:         with path.open("w", encoding="utf-8", newline="") as handle:
+  414:             writer = csv.DictWriter(
+  415:                 handle,
+  416:                 fieldnames=FIELDS,
+  417:                 lineterminator="\n",
+  418:             )
+  419:             writer.writeheader()
+  420: 
+  421:             for row in rows:
+  422:                 writer.writerow(
+  423:                     {
+  424:                         field: row.get(field, "")
+  425:                         for field in FIELDS
+  426:                     }
+  427:                 )
+  428: 
+  429:     def candidate_valid(self, candidate: Path) -> tuple[bool, str]:
+  430:         with tempfile.TemporaryDirectory(
+  431:             prefix="doda-qualification-"
+  432:         ) as temporary:
+  433:             root = Path(temporary)
+  434:             destination = root / "data_authoring" / "source"
+  435:             destination.mkdir(parents=True)
+  436: 
+  437:             for filename in FILES:
+  438:                 source = (
+  439:                     candidate
+  440:                     if filename == "qualification_catalog.csv"
+  441:                     else self.app.source_directory / filename
+  442:                 )
+  443:                 shutil.copy2(source, destination / filename)
+  444: 
+  445:             command = [
+  446:                 sys.executable,
+  447:                 str(self.app.validator_path),
+  448:                 "--root",
+  449:                 str(root),
+  450:                 "validate",
+  451:             ]
+  452: 
+  453:             completed = subprocess.run(
+  454:                 command,
+  455:                 cwd=root,
+  456:                 text=True,
+  457:                 encoding="utf-8",
+  458:                 errors="replace",
+  459:                 capture_output=True,
+  460:             )
+  461: 
+  462:             output = (
+  463:                 completed.stdout
+  464:                 + ("\n" if completed.stdout and completed.stderr else "")
+  465:                 + completed.stderr
+  466:             ).strip()
+  467: 
+  468:             return completed.returncode == 0, output
+  469: 
+  470:     def post_validate(self) -> tuple[bool, str]:
+  471:         command = [
+  472:             sys.executable,
+  473:             str(self.app.validator_path),
+  474:             "--root",
+  475:             str(self.app.project_root),
+  476:             "validate",
+  477:         ]
+  478: 
+  479:         completed = subprocess.run(
+  480:             command,
+  481:             cwd=self.app.project_root,
+  482:             text=True,
+  483:             encoding="utf-8",
+  484:             errors="replace",
+  485:             capture_output=True,
+  486:         )
+  487: 
+  488:         output = (
+  489:             completed.stdout
+  490:             + ("\n" if completed.stdout and completed.stderr else "")
+  491:             + completed.stderr
+  492:         ).strip()
+  493: 
+  494:         return completed.returncode == 0, output
+  495: 
+  496:     def save(self) -> None:
+  497:         row = self.record()
+  498: 
+  499:         if row is None:
+  500:             return
+  501: 
+  502:         rows = self.rows()
+  503: 
+  504:         if self.editing_id:
+  505:             if row["qualification_id"] != self.editing_id:
+  506:                 messagebox.showerror(
+  507:                     "DoDA Content Workbench",
+  508:                     "Qualification ID cannot change after creation.",
+  509:                 )
+  510:                 return
+  511: 
+  512:             rows = [
+  513:                 row
+  514:                 if item.get("qualification_id") == self.editing_id
+  515:                 else item
+  516:                 for item in rows
+  517:             ]
+  518:             action = "updated"
+  519:         else:
+  520:             if any(
+  521:                 item.get("qualification_id") == row["qualification_id"]
+  522:                 for item in rows
+  523:             ):
+  524:                 messagebox.showerror(
+  525:                     "DoDA Content Workbench",
+  526:                     "Qualification ID already exists.",
+  527:                 )
+  528:                 return
+  529: 
+  530:             rows.append(row)
+  531:             action = "added"
+  532: 
+  533:         rows.sort(
+  534:             key=lambda item: (
+  535:                 int(item.get("sort_order", "999999")),
+  536:                 item.get("qualification_id", ""),
+  537:             )
+  538:         )
+  539: 
+  540:         temporary = self.app.source_directory / (
+  541:             f".qualification-catalog-{uuid4().hex}.tmp.csv"
+  542:         )
+  543: 
+  544:         self.app.config(cursor="watch")
+  545:         self.app.update_idletasks()
+  546: 
+  547:         try:
+  548:             self.write(temporary, rows)
+  549: 
+  550:             valid, output = self.candidate_valid(temporary)
+  551: 
+  552:             self.app.log("Qualification candidate validation output:")
+  553: 
+  554:             fo

@@ -1,0 +1,238 @@
+r line in output.splitlines():
+  555:                 self.app.log(" " + line)
+  556: 
+  557:             if not valid:
+  558:                 messagebox.showerror(
+  559:                     "DoDA Content Workbench",
+  560:                     (
+  561:                         "Qualification candidate validation failed. Source CSV "
+  562:                         "was unchanged.\n\nReview Activity Log for details."
+  563:                     ),
+  564:                 )
+  565:                 return
+  566: 
+  567:             folder = self.backup_directory()
+  568:             folder.mkdir(parents=True, exist_ok=True)
+  569: 
+  570:             backup = folder / (
+  571:                 "qualification_catalog_"
+  572:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+  573:                 + ".csv"
+  574:             )
+  575: 
+  576:             shutil.copy2(self.source_path(), backup)
+  577:             os.replace(temporary, self.source_path())
+  578: 
+  579:             self.editing_id = row["qualification_id"]
+  580: 
+  581:             self.app.log(f"Created qualification backup: {backup}")
+  582:             self.app.log(
+  583:                 f"Qualification {action}: {row['qualification_id']}"
+  584:             )
+  585: 
+  586:             self.app.refresh_all(False)
+  587: 
+  588:             valid, output = self.post_validate()
+  589: 
+  590:             for line in output.splitlines():
+  591:                 self.app.log(" " + line)
+  592: 
+  593:             self.app.refresh_all(False)
+  594: 
+  595:             if valid:
+  596:                 messagebox.showinfo(
+  597:                     "DoDA Content Workbench",
+  598:                     (
+  599:                         f"Qualification '{row['qualification_id']}' {action}.\n\n"
+  600:                         f"Backup created:\n{backup}\n\n"
+  601:                         "Project validation passed."
+  602:                     ),
+  603:                 )
+  604:             else:
+  605:                 messagebox.showwarning(
+  606:                     "DoDA Content Workbench",
+  607:                     (
+  608:                         f"Qualification {action}, but post-save validation failed.\n\n"
+  609:                         f"Backup:\n{backup}"
+  610:                     ),
+  611:                 )
+  612: 
+  613:         except (OSError, ValueError) as error:
+  614:             self.app.log(f"QUALIFICATION SAVE ERROR: {error}")
+  615:             messagebox.showerror(
+  616:                 "DoDA Content Workbench",
+  617:                 f"Unable to save qualification.\n\n{error}",
+  618:             )
+  619:         finally:
+  620:             if temporary.exists():
+  621:                 temporary.unlink()
+  622: 
+  623:             self.app.config(cursor="")
+  624:             self.app.update_idletasks()
+  625: 
+  626:     def remove(self) -> None:
+  627:         if not self.editing_id:
+  628:             messagebox.showwarning(
+  629:                 "DoDA Content Workbench",
+  630:                 "Select an existing qualification before using Remove.",
+  631:             )
+  632:             return
+  633: 
+  634:         qualification_id = self.editing_id
+  635: 
+  636:         confirmed = messagebox.askyesno(
+  637:             "Remove Qualification?",
+  638:             (
+  639:                 f"ARE YOU SURE you want to remove '{qualification_id}'?\n\n"
+  640:                 "Removal will be blocked if the qualification is referenced "
+  641:                 "by staffing rules or overrides."
+  642:             ),
+  643:             icon="warning",
+  644:             default=messagebox.NO,
+  645:         )
+  646: 
+  647:         if not confirmed:
+  648:             self.app.log(
+  649:                 f"Remove Qualification cancelled for '{qualification_id}'."
+  650:             )
+  651:             return
+  652: 
+  653:         rows = [
+  654:             row
+  655:             for row in self.rows()
+  656:             if row.get("qualification_id") != qualification_id
+  657:         ]
+  658: 
+  659:         temporary = self.app.source_directory / (
+  660:             f".qualification-catalog-remove-{uuid4().hex}.tmp.csv"
+  661:         )
+  662: 
+  663:         self.app.config(cursor="watch")
+  664:         self.app.update_idletasks()
+  665: 
+  666:         try:
+  667:             self.write(temporary, rows)
+  668: 
+  669:             valid, output = self.candidate_valid(temporary)
+  670: 
+  671:             self.app.log(
+  672:                 "Qualification removal candidate validation output "
+  673:                 f"for '{qualification_id}':"
+  674:             )
+  675: 
+  676:             for line in output.splitlines():
+  677:                 self.app.log(" " + line)
+  678: 
+  679:             if not valid:
+  680:                 messagebox.showerror(
+  681:                     "DoDA Content Workbench",
+  682:                     (
+  683:                         "Qualification removal was blocked by validation.\n\n"
+  684:                         "Source CSV was unchanged."
+  685:                     ),
+  686:                 )
+  687:                 return
+  688: 
+  689:             folder = self.backup_directory()
+  690:             folder.mkdir(parents=True, exist_ok=True)
+  691: 
+  692:             backup = folder / (
+  693:                 "qualification_catalog_before_remove_"
+  694:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+  695:                 + ".csv"
+  696:             )
+  697: 
+  698:             shutil.copy2(self.source_path(), backup)
+  699:             os.replace(temporary, self.source_path())
+  700: 
+  701:             self.editing_id = None
+  702: 
+  703:             self.app.log(
+  704:                 f"Created pre-removal qualification backup: {backup}"
+  705:             )
+  706:             self.app.log(f"Removed qualification: {qualification_id}")
+  707: 
+  708:             self.app.refresh_all(False)
+  709:             self.new()
+  710: 
+  711:             valid, output = self.post_validate()
+  712: 
+  713:             for line in output.splitlines():
+  714:                 self.app.log(" " + line)
+  715: 
+  716:             self.app.refresh_all(False)
+  717: 
+  718:             if valid:
+  719:                 messagebox.showinfo(
+  720:                     "DoDA Content Workbench",
+  721:                     (
+  722:                         f"Qualification '{qualification_id}' removed.\n\n"
+  723:                         f"Backup created:\n{backup}\n\n"
+  724:                         "Project validation passed."
+  725:                     ),
+  726:                 )
+  727:             else:
+  728:                 messagebox.showwarning(
+  729:                     "DoDA Content Workbench",
+  730:                     (
+  731:                         f"Qualification '{qualification_id}' removed, but "
+  732:                         f"post-save validation failed.\n\nBackup:\n{backup}"
+  733:                     ),
+  734:                 )
+  735: 
+  736:         except (OSError, ValueError) as error:
+  737:             self.app.log(f"QUALIFICATION REMOVE ERROR: {error}")
+  738:             messagebox.showerror(
+  739:                 "DoDA Content Workbench",
+  740:                 f"Unable to remove qualification.\n\n{error}",
+  741:             )
+  742:         finally:
+  743:             if temporary.exists():
+  744:                 temporary.unlink()
+  745: 
+  746:             self.app.config(cursor="")
+  747:             self.app.update_idletasks()
+  748: 
+  749:     def open_backups(self) -> None:
+  750:         self.backup_directory().mkdir(parents=True, exist_ok=True)
+  751:         self.app.open_folder(self.backup_directory())
+  752: 
+  753: 
+  754: def install_qualification_catalog_editor(app: Any) -> None:
+  755:     editor = QualificationCatalogEditor(app)
+  756:     app.qualification_catalog_editor = editor
+
+===== FULL SOURCE: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_task_inline_bulk_edit.py =====
+SHA256: 2207DACC56756795C3309B7C8494F919742C39141F08737609F33D0607056AE8
+    1: """Task Templates inline multi-row editing; no editor popup and no source writes."""
+    2: import csv
+    3: import re
+    4: import doda_task_schema as schema
+    5: from doda_row_selection import MULTIPLE_VALUES, selection_display, set_form_state
+    6: 
+    7: DROPDOWNS = {"capability_id", "priority", "target_type", "target_family_id", "reward_mode", "loop_task", "active"}
+    8: BOOLEANS = {"loop_task", "active"}
+    9: 
+   10: 
+   11: class TaskInlineEditor:
+   12:     def __init__(self, editor):
+   13:         self.editor = editor
+   14:         self.active = False
+   15:         self.loading = False
+   16:         self.selection = ()
+   17:         self.original = []
+   18:         self.changes = {}
+   19:         self.description_seen = ""
+   20:         for name, variable in editor.vars.items():
+   21:             variable.trace_add("write", lambda *_args, n=name: self.changed(n))
+   22:             if name == "task_template_id":
+   23:                 continue
+   24:             widget = editor.widgets[name]
+   25:             if name in DROPDOWNS:
+   26:                 widget.bind("<<ComboboxSelected>>", lambda _e, n=name: self.changed(n), add="+")
+   27:             else:
+   28:                 widget.bind("<FocusIn>", lambda _e, n=name: self.focus(n), add="+")
+   29:                 widget.bind("<ButtonRelease-1>", lambda _e, n=name: self.focus(n), add="+")
+   30:         editor.description.bind("<<Modified>>", self.description_modified, add="+")
+   31:         editor.description.bind("<FocusIn>", lambda _e: self.focus("description"), add="+")
+   32:         editor.description.bind("<ButtonRelease-1>", lambda _e: s
