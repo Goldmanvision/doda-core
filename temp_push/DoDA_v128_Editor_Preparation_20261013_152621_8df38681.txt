@@ -1,0 +1,13 @@
+===== v128 EDITOR CANDIDATE PREPARATION =====
+Time: 2026-10-13T15:26:22.0204946-04:00
+Branch: feature/workbench-data-bridge
+PARSE PASS: doda_qualification_catalog_editor.py.candidate
+EDITOR CONTRACT PASS: 32 unique methods
+Checker exit code: 0
+Editor candidate: E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v128_editor_prepared_20261013_152621_8df38681\doda_qualification_catalog_editor.py.candidate
+Editor SHA256: 739EECB8334C7584B3BC27360789CB16A9F7E9B324615137CD071AFA9227D5CE
+Manifest: E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v128_editor_prepared_20261013_152621_8df38681\editor_manifest.json
+Manifest SHA256: EE39B544E9B032FCB54E1B2A82FB9D0BB6949819D4C25BC6CF71D4B3E7AE3DC1
+Editor preparation passed. Source remains unchanged.
+GUI, policy, and regression-test candidates are the next preparation stage.
+No regression tests or GUI launch performed.
