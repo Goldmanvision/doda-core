@@ -1,0 +1,298 @@
+===== DODA v128 QUALIFICATIONS — LOCAL INSPECTION =====
+Time: 2026-10-13T15:12:58.0514659-04:00
+Repository: E:\Dev\uzdoom_src\doda-core
+Branch: feature/workbench-data-bridge
+HEAD: 67ec3bca151aff50cf4db19f73ecc61989d1ebd4
+Source inspection only. No source/CSV edits, tests, or GUI launch.
+
+===== TRACKED WORKTREE STATUS =====
+
+===== FULL SOURCE: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_qualification_catalog_editor.py =====
+SHA256: F0B0F56D0122235F29273784F5ADDD98224DD80FC54A3B1A50327479CCA7D06F
+    1: from __future__ import annotations
+    2: 
+    3: import csv
+    4: import os
+    5: import re
+    6: import shutil
+    7: import subprocess
+    8: import sys
+    9: import tempfile
+   10: import tkinter as tk
+   11: from datetime import datetime
+   12: from pathlib import Path
+   13: from tkinter import messagebox, ttk
+   14: from typing import Any
+   15: from uuid import uuid4
+   16: 
+   17: 
+   18: FIELDS = (
+   19:     "qualification_id",
+   20:     "display_name",
+   21:     "description",
+   22:     "sort_order",
+   23:     "active",
+   24: )
+   25: 
+   26: FILES = (
+   27:     "enum_catalog.csv",
+   28:     "department_tracks.csv",
+   29:     "metrics.csv",
+   30:     "metric_tiers.csv",
+   31:     "facilities.csv",
+   32:     "flavor_text.csv",
+   33:     "qualification_catalog.csv",
+   34:     "capabilities.csv",
+   35:     "facility_capabilities.csv",
+   36:     "capability_staffing_rules.csv",
+   37:     "facility_capability_staffing_overrides.csv",
+   38:     "task_templates.csv",
+   39: )
+   40: FILES = tuple(FILES) + ("equipment_families.csv",)
+   41: FILES = tuple(dict.fromkeys(tuple(FILES) + ("resources.csv", "task_template_flows.csv")))
+   42: 
+   43: ID_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
+   44: 
+   45: 
+   46: class QualificationCatalogEditor:
+   47:     def __init__(self, app: Any) -> None:
+   48:         self.app = app
+   49:         self.editing_id: str | None = None
+   50: 
+   51:         self.qualification_id = tk.StringVar()
+   52:         self.display_name = tk.StringVar()
+   53:         self.sort_order = tk.StringVar()
+   54:         self.active = tk.BooleanVar(value=True)
+   55: 
+   56:         self.build()
+   57: 
+   58:     def source_path(self) -> Path:
+   59:         return self.app.source_directory / "qualification_catalog.csv"
+   60: 
+   61:     def backup_directory(self) -> Path:
+   62:         return (
+   63:             self.app.project_root
+   64:             / "data_authoring"
+   65:             / "backups"
+   66:             / "qualification_catalog"
+   67:         )
+   68: 
+   69:     def rows(self) -> list[dict[str, str]]:
+   70:         return [
+   71:             dict(row)
+   72:             for row in self.app.tables.get("qualification_catalog", [])
+   73:         ]
+   74: 
+   75:     def build(self) -> None:
+   76:         for child in self.app.qualifications_tab.winfo_children():
+   77:             child.destroy()
+   78: 
+   79:         tab = self.app.qualifications_tab
+   80:         tab.columnconfigure(0, weight=3)
+   81:         tab.columnconfigure(1, weight=2)
+   82:         tab.rowconfigure(0, weight=1)
+   83: 
+   84:         list_frame = ttk.LabelFrame(tab, text="Qualifications", padding=8)
+   85:         editor_frame = ttk.LabelFrame(
+   86:             tab,
+   87:             text="Qualification Editor",
+   88:             padding=10,
+   89:         )
+   90: 
+   91:         list_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=(0, 6))
+   92:         editor_frame.grid(row=0, column=1, sticky=tk.NSEW)
+   93: 
+   94:         list_frame.columnconfigure(0, weight=1)
+   95:         list_frame.rowconfigure(0, weight=1)
+   96:         editor_frame.columnconfigure(1, weight=1)
+   97: 
+   98:         self.tree = ttk.Treeview(
+   99:             list_frame,
+  100:             columns=("id", "name", "sort", "active"),
+  101:             show="headings",
+  102:             selectmode="browse",
+  103:         )
+  104: 
+  105:         columns = (
+  106:             ("id", "Qualification ID", 190),
+  107:             ("name", "Display Name", 240),
+  108:             ("sort", "Sort", 60),
+  109:             ("active", "Active", 70),
+  110:         )
+  111: 
+  112:         for key, title, width in columns:
+  113:             self.tree.heading(key, text=title)
+  114:             self.tree.column(key, width=width, anchor=tk.W)
+  115: 
+  116:         scrollbar = ttk.Scrollbar(
+  117:             list_frame,
+  118:             orient=tk.VERTICAL,
+  119:             command=self.tree.yview,
+  120:         )
+  121: 
+  122:         self.tree.configure(yscrollcommand=scrollbar.set)
+  123:         self.tree.grid(row=0, column=0, sticky=tk.NSEW)
+  124:         scrollbar.grid(row=0, column=1, sticky=tk.NS)
+  125:         self.tree.bind("<<TreeviewSelect>>", self.on_select)
+  126: 
+  127:         def label(text: str, row: int) -> None:
+  128:             ttk.Label(
+  129:                 editor_frame,
+  130:                 text=text,
+  131:                 style="Section.TLabel",
+  132:             ).grid(
+  133:                 row=row,
+  134:                 column=0,
+  135:                 sticky=tk.NW,
+  136:                 padx=(0, 8),
+  137:                 pady=(0, 8),
+  138:             )
+  139: 
+  140:         label("Qualification ID:", 0)
+  141: 
+  142:         self.id_entry = ttk.Entry(
+  143:             editor_frame,
+  144:             textvariable=self.qualification_id,
+  145:         )
+  146:         self.id_entry.grid(
+  147:             row=0,
+  148:             column=1,
+  149:             sticky=tk.EW,
+  150:             pady=(0, 8),
+  151:         )
+  152: 
+  153:         ttk.Label(
+  154:             editor_frame,
+  155:             text="Uppercase ID; immutable after creation.",
+  156:             foreground="#9da7b3",
+  157:         ).grid(
+  158:             row=1,
+  159:             column=1,
+  160:             sticky=tk.W,
+  161:             pady=(0, 10),
+  162:         )
+  163: 
+  164:         label("Display Name:", 2)
+  165: 
+  166:         ttk.Entry(
+  167:             editor_frame,
+  168:             textvariable=self.display_name,
+  169:         ).grid(
+  170:             row=2,
+  171:             column=1,
+  172:             sticky=tk.EW,
+  173:             pady=(0, 8),
+  174:         )
+  175: 
+  176:         label("Description:", 3)
+  177: 
+  178:         self.description = tk.Text(
+  179:             editor_frame,
+  180:             height=6,
+  181:             wrap=tk.WORD,
+  182:             background="#0d1117",
+  183:             foreground="#e6edf3",
+  184:             insertbackground="#e6edf3",
+  185:             highlightbackground="#3b4754",
+  186:             highlightcolor="#58a6ff",
+  187:         )
+  188:         self.description.grid(
+  189:             row=3,
+  190:             column=1,
+  191:             sticky=tk.EW,
+  192:             pady=(0, 8),
+  193:         )
+  194: 
+  195:         label("Sort Order:", 4)
+  196: 
+  197:         ttk.Entry(
+  198:             editor_frame,
+  199:             textvariable=self.sort_order,
+  200:             width=10,
+  201:         ).grid(
+  202:             row=4,
+  203:             column=1,
+  204:             sticky=tk.W,
+  205:             pady=(0, 8),
+  206:         )
+  207: 
+  208:         label("Active:", 5)
+  209: 
+  210:         ttk.Checkbutton(
+  211:             editor_frame,
+  212:             text="This qualification is active",
+  213:             variable=self.active,
+  214:         ).grid(
+  215:             row=5,
+  216:             column=1,
+  217:             sticky=tk.W,
+  218:             pady=(0, 8),
+  219:         )
+  220: 
+  221:         buttons = ttk.Frame(editor_frame)
+  222:         buttons.grid(
+  223:             row=6,
+  224:             column=0,
+  225:             columnspan=2,
+  226:             sticky=tk.EW,
+  227:             pady=(8, 0),
+  228:         )
+  229: 
+  230:         ttk.Button(
+  231:             buttons,
+  232:             text="Add Qualification",
+  233:             command=self.new,
+  234:         ).pack(side=tk.LEFT)
+  235: 
+  236:         ttk.Button(
+  237:             buttons,
+  238:             text="Save Qualification",
+  239:             command=self.save,
+  240:         ).pack(side=tk.LEFT, padx=6)
+  241: 
+  242:         ttk.Button(
+  243:             buttons,
+  244:             text="Remove Qualification",
+  245:             command=self.remove,
+  246:         ).pack(side=tk.LEFT, padx=6)
+  247: 
+  248:         ttk.Button(
+  249:             buttons,
+  250:             text="Revert Form",
+  251:             command=self.revert,
+  252:         ).pack(side=tk.LEFT, padx=6)
+  253: 
+  254:         ttk.Button(
+  255:             buttons,
+  256:             text="Open Backups",
+  257:             command=self.open_backups,
+  258:         ).pack(side=tk.RIGHT)
+  259: 
+  260:         ttk.Label(
+  261:             editor_frame,
+  262:             text=(
+  263:                 "Candidate validation blocks deletion or changes that would "
+  264:                 "break capability staffing references."
+  265:             ),
+  266:             foreground="#9da7b3",
+  267:             wraplength=390,
+  268:         ).grid(
+  269:             row=7,
+  270:             column=0,
+  271:             columnspan=2,
+  272:             sticky=tk.EW,
+  273:             pady=(12, 0),
+  274:         )
+  275: 
+  276:         self.new()
+  277: 
+  278:     def update(self) -> None:
+  279:         selected = self.editing_id
+  280: 
+  281:         for item in self.tree.get_children():
+  282:             self.tree.delete(item)
+  283: 
+  284:         rows = sorted(
+  285:             self.rows(),
+  286:             key=lambda row: (
+  287:                 int

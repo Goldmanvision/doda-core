@@ -1,0 +1,14 @@
+t.set(str(self.project_root))
+ 1947:         self.log(f"Project root changed to: {self.project_root}")
+ 1948:         self.refresh_all(show_message=True)
+ 1949: 
+
+===== QUALIFICATION CSV HEADER ONLY =====
+Path: E:\Dev\uzdoom_src\doda-core\data_authoring\source\qualification_catalog.csv
+SHA256: 4310980996E37628C20F94B54B5888147DA250B99879BA21861C63A9F6C55DD3
+"qualification_id","display_name","description","sort_order","active"
+
+===== DIRECT QUALIFICATIONS TEST DISCOVERY =====
+No directly matching test files found. Broader reference-validation coverage may exist.
+
+Inspection completed. No source/CSV changes, tests, or GUI launch.
