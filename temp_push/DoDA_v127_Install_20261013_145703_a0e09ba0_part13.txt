@@ -1,0 +1,65 @@
+Tests.test_valid_capacities) ... ok
+test_active_without_class_warns (test_weapon_rules.WeaponTests.test_active_without_class_warns) ... ok
+test_bad_type_and_duplicates (test_weapon_rules.WeaponTests.test_bad_type_and_duplicates) ... ok
+test_class_rules (test_weapon_rules.WeaponTests.test_class_rules) ... ok
+test_export_not_runtime (test_weapon_rules.WeaponTests.test_export_not_runtime) ... ok
+test_shipped_data (test_weapon_rules.WeaponTests.test_shipped_data) ... ok
+test_tags (test_weapon_rules.WeaponTests.test_tags) ... ok
+test_valid (test_weapon_rules.WeaponTests.test_valid) ... ok
+test_bad_task_values_rejected (test_zscript_catalog.CatalogTests.test_bad_task_values_rejected) ... ok
+test_dangling_link_fails_without_overwriting (test_zscript_catalog.CatalogTests.test_dangling_link_fails_without_overwriting) ... ok
+test_department_changes_stale_catalog (test_zscript_catalog.CatalogTests.test_department_changes_stale_catalog) ... ok
+test_department_labels_links_and_separate_tiers (test_zscript_catalog.CatalogTests.test_department_labels_links_and_separate_tiers) ... ok
+test_department_timestamp_and_unused_tables_do_not_stale_catalog (test_zscript_catalog.CatalogTests.test_department_timestamp_and_unused_tables_do_not_stale_catalog) ... ok
+test_duplicate_override_rejected (test_zscript_catalog.CatalogTests.test_duplicate_override_rejected) ... ok
+test_duplicate_task_id_rejected (test_zscript_catalog.CatalogTests.test_duplicate_task_id_rejected) ... ok
+test_equal_valued_override_keeps_override_provenance (test_zscript_catalog.CatalogTests.test_equal_valued_override_keeps_override_provenance) ... ok
+test_generate_and_check (test_zscript_catalog.CatalogTests.test_generate_and_check) ... ok
+test_inactive_override_inherits (test_zscript_catalog.CatalogTests.test_inactive_override_inherits) ... ok
+test_inactive_task_excluded (test_zscript_catalog.CatalogTests.test_inactive_task_excluded) ... ok
+test_invalid_range_rejected (test_zscript_catalog.CatalogTests.test_invalid_range_rejected) ... ok
+test_is_current (test_zscript_catalog.CatalogTests.test_is_current) ... ok
+test_missing_department_export_fails_without_overwriting (test_zscript_catalog.CatalogTests.test_missing_department_export_fails_without_overwriting) ... ok
+test_override_cannot_create_qualification_requirement (test_zscript_catalog.CatalogTests.test_override_cannot_create_qualification_requirement) ... ok
+test_override_replaces_entire_row_and_other_row_inherits (test_zscript_catalog.CatalogTests.test_override_replaces_entire_row_and_other_row_inherits) ... ok
+test_staffing_change_stales_catalog (test_zscript_catalog.CatalogTests.test_staffing_change_stales_catalog) ... ok
+test_staffing_dump_contains_baseline_effective_and_source (test_zscript_catalog.CatalogTests.test_staffing_dump_contains_baseline_effective_and_source) ... ok
+test_stale_detected (test_zscript_catalog.CatalogTests.test_stale_detected) ... ok
+test_task_assignment_metadata_exported (test_zscript_catalog.CatalogTests.test_task_assignment_metadata_exported) ... ok
+test_task_change_stales_catalog (test_zscript_catalog.CatalogTests.test_task_change_stales_catalog) ... ok
+test_task_reference_requires_installed_capability (test_zscript_catalog.CatalogTests.test_task_reference_requires_installed_capability) ... ok
+test_timestamp_does_not_change_output (test_zscript_catalog.CatalogTests.test_timestamp_does_not_change_output) ... ok
+System.Management.Automation.RemoteException
+----------------------------------------------------------------------
+Ran 961 tests in 5.769s
+System.Management.Automation.RemoteException
+OK
+Wrote E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\zc_8b165ddc184541cda139a86367b4a04d\DoDA\Generated\WorkbenchCatalog.zs sha256 08185cac004030ac037759159d057453ac7f5e1db4b25322f87b365d0abe2026
+Wrote E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\zc_8b165ddc184541cda139a86367b4a04d\generated\data\workbench_catalog_expected_dump.txt
+zscript.txt include present: yes
+RESULT: PASS
+RESULT: PASS (catalog current)
+Wrote E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\zc_f92496388d0f48fcb2488a38fd5e1946\DoDA\Generated\WorkbenchCatalog.zs sha256 08185cac004030ac037759159d057453ac7f5e1db4b25322f87b365d0abe2026
+Wrote E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\zc_f92496388d0f48fcb2488a38fd5e1946\generated\data\workbench_catalog_expected_dump.txt
+zscript.txt include present: yes
+RESULT: PASS
+RESULT: FAIL (catalog stale or missing)
+Full Workbench regression suite exit code: 0
+Installation and automated tests passed.
+Protected v126 source, authored staffing CSVs, and FOIMS-X source hashes unchanged.
+Manual v127 GUI verification remains pending.
+
+===== SCOPED SOURCE STATUS =====
+ M tools/doda_content_workbench/doda_content_gui.py
+ M tools/doda_content_workbench/doda_facility_capability_staffing_overrides_editor.py
+?? tools/doda_content_workbench/doda_facility_staffing_overrides_draft_policy.py
+?? tools/doda_content_workbench/tests/test_facility_staffing_overrides_v127.py
+
+===== WORKBENCH DIFF --STAT =====
+warning: in the working copy of 'tools/doda_content_workbench/doda_content_gui.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tools/doda_content_workbench/doda_facility_capability_staffing_overrides_editor.py', LF will be replaced by CRLF the next time Git touches it
+ tools/doda_content_workbench/doda_content_gui.py   |    4 +
+ ...acility_capability_staffing_overrides_editor.py | 1637 +++++++-------------
+ 2 files changed, 528 insertions(+), 1113 deletions(-)
+Untracked new files are not included in git diff --stat.
+Successful report-only publication follows; implementation source is not committed.
