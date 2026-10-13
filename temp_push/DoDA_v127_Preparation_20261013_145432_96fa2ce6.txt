@@ -1,0 +1,21 @@
+===== v127 SELF-CONTAINED PREPARATION =====
+Time: 2026-10-13T14:54:32.5312352-04:00
+Branch: feature/workbench-data-bridge
+Candidate directory: E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v127_prepared_20261013_145432_96fa2ce6
+Source guards passed. No source installation in this stage.
+Candidate: doda_facility_capability_staffing_overrides_editor.py
+SHA256: FBD8E655EF111EFA7945985C6793207810546B64751259AD927CF9A7EED1195A
+Candidate: doda_content_gui.py
+SHA256: 239B5EB21D3C2739D9D4B5B4A85C7CD09AD1AF5427A9E817B20F4D398EB2ED6F
+Candidate: doda_facility_staffing_overrides_draft_policy.py
+SHA256: E7F992A595D4A355F40235E696C1D52381E3911F8C0506CCB47675AC4B8B1BDF
+Candidate: tests\test_facility_staffing_overrides_v127.py
+SHA256: E39D1A7956816FF67DA12C33B05B456CB87301ACEC2B17B61C7864D23A1CC03D
+PARSE PASS: doda_facility_capability_staffing_overrides_editor.py.candidate
+PARSE PASS: doda_content_gui.py.candidate
+PARSE PASS: doda_facility_staffing_overrides_draft_policy.py.candidate
+PARSE PASS: tests_test_facility_staffing_overrides_v127.py.candidate
+Candidate syntax check exit code: 0
+Installation manifest: E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v127_prepared_20261013_145432_96fa2ce6\install_manifest.json
+Manifest SHA256: 0E56D7135A38EA4BCFB4CC01ECE2E62B650119B153BA5304784D26EF231FF54E
+PREPARATION PASSED. No source installed. No regression tests or GUI launch.
