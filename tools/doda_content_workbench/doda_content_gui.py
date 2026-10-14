@@ -37,6 +37,7 @@ from doda_facilities_editor import install_facilities_editor
 from doda_flavor_text_editor import install_flavor_text_editor
 from doda_enum_catalog_editor import install_enum_catalog_editor
 from doda_qualification_catalog_editor import install_qualification_catalog_editor
+from doda_qualification_draft_policy import allow_qualification_project_change, install_qualification_draft_close_guard
 from doda_capabilities_editor import install_capabilities_editor
 from doda_facility_capabilities_editor import install_facility_capabilities_editor
 from doda_capability_staffing_rules_editor import install_capability_staffing_rules_editor
@@ -272,6 +273,7 @@ class ContentWorkbenchApp(tk.Tk):
         install_task_draft_close_guard(self, messagebox)
         install_capability_staffing_draft_close_guard(self, messagebox)
         install_facility_staffing_overrides_draft_close_guard(self, messagebox)
+        install_qualification_draft_close_guard(self, messagebox)
         install_grouped_navigation(self)
         install_tree_autosize(self)
         self.refresh_all(show_message=False)
@@ -1903,6 +1905,8 @@ class ContentWorkbenchApp(tk.Tk):
             )
 
     def choose_project_root(self) -> None:
+        if not allow_qualification_project_change(self, messagebox):
+            return
         if not allow_facility_staffing_overrides_project_change(self, messagebox):
             return
         if not allow_capability_staffing_project_change(self, messagebox):
