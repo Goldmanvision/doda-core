@@ -1,0 +1,40 @@
+===== DODA v129 FINAL VERIFICATION CHECKPOINT =====
+Created: 2026-10-15T07:25:04.2503140-04:00
+Branch: feature/workbench-data-bridge
+HEAD at creation: 4d8d7386f58fdb3d87835841c6fb4067eb1df8ec
+
+Task: Capabilities draft workflow with inline multi-row editing, including the existing inactive-draft label compatibility correction.
+Installation: successful; corrected implementation hashes verified at checkpoint creation.
+Candidate syntax: passed.
+Targeted v129 automated tests: 67 passed; exit code 0 (59 original plus 8 compatibility tests).
+Full Workbench suite: 1075 passed; exit code 0 (1067 before the compatibility correction; increase 8).
+
+Manual evidence:
+User reported success for all targeted v129 manual GUI criteria; final confirmation on 2026-10-15 EDT.
+Confirmed checks: startup and Refresh load all six capabilities; single- and multi-row Standing Operation and Description edits preserve selection and column alignment; Refresh retains applied drafts; project switching is blocked with an unsaved applied draft; canceling either the window-close or File -> Exit confirmation keeps the application open and preserves the draft; required-field rejection and inactive-draft compatibility behave as specified; referenced-capability deletion and deactivation are rejected.
+User reported that CAP_RESEARCH returned after Revert Draft and that its deletion existed only in the draft. Post-manual-session CSV contents were not independently checked by this checkpoint.
+Recorded as user-reported successful v129 manual GUI verification.
+Individual observations beyond the confirmed criteria were not separately supplied.
+
+Automated evidence:
+Local log: E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v129_compatibility_20261015_063125_81ae4f79\v129_compatibility_and_tests.txt
+Log SHA256: 569485608B27B814970E129CF5E59F8855831867603643A7ACDA81C0E63A130C
+Authored CSV files unchanged: 64 (recorded during correction validation).
+The correction installation reported verified editor and test backups under generated\_tests_tmp\v129_compatibility_20261015_063125_81ae4f79 (historical installation evidence).
+
+Limitations:
+No automated tests were rerun after the manual session.
+Any authored CSV edits made during the manual session are not separately validated by this checkpoint.
+Python test success is not native-engine or in-game validation.
+The installation and correction blocks did not commit implementation source; current commit state was not newly inspected by this checkpoint.
+No next implementation task is approved by this checkpoint.
+
+===== VERIFIED SOURCE HASHES =====
+doda_capabilities_draft_policy.py SHA256: C5AA2E469F9723F3AD54A41522681B66D32AA7C5E493E13AFEDBF4FBDB43DEBB
+doda_capabilities_editor.py SHA256: AF28F11AB48753AA2E8AA2E05C279523164ED784CF2BB6CA3489CB4F50821252
+doda_content_gui.py SHA256: 5AA990692C16A705B45F8F4C1805121160993143A766C9DB1D3D5F95F557A84A
+tests\test_capabilities_v129.py SHA256: F3F954A6C19C7EFA0CDB420B2FDC7C1AB7F3C9031CE1DE173A37EE06AE5EE104
+
+===== TRACKED WORKTREE STATUS =====
+ M tools/doda_content_workbench/doda_capabilities_editor.py
+ M tools/doda_content_workbench/doda_content_gui.py
