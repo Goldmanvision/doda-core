@@ -1,0 +1,301 @@
+otgun compiler/runtime failures remain unresolved.
+  364: - Before changing shotgun code, inspect the active shotgun path shown by the
+  365:   current `zscript.txt` and/or human-provided GZDoom error log.
+  366: - Do not assume `DoDA/WeaponSystem/...` is the active shotgun path when runtime
+  367:   evidence names a lower-case `doda/WeaponSystem/...` path.
+  368: - The project-owned shotgun must consume existing DoDA deadzone/lean weapon
+  369:   presentation behavior rather than duplicating deadzone math.
+  370: - Use only verified imported sprite families.
+  371: - Do not reference unverified placeholder bases such as `SHTG`, `SHTF`, or
+  372:   `SHOT` when current assets do not contain them.
+  373: - Current Brutal Doom placeholder asset mapping:
+  374:   - `SHTN A`: hipfire ready;
+  375:   - `SHTN B-F`, `S-T`, `U-W`, `X`, `Y-Z`, `[`, `]`: reload/shell insertion;
+  376:   - `SHT8 A-B`: ADS/deadzone enter;
+  377:   - `SHT8 C`: ADS/deadzone ready;
+  378:   - `SHT8 D`: ADS/deadzone fire frame;
+  379:   - `SHT8 E-F`: ADS recoil;
+  380:   - `SHT8 G-J`: ADS rack/recovery candidate, requiring visual verification;
+  381:   - `SHT6 A-I`: inspect only;
+  382:   - `SHTC A`: world pickup/spawn candidate.
+  383: - Do not rename `SHTN[0` or `SHTN]0` without explicit asset-conversion work.
+  384: - Do not import Brutal Doom ACS/token/inspect/sprint/purist systems into DoDA.
+  385: - Shotgun target behavior:
+  386:   - deadzone aim held: fire, then defer rack until deadzone aim releases;
+  387:   - deadzone aim released: perform required rack.
+Not present at this exact path: E:\Dev\uzdoom_src\doda-core\tools\AGENTS.md
+Not present at this exact path: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\AGENTS.md
+Not present at this exact path: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\tests\AGENTS.md
+
+===== FULL SOURCE: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_facility_capabilities_editor.py =====
+SHA256: E47FFD02C4D5F688E1594E63172B791D75A61A915CD7C0F64345AABBAAEC0C9E
+    1: from __future__ import annotations
+    2: 
+    3: import csv
+    4: import os
+    5: import shutil
+    6: import subprocess
+    7: import sys
+    8: import tempfile
+    9: import tkinter as tk
+   10: from datetime import datetime
+   11: from pathlib import Path
+   12: from tkinter import messagebox, ttk
+   13: from typing import Any
+   14: from uuid import uuid4
+   15: 
+   16: 
+   17: FIELDS = (
+   18:     "facility_id",
+   19:     "capability_id",
+   20:     "display_name_override",
+   21:     "max_concurrent_personnel",
+   22:     "initial_tier_id",
+   23:     "foims_panel_id",
+   24:     "sort_order",
+   25:     "active",
+   26: )
+   27: 
+   28: FILES = (
+   29:     "enum_catalog.csv",
+   30:     "department_tracks.csv",
+   31:     "metrics.csv",
+   32:     "metric_tiers.csv",
+   33:     "facilities.csv",
+   34:     "flavor_text.csv",
+   35:     "qualification_catalog.csv",
+   36:     "capabilities.csv",
+   37:     "facility_capabilities.csv",
+   38:     "capability_staffing_rules.csv",
+   39:     "facility_capability_staffing_overrides.csv",
+   40:     "task_templates.csv",
+   41: )
+   42: FILES = tuple(FILES) + ("equipment_families.csv",)
+   43: FILES = tuple(dict.fromkeys(tuple(FILES) + ("resources.csv", "task_template_flows.csv")))
+   44: 
+   45: 
+   46: class FacilityCapabilitiesEditor:
+   47:     def __init__(self, app: Any) -> None:
+   48:         self.app = app
+   49:         self.editing_key: tuple[str, str] | None = None
+   50: 
+   51:         self.facility_id = tk.StringVar()
+   52:         self.capability_id = tk.StringVar()
+   53:         self.display_name_override = tk.StringVar()
+   54:         self.max_concurrent_personnel = tk.StringVar()
+   55:         self.initial_tier_id = tk.StringVar()
+   56:         self.foims_panel_id = tk.StringVar()
+   57:         self.sort_order = tk.StringVar()
+   58:         self.active = tk.BooleanVar(value=True)
+   59: 
+   60:         self.build()
+   61: 
+   62:     def source_path(self) -> Path:
+   63:         return self.app.source_directory / "facility_capabilities.csv"
+   64: 
+   65:     def backup_directory(self) -> Path:
+   66:         return (
+   67:             self.app.project_root
+   68:             / "data_authoring"
+   69:             / "backups"
+   70:             / "facility_capabilities"
+   71:         )
+   72: 
+   73:     def rows(self) -> list[dict[str, str]]:
+   74:         return [
+   75:             dict(row)
+   76:             for row in self.app.tables.get("facility_capabilities", [])
+   77:         ]
+   78: 
+   79:     def active_facility_rows(self) -> list[dict[str, str]]:
+   80:         return sorted(
+   81:             (
+   82:                 row
+   83:                 for row in self.app.tables.get("facilities", [])
+   84:                 if row.get("facility_id", "")
+   85:                 and row.get("active", "").upper() == "TRUE"
+   86:             ),
+   87:             key=lambda row: row.get("facility_id", ""),
+   88:         )
+   89: 
+   90:     def facility_ids(self) -> list[str]:
+   91:         return [
+   92:             row.get("facility_id", "")
+   93:             for row in self.active_facility_rows()
+   94:         ]
+   95: 
+   96:     def active_capability_rows(self) -> list[dict[str, str]]:
+   97:         return sorted(
+   98:             (
+   99:                 row
+  100:                 for row in self.app.tables.get("capabilities", [])
+  101:                 if row.get("capability_id", "")
+  102:                 and row.get("active", "").upper() == "TRUE"
+  103:             ),
+  104:             key=lambda row: (
+  105:                 self.integer_or_default(row.get("sort_order", ""), 999999),
+  106:                 row.get("capability_id", ""),
+  107:             ),
+  108:         )
+  109: 
+  110:     def capability_ids(self) -> list[str]:
+  111:         return [
+  112:             row.get("capability_id", "")
+  113:             for row in self.active_capability_rows()
+  114:         ]
+  115: 
+  116:     def facility_tiers(self) -> list[str]:
+  117:         rows = [
+  118:             row
+  119:             for row in self.app.tables.get("enum_catalog", [])
+  120:             if row.get("enum_group", "") == "FACILITY_TIER"
+  121:             and row.get("enum_value", "")
+  122:             and row.get("active", "").upper() == "TRUE"
+  123:         ]
+  124: 
+  125:         rows.sort(
+  126:             key=lambda row: (
+  127:                 self.integer_or_default(row.get("sort_order", ""), 999999),
+  128:                 row.get("enum_value", ""),
+  129:             )
+  130:         )
+  131: 
+  132:         return [row.get("enum_value", "") for row in rows]
+  133: 
+  134:     @staticmethod
+  135:     def integer_or_default(value: str, default: int) -> int:
+  136:         try:
+  137:             return int((value or "").strip())
+  138:         except ValueError:
+  139:             return default
+  140: 
+  141:     def selected_facility_capacity(self) -> int | None:
+  142:         selected_id = self.facility_id.get().strip()
+  143: 
+  144:         for row in self.active_facility_rows():
+  145:             if row.get("facility_id", "") != selected_id:
+  146:                 continue
+  147: 
+  148:             try:
+  149:                 return int(row.get("personnel_capacity", ""))
+  150:             except ValueError:
+  151:                 return None
+  152: 
+  153:         return None
+  154: 
+  155:     def facility_display_values(self) -> dict[str, str]:
+  156:         return {
+  157:             row.get("facility_id", ""): (
+  158:                 f"{row.get('facility_id', '')} — {row.get('display_name', '')}"
+  159:             )
+  160:             for row in self.active_facility_rows()
+  161:         }
+  162: 
+  163:     def capability_display_values(self) -> dict[str, str]:
+  164:         return {
+  165:             row.get("capability_id", ""): (
+  166:                 f"{row.get('capability_id', '')} — {row.get('display_name', '')}"
+  167:             )
+  168:             for row in self.active_capability_rows()
+  169:         }
+  170: 
+  171:     def build(self) -> None:
+  172:         for child in self.app.facility_capabilities_tab.winfo_children():
+  173:             child.destroy()
+  174: 
+  175:         tab = self.app.facility_capabilities_tab
+  176:         tab.columnconfigure(0, weight=3)
+  177:         tab.columnconfigure(1, weight=2)
+  178:         tab.rowconfigure(0, weight=1)
+  179: 
+  180:         list_frame = ttk.LabelFrame(
+  181:             tab,
+  182:             text="Facility Capabilities",
+  183:             padding=8,
+  184:         )
+  185:         editor_frame = ttk.LabelFrame(
+  186:             tab,
+  187:             text="Facility Capability Editor",
+  188:             padding=10,
+  189:         )
+  190: 
+  191:         list_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=(0, 6))
+  192:         editor_frame.grid(row=0, column=1, sticky=tk.NSEW)
+  193: 
+  194:         list_frame.columnconfigure(0, weight=1)
+  195:         list_frame.rowconfigure(0, weight=1)
+  196:         editor_frame.columnconfigure(1, weight=1)
+  197: 
+  198:         self.tree = ttk.Treeview(
+  199:             list_frame,
+  200:             columns=(
+  201:                 "facility",
+  202:                 "capability",
+  203:                 "override",
+  204:                 "maximum",
+  205:                 "tier",
+  206:                 "active",
+  207:             ),
+  208:             show="headings",
+  209:             selectmode="browse",
+  210:         )
+  211: 
+  212:         columns = (
+  213:             ("facility", "Facility", 175),
+  214:             ("capability", "Capability", 190),
+  215:             ("override", "Display Override", 175),
+  216:             ("maximum", "Max Personnel", 105),
+  217:             ("tier", "Initial Tier", 115),
+  218:             ("active", "Active", 70),
+  219:         )
+  220: 
+  221:         for key, title, width in columns:
+  222:             self.tree.heading(key, text=title)
+  223:             self.tree.column(key, width=width, anchor=tk.W)
+  224: 
+  225:         scrollbar = ttk.Scrollbar(
+  226:             list_frame,
+  227:             orient=tk.VERTICAL,
+  228:             command=self.tree.yview,
+  229:         )
+  230: 
+  231:         self.tree.configure(yscrollcommand=scrollbar.set)
+  232:         self.tree.grid(row=0, column=0, sticky=tk.NSEW)
+  233:         scrollbar.grid(row=0, column=1, sticky=tk.NS)
+  234:         self.tree.bind("<<TreeviewSelect>>", self.on_select)
+  235: 
+  236:         def label(text: str, row: int) -> None:
+  237:             ttk.Label(
+  238:                 editor_frame,
+  239:                 text=text,
+  240:                 style="Section.TLabel",
+  241:             ).grid(
+  242:                 row=row,
+  243:                 column=0,
+  244:                 sticky=tk.NW,
+  245:                 padx=(0, 8),
+  246:                 pady=(0, 8),
+  247:             )
+  248: 
+  249:         label("Facility:", 0)
+  250: 
+  251:         self.facility_combo = ttk.Combobox(
+  252:             editor_frame,
+  253:             textvariable=self.facility_id,
+  254:             state="readonly",
+  255:             values=self.facility_ids(),
+  256:         )
+  257:         self.facility_combo.grid(
+  258:             row=0,
+  259:             column=1,
+  260:             sticky=tk.EW,
+  261:             pady=(0, 8),
+  262:         )
+  263:         self.facility_combo.bind(
+  264:             "<<ComboboxSelected>>",
+  265:             self.on_facility_changed,
+  266:         )
+  267: 
+  268:         self.facility_hint = ttk.Label(
+  269:             editor_frame,
+  270:             text="Selec

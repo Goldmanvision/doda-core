@@ -1,0 +1,278 @@
+:\n{backup}"
+  918:                     ),
+  919:                 )
+  920: 
+  921:         except (OSError, ValueError) as error:
+  922:             self.app.log(f"FACILITY CAPABILITY SAVE ERROR: {error}")
+  923:             messagebox.showerror(
+  924:                 "DoDA Content Workbench",
+  925:                 f"Unable to save Facility Capability.\n\n{error}",
+  926:             )
+  927:         finally:
+  928:             if temporary.exists():
+  929:                 temporary.unlink()
+  930: 
+  931:             self.app.config(cursor="")
+  932:             self.app.update_idletasks()
+  933: 
+  934:     def remove(self) -> None:
+  935:         if not self.editing_key:
+  936:             messagebox.showwarning(
+  937:                 "DoDA Content Workbench",
+  938:                 (
+  939:                     "Select an existing Facility Capability before using "
+  940:                     "Remove Installation."
+  941:                 ),
+  942:             )
+  943:             return
+  944: 
+  945:         facility_id, capability_id = self.editing_key
+  946: 
+  947:         confirmed = messagebox.askyesno(
+  948:             "Remove Facility Capability?",
+  949:             (
+  950:                 "ARE YOU SURE you want to remove this installation?\n\n"
+  951:                 f"Facility: {facility_id}\n"
+  952:                 f"Capability: {capability_id}\n\n"
+  953:                 "Removal will be blocked if it breaks staffing overrides or "
+  954:                 "active task-template availability."
+  955:             ),
+  956:             icon="warning",
+  957:             default=messagebox.NO,
+  958:         )
+  959: 
+  960:         if not confirmed:
+  961:             self.app.log(
+  962:                 "Remove Facility Capability cancelled for "
+  963:                 f"'{facility_id} / {capability_id}'."
+  964:             )
+  965:             return
+  966: 
+  967:         rows = [
+  968:             row
+  969:             for row in self.rows()
+  970:             if not (
+  971:                 row.get("facility_id", "") == facility_id
+  972:                 and row.get("capability_id", "") == capability_id
+  973:             )
+  974:         ]
+  975: 
+  976:         temporary = self.app.source_directory / (
+  977:             f".facility-capabilities-remove-{uuid4().hex}.tmp.csv"
+  978:         )
+  979: 
+  980:         self.app.config(cursor="watch")
+  981:         self.app.update_idletasks()
+  982: 
+  983:         try:
+  984:             self.write(temporary, rows)
+  985: 
+  986:             valid, output = self.candidate_valid(temporary)
+  987: 
+  988:             self.app.log(
+  989:                 "Facility Capability removal candidate validation output "
+  990:                 f"for '{facility_id} / {capability_id}':"
+  991:             )
+  992: 
+  993:             for line in output.splitlines():
+  994:                 self.app.log(" " + line)
+  995: 
+  996:             if not valid:
+  997:                 messagebox.showerror(
+  998:                     "DoDA Content Workbench",
+  999:                     (
+ 1000:                         "Facility Capability removal was blocked by "
+ 1001:                         "validation.\n\nSource CSV was unchanged."
+ 1002:                     ),
+ 1003:                 )
+ 1004:                 return
+ 1005: 
+ 1006:             folder = self.backup_directory()
+ 1007:             folder.mkdir(parents=True, exist_ok=True)
+ 1008: 
+ 1009:             backup = folder / (
+ 1010:                 "facility_capabilities_before_remove_"
+ 1011:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+ 1012:                 + ".csv"
+ 1013:             )
+ 1014: 
+ 1015:             shutil.copy2(self.source_path(), backup)
+ 1016:             os.replace(temporary, self.source_path())
+ 1017: 
+ 1018:             self.editing_key = None
+ 1019: 
+ 1020:             self.app.log(
+ 1021:                 f"Created pre-removal Facility Capability backup: {backup}"
+ 1022:             )
+ 1023:             self.app.log(
+ 1024:                 f"Removed Facility Capability: {facility_id} / {capability_id}"
+ 1025:             )
+ 1026: 
+ 1027:             self.app.refresh_all(False)
+ 1028:             self.new()
+ 1029: 
+ 1030:             valid, output = self.post_validate()
+ 1031: 
+ 1032:             for line in output.splitlines():
+ 1033:                 self.app.log(" " + line)
+ 1034: 
+ 1035:             self.app.refresh_all(False)
+ 1036: 
+ 1037:             if valid:
+ 1038:                 messagebox.showinfo(
+ 1039:                     "DoDA Content Workbench",
+ 1040:                     (
+ 1041:                         "Facility Capability "
+ 1042:                         f"'{facility_id} / {capability_id}' removed.\n\n"
+ 1043:                         f"Backup created:\n{backup}\n\n"
+ 1044:                         "Project validation passed."
+ 1045:                     ),
+ 1046:                 )
+ 1047:             else:
+ 1048:                 messagebox.showwarning(
+ 1049:                     "DoDA Content Workbench",
+ 1050:                     (
+ 1051:                         "Facility Capability removed, but post-save validation "
+ 1052:                         f"failed.\n\nBackup:\n{backup}"
+ 1053:                     ),
+ 1054:                 )
+ 1055: 
+ 1056:         except (OSError, ValueError) as error:
+ 1057:             self.app.log(f"FACILITY CAPABILITY REMOVE ERROR: {error}")
+ 1058:             messagebox.showerror(
+ 1059:                 "DoDA Content Workbench",
+ 1060:                 f"Unable to remove Facility Capability.\n\n{error}",
+ 1061:             )
+ 1062:         finally:
+ 1063:             if temporary.exists():
+ 1064:                 temporary.unlink()
+ 1065: 
+ 1066:             self.app.config(cursor="")
+ 1067:             self.app.update_idletasks()
+ 1068: 
+ 1069:     def open_backups(self) -> None:
+ 1070:         self.backup_directory().mkdir(parents=True, exist_ok=True)
+ 1071:         self.app.open_folder(self.backup_directory())
+ 1072: 
+ 1073: 
+ 1074: def install_facility_capabilities_editor(app: Any) -> None:
+ 1075:     editor = FacilityCapabilitiesEditor(app)
+ 1076:     app.facility_capabilities_editor = editor
+
+===== FULL SOURCE: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_capabilities_editor.py =====
+SHA256: AF28F11AB48753AA2E8AA2E05C279523164ED784CF2BB6CA3489CB4F50821252
+    1: from __future__ import annotations
+    2: 
+    3: import csv
+    4: import hashlib
+    5: import os
+    6: import re
+    7: import shutil
+    8: import subprocess
+    9: import sys
+   10: import tempfile
+   11: import tkinter as tk
+   12: from datetime import datetime
+   13: from pathlib import Path
+   14: from tkinter import messagebox, ttk
+   15: from uuid import uuid4
+   16: 
+   17: from doda_row_selection import MULTIPLE_VALUES, selection_display
+   18: from doda_task_templates_editor import FILES as VALIDATION_FILES
+   19: 
+   20: FIELDS = ("capability_id", "display_name", "description", "standing_operation_label", "sort_order", "active")
+   21: IDENTITY = FIELDS[:1]
+   22: EDITABLE = FIELDS[1:]
+   23: FILES = tuple(VALIDATION_FILES)
+   24: ERRORS = (OSError, UnicodeError, csv.Error, ValueError)
+   25: 
+   26: 
+   27: def row_key(row):
+   28:     return row["capability_id"]
+   29: 
+   30: 
+   31: def row_iid(row):
+   32:     return row_key(row)
+   33: 
+   34: 
+   35: class CapabilitiesEditor:
+   36:     title = "Capabilities"
+   37: 
+   38:     def __init__(self, app):
+   39:         self.app = app
+   40:         self.editing_key = None
+   41:         self.loaded_rows = []
+   42:         self.loaded_path = None
+   43:         self.snapshot_hash = None
+   44:         self.dirty = False
+   45:         self.vars = {field: tk.StringVar(master=app) for field in FIELDS}
+   46:         self.status = tk.StringVar(master=app, value="Source not loaded.")
+   47:         self.widgets = {}
+   48:         self._loading = False
+   49:         self._session = ()
+   50:         self._original = []
+   51:         self._changes = {}
+   52:         self._description_seen = ""
+   53:         self.build()
+   54:         for field in EDITABLE:
+   55:             self.vars[field].trace_add("write", lambda *_args, f=field: self.changed(f))
+   56:         self.widgets["active"].bind(
+   57:             "<<ComboboxSelected>>", lambda _event: self.changed("active")
+   58:         )
+   59: 
+   60:     def source_path(self):
+   61:         return self.app.source_directory / "capabilities.csv"
+   62: 
+   63:     def backup_directory(self):
+   64:         return self.app.project_root / "data_authoring" / "backups" / "capabilities"
+   65: 
+   66:     @staticmethod
+   67:     def digest(path):
+   68:         return hashlib.sha256(path.read_bytes()).hexdigest()
+   69: 
+   70:     def build(self):
+   71:         tab = self.app.capabilities_tab
+   72:         for child in tab.winfo_children():
+   73:             child.destroy()
+   74:         tab.columnconfigure(0, weight=3)
+   75:         tab.columnconfigure(1, weight=2)
+   76:         tab.rowconfigure(0, weight=1)
+   77:         left = ttk.LabelFrame(tab, text=self.title, padding=8)
+   78:         right = ttk.LabelFrame(tab, text="Capability Editor", padding=10)
+   79:         left.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
+   80:         right.grid(row=0, column=1, sticky="nsew")
+   81:         left.columnconfigure(0, weight=1)
+   82:         left.rowconfigure(0, weight=1)
+   83:         right.columnconfigure(1, weight=1)
+   84:         columns = ("capability_id", "display_name", "standing_operation_label", "sort_order", "active")
+   85:         self.tree = ttk.Treeview(left, columns=columns, show="headings", selectmode="extended")
+   86:         for field, label in zip(columns, ("Capability ID", "Display Name", "Standing Operation", "Sort", "Active")):
+   87:             self.tree.heading(field, text=label)
+   88:             self.tree.column(field, width=200 if field in columns[:2] else 80, minwidth=50)
+   89:         self.tree.grid(row=0, column=0, sticky="nsew")
+   90:         vertical = ttk.Scrollbar(left, command=self.tree.yview)
+   91:         vertical.grid(row=0, column=1, sticky="ns")
+   92:         horizontal = ttk.Scrollbar(left, orient="horizontal", command=self.tree.xview)
+   93:         horizontal.grid(row=1, column=0, sticky="ew")
+   94:         self.tree.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)
+   95:         self.tree.bind("<<TreeviewSelect>>", self.on_select)
+   96:         for index, (field, label) in enumerate(zip(
+   97:             FIELDS, ("Capability ID", "Display Name", "Description", "Standing Operation", "Sort Order", "Active")
+   98:         )):
+   99:             ttk.Label(right, text=label + ":").grid(row=index, column=0, sticky="nw", pady=4)
+  100:             if field == "description":
+  101:                 widget = tk.Text(
+  102:                     right, height=6, wrap="word", background="#0d1117",
+  103:                     foreground="#e6edf3", insertbackground="#e6edf3"
+  104:                 )
+  105:                 self.description = widget
+  106:                 widget.bind("<<Modified>>", self.description_modified)
+  107:             elif field == "active":
+  108:                 widget = ttk.Combobox(
+  109:                     right, textvariable=self.vars[field], state="readonly",
+  110:                     values=("TRUE", "FALSE")
+  111:                 )
+  112:             else:
+  113:                 widget = ttk.Entry(right, textvariable=self.vars[field])
+  114:             if field in ("display_name", "description", "standing_operation_label", "sort_order"):
+  115:                 widget.bind("<FocusIn>", lambda _e, f=

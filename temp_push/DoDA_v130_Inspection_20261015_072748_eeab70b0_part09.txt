@@ -1,0 +1,212 @@
+p._network_close_handler = on_close
+   37:     app.protocol("WM_DELETE_WINDOW", on_close)
+   38:     app._capabilities_close_guard_installed = True
+
+===== FULL SOURCE: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_task_inline_bulk_edit.py =====
+SHA256: 2207DACC56756795C3309B7C8494F919742C39141F08737609F33D0607056AE8
+    1: """Task Templates inline multi-row editing; no editor popup and no source writes."""
+    2: import csv
+    3: import re
+    4: import doda_task_schema as schema
+    5: from doda_row_selection import MULTIPLE_VALUES, selection_display, set_form_state
+    6: 
+    7: DROPDOWNS = {"capability_id", "priority", "target_type", "target_family_id", "reward_mode", "loop_task", "active"}
+    8: BOOLEANS = {"loop_task", "active"}
+    9: 
+   10: 
+   11: class TaskInlineEditor:
+   12:     def __init__(self, editor):
+   13:         self.editor = editor
+   14:         self.active = False
+   15:         self.loading = False
+   16:         self.selection = ()
+   17:         self.original = []
+   18:         self.changes = {}
+   19:         self.description_seen = ""
+   20:         for name, variable in editor.vars.items():
+   21:             variable.trace_add("write", lambda *_args, n=name: self.changed(n))
+   22:             if name == "task_template_id":
+   23:                 continue
+   24:             widget = editor.widgets[name]
+   25:             if name in DROPDOWNS:
+   26:                 widget.bind("<<ComboboxSelected>>", lambda _e, n=name: self.changed(n), add="+")
+   27:             else:
+   28:                 widget.bind("<FocusIn>", lambda _e, n=name: self.focus(n), add="+")
+   29:                 widget.bind("<ButtonRelease-1>", lambda _e, n=name: self.focus(n), add="+")
+   30:         editor.description.bind("<<Modified>>", self.description_modified, add="+")
+   31:         editor.description.bind("<FocusIn>", lambda _e: self.focus("description"), add="+")
+   32:         editor.description.bind("<ButtonRelease-1>", lambda _e: self.focus("description"), add="+")
+   33: 
+   34:     def same_session(self, selected):
+   35:         return self.active and tuple(selected) == self.selection and self.editor.loaded_rows == self.original
+   36: 
+   37:     def refresh_choices(self, multiple):
+   38:         for name in DROPDOWNS & set(self.editor.vars):
+   39:             values = ("TRUE", "FALSE") if name in BOOLEANS else tuple(self.editor.choices(name))
+   40:             if multiple:
+   41:                 values = tuple(dict.fromkeys(("",) + tuple(values)))
+   42:             self.editor.widgets[name].configure(values=values, state="readonly")
+   43: 
+   44:     def begin(self, selected, force=False):
+   45:         if not force and self.same_session(selected):
+   46:             return
+   47:         selected = tuple(selected)
+   48:         by_id = {row["task_template_id"]: row for row in self.editor.loaded_rows}
+   49:         if len(selected) < 2 or len(selected) != len(set(selected)) or any(key not in by_id for key in selected):
+   50:             raise ValueError("Selection no longer matches the task draft. Reselect the rows.")
+   51:         self.active = False
+   52:         self.loading = True
+   53:         try:
+   54:             self.selection = selected
+   55:             self.original = [dict(row) for row in self.editor.loaded_rows]
+   56:             rows = [by_id[key] for key in selected]
+   57:             self.changes = {}
+   58:             set_form_state(self.editor, False)
+   59:             self.refresh_choices(True)
+   60:             for name, variable in self.editor.vars.items():
+   61:                 variable.set(selection_display(rows, name, show_common=True))
+   62:             self.editor.widgets["task_template_id"].configure(state="disabled")
+   63:             self.editor.description.configure(state="normal")
+   64:             text = selection_display(rows, "description", show_common=True)
+   65:             self.editor.description.delete("1.0", "end")
+   66:             self.editor.description.insert("1.0", text)
+   67:             self.description_seen = self.editor.description.get("1.0", "end-1c")
+   68:             self.editor.description.edit_modified(False)
+   69:             self.active = True
+   70:         finally:
+   71:             self.loading = False
+   72:         self.editor._set_status(f"{len(selected)} templates selected - edit fields, then Apply to List. Untouched fields are preserved.")
+   73: 
+   74:     def end(self):
+   75:         self.active = False
+   76:         self.changes = {}
+   77:         self.selection = ()
+   78:         self.original = []
+   79:         self.refresh_choices(False)
+   80: 
+   81:     def changed(self, name):
+   82:         if not self.active or self.loading or name == "task_template_id":
+   83:             return
+   84:         self.changes[name] = self.editor.vars[name].get()
+   85:         self.note_changes()
+   86: 
+   87:     def note_changes(self):
+   88:         self.editor._set_status(f"{len(self.selection)} templates selected; {len(self.changes)} edited field(s) ready for Apply to List.")
+   89: 
+   90:     def description_modified(self, _event=None):
+   91:         widget = self.editor.description
+   92:         if not widget.edit_modified():
+   93:             return
+   94:         widget.edit_modified(False)
+   95:         self.flush_description()
+   96: 
+   97:     def flush_description(self):
+   98:         current = self.editor.description.get("1.0", "end-1c")
+   99:         if self.active and not self.loading and current != self.description_seen:
+  100:             self.changes["description"] = current
+  101:             self.note_changes()
+  102:         self.description_seen = current
+  103: 
+  104:     def focus(self, name):
+  105:         if not self.active or name in self.changes or name == "task_template_id":
+  106:             return
+  107:         widget = self.editor.description if name == "description" else self.editor.widgets[name]
+  108:         def select_placeholder():
+  109:             if not self.active or name in self.changes:
+  110:                 return
+  111:             value = self.editor.description.get("1.0", "end-1c") if name == "description" else self.editor.vars[name].get()
+  112:             if value != MULTIPLE_VALUES:
+  113:                 return
+  114:             if name == "description":
+  115:                 widget.tag_add("sel", "1.0", "end-1c")
+  116:                 widget.mark_set("insert", "end-1c")
+  117:             else:
+  118:                 widget.selection_range(0, "end")
+  119:                 widget.icursor("end")
+  120:         widget.after_idle(select_placeholder)
+  121: 
+  122:     def apply(self):
+  123:         self.flush_description()
+  124:         if not self.active:
+  125:             raise ValueError("Select the task rows before editing.")
+  126:         if tuple(self.editor.tree.selection()) != self.selection or self.editor.loaded_rows != self.original:
+  127:             raise ValueError("Task draft or selection changed. Reselect rows before applying.")
+  128:         if not self.changes:
+  129:             self.editor._set_status("No deliberately edited fields. Task draft unchanged.")
+  130:             return False
+  131:         changes = dict(self.changes)
+  132:         allowed = set(self.editor.vars) | {"description"}
+  133:         for name, value in changes.items():
+  134:             if name not in allowed or name == "task_template_id":
+  135:                 raise ValueError("Task identity fields cannot be batch-edited.")
+  136:             if not isinstance(value, str) or value.strip() == MULTIPLE_VALUES:
+  137:                 raise ValueError("Placeholder text cannot be applied as task data.")
+  138:         candidate = [dict(row) for row in self.original]
+  139:         priorities = set(self.editor.choices("priority"))
+  140:         capabilities = set(self.editor.choices("capability_id"))
+  141:         families = set(self.editor.choices("target_family_id"))
+  142:         for row in candidate:
+  143:             if row["task_template_id"] not in self.selection:
+  144:                 continue
+  145:             row.update({name: value.strip() for name, value in changes.items()})
+  146:             if not re.fullmatch(r"[A-Z][A-Z0-9_]*", row["task_template_id"]):
+  147:                 raise ValueError("Invalid task identity in draft.")
+  148:             problems = schema.errors(row, priorities)
+  149:             if row.get("capability_id") and row["capability_id"] not in capabilities:
+  150:                 problems.append("unknown capability_id")
+  151:             if row.get("target_family_id", "") not in families:
+  152:                 problems.append("unknown LOCATION station family")
+  153:             if problems:
+  154:                 raise ValueError(row["task_template_id"] + ": " + "; ".join(problems))
+  155:         keys = [row["task_template_id"] for row in candidate]
+  156:         if len(keys) != len(set(keys)):
+  157:             raise ValueError("Duplicate task IDs in draft.")
+  158:         self.editor._validate_rows(candidate)
+  159:         if tuple(self.editor.tree.selection()) != self.selection or self.editor.loaded_rows != self.original:
+  160:             raise ValueError("Task draft changed during validation. No batch rows applied.")
+  161:         self.editor.loaded_rows = candidate
+  162:         self.editor.dirty = True
+  163:         for key in self.selection:
+  164:             row = next(row for row in candidate if row["task_template_id"] == key)
+  165:             self.editor.tree.item(key, values=tuple(row[field] for field in self.editor.tree["columns"]))
+  166:         count = len(self.selection)
+  167:         self.begin(self.selection, force=True)
+  168:         self.editor._set_status(f"Updated {count} task draft rows; {len(changes)} field(s). UNSAVED CHANGES.")
+  169:         return True
+  170: 
+  171: 
+  172: def install_task_inline(editor):
+  173:     controller = getattr(editor, "_task_inline", None)
+  174:     if controller is None:
+  175:         controller = TaskInlineEditor(editor)
+  176:         editor._task_inline = controller
+  177:     return controller
+  178: 
+  179: 
+  180: def end_task_inline(editor):
+  181:     controller = getattr(editor, "_task_inline", None)
+  182:     if controller is not None:
+  183:         controller.end()
+  184: 
+  185: 
+  186: def apply_task_inline(editor):
+  187:     controller = getattr(editor, "_task_inline", None)
+  188:     try:
+  189:         if controller is None:
+  190:             raise ValueError("Reselect multiple task rows before editing.")
+  191:         return controller.apply()
+  192:     except (OSError, UnicodeError, csv.Error, ValueError) as error:
+  193:         editor.app.log(f"Task Templates batch Apply blocked; draft retained: {error}")
+  194:         editor._set_status("Batch Apply blocked: " + str(error).splitlines()[0] + " See Activity Log.")
+  195:         return False
+
+===== BOUNDED EXCERPT: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_content_gui.py =====
+SHA256: 5AA990692C16A705B45F8F4C1805121160993143A766C9DB1D3D5F95F557A84A
+Match pattern: facility_capabilities_editor|facility_capabilities_tab|capabilities_draft_policy|install_.*draft.*close_guard|allow_.*project_change|_network_close_handler|WM_DELETE_WINDOW
+    ...
+   34: from doda_metric_tiers_editor import install_metric_tiers_editor
+   35: from doda_metric_bundle_editor import open_metric_bundle_editor
+   36: from doda_facilities_editor import install_facilities_editor
+   37: from doda_flavor_text_editor import install_flavor_text_editor
+   38: from doda_enum_catalog_editor import install_enum_catalog_editor
+   39: from doda_qualification_catalog_editor import install_qualific

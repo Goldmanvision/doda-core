@@ -1,0 +1,216 @@
+===== DODA v130 FACILITY CAPABILITIES LOCAL INSPECTION =====
+Time: 2026-10-15T07:27:47.1974913-04:00
+Repository: E:\Dev\uzdoom_src\doda-core
+Branch: feature/workbench-data-bridge
+HEAD: 9662530962b70439c81eeaad89079d0979d465ea
+PowerShell: 5.1.26100.9444
+No source/CSV edits, installation, tests, or GUI launch.
+Only generated inspection report files are approved for commit/push.
+
+===== CURRENT WORKTREE STATUS =====
+ M tools/doda_content_workbench/doda_capabilities_editor.py
+ M tools/doda_content_workbench/doda_content_gui.py
+?? tools/doda_content_workbench/doda_capabilities_draft_policy.py
+?? tools/doda_content_workbench/tests/test_capabilities_v129.py
+
+===== FULL SOURCE: E:\Dev\uzdoom_src\doda-core\temp_push\DoDA_v129_Checkpoint_20261015_072504_16316449.txt =====
+SHA256: 1BD288770890813379B5DEA484950E6E5616B3BA4AF7654832554D079650BDE6
+    1: ===== DODA v129 FINAL VERIFICATION CHECKPOINT =====
+    2: Created: 2026-10-15T07:25:04.2503140-04:00
+    3: Branch: feature/workbench-data-bridge
+    4: HEAD at creation: 4d8d7386f58fdb3d87835841c6fb4067eb1df8ec
+    5: 
+    6: Task: Capabilities draft workflow with inline multi-row editing, including the existing inactive-draft label compatibility correction.
+    7: Installation: successful; corrected implementation hashes verified at checkpoint creation.
+    8: Candidate syntax: passed.
+    9: Targeted v129 automated tests: 67 passed; exit code 0 (59 original plus 8 compatibility tests).
+   10: Full Workbench suite: 1075 passed; exit code 0 (1067 before the compatibility correction; increase 8).
+   11: 
+   12: Manual evidence:
+   13: User reported success for all targeted v129 manual GUI criteria; final confirmation on 2026-10-15 EDT.
+   14: Confirmed checks: startup and Refresh load all six capabilities; single- and multi-row Standing Operation and Description edits preserve selection and column alignment; Refresh retains applied drafts; project switching is blocked with an unsaved applied draft; canceling either the window-close or File -> Exit confirmation keeps the application open and preserves the draft; required-field rejection and inactive-draft compatibility behave as specified; referenced-capability deletion and deactivation are rejected.
+   15: User reported that CAP_RESEARCH returned after Revert Draft and that its deletion existed only in the draft. Post-manual-session CSV contents were not independently checked by this checkpoint.
+   16: Recorded as user-reported successful v129 manual GUI verification.
+   17: Individual observations beyond the confirmed criteria were not separately supplied.
+   18: 
+   19: Automated evidence:
+   20: Local log: E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v129_compatibility_20261015_063125_81ae4f79\v129_compatibility_and_tests.txt
+   21: Log SHA256: 569485608B27B814970E129CF5E59F8855831867603643A7ACDA81C0E63A130C
+   22: Authored CSV files unchanged: 64 (recorded during correction validation).
+   23: The correction installation reported verified editor and test backups under generated\_tests_tmp\v129_compatibility_20261015_063125_81ae4f79 (historical installation evidence).
+   24: 
+   25: Limitations:
+   26: No automated tests were rerun after the manual session.
+   27: Any authored CSV edits made during the manual session are not separately validated by this checkpoint.
+   28: Python test success is not native-engine or in-game validation.
+   29: The installation and correction blocks did not commit implementation source; current commit state was not newly inspected by this checkpoint.
+   30: No next implementation task is approved by this checkpoint.
+   31: 
+   32: ===== VERIFIED SOURCE HASHES =====
+   33: doda_capabilities_draft_policy.py SHA256: C5AA2E469F9723F3AD54A41522681B66D32AA7C5E493E13AFEDBF4FBDB43DEBB
+   34: doda_capabilities_editor.py SHA256: AF28F11AB48753AA2E8AA2E05C279523164ED784CF2BB6CA3489CB4F50821252
+   35: doda_content_gui.py SHA256: 5AA990692C16A705B45F8F4C1805121160993143A766C9DB1D3D5F95F557A84A
+   36: tests\test_capabilities_v129.py SHA256: F3F954A6C19C7EFA0CDB420B2FDC7C1AB7F3C9031CE1DE173A37EE06AE5EE104
+   37: 
+   38: ===== TRACKED WORKTREE STATUS =====
+   39:  M tools/doda_content_workbench/doda_capabilities_editor.py
+   40:  M tools/doda_content_workbench/doda_content_gui.py
+
+===== APPLICABLE AGENTS RULE FILES AT KNOWN ANCESTORS =====
+Not present at this exact path: E:\Dev\uzdoom_src\AGENTS.md
+
+===== FULL SOURCE: E:\Dev\uzdoom_src\doda-core\AGENTS.md =====
+SHA256: DB55CEADCB6A8E648A469423C221B5F7445E0A70DCB84B1D0BDE1A8ADF34B071
+    1: # DoDA / GZDoom Coding-Agent Instructions
+    2: 
+    3: ## Project roots and scope
+    4: 
+    5: The primary mod project root is:
+    6: 
+    7: ```text
+    8: gzdoda/doda-core/
+    9: ```
+   10: 
+   11: Important project paths:
+   12: 
+   13: - Root ZScript translation unit: `zscript.txt`
+   14: - Active gameplay source: prove from current `zscript.txt`, current source, and
+   15:   appropriately labeled runtime evidence before editing
+   16: - Local GZDoom/ZScript documentation: `ZDoom_Documentation/`
+   17: - Human-provided GZDoom output: `console_log.txt`
+   18: - Architecture notes: `doda-architecture.md`
+   19: - Maps: `maps/`
+   20: - Packaged artifact: `doda-core.pk3`
+   21: - Legacy/stub wiki site: `../doda-wiki/`
+   22: 
+   23: The unpacked `doda-core/` directory is authoritative for mod-source edits.
+   24: `doda-core.pk3` is a packaged artifact and is not authoritative source for
+   25: implementation changes.
+   26: 
+   27: An explicitly approved native DoDA engine task may additionally name a separate
+   28: engine repository root, such as the active UZDoom/GZDoom engine checkout.
+   29: 
+   30: Agents must not work outside `gzdoda/doda-core/` unless the current human-
+   31: approved task explicitly identifies another repository root, its allowed paths,
+   32: and its exact subsystem scope.
+   33: 
+   34: When an approved task spans both the engine repository and `doda-core`, treat
+   35: them as separate source authorities. Edit only the files explicitly permitted
+   36: by that task. Do not infer permission to modify broader engine or mod files.
+   37: 
+   38: ## Authority order
+   39: 
+   40: When sources disagree, use this order:
+   41: 
+   42: 1. Explicit human instructions in the current task.
+   43: 2. This `AGENTS.md`.
+   44: 3. Current active `zscript.txt` include graph.
+   45: 4. Current active source files at paths proven by the active `zscript.txt`,
+   46:    current engine source, approved native-engine test evidence, or
+   47:    human-provided GZDoom logs, as applicable to the approved task.
+   48: 5. Human-provided GZDoom runtime logs, approved native-engine smoke-test logs,
+   49:    and manual test results, labeled by evidence type.
+   50: 6. Local `ZDoom_Documentation/`.
+   51: 7. Explicitly approved architecture documentation under `doda-core/`.
+   52: 8. Historical commits, old logs, old handoffs, backups, archives, packaged PK3
+   53:    files, and wiki pages.
+   54: 
+   55: Never treat a stale path, backup, old branch view, historical source excerpt,
+   56: packaged artifact, or generic wiki page as stronger authority than active source
+   57: and the applicable approved runtime evidence.
+   58: 
+   59: ## Documentation authority
+   60: 
+   61: Use `ZDoom_Documentation/` as the primary authority for ZScript syntax and
+   62: documented GZDoom APIs.
+   63: 
+   64: Documentation lookup order:
+   65: 
+   66: 1. Read `ZDoom_Documentation/__ZDoom_Docs_TOC.txt`.
+   67: 2. Read the most-specific numbered topic file for the requested API or feature.
+   68: 3. Read `ZDoom_Documentation/ZDoomDocs_FULL.txt` only when the specific topic
+   69:    cannot be found or does not answer the question.
+   70: 4. Use external sources only after explicitly stating:
+   71: 
+   72: ```text
+   73: LOCAL DOCUMENTATION DOES NOT ANSWER THIS QUESTION
+   74: ```
+   75: 
+   76: Never invent a ZScript feature, API member, event callback, actor property,
+   77: state syntax, action scope, flag, data-lump rule, DoomEdNum, spawn ID, UDMF
+   78: placement rule, map metadata rule, sprite naming rule, or engine behavior.
+   79: 
+   80: Before proposing or editing code that uses a GZDoom/ZScript API:
+   81: 
+   82: - Read the relevant local documentation.
+   83: - Report the exact local documentation path.
+   84: - State whether the local documentation directly supports the intended usage.
+   85: - If the documentation does not support the usage, stop and report the need
+   86:   for further source/engine investigation.
+   87: - Do not use current DoDA source as proof that an undocumented API call is
+   88:   valid merely because it appears in code.
+   89: 
+   90: ## Wiki status
+   91: 
+   92: `gzdoda/doda-wiki/` is currently a legacy/stub documentation site.
+   93: 
+   94: - Do not treat its current pages as authoritative technical, gameplay,
+   95:   architecture, source-path, build, test, control, weapon, map, or API
+   96:   documentation.
+   97: - Do not copy malformed generated tool-call payloads from the wiki into source,
+   98:   documentation, or prompts.
+   99: - Until explicitly rebuilt and approved, the wiki is informational only.
+  100: - Do not update, repair, generate, restructure, package, or deploy the wiki
+  101:   unless the task explicitly requests wiki work.
+  102: 
+  103: ## ZScript integration
+  104: 
+  105: - `zscript.txt` is the root translation unit and authoritative include order.
+  106: - Preserve `version "2.4"` in root `zscript.txt`.
+  107: - Do not add a version declaration to included `.zs` files.
+  108: - Inspect current `zscript.txt` before adding, removing, moving, renaming, or
+  109:   changing any ZScript module.
+  110: - Add new includes in dependency-correct order.
+  111: - Do not reorder unrelated includes.
+  112: - Treat a source file as active only when it is included by the current
+  113:   translation unit or is proven runtime-active by applicable approved evidence.
+  114: - Do not infer active status from naming, timestamps, directory casing, old
+  115:   documentation, GitHub browsing alone, or package contents.
+  116: 
+  117: ## Source-path and backup policy
+  118: 
+  119: - Current source may use both `DoDA/` and lower-case `doda/` paths.
+  120: - Do not assume one path root is inactive because a similarly named path exists
+  121:   elsewhere.
+  122: - A human-provided GZDoom runtime error naming a source path is evidence that
+  123:   the path is active for that run.
+  124: - Before editing a file, identify:
+  125:   - exact repository path;
+  126:   - exact include path;
+  127:   - active/legacy/backup status;
+  128:   - evidence for that status.
+  129: - Never edit `DoDA/WeaponSystem/WeaponBase_bak.zs`; it is backup/orphan source.
+  130: - Treat `DoDA/Aim/DeadzoneController.zs` as legacy/orphan unless current
+  131:   `zscript.txt`, current `MAPINFO`, and runtime evidence explicitly restore it.
+  132: - Do not delete, rename, case-normalize, consolidate, or move `DoDA/` or
+  133:   `doda/` paths unless a separate, explicitly authorized, validated source-tree
+  134:   cleanup task proves all runtime references are safe.
+  135: - Do not use an old source excerpt as authority when the current checkout
+  136:   differs.
+  137: 
+  138: ## Build and test policy
+  139: 
+  140: `doda-core` is a GZDoom PK3/folder-based mod project. The `doda-core` package
+  141: itself is not an MSBuild, .NET, C++, Rider, Visual Studio, CMake, Gradle, npm,
+  142: or conventional IDE-build project.
+  143: 
+  144: - Never invoke, configure, troubleshoot, or interpret:
+  145:   - MSBuild;
+  146:   - `dotnet build`;
+  147:   - Rider Build;
+  148:   - Visual Studio Build;
+  149:   - CMake;
+  150:   - Make;
+  151:   - Gradle;
+  152:   - npm build;
+  153:   - or any generic IDE build command for `

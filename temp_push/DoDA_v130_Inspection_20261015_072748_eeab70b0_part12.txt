@@ -1,0 +1,231 @@
+ne_number']}: qualification_id '{qualification_id}' "
+  805:                 "does not exist in active qualification_catalog.csv"
+  806:             )
+  807: 
+  808:         if (capability_id, qualification_id) not in active_global_rules:
+  809:             result.error(
+  810:                 f"[facility_capability_staffing_overrides] Line "
+  811:                 f"{row['_line_number']}: no active global staffing rule exists "
+  812:                 f"for '{capability_id}/{qualification_id}'"
+  813:             )
+  814: 
+  815:         validate_staffing_range(
+  816:             "facility_capability_staffing_overrides",
+  817:             row,
+  818:             result,
+  819:         )
+  820: 
+  821:     validate_sort_order(
+  822:         "facility_capability_staffing_overrides",
+  823:         rows,
+  824:         result,
+  825:     )
+  826: 
+  827: 
+  828: def validate_task_templates(rows, active_capability_ids, active_facility_capabilities, enum_values, result):
+  829:     priorities = enum_values.get("TASK_PRIORITY", set())
+  830:     installed = {cid for _, cid in active_facility_capabilities}
+  831:     for row in rows:
+  832:         ctx = "[task_templates] Line " + str(row.get("_line_number", "?"))
+  833:         for message in task_schema.errors(row, priorities):
+  834:             result.error(ctx + ": " + message)
+  835:         try:
+  836:             active = task_schema.boolean(row.get("active"))
+  837:         except ValueError:
+  838:             active = False
+  839:         cid = row.get("capability_id", "")
+  840:         if active and cid not in active_capability_ids:
+  841:             result.error(ctx + ": capability_id is not an active capability")
+  842:         if active and cid not in installed:
+  843:             result.error(ctx + ": capability has no active Facility Capability installation")
+  844:         if not active and (not cid or not row.get("time_to_complete_minutes")):
+  845:             result.warning(ctx + ": draft task requirements/timing are not fully configured")
+  846:     validate_sort_order("task_templates", rows, result)
+  847: 
+  848: 
+  849: def warn_on_facility_capacity_overcommit(
+  850:     facilities: list[dict[str, str]],
+  851:     facility_capabilities: list[dict[str, str]],
+  852:     result: ValidationResult,
+  853: ) -> None:
+  854:     capacity_by_facility: dict[str, int] = {}
+  855: 
+  856:     for row in facilities:
+  857:         if row.get("active", "").upper() != "TRUE":
+  858:             continue
+  859: 
+  860:         capacity = parse_int("facilities", row, "personnel_capacity", result)
+  861:         if capacity is not None:
+  862:             capacity_by_facility[row["facility_id"]] = capacity
+  863: 
+  864:     concurrent_total: dict[str, int] = defaultdict(int)
+  865: 
+  866:     for row in facility_capabilities:
+  867:         if row.get("active", "").upper() != "TRUE":
+  868:             continue
+  869: 
+  870:         maximum = parse_int(
+  871:             "facility_capabilities",
+  872:             row,
+  873:             "max_concurrent_personnel",
+  874:             result,
+  875:         )
+  876:         if maximum is not None:
+  877:             concurrent_total[row["facility_id"]] += maximum
+  878: 
+  879:     for facility_id, total in sorted(concurrent_total.items()):
+  880:         capacity = capacity_by_facility.get(facility_id)
+  881:         if capacity is not None and total > capacity:
+  882:             result.warning(
+  883:                 f"[facility_capabilities] Active Facility Capability maximum "
+  884:                 f"concurrency totals {total} for '{facility_id}', exceeding "
+  885:                 f"facility personnel_capacity {capacity}. This is permitted as "
+  886:                 "a strategic allocation tradeoff."
+  887:             )
+  888: 
+  889: 
+  890: def validate_task_station_links(rows, project_root, result):
+  891:     path = project_root / "data_authoring/source/equipment_families.csv"
+  892:     if not path.is_file():
+  893:         if any(row.get("target_family_id") for row in rows):
+  894:             result.error("[task_templates] equipment_families.csv is required for station references")
+  895:         return
+  896:     with path.open(encoding="utf-8-sig", newline="") as handle:
+  897:         families = {r["family_id"]: r for r in csv.DictReader(handle)}
+  898:     for row in rows:
+  899:         family_id = row.get("target_family_id", "")
+  900:         if not family_id:
+  901:             continue
+  902:         family = families.get(family_id)
+  903:         if family is None or family.get("ownership", "").upper() != "LOCATION":
+  904:             result.error("[task_templates] station target must reference a LOCATION equipment family: " + family_id)
+  905:         elif row.get("active", "").upper() == "TRUE" and family.get("active", "").upper() != "TRUE":
+  906:             result.error("[task_templates] active task references inactive station family: " + family_id)
+  907: 
+  908: def validate_project(project_root: Path) -> ValidationResult:
+  909:     result = ValidationResult()
+  910:     source_directory = project_root / "data_authoring" / "source"
+  911:     loaded_tables: dict[str, list[dict[str, str]]] = {}
+  912: 
+  913:     for table_name, specification in TABLE_SPECS.items():
+  914:         path = source_directory / specification["filename"]
+  915:         rows = load_csv(
+  916:             path,
+  917:             specification["required_columns"],
+  918:             table_name,
+    ...
+  965:         enum_values,
+  966:         result,
+  967:     )
+  968:     validate_metric_tiers(
+  969:         loaded_tables["metric_tiers"],
+  970:         metrics_by_id,
+  971:         flavor_text_ids,
+  972:         result,
+  973:     )
+  974:     facility_by_id = validate_facilities(
+  975:         loaded_tables["facilities"],
+  976:         track_ids,
+  977:         enum_values,
+  978:         result,
+  979:     )
+  980:     active_facility_capabilities = validate_facility_capabilities(
+  981:         loaded_tables["facility_capabilities"],
+  982:         active_facility_ids,
+  983:         active_capability_ids,
+  984:         facility_by_id,
+  985:         enum_values,
+  986:         result,
+  987:     )
+  988:     active_global_rules = validate_capability_staffing_rules(
+  989:         loaded_tables["capability_staffing_rules"],
+  990:         active_capability_ids,
+  991:         active_qualification_ids,
+  992:         result,
+  993:     )
+  994:     validate_facility_capability_staffing_overrides(
+  995:         loaded_tables["facility_capability_staffing_overrides"],
+  996:         active_facility_capabilities,
+  997:         active_qualification_ids,
+  998:         active_global_rules,
+  999:         result,
+ 1000:     )
+ 1001:     validate_task_templates(
+ 1002:         loaded_tables["task_templates"],
+ 1003:         active_capability_ids,
+ 1004:         active_facility_capabilities,
+ 1005:         enum_values,
+ 1006:         result,
+ 1007:     )
+ 1008:     warn_on_facility_capacity_overcommit(
+ 1009:         loaded_tables["facilities"],
+ 1010:         loaded_tables["facility_capabilities"],
+ 1011:         result,
+ 1012:     )
+ 1013: 
+ 1014:     validate_task_station_links(loaded_tables["task_templates"], project_root, result)
+ 1015:     if (source_directory / "task_template_flows.csv").is_file():
+ 1016:         import doda_task_flow_rules
+ 1017:         doda_task_flow_rules.validate_flows(project_root, result)
+ 1018:     if (source_directory / "task_staffing_rules.csv").is_file():
+ 1019:         import doda_task_staffing_rules
+ 1020:         doda_task_staffing_rules.validate_staffing(project_root, result)
+ 1021:     if (source_directory / "collection_receptacles.csv").is_file():
+ 1022:         import doda_collection_rules
+ 1023:         doda_collection_rules.validate_collection(project_root, result)
+ 1024:     if (source_directory / "collection_models.csv").is_file():
+ 1025:         import doda_collection_model_rules
+ 1026:         doda_collection_model_rules.validate_models(project_root, result)
+ 1027:     if (source_directory / "evidence_type_instances.csv").is_file():
+ 1028:         import doda_evidence_instance_rules
+ 1029:         doda_evidence_instance_rules.validate_instances(project_root, result)
+ 1030:     if (source_directory / "task_prerequisites.csv").is_file():
+ 1031:         import doda_task_prerequisite_rules
+ 1032:         doda_task_prerequisite_rules.validate_prerequisites(project_root, result)
+ 1033:     if (source_directory / "vehicle_types.csv").is_file():
+ 1034:         import doda_vehicle_rules
+ 1035:         doda_vehicle_rules.validate_vehicles(project_root, result)
+ 1036:     return result
+ 1037: 
+ 1038: 
+ 1039: def write_report(project_root: Path, result: ValidationResult) -> Path:
+ 1040:     report_directory = project_root / "generated" / "reports"
+ 1041:     report_directory.mkdir(parents=True, exist_ok=True)
+ 1042: 
+ 1043:     report_path = report_directory / "content_validation_report.json"
+ 1044: 
+ 1045:     report = {
+
+===== BOUNDED EXCERPT: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\README.md =====
+SHA256: 79A9881991CB114E10A14A03FD62D812920B46B1B18AA65C0E7BEC3999593385
+Match pattern: unittest|pytest|test discovery|run.*tests|\.venv
+    ...
+   14: ## Initial commands
+   15: 
+   16: Activate the environment:
+   17: 
+   18: ```powershell
+   19: & .\tools\doda_content_workbench\.venv\Scripts\Activate.ps1
+   20: ```
+   21: 
+   22: Run the future command-line tool:
+   23: 
+   24: ```powershell
+   25: python -m doda_workbench --help
+   26: ```
+
+===== FACILITY CAPABILITIES SOURCE DATA, BOUNDED =====
+Path: E:\Dev\uzdoom_src\doda-core\data_authoring\source\facility_capabilities.csv
+SHA256: F3D3F1D24C2C8CFC3893C77F13BCACC35D51A628C6EFFDED8CFE301E20B9959F
+Total physical lines: 3
+    1: facility_id,capability_id,display_name_override,max_concurrent_personnel,initial_tier_id,foims_panel_id,sort_order,active
+    2: FIELD_OPERATIONS_ROOM,OCCULT_RESPONSE,Occult Task Force,2,UNBUILT,FOIMS_FIELD_OCCULT_RESPONSE,10,TRUE
+    3: TECHOPS_HUB,ELECTRONIC_SURVEILLANCE,,2,UNBUILT,FOIMS_TECHOPS_SURVEILLANCE,10,TRUE
+
+===== DIRECT EDITOR TEST DISCOVERY =====
+No direct editor test matches. This does not mean there are no validator tests.
+
+===== FACILITY-CAPABILITIES VALIDATION TEST MATCHES =====
+
+Captured file hashes rechecked: unchanged during inspection.
+Inspection complete. No tests or GUI checks performed.

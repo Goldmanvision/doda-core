@@ -1,0 +1,306 @@
+   self.sort_order.set(row.get("sort_order", ""))
+  613:         self.active.set(row.get("active", "").upper() == "TRUE")
+  614: 
+  615:         self.update_facility_hint()
+  616: 
+  617:     def revert(self) -> None:
+  618:         if self.editing_key:
+  619:             key = f"{self.editing_key[0]}::{self.editing_key[1]}"
+  620: 
+  621:             if self.tree.exists(key):
+  622:                 self.tree.selection_set(key)
+  623:                 self.on_select()
+  624:                 return
+  625: 
+  626:         self.new()
+  627: 
+  628:     def record(self) -> dict[str, str] | None:
+  629:         row = {
+  630:             "facility_id": self.facility_id.get().strip(),
+  631:             "capability_id": self.capability_id.get().strip(),
+  632:             "display_name_override": (
+  633:                 self.display_name_override.get().strip()
+  634:             ),
+  635:             "max_concurrent_personnel": (
+  636:                 self.max_concurrent_personnel.get().strip()
+  637:             ),
+  638:             "initial_tier_id": self.initial_tier_id.get().strip(),
+  639:             "foims_panel_id": self.foims_panel_id.get().strip(),
+  640:             "sort_order": self.sort_order.get().strip(),
+  641:             "active": "TRUE" if self.active.get() else "FALSE",
+  642:         }
+  643: 
+  644:         errors: list[str] = []
+  645: 
+  646:         if row["facility_id"] not in self.facility_ids():
+  647:             errors.append("Select a valid active Facility.")
+  648: 
+  649:         if row["capability_id"] not in self.capability_ids():
+  650:             errors.append("Select a valid active Capability.")
+  651: 
+  652:         if row["initial_tier_id"] not in self.facility_tiers():
+  653:             errors.append("Select a valid active Facility Tier.")
+  654: 
+  655:         if not row["foims_panel_id"]:
+  656:             errors.append("FOIMS Panel ID is required.")
+  657: 
+  658:         try:
+  659:             maximum = int(row["max_concurrent_personnel"])
+  660: 
+  661:             if maximum < 1:
+  662:                 errors.append(
+  663:                     "Max Concurrent Personnel must be at least 1."
+  664:                 )
+  665: 
+  666:             capacity = self.selected_facility_capacity()
+  667: 
+  668:             if capacity is not None and maximum > capacity:
+  669:                 errors.append(
+  670:                     "Max Concurrent Personnel cannot exceed the selected "
+  671:                     f"Facility capacity of {capacity}."
+  672:                 )
+  673:         except ValueError:
+  674:             errors.append(
+  675:                 "Max Concurrent Personnel must be a whole number."
+  676:             )
+  677: 
+  678:         try:
+  679:             sort_order = int(row["sort_order"])
+  680: 
+  681:             if sort_order < 1:
+  682:                 errors.append("Sort Order must be at least 1.")
+  683:         except ValueError:
+  684:             errors.append("Sort Order must be an integer.")
+  685: 
+  686:         if errors:
+  687:             messagebox.showerror(
+  688:                 "DoDA Content Workbench",
+  689:                 "Correct before saving:\n\n- " + "\n- ".join(errors),
+  690:             )
+  691:             return None
+  692: 
+  693:         return row
+  694: 
+  695:     def write(self, path: Path, rows: list[dict[str, str]]) -> None:
+  696:         with path.open("w", encoding="utf-8", newline="") as handle:
+  697:             writer = csv.DictWriter(
+  698:                 handle,
+  699:                 fieldnames=FIELDS,
+  700:                 lineterminator="\n",
+  701:             )
+  702:             writer.writeheader()
+  703: 
+  704:             for row in rows:
+  705:                 writer.writerow(
+  706:                     {
+  707:                         field: row.get(field, "")
+  708:                         for field in FIELDS
+  709:                     }
+  710:                 )
+  711: 
+  712:     def candidate_valid(self, candidate: Path) -> tuple[bool, str]:
+  713:         with tempfile.TemporaryDirectory(
+  714:             prefix="doda-facility-capability-"
+  715:         ) as temporary:
+  716:             root = Path(temporary)
+  717:             destination = root / "data_authoring" / "source"
+  718:             destination.mkdir(parents=True)
+  719: 
+  720:             for filename in FILES:
+  721:                 source = (
+  722:                     candidate
+  723:                     if filename == "facility_capabilities.csv"
+  724:                     else self.app.source_directory / filename
+  725:                 )
+  726:                 shutil.copy2(source, destination / filename)
+  727: 
+  728:             command = [
+  729:                 sys.executable,
+  730:                 str(self.app.validator_path),
+  731:                 "--root",
+  732:                 str(root),
+  733:                 "validate",
+  734:             ]
+  735: 
+  736:             completed = subprocess.run(
+  737:                 command,
+  738:                 cwd=root,
+  739:                 text=True,
+  740:                 encoding="utf-8",
+  741:                 errors="replace",
+  742:                 capture_output=True,
+  743:             )
+  744: 
+  745:             output = (
+  746:                 completed.stdout
+  747:                 + ("\n" if completed.stdout and completed.stderr else "")
+  748:                 + completed.stderr
+  749:             ).strip()
+  750: 
+  751:             return completed.returncode == 0, output
+  752: 
+  753:     def post_validate(self) -> tuple[bool, str]:
+  754:         command = [
+  755:             sys.executable,
+  756:             str(self.app.validator_path),
+  757:             "--root",
+  758:             str(self.app.project_root),
+  759:             "validate",
+  760:         ]
+  761: 
+  762:         completed = subprocess.run(
+  763:             command,
+  764:             cwd=self.app.project_root,
+  765:             text=True,
+  766:             encoding="utf-8",
+  767:             errors="replace",
+  768:             capture_output=True,
+  769:         )
+  770: 
+  771:         output = (
+  772:             completed.stdout
+  773:             + ("\n" if completed.stdout and completed.stderr else "")
+  774:             + completed.stderr
+  775:         ).strip()
+  776: 
+  777:         return completed.returncode == 0, output
+  778: 
+  779:     def save(self) -> None:
+  780:         row = self.record()
+  781: 
+  782:         if row is None:
+  783:             return
+  784: 
+  785:         rows = self.rows()
+  786: 
+  787:         if self.editing_key:
+  788:             if (
+  789:                 row["facility_id"] != self.editing_key[0]
+  790:                 or row["capability_id"] != self.editing_key[1]
+  791:             ):
+  792:                 messagebox.showerror(
+  793:                     "DoDA Content Workbench",
+  794:                     (
+  795:                         "Facility ID and Capability ID cannot change after "
+  796:                         "creation."
+  797:                     ),
+  798:                 )
+  799:                 return
+  800: 
+  801:             rows = [
+  802:                 row
+  803:                 if (
+  804:                     item.get("facility_id", "") == self.editing_key[0]
+  805:                     and item.get("capability_id", "") == self.editing_key[1]
+  806:                 )
+  807:                 else item
+  808:                 for item in rows
+  809:             ]
+  810:             action = "updated"
+  811:         else:
+  812:             if any(
+  813:                 item.get("facility_id", "") == row["facility_id"]
+  814:                 and item.get("capability_id", "") == row["capability_id"]
+  815:                 for item in rows
+  816:             ):
+  817:                 messagebox.showerror(
+  818:                     "DoDA Content Workbench",
+  819:                     (
+  820:                         "This Facility and Capability installation already "
+  821:                         "exists."
+  822:                     ),
+  823:                 )
+  824:                 return
+  825: 
+  826:             rows.append(row)
+  827:             action = "added"
+  828: 
+  829:         rows.sort(
+  830:             key=lambda item: (
+  831:                 item.get("facility_id", ""),
+  832:                 self.integer_or_default(item.get("sort_order", ""), 999999),
+  833:                 item.get("capability_id", ""),
+  834:             )
+  835:         )
+  836: 
+  837:         temporary = self.app.source_directory / (
+  838:             f".facility-capabilities-{uuid4().hex}.tmp.csv"
+  839:         )
+  840: 
+  841:         self.app.config(cursor="watch")
+  842:         self.app.update_idletasks()
+  843: 
+  844:         try:
+  845:             self.write(temporary, rows)
+  846: 
+  847:             valid, output = self.candidate_valid(temporary)
+  848: 
+  849:             self.app.log(
+  850:                 "Facility Capability candidate validation output:"
+  851:             )
+  852: 
+  853:             for line in output.splitlines():
+  854:                 self.app.log(" " + line)
+  855: 
+  856:             if not valid:
+  857:                 messagebox.showerror(
+  858:                     "DoDA Content Workbench",
+  859:                     (
+  860:                         "Facility Capability candidate validation failed. "
+  861:                         "Source CSV was unchanged.\n\nReview Activity Log for "
+  862:                         "details."
+  863:                     ),
+  864:                 )
+  865:                 return
+  866: 
+  867:             folder = self.backup_directory()
+  868:             folder.mkdir(parents=True, exist_ok=True)
+  869: 
+  870:             backup = folder / (
+  871:                 "facility_capabilities_"
+  872:                 + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+  873:                 + ".csv"
+  874:             )
+  875: 
+  876:             shutil.copy2(self.source_path(), backup)
+  877:             os.replace(temporary, self.source_path())
+  878: 
+  879:             self.editing_key = (
+  880:                 row["facility_id"],
+  881:                 row["capability_id"],
+  882:             )
+  883: 
+  884:             self.app.log(
+  885:                 f"Created Facility Capability backup: {backup}"
+  886:             )
+  887:             self.app.log(
+  888:                 "Facility Capability "
+  889:                 f"{action}: {row['facility_id']} / {row['capability_id']}"
+  890:             )
+  891: 
+  892:             self.app.refresh_all(False)
+  893: 
+  894:             valid, output = self.post_validate()
+  895: 
+  896:             for line in output.splitlines():
+  897:                 self.app.log(" " + line)
+  898: 
+  899:             self.app.refresh_all(False)
+  900: 
+  901:             if valid:
+  902:                 messagebox.showinfo(
+  903:                     "DoDA Content Workbench",
+  904:                     (
+  905:                         "Facility Capability "
+  906:                         f"'{row['facility_id']} / {row['capability_id']}' "
+  907:                         f"{action}.\n\nBackup created:\n{backup}\n\n"
+  908:                         "Project validation passed."
+  909:                     ),
+  910:                 )
+  911:             else:
+  912:                 messagebox.showwarning(
+  913:                     "DoDA Content Workbench",
+  914:                     (
+  915:                         "Facility Capability "
+  916:                         f"{action}, but post-save validation failed.\n\n"
+  917:                         f"Backup

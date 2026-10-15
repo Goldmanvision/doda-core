@@ -1,0 +1,343 @@
+t an active Facility.",
+  271:             foreground="#9da7b3",
+  272:             wraplength=360,
+  273:         )
+  274:         self.facility_hint.grid(
+  275:             row=1,
+  276:             column=1,
+  277:             sticky=tk.W,
+  278:             pady=(0, 10),
+  279:         )
+  280: 
+  281:         label("Capability:", 2)
+  282: 
+  283:         self.capability_combo = ttk.Combobox(
+  284:             editor_frame,
+  285:             textvariable=self.capability_id,
+  286:             state="readonly",
+  287:             values=self.capability_ids(),
+  288:         )
+  289:         self.capability_combo.grid(
+  290:             row=2,
+  291:             column=1,
+  292:             sticky=tk.EW,
+  293:             pady=(0, 8),
+  294:         )
+  295: 
+  296:         ttk.Label(
+  297:             editor_frame,
+  298:             text="Facility + Capability are immutable after creation.",
+  299:             foreground="#9da7b3",
+  300:         ).grid(
+  301:             row=3,
+  302:             column=1,
+  303:             sticky=tk.W,
+  304:             pady=(0, 10),
+  305:         )
+  306: 
+  307:         label("Display Name Override:", 4)
+  308: 
+  309:         ttk.Entry(
+  310:             editor_frame,
+  311:             textvariable=self.display_name_override,
+  312:         ).grid(
+  313:             row=4,
+  314:             column=1,
+  315:             sticky=tk.EW,
+  316:             pady=(0, 8),
+  317:         )
+  318: 
+  319:         ttk.Label(
+  320:             editor_frame,
+  321:             text="Optional. Leave blank to use the Capability display name.",
+  322:             foreground="#9da7b3",
+  323:             wraplength=360,
+  324:         ).grid(
+  325:             row=5,
+  326:             column=1,
+  327:             sticky=tk.W,
+  328:             pady=(0, 10),
+  329:         )
+  330: 
+  331:         label("Max Concurrent Personnel:", 6)
+  332: 
+  333:         ttk.Entry(
+  334:             editor_frame,
+  335:             textvariable=self.max_concurrent_personnel,
+  336:             width=10,
+  337:         ).grid(
+  338:             row=6,
+  339:             column=1,
+  340:             sticky=tk.W,
+  341:             pady=(0, 8),
+  342:         )
+  343: 
+  344:         label("Initial Tier:", 7)
+  345: 
+  346:         self.tier_combo = ttk.Combobox(
+  347:             editor_frame,
+  348:             textvariable=self.initial_tier_id,
+  349:             state="readonly",
+  350:             values=self.facility_tiers(),
+  351:         )
+  352:         self.tier_combo.grid(
+  353:             row=7,
+  354:             column=1,
+  355:             sticky=tk.EW,
+  356:             pady=(0, 8),
+  357:         )
+  358: 
+  359:         label("FOIMS Panel ID:", 8)
+  360: 
+  361:         ttk.Entry(
+  362:             editor_frame,
+  363:             textvariable=self.foims_panel_id,
+  364:         ).grid(
+  365:             row=8,
+  366:             column=1,
+  367:             sticky=tk.EW,
+  368:             pady=(0, 8),
+  369:         )
+  370: 
+  371:         label("Sort Order:", 9)
+  372: 
+  373:         ttk.Entry(
+  374:             editor_frame,
+  375:             textvariable=self.sort_order,
+  376:             width=10,
+  377:         ).grid(
+  378:             row=9,
+  379:             column=1,
+  380:             sticky=tk.W,
+  381:             pady=(0, 8),
+  382:         )
+  383: 
+  384:         label("Active:", 10)
+  385: 
+  386:         ttk.Checkbutton(
+  387:             editor_frame,
+  388:             text="This capability installation is active",
+  389:             variable=self.active,
+  390:         ).grid(
+  391:             row=10,
+  392:             column=1,
+  393:             sticky=tk.W,
+  394:             pady=(0, 8),
+  395:         )
+  396: 
+  397:         buttons = ttk.Frame(editor_frame)
+  398:         buttons.grid(
+  399:             row=11,
+  400:             column=0,
+  401:             columnspan=2,
+  402:             sticky=tk.EW,
+  403:             pady=(8, 0),
+  404:         )
+  405: 
+  406:         ttk.Button(
+  407:             buttons,
+  408:             text="Add Installation",
+  409:             command=self.new,
+  410:         ).pack(side=tk.LEFT)
+  411: 
+  412:         ttk.Button(
+  413:             buttons,
+  414:             text="Save Installation",
+  415:             command=self.save,
+  416:         ).pack(side=tk.LEFT, padx=6)
+  417: 
+  418:         ttk.Button(
+  419:             buttons,
+  420:             text="Remove Installation",
+  421:             command=self.remove,
+  422:         ).pack(side=tk.LEFT, padx=6)
+  423: 
+  424:         ttk.Button(
+  425:             buttons,
+  426:             text="Revert Form",
+  427:             command=self.revert,
+  428:         ).pack(side=tk.LEFT, padx=6)
+  429: 
+  430:         ttk.Button(
+  431:             buttons,
+  432:             text="Open Backups",
+  433:             command=self.open_backups,
+  434:         ).pack(side=tk.RIGHT)
+  435: 
+  436:         ttk.Label(
+  437:             editor_frame,
+  438:             text=(
+  439:                 "Candidate validation blocks changes that would break staffing "
+  440:                 "overrides or active task-template capability availability."
+  441:             ),
+  442:             foreground="#9da7b3",
+  443:             wraplength=390,
+  444:         ).grid(
+  445:             row=12,
+  446:             column=0,
+  447:             columnspan=2,
+  448:             sticky=tk.EW,
+  449:             pady=(12, 0),
+  450:         )
+  451: 
+  452:         self.new()
+  453: 
+  454:     def update(self) -> None:
+  455:         selected = self.editing_key
+  456: 
+  457:         self.facility_combo.configure(values=self.facility_ids())
+  458:         self.capability_combo.configure(values=self.capability_ids())
+  459:         self.tier_combo.configure(values=self.facility_tiers())
+  460: 
+  461:         for item in self.tree.get_children():
+  462:             self.tree.delete(item)
+  463: 
+  464:         rows = sorted(
+  465:             self.rows(),
+  466:             key=lambda row: (
+  467:                 row.get("facility_id", ""),
+  468:                 self.integer_or_default(row.get("sort_order", ""), 999999),
+  469:                 row.get("capability_id", ""),
+  470:             ),
+  471:         )
+  472: 
+  473:         for row in rows:
+  474:             facility_id = row.get("facility_id", "")
+  475:             capability_id = row.get("capability_id", "")
+  476:             key = f"{facility_id}::{capability_id}"
+  477: 
+  478:             self.tree.insert(
+  479:                 "",
+  480:                 tk.END,
+  481:                 iid=key,
+  482:                 values=(
+  483:                     facility_id,
+  484:                     capability_id,
+  485:                     row.get("display_name_override", ""),
+  486:                     row.get("max_concurrent_personnel", ""),
+  487:                     row.get("initial_tier_id", ""),
+  488:                     row.get("active", ""),
+  489:                 ),
+  490:             )
+  491: 
+  492:         if selected:
+  493:             key = f"{selected[0]}::{selected[1]}"
+  494: 
+  495:             if self.tree.exists(key):
+  496:                 self.tree.selection_set(key)
+  497:                 self.tree.focus(key)
+  498: 
+  499:         self.update_facility_hint()
+  500: 
+  501:     def next_sort_order(self, facility_id: str) -> int:
+  502:         values: list[int] = []
+  503: 
+  504:         for row in self.rows():
+  505:             if row.get("facility_id", "") != facility_id:
+  506:                 continue
+  507: 
+  508:             try:
+  509:                 values.append(int(row.get("sort_order", "")))
+  510:             except ValueError:
+  511:                 pass
+  512: 
+  513:         return max(values, default=0) + 1
+  514: 
+  515:     def update_facility_hint(self) -> None:
+  516:         facility_id = self.facility_id.get().strip()
+  517:         display_values = self.facility_display_values()
+  518:         capacity = self.selected_facility_capacity()
+  519: 
+  520:         if not facility_id:
+  521:             self.facility_hint.configure(
+  522:                 text="Select an active Facility."
+  523:             )
+  524:             return
+  525: 
+  526:         if capacity is None:
+  527:             self.facility_hint.configure(
+  528:                 text=f"{display_values.get(facility_id, facility_id)}"
+  529:             )
+  530:             return
+  531: 
+  532:         self.facility_hint.configure(
+  533:             text=(
+  534:                 f"{display_values.get(facility_id, facility_id)}\n"
+  535:                 f"Personnel capacity: {capacity}. "
+  536:                 f"Max concurrent personnel cannot exceed this value."
+  537:             )
+  538:         )
+  539: 
+  540:     def on_facility_changed(self, _event: Any = None) -> None:
+  541:         facility_id = self.facility_id.get().strip()
+  542: 
+  543:         if facility_id:
+  544:             self.sort_order.set(str(self.next_sort_order(facility_id)))
+  545: 
+  546:         self.update_facility_hint()
+  547: 
+  548:     def new(self) -> None:
+  549:         self.editing_key = None
+  550: 
+  551:         self.facility_combo.configure(state="readonly")
+  552:         self.capability_combo.configure(state="readonly")
+  553: 
+  554:         facilities = self.facility_ids()
+  555:         capabilities = self.capability_ids()
+  556:         tiers = self.facility_tiers()
+  557: 
+  558:         self.facility_id.set(facilities[0] if facilities else "")
+  559:         self.capability_id.set(capabilities[0] if capabilities else "")
+  560:         self.display_name_override.set("")
+  561:         self.max_concurrent_personnel.set("1")
+  562:         self.initial_tier_id.set(
+  563:             "UNBUILT" if "UNBUILT" in tiers else (tiers[0] if tiers else "")
+  564:         )
+  565:         self.foims_panel_id.set("")
+  566:         self.sort_order.set(
+  567:             str(self.next_sort_order(self.facility_id.get()))
+  568:             if self.facility_id.get()
+  569:             else "1"
+  570:         )
+  571:         self.active.set(True)
+  572: 
+  573:         self.update_facility_hint()
+  574:         self.facility_combo.focus_set()
+  575: 
+  576:     def on_select(self, _event: Any = None) -> None:
+  577:         selection = self.tree.selection()
+  578: 
+  579:         if not selection:
+  580:             return
+  581: 
+  582:         facility_id, capability_id = selection[0].split("::", 1)
+  583: 
+  584:         row = next(
+  585:             (
+  586:                 item
+  587:                 for item in self.rows()
+  588:                 if item.get("facility_id", "") == facility_id
+  589:                 and item.get("capability_id", "") == capability_id
+  590:             ),
+  591:             None,
+  592:         )
+  593: 
+  594:         if row is None:
+  595:             return
+  596: 
+  597:         self.editing_key = (facility_id, capability_id)
+  598: 
+  599:         self.facility_combo.configure(state=tk.DISABLED)
+  600:         self.capability_combo.configure(state=tk.DISABLED)
+  601: 
+  602:         self.facility_id.set(facility_id)
+  603:         self.capability_id.set(capability_id)
+  604:         self.display_name_override.set(
+  605:             row.get("display_name_override", "")
+  606:         )
+  607:         self.max_concurrent_personnel.set(
+  608:             row.get("max_concurrent_personnel", "")
+  609:         )
+  610:         self.initial_tier_id.set(row.get("initial_tier_id", ""))
+  611:         self.foims_panel_id.set(row.get("foims_panel_id", ""))
+  612:      

@@ -1,0 +1,292 @@
+id|foims_panel_id
+    ...
+   93:             "ui_color",
+   94:             "flavor_text_id",
+   95:             "sort_order",
+   96:         ],
+   97:         "key_columns": ["metric_id", "tier_id"],
+   98:     },
+   99:     "facilities": {
+  100:         "filename": "facilities.csv",
+  101:         "required_columns": [
+  102:             "facility_id",
+  103:             "display_name",
+  104:             "track_id",
+  105:             "hq_zone_id",
+  106:             "description",
+  107:             "personnel_capacity",
+  108:             "initial_tier_id",
+  109:             "interaction_asset_id",
+  110:             "foims_panel_id",
+  111:             "active",
+  112:         ],
+  113:         "key_columns": ["facility_id"],
+  114:     },
+  115:     "flavor_text": {
+  116:         "filename": "flavor_text.csv",
+  117:         "required_columns": [
+  118:             "flavor_text_id",
+  119:             "category",
+  120:             "title",
+  121:             "body",
+  122:             "active",
+  123:         ],
+  124:         "key_columns": ["flavor_text_id"],
+  125:     },
+  126:     "qualification_catalog": {
+  127:         "filename": "qualification_catalog.csv",
+  128:         "required_columns": [
+  129:             "qualification_id",
+  130:             "display_name",
+  131:             "description",
+  132:             "sort_order",
+  133:             "active",
+  134:         ],
+  135:         "key_columns": ["qualification_id"],
+  136:     },
+  137:     "capabilities": {
+  138:         "filename": "capabilities.csv",
+  139:         "required_columns": [
+  140:             "capability_id",
+  141:             "display_name",
+  142:             "description",
+  143:             "standing_operation_label",
+  144:             "sort_order",
+  145:             "active",
+  146:         ],
+  147:         "key_columns": ["capability_id"],
+  148:     },
+  149:     "facility_capabilities": {
+  150:         "filename": "facility_capabilities.csv",
+  151:         "required_columns": [
+  152:             "facility_id",
+  153:             "capability_id",
+  154:             "display_name_override",
+  155:             "max_concurrent_personnel",
+  156:             "initial_tier_id",
+  157:             "foims_panel_id",
+  158:             "sort_order",
+  159:             "active",
+  160:         ],
+  161:         "key_columns": ["facility_id", "capability_id"],
+  162:     },
+  163:     "capability_staffing_rules": {
+  164:         "filename": "capability_staffing_rules.csv",
+  165:         "required_columns": [
+  166:             "capability_id",
+  167:             "qualification_id",
+  168:             "min_contributors",
+  169:             "preferred_contributors",
+  170:             "max_contributors",
+  171:             "sort_order",
+  172:             "active",
+  173:         ],
+  174:         "key_columns": ["capability_id", "qualification_id"],
+  175:     },
+  176:     "facility_capability_staffing_overrides": {
+  177:         "filename": "facility_capability_staffing_overrides.csv",
+  178:         "required_columns": [
+  179:             "facility_id",
+  180:             "capability_id",
+  181:             "qualification_id",
+  182:             "min_contributors",
+  183:             "preferred_contributors",
+  184:             "max_contributors",
+  185:             "sort_order",
+  186:             "active",
+  187:         ],
+  188:         "key_columns": ["facility_id", "capability_id", "qualification_id"],
+  189:     },
+  190:     "task_templates": {
+  191:         "filename": "task_templates.csv",
+  192:         "required_columns": [
+    ...
+  593: 
+  594: def validate_facilities(
+  595:     facilities: list[dict[str, str]],
+  596:     track_ids: set[str],
+  597:     enum_values: dict[str, set[str]],
+  598:     result: ValidationResult,
+  599: ) -> dict[str, dict[str, str]]:
+  600:     facility_by_id: dict[str, dict[str, str]] = {}
+  601:     allowed_tiers = enum_values.get("FACILITY_TIER", set())
+  602: 
+  603:     for row in facilities:
+  604:         facility_id = row["facility_id"]
+  605:         facility_by_id[facility_id] = row
+  606: 
+  607:         track_id = row["track_id"]
+  608:         tier_id = row["initial_tier_id"]
+  609:         personnel_capacity = parse_int("facilities", row, "personnel_capacity", result)
+  610: 
+  611:         if track_id not in track_ids:
+  612:             result.error(
+  613:                 f"[facilities] Line {row['_line_number']}: track_id '{track_id}' "
+  614:                 "does not exist in active department_tracks.csv"
+  615:             )
+  616: 
+  617:         if tier_id not in allowed_tiers:
+  618:             result.error(
+  619:                 f"[facilities] Line {row['_line_number']}: initial_tier_id "
+  620:                 f"'{tier_id}' does not exist in active enum_catalog FACILITY_TIER"
+  621:             )
+  622: 
+  623:         if personnel_capacity is not None and personnel_capacity < 1:
+  624:             result.error(
+  625:                 f"[facilities] Line {row['_line_number']}: personnel_capacity "
+  626:                 "must be at least 1"
+  627:             )
+  628: 
+  629:     return facility_by_id
+  630: 
+  631: 
+  632: def validate_catalog_sort_orders(
+  633:     table_name: str,
+  634:     rows: list[dict[str, str]],
+  635:     result: ValidationResult,
+  636: ) -> None:
+  637:     minimum_allowed = 0 if table_name == "enum_catalog" else 1
+  638: 
+  639:     for row in rows:
+  640:         value = parse_int(table_name, row, "sort_order", result)
+  641: 
+  642:         if value is not None and value < minimum_allowed:
+  643:             result.error(
+  644:                 f"[{table_name}] Line {row['_line_number']}: sort_order must be "
+  645:                 f"at least {minimum_allowed}"
+  646:             )
+  647: 
+  648: 
+  649: def validate_facility_capabilities(
+  650:     rows: list[dict[str, str]],
+  651:     active_facility_ids: set[str],
+  652:     active_capability_ids: set[str],
+  653:     facility_by_id: dict[str, dict[str, str]],
+  654:     enum_values: dict[str, set[str]],
+  655:     result: ValidationResult,
+  656: ) -> dict[tuple[str, str], dict[str, str]]:
+  657:     allowed_tiers = enum_values.get("FACILITY_TIER", set())
+  658:     active_pairs: dict[tuple[str, str], dict[str, str]] = {}
+  659: 
+  660:     for row in rows:
+  661:         facility_id = row["facility_id"]
+  662:         capability_id = row["capability_id"]
+  663:         maximum = parse_int(
+  664:             "facility_capabilities",
+  665:             row,
+  666:             "max_concurrent_personnel",
+  667:             result,
+  668:         )
+  669: 
+  670:         if facility_id not in active_facility_ids:
+  671:             result.error(
+  672:                 f"[facility_capabilities] Line {row['_line_number']}: facility_id "
+  673:                 f"'{facility_id}' does not exist in active facilities.csv"
+  674:             )
+  675: 
+  676:         if capability_id not in active_capability_ids:
+  677:             result.error(
+  678:                 f"[facility_capabilities] Line {row['_line_number']}: capability_id "
+  679:                 f"'{capability_id}' does not exist in active capabilities.csv"
+  680:             )
+  681: 
+  682:         if row["initial_tier_id"] not in allowed_tiers:
+  683:             result.error(
+  684:                 f"[facility_capabilities] Line {row['_line_number']}: "
+  685:                 f"initial_tier_id '{row['initial_tier_id']}' does not exist in "
+  686:                 "active enum_catalog FACILITY_TIER"
+  687:             )
+  688: 
+  689:         if maximum is not None and maximum < 1:
+  690:             result.error(
+  691:                 f"[facility_capabilities] Line {row['_line_number']}: "
+  692:                 "max_concurrent_personnel must be at least 1"
+  693:             )
+  694: 
+  695:         parent = facility_by_id.get(facility_id)
+  696:         if parent is not None and maximum is not None:
+  697:             capacity = parse_int("facilities", parent, "personnel_capacity", result)
+  698:             if capacity is not None and maximum > capacity:
+  699:                 result.error(
+  700:                     f"[facility_capabilities] Line {row['_line_number']}: "
+  701:                     f"max_concurrent_personnel ({maximum}) exceeds facility "
+  702:                     f"personnel_capacity ({capacity}) for '{facility_id}'"
+  703:                 )
+  704: 
+  705:         if row.get("active", "").upper() == "TRUE":
+  706:             active_pairs[(facility_id, capability_id)] = row
+  707: 
+  708:     validate_sort_order("facility_capabilities", rows, result)
+  709:     return active_pairs
+  710: 
+  711: 
+  712: def validate_staffing_range(
+  713:     table_name: str,
+  714:     row: dict[str, str],
+  715:     result: ValidationResult,
+  716: ) -> None:
+  717:     minimum = parse_int(table_name, row, "min_contributors", result)
+  718:     preferred = parse_int(table_name, row, "preferred_contributors", result)
+  719:     maximum = parse_int(table_name, row, "max_contributors", result)
+  720: 
+  721:     if (
+  722:         minimum is not None
+  723:         and preferred is not None
+  724:         and maximum is not None
+  725:         and not 0 <= minimum <= preferred <= maximum
+  726:     ):
+  727:         result.error(
+  728:             f"[{table_name}] Line {row['_line_number']}: contributor counts "
+  729:             "must satisfy 0 <= min_contributors <= preferred_contributors "
+  730:             "<= max_contributors"
+  731:         )
+  732: 
+  733: 
+  734: def validate_capability_staffing_rules(
+  735:     rows: list[dict[str, str]],
+  736:     active_capability_ids: set[str],
+  737:     active_qualification_ids: set[str],
+  738:     result: ValidationResult,
+  739: ) -> dict[tuple[str, str], dict[str, str]]:
+  740:     active_rules: dict[tuple[str, str], dict[str, str]] = {}
+  741: 
+  742:     for row in rows:
+  743:         capability_id = row["capability_id"]
+    ...
+  768:     for capability_id, _ in active_rules:
+  769:         active_rules_by_capability[capability_id] += 1
+  770: 
+  771:     for capability_id in active_capability_ids:
+  772:         if active_rules_by_capability.get(capability_id, 0) == 0:
+  773:             result.error(
+  774:                 f"[capability_staffing_rules] No active staffing rule exists "
+  775:                 f"for active capability '{capability_id}'"
+  776:             )
+  777: 
+  778:     return active_rules
+  779: 
+  780: 
+  781: def validate_facility_capability_staffing_overrides(
+  782:     rows: list[dict[str, str]],
+  783:     active_facility_capabilities: dict[tuple[str, str], dict[str, str]],
+  784:     active_qualification_ids: set[str],
+  785:     active_global_rules: dict[tuple[str, str], dict[str, str]],
+  786:     result: ValidationResult,
+  787: ) -> None:
+  788:     for row in rows:
+  789:         facility_id = row["facility_id"]
+  790:         capability_id = row["capability_id"]
+  791:         qualification_id = row["qualification_id"]
+  792: 
+  793:         if (facility_id, capability_id) not in active_facility_capabilities:
+  794:             result.error(
+  795:                 f"[facility_capability_staffing_overrides] Line "
+  796:                 f"{row['_line_number']}: facility_id/capability_id pair "
+  797:                 f"'{facility_id}/{capability_id}' does not exist in active "
+  798:                 "facility_capabilities.csv"
+  799:             )
+  800: 
+  801:         if qualification_id not in active_qualification_ids:
+  802:             result.error(
+  803:                 f"[facility_capability_staffing_overrides] Line "
+  804:                 f"{row['_li

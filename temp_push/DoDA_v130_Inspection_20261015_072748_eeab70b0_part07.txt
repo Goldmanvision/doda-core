@@ -1,0 +1,235 @@
+field: self.select_placeholder(f), add="+")
+  116:                 widget.bind("<ButtonRelease-1>", lambda _e, f=field: self.select_placeholder(f), add="+")
+  117:             widget.grid(row=index, column=1, sticky="ew", pady=4)
+  118:             self.widgets[field] = widget
+  119:         buttons = ttk.Frame(right)
+  120:         buttons.grid(row=len(FIELDS), column=0, columnspan=2, sticky="ew", pady=8)
+  121:         for index, (label, command) in enumerate((
+  122:             ("New Capability", self.new), ("Apply to List", self.apply_record),
+  123:             ("Save to Source", self.save), ("Delete from List", self.remove),
+  124:             ("Revert Form", self.revert), ("Revert Draft", self.revert_source),
+  125:             ("Open Backups", self.open_backups),
+  126:         )):
+  127:             ttk.Button(buttons, text=label, command=command).grid(
+  128:                 row=index // 3, column=index % 3, sticky="ew", padx=3, pady=3
+  129:             )
+  130:         ttk.Label(
+  131:             right, wraplength=390,
+  132:             text="IDs are immutable. Name, Description, and Standing Operation are required. Apply changes "
+  133:                  "only the draft. Save validates the candidate project and protects "
+  134:                  "facility, staffing, and task references. Active capabilities require an active global staffing rule. Validate/Export use saved source."
+  135:         ).grid(row=len(FIELDS) + 1, column=0, columnspan=2, sticky="ew", pady=8)
+  136:         ttk.Label(right, textvariable=self.status, wraplength=390).grid(
+  137:             row=len(FIELDS) + 2, column=0, columnspan=2, sticky="ew"
+  138:         )
+  139:         self.new()
+  140: 
+  141:     def new(self):
+  142:         self._end_session()
+  143:         self.editing_key = None
+  144:         self._loading = True
+  145:         try:
+  146:             self.tree.selection_remove(*self.tree.selection())
+  147:             self.widgets["capability_id"].configure(state="normal")
+  148:             for field in FIELDS:
+  149:                 self.vars[field].set("")
+  150:             self.vars["sort_order"].set(str(max(
+  151:                 (int(r["sort_order"]) for r in self.loaded_rows), default=0
+  152:             ) + 1))
+  153:             self.vars["active"].set("TRUE")
+  154:             self.widgets["active"].configure(values=("TRUE", "FALSE"))
+  155:             self._load_description()
+  156:         finally:
+  157:             self._loading = False
+  158: 
+  159:     def validate_rows(self, rows, allow_source_drafts=False):
+  160:         seen = set()
+  161:         for row in rows:
+  162:             if set(row) != set(FIELDS) or any(not isinstance(row[f], str) for f in FIELDS):
+  163:                 raise ValueError("Malformed capability row.")
+  164:             if any(row[f].strip() == MULTIPLE_VALUES for f in FIELDS):
+  165:                 raise ValueError("Mixed-value placeholder cannot be applied as data.")
+  166:             key = row_key(row)
+  167:             if not re.fullmatch(r"[A-Z][A-Z0-9_]*", key):
+  168:                 raise ValueError("Capability ID must be uppercase letters/digits/underscores, starting with a letter.")
+  169:             if key in seen:
+  170:                 raise ValueError("Duplicate Capability ID.")
+  171:             seen.add(key)
+  172:             if not row["display_name"].strip():
+  173:                 raise ValueError("Display Name is required.")
+  174:             if not row["description"].strip():
+  175:                 raise ValueError("Description is required.")
+  176:             if not row["standing_operation_label"].strip():
+  177:                 original = getattr(self, "_source_rows", {}).get(key)
+  178:                 unchanged_source_draft = (
+  179:                     row["active"] == "FALSE"
+  180:                     and (allow_source_drafts or row == original)
+  181:                 )
+  182:                 if not unchanged_source_draft:
+  183:                     raise ValueError("Standing Operation Label is required.")
+  184:             if int(row["sort_order"]) < 1:
+  185:                 raise ValueError("Sort Order must be at least 1.")
+  186:             if row["active"] not in ("TRUE", "FALSE"):
+  187:                 raise ValueError("Active must be TRUE or FALSE.")
+  188: 
+  189:     def _load_description(self):
+  190:         previous = self._loading
+  191:         self._loading = True
+  192:         try:
+  193:             self.description.delete("1.0", "end")
+  194:             self.description.insert("1.0", self.vars["description"].get())
+  195:             self._description_seen = self.description.get("1.0", "end-1c")
+  196:             self.description.edit_modified(False)
+  197:         finally:
+  198:             self._loading = previous
+  199: 
+  200:     def description_modified(self, _event=None):
+  201:         if not self.description.edit_modified():
+  202:             return
+  203:         self.description.edit_modified(False)
+  204:         self.flush_description()
+  205: 
+  206:     def flush_description(self):
+  207:         current = self.description.get("1.0", "end-1c")
+  208:         if not self._loading and current != self._description_seen:
+  209:             self.vars["description"].set(current)
+  210:             self.changed("description")
+  211:         self._description_seen = current
+  212: 
+  213:     def on_select(self, _event=None, force=False):
+  214:         selected = tuple(self.tree.selection())
+  215:         if not force and selected == self._session and self.loaded_rows == self._original:
+  216:             return
+  217:         self._draft_on_select(_event, force)
+  218:         self._load_description()
+  219: 
+  220:     def apply_record(self):
+  221:         self.flush_description()
+  222:         return self._draft_apply_record()
+  223: 
+  224:     def select_placeholder(self, field):
+  225:         if len(self._session) < 2 or field in self._changes:
+  226:             return
+  227: 
+  228:         def select():
+  229:             if len(self._session) < 2 or field in self._changes:
+  230:                 return
+  231:             value = (
+  232:                 self.description.get("1.0", "end-1c")
+  233:                 if field == "description" else self.vars[field].get()
+  234:             )
+  235:             if value != MULTIPLE_VALUES:
+  236:                 return
+  237:             if field == "description":
+  238:                 self.description.tag_add("sel", "1.0", "end-1c")
+  239:                 self.description.mark_set("insert", "end-1c")
+  240:             else:
+  241:                 self.widgets[field].selection_range(0, "end")
+  242:                 self.widgets[field].icursor("end")
+  243: 
+  244:         self.widgets[field].after_idle(select)
+  245: 
+  246:     def rows(self):
+  247:         return [dict(row) for row in self.loaded_rows]
+  248: 
+  249:     def _set_status(self, text):
+  250:         self.status.set(text)
+  251: 
+  252:     def _end_session(self):
+  253:         self._session = ()
+  254:         self._original = []
+  255:         self._changes = {}
+  256: 
+  257:     def changed(self, field):
+  258:         if self._loading or len(self._session) < 2 or field not in EDITABLE:
+  259:             return
+  260:         self._changes[field] = self.vars[field].get()
+  261:         self._set_status(
+  262:             f"{len(self._session)} capabilities selected; {len(self._changes)} edited field(s) ready for Apply."
+  263:         )
+  264: 
+  265:     def _render_draft(self):
+  266:         selected = tuple(self.tree.selection())
+  267:         for item in self.tree.get_children():
+  268:             self.tree.delete(item)
+  269:         for row in sorted(
+  270:             self.loaded_rows,
+  271:             key=lambda r: (int(r["sort_order"]), r["capability_id"])
+  272:         ):
+  273:             self.tree.insert(
+  274:                 "", "end", iid=row_iid(row), values=tuple(row[f] for f in self.tree["columns"])
+  275:             )
+  276:         kept = [iid for iid in selected if self.tree.exists(iid)]
+  277:         if kept:
+  278:             self.tree.selection_set(*kept)
+  279: 
+  280:     def update(self, force=False):
+  281:         path = self.source_path()
+  282:         if self.dirty and not force:
+  283:             if self.loaded_path is not None and path.resolve() != self.loaded_path:
+  284:                 raise ValueError("Capabilities draft belongs to another project. Save or revert first.")
+  285:             self._set_status("Unsaved Capabilities draft retained; refresh skipped.")
+  286:             return
+  287:         before = self.digest(path)
+  288:         with path.open(encoding="utf-8-sig", newline="") as handle:
+  289:             reader = csv.DictReader(handle)
+  290:             if reader.fieldnames != list(FIELDS):
+  291:                 raise ValueError("Capabilities CSV header does not match the current schema.")
+  292:             rows = [dict(row) for row in reader if any(row.values())]
+  293:         self.validate_rows(rows, allow_source_drafts=True)
+  294:         if before != self.digest(path):
+  295:             raise ValueError("Capabilities CSV changed during refresh; draft retained.")
+  296: 
+  297:         self._end_session()
+  298:         self._source_rows = {row_key(row): dict(row) for row in rows}
+  299:         self.loaded_rows = rows
+  300:         self.loaded_path = path.resolve()
+  301:         self.snapshot_hash = before
+  302:         self.dirty = False
+  303:         self._render_draft()
+  304:         if self.tree.selection():
+  305:             self.on_select(force=True)
+  306:         else:
+  307:             self.new()
+  308:         self._set_status(f"{len(rows)} capabilities loaded from source.")
+  309: 
+  310:     def _draft_on_select(self, _event=None, force=False):
+  311:         selected = tuple(self.tree.selection())
+  312:         if not selected:
+  313:             was_multiple = len(self._session) > 1
+  314:             self._end_session()
+  315:             if was_multiple:
+  316:                 self.new()
+  317:             return
+  318:         if not force and selected == self._session and self.loaded_rows == self._original:
+  319:             return
+  320:         by_id = {row_iid(row): row for row in self.loaded_rows}
+  321:         if len(selected) != len(set(selected)) or any(iid not in by_id for iid in selected):
+  322:             self._set_status("Selection no longer matches draft. Reselect rows.")
+  323:             return
+  324:         rows = [by_id[iid] for iid in selected]
+  325:         self._loading = True
+  326:         try:
+  327:             self._session = selected
+  328:             self._original = self.rows()
+  329:             self._changes = {}
+  330:             self.editing_key = row_key(rows[0]) if len(rows) == 1 else None
+  331:             for field in FIELDS:
+  332:                 self.vars[field].set(selection_display(rows, field, show_common=True))
+  333:             for field in IDENTITY:
+  334:                 self.widgets[field].configure(state="disabled")
+  335:             self.widgets["active"].configure(values=("TRUE", "FALSE"))
+  336:         finally:
+  337:             self._loading = False
+  338:         if len(rows) > 1:
+  339:             self._set_status(f"{len(rows)} capabilities selected. Untouched fields are preserved.")
+  340: 
+  341:     def revert(self):
+  342:         if self.tree.selection():
+  343:             self.on_select(force=True)
+  344:         else:
+  345:             self.new()
+  346: 
+  347:     def write(self, path, rows):
+  348:         with path.open("w", encoding="utf-8", newline="") as handle:
+  349:             writer = cs

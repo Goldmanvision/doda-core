@@ -1,0 +1,229 @@
+v.DictWriter(handle, fieldnames=FIELDS, lineterminator="\n")
+  350:             writer.writeheader()
+  351:             writer.writerows(sorted(
+  352:                 rows, key=lambda r: (int(r["sort_order"]), r["capability_id"])
+  353:             ))
+  354: 
+  355:     def candidate_valid(self, candidate):
+  356:         with tempfile.TemporaryDirectory(prefix="doda-capabilities-") as temporary:
+  357:             root = Path(temporary)
+  358:             destination = root / "data_authoring" / "source"
+  359:             destination.mkdir(parents=True)
+  360:             for filename in FILES:
+  361:                 shutil.copy2(
+  362:                     candidate if filename == "capabilities.csv"
+  363:                     else self.app.source_directory / filename,
+  364:                     destination / filename
+  365:                 )
+  366:             completed = subprocess.run(
+  367:                 [sys.executable, str(self.app.validator_path), "--root", str(root), "validate"],
+  368:                 cwd=root, text=True, encoding="utf-8", errors="replace", capture_output=True
+  369:             )
+  370:             return completed.returncode == 0, completed.stdout + "\n" + completed.stderr
+  371: 
+  372:     def _validate_rows(self, rows):
+  373:         self.validate_rows(rows)
+  374:         with tempfile.TemporaryDirectory(prefix="doda-capabilities-draft-") as temporary:
+  375:             candidate = Path(temporary) / "capabilities.csv"
+  376:             self.write(candidate, rows)
+  377:             valid, output = self.candidate_valid(candidate)
+  378:         self.app.log(output)
+  379:         if not valid:
+  380:             raise ValueError("Candidate project validation failed. Draft and CSV unchanged; see Activity Log.")
+  381: 
+  382:     def _check_project(self):
+  383:         if self.loaded_path is None or self.source_path().resolve() != self.loaded_path:
+  384:             raise ValueError("Source project changed or is not loaded. Draft retained.")
+  385: 
+  386:     def _draft_apply_record(self):
+  387:         try:
+  388:             self._check_project()
+  389:             before = self.rows()
+  390:             selected = tuple(self.tree.selection())
+  391:             if len(selected) > 1:
+  392:                 if selected != self._session or before != self._original:
+  393:                     raise ValueError("Draft or selection changed. Reselect before applying.")
+  394:                 if not self._changes:
+  395:                     self._set_status("No deliberately edited fields. Draft unchanged.")
+  396:                     return False
+  397:                 if any(field not in EDITABLE for field in self._changes):
+  398:                     raise ValueError("Identity cannot be batch-edited.")
+  399:                 changes = {field: value.strip() for field, value in self._changes.items()}
+  400:                 candidate = [
+  401:                     {**row, **changes} if row_iid(row) in selected else dict(row)
+  402:                     for row in before
+  403:                 ]
+  404:             else:
+  405:                 row = {field: self.vars[field].get().strip() for field in FIELDS}
+  406:                 key = row_key(row)
+  407:                 if self.editing_key is not None and key != self.editing_key:
+  408:                     raise ValueError("Capability ID cannot change after creation.")
+  409:                 if self.editing_key is None and any(row_key(r) == key for r in before):
+  410:                     raise ValueError("Capability ID already exists.")
+  411:                 if self.editing_key is not None and not any(row_key(r) == key for r in before):
+  412:                     raise ValueError("Selected capability is no longer in the draft.")
+  413:                 candidate = [dict(r) for r in before if row_key(r) != key] + [row]
+  414:             self._validate_rows(candidate)
+  415:             self._check_project()
+  416:             if self.loaded_rows != before or tuple(self.tree.selection()) != selected:
+  417:                 raise ValueError("Draft or selection changed during validation. Nothing applied.")
+  418:             self.loaded_rows = candidate
+  419:             self.dirty = True
+  420:             if len(selected) > 1:
+  421:                 by_id = {row_iid(r): r for r in candidate}
+  422:                 for iid in selected:
+  423:                     self.tree.item(iid, values=tuple(by_id[iid][f] for f in self.tree["columns"]))
+  424:             else:
+  425:                 self._render_draft()
+  426:                 self.tree.selection_set(row_iid(row))
+  427:             self.on_select(force=True)
+  428:             self._set_status("Applied to draft. UNSAVED CHANGES.")
+  429:             return True
+  430:         except ERRORS as error:
+  431:             self.blocked("Apply", error)
+  432:             return False
+  433: 
+  434:     def blocked(self, action, error):
+  435:         self.app.log(f"Capabilities {action} blocked; draft retained: {error}")
+  436:         self._set_status(f"{action} blocked: {str(error).splitlines()[0]}")
+  437:         messagebox.showerror(self.title, str(error), parent=self.app)
+  438: 
+  439:     def remove(self):
+  440:         selected = tuple(self.tree.selection())
+  441:         if len(selected) != 1 or self.editing_key is None:
+  442:             messagebox.showwarning(
+  443:                 self.title, "Delete from List requires one selected existing capability.", parent=self.app
+  444:             )
+  445:             return
+  446:         if not messagebox.askyesno(
+  447:             self.title, "Delete selected capability from draft? Source changes only after Save to Source.",
+  448:             default=messagebox.NO, parent=self.app
+  449:         ):
+  450:             return
+  451:         try:
+  452:             self._check_project()
+  453:             before = self.rows()
+  454:             candidate = [r for r in before if row_iid(r) != selected[0]]
+  455:             if len(candidate) == len(before):
+  456:                 raise ValueError("Selected capability is no longer in the draft.")
+  457:             self._validate_rows(candidate)
+  458:             self._check_project()
+  459:             if self.loaded_rows != before or tuple(self.tree.selection()) != selected:
+  460:                 raise ValueError("Draft or selection changed during validation.")
+  461:             self.loaded_rows = candidate
+  462:             self.dirty = True
+  463:             self._render_draft()
+  464:             self.new()
+  465:             self._set_status("Capability deleted from draft. UNSAVED CHANGES.")
+  466:         except ERRORS as error:
+  467:             self.blocked("Delete", error)
+  468: 
+  469:     def commit(self, rows):
+  470:         self._check_project()
+  471:         path = self.source_path()
+  472:         expected = self.snapshot_hash
+  473:         if expected is None or self.digest(path) != expected:
+  474:             raise ValueError("CSV changed externally. Draft retained; Revert Draft before reapplying edits.")
+  475:         original = self.rows()
+  476:         candidate_rows = [dict(row) for row in rows]
+  477:         temporary = path.with_name(".capabilities-" + uuid4().hex + ".tmp.csv")
+  478:         try:
+  479:             self.validate_rows(candidate_rows)
+  480:             self.write(temporary, candidate_rows)
+  481:             valid, output = self.candidate_valid(temporary)
+  482:             self.app.log(output)
+  483:             if not valid:
+  484:                 raise ValueError("Candidate project validation failed. Draft retained; CSV unchanged.")
+  485:             self._check_project()
+  486:             if self.loaded_rows != original or self.digest(path) != expected:
+  487:                 raise ValueError("Draft or CSV changed during validation. Save blocked.")
+  488:             folder = self.backup_directory()
+  489:             folder.mkdir(parents=True, exist_ok=True)
+  490:             backup = folder / (
+  491:                 "capabilities_" + datetime.now().strftime("%Y%m%d_%H%M%S_%f") + ".csv"
+  492:             )
+  493:             shutil.copy2(path, backup)
+  494:             if self.digest(backup) != expected or self.digest(path) != expected:
+  495:                 raise ValueError("CSV changed while preparing backup. Save blocked.")
+  496:             self._check_project()
+  497:             os.replace(temporary, path)
+  498:         finally:
+  499:             try:
+  500:                 temporary.unlink(missing_ok=True)
+  501:             except OSError as error:
+  502:                 self.app.log(f"Capabilities temporary cleanup warning: {error}")
+  503:         self.snapshot_hash = self.digest(path)
+  504:         self.dirty = False
+  505:         self.app.log(f"Capabilities saved. Backup: {backup}")
+  506:         self._set_status("Capabilities saved to source.")
+  507:         self.app.refresh_all(False)
+  508:         messagebox.showinfo(
+  509:             self.title, f"Candidate validation passed.\nBackup: {backup}", parent=self.app
+  510:         )
+  511: 
+  512:     def save(self):
+  513:         if not self.dirty:
+  514:             self._set_status("No applied changes. Use Apply to List first.")
+  515:             return
+  516:         try:
+  517:             self.commit(self.loaded_rows)
+  518:         except ERRORS as error:
+  519:             self.blocked("Save", error)
+  520: 
+  521:     def revert_source(self):
+  522:         if self.dirty and not messagebox.askyesno(
+  523:             self.title, "Discard applied Capabilities draft changes and reload source?",
+  524:             default=messagebox.NO, parent=self.app
+  525:         ):
+  526:             return
+  527:         try:
+  528:             self.update(force=True)
+  529:         except ERRORS as error:
+  530:             self.blocked("Revert Draft", error)
+  531: 
+  532:     def open_backups(self):
+  533:         self.backup_directory().mkdir(parents=True, exist_ok=True)
+  534:         self.app.open_folder(self.backup_directory())
+  535: 
+  536: 
+  537: def install_capabilities_editor(app):
+  538:     app.capabilities_editor = CapabilitiesEditor(app)
+
+===== FULL SOURCE: E:\Dev\uzdoom_src\doda-core\tools\doda_content_workbench\doda_capabilities_draft_policy.py =====
+SHA256: C5AA2E469F9723F3AD54A41522681B66D32AA7C5E493E13AFEDBF4FBDB43DEBB
+    1: """Capabilities applied-draft guards; preserve existing guard delegation."""
+    2: 
+    3: 
+    4: def capabilities_draft_dirty(app):
+    5:     editor = getattr(app, "capabilities_editor", None)
+    6:     return bool(editor is not None and getattr(editor, "dirty", False))
+    7: 
+    8: 
+    9: def allow_capabilities_project_change(app, dialogs):
+   10:     if capabilities_draft_dirty(app):
+   11:         dialogs.showwarning(
+   12:             "Capabilities",
+   13:             "Save to Source or Revert Draft before switching projects. Draft retained.",
+   14:             parent=app,
+   15:         )
+   16:         return False
+   17:     return True
+   18: 
+   19: 
+   20: def install_capabilities_draft_close_guard(app, dialogs):
+   21:     if getattr(app, "_capabilities_close_guard_installed", False):
+   22:         return
+   23:     previous = getattr(app, "_network_close_handler", None)
+   24: 
+   25:     def on_close():
+   26:         if capabilities_draft_dirty(app) and not dialogs.askyesno(
+   27:             "Unsaved Capabilities Draft",
+   28:             "Close and discard applied Capabilities draft changes?",
+   29:             parent=app,
+   30:         ):
+   31:             return
+   32:         if previous is not None:
+   33:             return previous()
+   34:         return app.destroy()
+   35: 
+   36:     ap
