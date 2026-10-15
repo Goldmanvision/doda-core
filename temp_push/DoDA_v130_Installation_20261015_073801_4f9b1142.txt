@@ -1,0 +1,46 @@
+===== DoDA v130 FACILITY CAPABILITIES INSTALLATION AND AUTOMATED VERIFICATION =====
+Time: 2026-10-15T07:53:14.8648479-04:00
+Branch: feature/workbench-data-bridge
+HEAD before report publication: 673ec61cd81f1b250db4bc8ca5a48c7af9b64183
+Four-file approved scope: Facility Capabilities editor replacement, four-line GUI integration, new draft policy, new targeted test module.
+Installed directly through the native filesystem writer with source hash guards and verified original backups.
+PowerShell Copy-Item initially denied writing the existing editor. Its partial GUI/policy installation was hash-verified and rolled back before native-writer recovery. No ACL or global Git configuration changes were made.
+Draft-only Apply/Delete; separate validated Save to Source; composite identity immutable; per-facility capacity checks; aggregate overcommit remains a validator warning; draft refresh/project-switch/close protection.
+
+===== AUTOMATED EVIDENCE =====
+Candidate syntax: AST parse passed.
+Staged targeted tests: 93 passed, 0 failures, 0 errors, 0 skips.
+Existing regression tests against staged candidate: 1075 passed, 0 failures, 0 errors, 0 skips.
+Installed targeted tests: 93 passed, exit code 0, 0 failures, 0 errors, 0 skips.
+Installed full regression tests: 1168 passed, exit code 0, 0 failures, 0 errors, 0 skips.
+Seven automated Tk widget smoke checks included; these are NOT manual user GUI verification.
+Eight real-validator tests included, using isolated candidate projects. Active-task reference protection was tested using an isolated active-task fixture because current authored tasks are inactive drafts.
+Tests used the existing Workbench .venv Python 3.14.6 and unittest discovery.
+Sandbox-only runner adapts newly-created private tempfile directories under the disposable test root to inherited workspace permissions; no test suppression or product changes for this workaround.
+Authored CSVs unchanged: 64, verified after installed test runs.
+All other baselined Workbench Python source/test files unchanged.
+
+===== VERIFICATION STILL OPEN =====
+Manual GUI checks have NOT been performed or user-confirmed for v130.
+Check startup/Refresh, single and multi-row Apply, selection/column alignment, per-facility capacity and required-field rejection, Revert Form/Draft, dirty refresh retention, project-switch and both close cancel paths, referenced deletion/deactivation rejection.
+No native-engine builds, ZScript parsing, or in-game validation performed.
+Implementation source remains uncommitted. Only this report is approved for publication.
+
+===== INSTALLED FILE HASHES =====
+doda_content_gui.py SHA256: 766C71AA32934A3A4D0AA77AE56590C6847D0EADD3D3196A023F671CDA803E09
+doda_facility_capabilities_draft_policy.py SHA256: 3FA28C46DD8B949552668D32F27015D677023624A29B8E1E1A563BF4696324B5
+doda_facility_capabilities_editor.py SHA256: 317E5AE68E1A41C79AEBA2C022F01DC1A8B5268506D91F900C9D5B9BCF87068E
+tests\test_facility_capabilities_v130.py SHA256: 1D41F81E58AA73420382CB1BA4A23CCE80157C53BF9279CB8ED0C12749119932
+
+===== LOCAL BACKUPS AND TEST LOGS =====
+Work directory: E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v130_direct_20261015_073801_4f9b1142
+E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v130_direct_20261015_073801_4f9b1142\originals\doda_content_gui.py.bak SHA256: 5AA990692C16A705B45F8F4C1805121160993143A766C9DB1D3D5F95F557A84A
+E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v130_direct_20261015_073801_4f9b1142\originals\doda_facility_capabilities_editor.py.bak SHA256: E47FFD02C4D5F688E1594E63172B791D75A61A915CD7C0F64345AABBAAEC0C9E
+E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v130_direct_20261015_073801_4f9b1142\staged_targeted_tests_final.txt SHA256: B5E39A08A5576B3C256DC4753A678BD0718346A5D7AD352DF2AB8AC0B87A7534
+E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v130_direct_20261015_073801_4f9b1142\staged_existing_regression.txt SHA256: A2D48A86E2FDBD81F762BFFF7BD2D3F725C62D1C150F1B0D03B2A8ACEEAA47DA
+E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v130_direct_20261015_073801_4f9b1142\installed_targeted_tests.txt SHA256: FA853B3FD492399EB93566068B2F87475CE0D188499FB9C802333EB7C624A510
+E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v130_direct_20261015_073801_4f9b1142\installed_full_regression.txt SHA256: BFE60D4017396126E182893CBE236E64E08088AAD83EC0E9D9737238332BE762
+E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v130_direct_20261015_073801_4f9b1142\installation.txt SHA256: 3AD876676D16595155D428DF13594E6B56F8CBA322F2EA523726CFC1C04B594E
+E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v130_direct_20261015_073801_4f9b1142\rollback.txt SHA256: E4B272A3959AF980609F03198DB1FB48C8F5F6697718A1268AE503596D712344
+E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v130_direct_20261015_073801_4f9b1142\run_v130_tests.py SHA256: C38D1AA3074DCDC1CF642D076C21BFAFBA5C9CECE2234369D1F870FBFF8A184D
+E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v130_direct_20261015_073801_4f9b1142\baseline.json SHA256: 6A85421FD1F9A86234A8E137E5A9F4A5D0656B719D36B2A38247629FE7F340BE

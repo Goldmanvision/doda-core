@@ -46,11 +46,6 @@ map MAP03 "TULPA LOBBT"
 map MAP04 "TULPA AMBUSH"
 {
     Sky1 = "SKY1"
-    next = "MAP05"
-}
-
-map MAP05 "ON-SITE FORENSICS"
-{
-    Sky1 = "SKY1"
     next = "MAP01"
 }
+
