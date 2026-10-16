@@ -5,7 +5,7 @@
 //   tools/doda_content_workbench/doda_zscript_catalog.py
 // Generator 0.5.0; network content sha256 ca30bb147d2525c2d7ba9aeab9360fb3e53be65dd639812bee4f51ec8d0dfa36
 // equipment content sha256 29cdce16968120b1daa127d59968b61cf37dacbd9e35cc7c59d938712c20f50d
-// department catalog content sha256 053a0d547e55531cd38922fb48149800d42367c143199784ebdb69ef9523ba6a
+// department catalog content sha256 ba31545886d7438d8538c5369049bebc88f47d634720bf0f3f8dc6eff1f3eaa7
 // Read-only display/lookup catalog (Option B stopgap). No simulation rules.
 
 class DoDAWorkbenchCatalog : Object
@@ -26,7 +26,7 @@ class DoDAWorkbenchCatalog : Object
     static String GeneratorVersion() { return "0.5.0"; }
     static String NetworkSourceHash() { return "ca30bb147d2525c2"; }
     static String EquipmentSourceHash() { return "29cdce16968120b1"; }
-    static String DepartmentSourceHash() { return "053a0d547e55531c"; }
+    static String DepartmentSourceHash() { return "ba31545886d7438d"; }
 
     // Network tiers
     static String TierId(int i)
@@ -716,9 +716,9 @@ class DoDAWorkbenchCatalog : Object
         switch (i)
         {
         case 0: return 1;
-        case 1: return 0;
+        case 1: return 1;
         case 2: return 1;
-        case 3: return 0;
+        case 3: return 1;
         default: return -2;
         }
     }
@@ -740,7 +740,7 @@ class DoDAWorkbenchCatalog : Object
         switch (i)
         {
         case 0: return 2;
-        case 1: return 1;
+        case 1: return 2;
         case 2: return 2;
         case 3: return 2;
         default: return -2;
@@ -826,7 +826,7 @@ class DoDAWorkbenchCatalog : Object
         case 0: return 1;
         case 1: return 1;
         case 2: return 1;
-        case 3: return 0;
+        case 3: return 1;
         default: return -2;
         }
     }
@@ -836,9 +836,9 @@ class DoDAWorkbenchCatalog : Object
         switch (i)
         {
         case 0: return 1;
-        case 1: return 0;
+        case 1: return 1;
         case 2: return 1;
-        case 3: return 0;
+        case 3: return 1;
         default: return -2;
         }
     }
@@ -886,7 +886,7 @@ class DoDAWorkbenchCatalog : Object
         case 0: return 2;
         case 1: return 2;
         case 2: return 2;
-        case 3: return 1;
+        case 3: return 2;
         default: return -2;
         }
     }

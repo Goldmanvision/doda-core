@@ -71,6 +71,7 @@ import doda_hostile_rules
 import doda_progression_identity_rules
 import doda_authored_mission_rules
 import doda_zscript_catalog
+import doda_export_freshness
 import doda_resource_rules
 import doda_task_flow_rules
 import doda_task_staffing_rules
@@ -1329,33 +1330,34 @@ class ContentWorkbenchApp(tk.Tk):
 
             if valid:
                 self.validation_text.set(
-                    f"PASS — {error_count} error(s), {warning_count} warning(s), "
+                    f"PASS \u2014 {error_count} error(s), {warning_count} warning(s), "
                     f"report: {generated_at}"
                 )
             else:
                 self.validation_text.set(
-                    f"FAIL — {error_count} error(s), {warning_count} warning(s), "
+                    f"FAIL \u2014 {error_count} error(s), {warning_count} warning(s), "
                     f"report: {generated_at}"
                 )
         else:
             self.validation_text.set(
-                "UNKNOWN — no validation report has been generated yet."
+                "UNKNOWN \u2014 no validation report has been generated yet."
             )
 
+        freshness = doda_export_freshness.inspect_freshness(self.project_root)
         pk3_path = self.build_directory / "doda-generated-content.pk3"
-
         if pk3_path.is_file():
             modified = datetime.fromtimestamp(
                 pk3_path.stat().st_mtime
             ).strftime("%Y-%m-%d %H:%M:%S")
-
             self.export_text.set(
-                f"READY — doda-generated-content.pk3, "
-                f"{pk3_path.stat().st_size:,} bytes, built {modified}"
+                f"BUILT \u2014 doda-generated-content.pk3, "
+                f"{pk3_path.stat().st_size:,} bytes, built {modified}\n"
+                + freshness.summary
             )
         else:
             self.export_text.set(
-                "NOT BUILT — no generated PK3 overlay exists yet."
+                "NOT BUILT \u2014 no generated PK3 overlay exists yet.\n"
+                + freshness.summary
             )
 
     def update_dashboard(self) -> None:
@@ -1802,8 +1804,10 @@ class ContentWorkbenchApp(tk.Tk):
                 doda_evidence_instance_rules.validate_instances(self.project_root, result)
                 doda_task_prerequisite_rules.validate_prerequisites(self.project_root, result)
                 doda_vehicle_rules.validate_vehicles(self.project_root, result)
-                if result.valid and not doda_zscript_catalog.is_current(self.project_root):
-                    result.warnings.append("ZScript catalog is stale; export network rules to regenerate it")
+                if result.valid:
+                    result.warnings.extend(
+                        doda_export_freshness.inspect_freshness(self.project_root).warnings
+                    )
                 out_path = None
         except Exception as error:
             self.log(f"Network rules {mode} error: {error}")

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "toolVersion": "0.1.1",
-  "generatedAtUtc": "2026-10-13T03:47:55.332618+00:00",
+  "generatedAtUtc": "2026-10-16T18:56:18.085279+00:00",
   "tables": {
     "enum_catalog": [
       {
@@ -885,9 +885,9 @@
       {
         "capability_id": "ELECTRONIC_SURVEILLANCE",
         "qualification_id": "DATA_SYSTEMS",
-        "min_contributors": 0,
+        "min_contributors": 1,
         "preferred_contributors": 1,
-        "max_contributors": 1,
+        "max_contributors": 2,
         "sort_order": 20,
         "active": true
       },
@@ -903,7 +903,7 @@
       {
         "capability_id": "OCCULT_RESPONSE",
         "qualification_id": "OCCULT_RESPONSE",
-        "min_contributors": 0,
+        "min_contributors": 1,
         "preferred_contributors": 1,
         "max_contributors": 2,
         "sort_order": 20,
@@ -935,7 +935,7 @@
         "facility_id": "TECHOPS_HUB",
         "capability_id": "ELECTRONIC_SURVEILLANCE",
         "qualification_id": "DATA_SYSTEMS",
-        "min_contributors": 0,
+        "min_contributors": 1,
         "preferred_contributors": 1,
         "max_contributors": 1,
         "sort_order": 2,
