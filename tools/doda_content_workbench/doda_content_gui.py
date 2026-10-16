@@ -30,13 +30,16 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 from typing import Any
 from doda_track_editor import install_track_editor
+from doda_track_draft_policy import allow_track_project_change, install_track_draft_close_guard
 from doda_metrics_editor import install_metrics_editor
 from doda_metric_tiers_editor import install_metric_tiers_editor
 from doda_metric_bundle_editor import open_metric_bundle_editor
 from doda_facilities_editor import install_facilities_editor
 from doda_facilities_draft_policy import allow_facilities_project_change, install_facilities_draft_close_guard
 from doda_flavor_text_editor import install_flavor_text_editor
+from doda_flavor_text_draft_policy import allow_flavor_text_project_change, install_flavor_text_draft_close_guard
 from doda_enum_catalog_editor import install_enum_catalog_editor
+from doda_enum_catalog_draft_policy import allow_enum_catalog_project_change, install_enum_catalog_draft_close_guard
 from doda_qualification_catalog_editor import install_qualification_catalog_editor
 from doda_qualification_draft_policy import allow_qualification_project_change, install_qualification_draft_close_guard
 from doda_capabilities_editor import install_capabilities_editor
@@ -280,6 +283,9 @@ class ContentWorkbenchApp(tk.Tk):
         install_capabilities_draft_close_guard(self, messagebox)
         install_facility_capabilities_draft_close_guard(self, messagebox)
         install_facilities_draft_close_guard(self, messagebox)
+        install_track_draft_close_guard(self, messagebox)
+        install_flavor_text_draft_close_guard(self, messagebox)
+        install_enum_catalog_draft_close_guard(self, messagebox)
         install_grouped_navigation(self)
         install_tree_autosize(self)
         self.refresh_all(show_message=False)
@@ -1911,6 +1917,12 @@ class ContentWorkbenchApp(tk.Tk):
             )
 
     def choose_project_root(self) -> None:
+        if not allow_enum_catalog_project_change(self, messagebox):
+            return
+        if not allow_flavor_text_project_change(self, messagebox):
+            return
+        if not allow_track_project_change(self, messagebox):
+            return
         if not allow_facilities_project_change(self, messagebox):
             return
         if not allow_facility_capabilities_project_change(self, messagebox):

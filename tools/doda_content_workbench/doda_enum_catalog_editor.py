@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import csv
+import json
+import hashlib
 import os
 import re
 import shutil
@@ -11,982 +13,688 @@ import tkinter as tk
 from datetime import datetime
 from pathlib import Path
 from tkinter import messagebox, ttk
-from typing import Any
 from uuid import uuid4
 
-FIELDS = (
-    "enum_group",
-    "enum_value",
-    "display_label",
-    "description",
-    "sort_order",
-    "active",
-)
+from doda_row_selection import MULTIPLE_VALUES, selection_display
+from doda_task_templates_editor import FILES as VALIDATION_FILES
 
-FILES = (
-    "enum_catalog.csv",
-    "department_tracks.csv",
-    "metrics.csv",
-    "metric_tiers.csv",
-    "facilities.csv",
-    "flavor_text.csv",
-    "qualification_catalog.csv",
-    "capabilities.csv",
-    "facility_capabilities.csv",
-    "capability_staffing_rules.csv",
-    "facility_capability_staffing_overrides.csv",
-    "task_templates.csv",
-)
-FILES = tuple(FILES) + ("equipment_families.csv",)
-FILES = tuple(dict.fromkeys(tuple(FILES) + ("resources.csv", "task_template_flows.csv")))
+FIELDS = ("enum_group", "enum_value", "display_label", "description", "sort_order", "active")
+IDENTITY = FIELDS[:2]
+EDITABLE = FIELDS[2:]
+FILES = tuple(VALIDATION_FILES)
+ERRORS = (OSError, UnicodeError, csv.Error, ValueError)
 
-ID_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
+
+def row_key(row):
+    return row["enum_group"], row["enum_value"]
+
+
+def row_iid(row):
+    return json.dumps(row_key(row), separators=(",", ":"), ensure_ascii=True)
+
+
+def sort_key(row):
+    return row["enum_group"], int(row["sort_order"]), row["enum_value"]
+
+
+def clean_value(field, value):
+    if not isinstance(value, str):
+        raise ValueError("Form values must be text.")
+    return value if field == "description" else value.strip()
+
+
+def display_values(row):
+    return tuple(row[f] for f in (
+        "enum_group", "enum_value", "display_label", "sort_order", "active"
+    ))
 
 
 class EnumCatalogEditor:
-    def __init__(self, app: Any) -> None:
+    title = "Enum Catalog"
+
+    def __init__(self, app):
         self.app = app
-        self.editing_key: tuple[str, str] | None = None
-
-        self.catalog_group_filter = tk.StringVar(value="All Groups")
-
-        self.enum_group = tk.StringVar()
-        self.enum_value = tk.StringVar()
-        self.display_label = tk.StringVar()
-        self.sort_order = tk.StringVar()
-        self.active = tk.BooleanVar(value=True)
-
+        self.editing_key = None
+        self.loaded_rows = []
+        self.loaded_path = None
+        self.snapshot_hash = None
+        self.dirty = False
+        self.vars = {field: tk.StringVar(master=app) for field in FIELDS}
+        self.status = tk.StringVar(master=app, value="Source not loaded.")
+        self.widgets = {}
+        self._loading = False
+        self._session = ()
+        self._original = []
+        self._changes = {}
+        self._validated_dependencies = {}
+        self._description_seen = ""
+        self.catalog_group_filter = tk.StringVar(master=app, value="All Groups")
+        self._visible_filter = "All Groups"
+        self._new_form_values = {}
         self.build()
+        for field in EDITABLE:
+            self.vars[field].trace_add("write", lambda *_args, f=field: self.changed(f))
+        self.vars["enum_group"].trace_add("write", lambda *_args: self.on_group_changed())
+        self.widgets["active"].bind(
+            "<<ComboboxSelected>>", lambda _event: self.changed("active")
+        )
 
-    def source_path(self) -> Path:
+    def source_path(self):
         return self.app.source_directory / "enum_catalog.csv"
 
-    def backup_directory(self) -> Path:
+    def backup_directory(self):
         return self.app.project_root / "data_authoring" / "backups" / "enum_catalog"
 
-    def rows(self) -> list[dict[str, str]]:
-        return [dict(row) for row in self.app.tables.get("enum_catalog", [])]
+    @staticmethod
+    def digest(path):
+        return hashlib.sha256(path.read_bytes()).hexdigest()
 
-    def groups(self) -> list[str]:
-        source_path = self.app.source_directory / "enum_catalog.csv"
-
-        if not source_path.is_file():
-            return []
-
-        groups: set[str] = set()
-
-        try:
-            with source_path.open(
-                "r",
-                encoding="utf-8-sig",
-                newline="",
-            ) as source_file:
-                reader = csv.DictReader(source_file)
-
-                for row in reader:
-                    if row is None:
-                        continue
-
-                    group = (row.get("enum_group") or "").strip()
-
-                    if group:
-                        groups.add(group)
-
-        except (OSError, csv.Error):
-            return []
-
-        return sorted(groups)
-
-    def values_for_group(self, group: str) -> list[str]:
-        source_path = self.app.source_directory / "enum_catalog.csv"
-
-        if not source_path.is_file() or not group:
-            return []
-
-        rows: list[tuple[int, str]] = []
-
-        try:
-            with source_path.open(
-                "r",
-                encoding="utf-8-sig",
-                newline="",
-            ) as source_file:
-                reader = csv.DictReader(source_file)
-
-                for row in reader:
-                    if row is None:
-                        continue
-
-                    if (row.get("enum_group") or "").strip() != group:
-                        continue
-
-                    value = (row.get("enum_value") or "").strip()
-
-                    if not value:
-                        continue
-
-                    try:
-                        sort_order = int(
-                            (row.get("sort_order") or "999999").strip()
-                        )
-                    except ValueError:
-                        sort_order = 999999
-
-                    rows.append((sort_order, value))
-
-        except (OSError, csv.Error):
-            return []
-
-        return [
-            value
-            for _, value in sorted(
-                rows,
-                key=lambda item: (item[0], item[1]),
-            )
-        ]
-
-    def refresh_value_choices(self, _event: object = None) -> None:
-        group = self.enum_group.get().strip()
-        current_value = self.enum_value.get().strip()
-
-        self.value_combo.configure(values=self.values_for_group(group))
-
-        if current_value:
-            self.enum_value.set(current_value)
-    def catalog_groups(self) -> list[str]:
-        groups = sorted(
-            {
-                (row.get("enum_group") or "").strip()
-                for row in self.rows()
-                if (row.get("enum_group") or "").strip()
-            }
-        )
-
-        return ["All Groups", *groups]
-
-    def visible_rows(self) -> list[dict[str, str]]:
-        selected_group = self.catalog_group_filter.get().strip()
-
-        if not selected_group or selected_group == "All Groups":
-            return self.rows()
-
-        return [
-            row
-            for row in self.rows()
-            if (row.get("enum_group") or "").strip() == selected_group
-        ]
-
-    def refresh_catalog_group_filter(self) -> None:
-        groups = self.catalog_groups()
-        current = self.catalog_group_filter.get().strip()
-
-        self.catalog_group_combo.configure(values=groups)
-
-        if current in groups:
-            self.catalog_group_filter.set(current)
-        else:
-            self.catalog_group_filter.set("All Groups")
-
-    def on_catalog_group_filter_changed(self, _event: Any = None) -> None:
-        self.update()
-    def build(self) -> None:
-        self.tab = ttk.Frame(self.app.notebook, padding=10)
-        self.app.notebook.add(self.tab, text="Enum Catalog — Admin")
-
-        self.tab.columnconfigure(0, weight=3)
-        self.tab.columnconfigure(1, weight=2)
-        self.tab.rowconfigure(0, weight=1)
-
-        list_frame = ttk.LabelFrame(self.tab, text="Enum Catalog", padding=8)
-        editor_frame = ttk.LabelFrame(self.tab, text="Enum Catalog Editor", padding=10)
-
-        list_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=(0, 6))
-        editor_frame.grid(row=0, column=1, sticky=tk.NSEW)
-
-        list_frame.columnconfigure(0, weight=1)
-        list_frame.rowconfigure(0, weight=1)
-        editor_frame.columnconfigure(1, weight=1)
-
-        filter_frame = ttk.Frame(list_frame)
-        filter_frame.grid(
-            row=0,
-            column=0,
-            columnspan=2,
-            sticky=tk.EW,
-            pady=(0, 8),
-        )
-
-        ttk.Label(
-            filter_frame,
-            text="Enum Group:",
-            style="Section.TLabel",
-        ).pack(side=tk.LEFT, padx=(0, 6))
-
+    def build(self):
+        self.tab = tab = ttk.Frame(self.app.notebook, padding=10)
+        self.app.notebook.add(tab, text="Enum Catalog — Admin")
+        tab.columnconfigure(0, weight=3)
+        tab.columnconfigure(1, weight=2)
+        tab.rowconfigure(0, weight=1)
+        left = ttk.LabelFrame(tab, text=self.title, padding=8)
+        right = ttk.LabelFrame(tab, text="Enum Catalog Editor", padding=10)
+        left.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
+        right.grid(row=0, column=1, sticky="nsew")
+        left.columnconfigure(0, weight=1)
+        left.rowconfigure(1, weight=1)
+        right.columnconfigure(1, weight=1)
+        right.rowconfigure(3, weight=1)
+        filters = ttk.Frame(left)
+        filters.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 8))
+        ttk.Label(filters, text="Enum Group:").pack(side="left", padx=(0, 6))
         self.catalog_group_combo = ttk.Combobox(
-            filter_frame,
-            textvariable=self.catalog_group_filter,
-            values=self.catalog_groups(),
-            state="readonly",
-            width=28,
+            filters, textvariable=self.catalog_group_filter,
+            values=("All Groups",), state="readonly", width=28,
         )
-        self.catalog_group_combo.pack(side=tk.LEFT)
+        self.catalog_group_combo.pack(side="left")
         self.catalog_group_combo.bind(
-            "<<ComboboxSelected>>",
-            self.on_catalog_group_filter_changed,
+            "<<ComboboxSelected>>", self.on_catalog_group_filter_changed
         )
-        self.tree = ttk.Treeview(
-            list_frame,
-            columns=("group", "value", "label", "sort", "active"),
-            show="headings",
-            selectmode="browse",
-        )
-
-        columns = (
-            ("group", "Enum Group", 170),
-            ("value", "Enum Value", 200),
-            ("label", "Display Label", 230),
-            ("sort", "Sort", 60),
-            ("active", "Active", 70),
-        )
-
-        for key, title, width in columns:
-            self.tree.heading(key, text=title)
-            self.tree.column(key, width=width, anchor=tk.W)
-
-        scrollbar = ttk.Scrollbar(
-            list_frame,
-            orient=tk.VERTICAL,
-            command=self.tree.yview,
-        )
-
-        self.tree.configure(yscrollcommand=scrollbar.set)
-        self.tree.grid(row=1, column=0, sticky=tk.NSEW)
-        scrollbar.grid(row=1, column=1, sticky=tk.NS)
-
-        list_frame.rowconfigure(1, weight=1)
-
+        columns = ("enum_group", "enum_value", "display_label", "sort_order", "active")
+        self.tree = ttk.Treeview(left, columns=columns, show="headings", selectmode="extended")
+        for field, label, width in (
+            ("enum_group", "Enum Group", 170), ("enum_value", "Enum Value", 200),
+            ("display_label", "Display Label", 230), ("sort_order", "Sort", 65),
+            ("active", "Active", 75),
+        ):
+            self.tree.heading(field, text=label)
+            self.tree.column(field, width=width, minwidth=60)
+        self.tree.grid(row=1, column=0, sticky="nsew")
+        vertical = ttk.Scrollbar(left, command=self.tree.yview)
+        vertical.grid(row=1, column=1, sticky="ns")
+        horizontal = ttk.Scrollbar(left, orient="horizontal", command=self.tree.xview)
+        horizontal.grid(row=2, column=0, sticky="ew")
+        self.tree.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)
         self.tree.bind("<<TreeviewSelect>>", self.on_select)
-
-        def label(text: str, row: int) -> None:
-            ttk.Label(
-                editor_frame,
-                text=text,
-                style="Section.TLabel",
-            ).grid(
-                row=row,
-                column=0,
-                sticky=tk.NW,
-                padx=(0, 8),
-                pady=(0, 8),
+        labels = ("Enum Group", "Enum Value", "Display Label", "Description", "Sort Order", "Active")
+        for index, (field, label) in enumerate(zip(FIELDS, labels)):
+            ttk.Label(right, text=label + ":").grid(row=index, column=0, sticky="nw", pady=4)
+            if field == "description":
+                widget = tk.Text(
+                    right, height=7, wrap="word", background="#0d1117",
+                    foreground="#e6edf3", insertbackground="#e6edf3",
+                )
+                self.description = widget
+                widget.bind("<<Modified>>", self.description_modified)
+                scrollbar = ttk.Scrollbar(right, command=widget.yview)
+                scrollbar.grid(row=index, column=2, sticky="ns", pady=4)
+                widget.configure(yscrollcommand=scrollbar.set)
+            elif field in IDENTITY:
+                widget = ttk.Combobox(right, textvariable=self.vars[field], state="normal")
+            elif field == "active":
+                widget = ttk.Combobox(
+                    right, textvariable=self.vars[field], state="readonly",
+                    values=("TRUE", "FALSE"),
+                )
+            else:
+                widget = ttk.Entry(right, textvariable=self.vars[field])
+            if field in EDITABLE and field != "active":
+                widget.bind("<FocusIn>", lambda _e, f=field: self.select_placeholder(f), add="+")
+                widget.bind("<ButtonRelease-1>", lambda _e, f=field: self.select_placeholder(f), add="+")
+            widget.grid(row=index, column=1, sticky="nsew" if field == "description" else "ew", pady=4)
+            self.widgets[field] = widget
+        self.group_combo = self.widgets["enum_group"]
+        self.value_combo = self.widgets["enum_value"]
+        self.group_combo.bind("<<ComboboxSelected>>", self.refresh_value_choices)
+        self.group_combo.bind("<FocusOut>", self.refresh_value_choices)
+        buttons = ttk.Frame(right)
+        buttons.grid(row=len(FIELDS), column=0, columnspan=3, sticky="ew", pady=8)
+        for index, (label, command) in enumerate((
+            ("New Enum Value", self.new), ("Apply to List", self.apply_record),
+            ("Save to Source", self.save), ("Delete from List", self.remove),
+            ("Revert Form", self.revert), ("Revert Draft", self.revert_source),
+            ("Open Backups", self.open_backups),
+        )):
+            ttk.Button(buttons, text=label, command=command).grid(
+                row=index // 3, column=index % 3, sticky="ew", padx=3, pady=3
             )
-
-        label("Enum Group:", 0)
-
-        self.group_combo = ttk.Combobox(
-            editor_frame,
-            textvariable=self.enum_group,
-            values=self.groups(),
-            state="normal",
-        )
-
-        self.group_combo.grid(
-            row=0,
-            column=1,
-            sticky=tk.EW,
-            pady=(0, 8),
-        )
-        self.group_combo.bind(
-            "<<ComboboxSelected>>",
-            self.refresh_value_choices,
-        )
-
-        self.group_combo.bind(
-            "<FocusOut>",
-            self.refresh_value_choices,
-        )
-
-        label("Enum Value:", 1)
-        self.value_combo = ttk.Combobox(
-            editor_frame,
-            textvariable=self.enum_value,
-            values=self.values_for_group(self.enum_group.get()),
-            state="normal",
-        )
-
-        self.value_combo.grid(
-            row=1,
-            column=1,
-            sticky=tk.EW,
-            pady=(0, 8),
-        )
-
         ttk.Label(
-            editor_frame,
-            text="Group + Value are immutable after creation.",
-            foreground="#9da7b3",
-        ).grid(
-            row=2,
-            column=1,
-            sticky=tk.W,
-            pady=(0, 10),
+            right, wraplength=390,
+            text="Group + Value are immutable after creation. Label and Description are required. "
+                 "Sort Order is a whole number of at least zero. Apply/Delete change only the draft. "
+                 "Save validates authored dependencies and creates a backup. "
+                 "Apply or Revert Form before changing the group filter.",
+        ).grid(row=len(FIELDS) + 1, column=0, columnspan=3, sticky="ew", pady=8)
+        ttk.Label(right, textvariable=self.status, wraplength=390).grid(
+            row=len(FIELDS) + 2, column=0, columnspan=3, sticky="ew"
         )
-
-        label("Display Label:", 3)
-
-        ttk.Entry(
-            editor_frame,
-            textvariable=self.display_label,
-        ).grid(
-            row=3,
-            column=1,
-            sticky=tk.EW,
-            pady=(0, 8),
-        )
-
-        label("Description:", 4)
-
-        self.description = tk.Text(
-            editor_frame,
-            height=7,
-            wrap=tk.WORD,
-            background="#0d1117",
-            foreground="#e6edf3",
-            insertbackground="#e6edf3",
-            highlightbackground="#3b4754",
-            highlightcolor="#58a6ff",
-        )
-
-        self.description.grid(
-            row=4,
-            column=1,
-            sticky=tk.EW,
-            pady=(0, 8),
-        )
-
-        label("Sort Order:", 5)
-
-        ttk.Entry(
-            editor_frame,
-            textvariable=self.sort_order,
-            width=10,
-        ).grid(
-            row=5,
-            column=1,
-            sticky=tk.W,
-            pady=(0, 8),
-        )
-
-        label("Active:", 6)
-
-        ttk.Checkbutton(
-            editor_frame,
-            text="This enum value is active",
-            variable=self.active,
-        ).grid(
-            row=6,
-            column=1,
-            sticky=tk.W,
-            pady=(0, 8),
-        )
-
-        buttons = ttk.Frame(editor_frame)
-        buttons.grid(
-            row=7,
-            column=0,
-            columnspan=2,
-            sticky=tk.EW,
-            pady=(8, 0),
-        )
-
-        ttk.Button(
-            buttons,
-            text="Add Enum Value",
-            command=self.new,
-        ).pack(side=tk.LEFT)
-
-        ttk.Button(
-            buttons,
-            text="Save Enum Value",
-            command=self.save,
-        ).pack(side=tk.LEFT, padx=6)
-
-        ttk.Button(
-            buttons,
-            text="Remove Enum Value",
-            command=self.remove,
-        ).pack(side=tk.LEFT, padx=6)
-
-        ttk.Button(
-            buttons,
-            text="Revert Form",
-            command=self.revert,
-        ).pack(side=tk.LEFT, padx=6)
-
-        ttk.Button(
-            buttons,
-            text="Open Backups",
-            command=self.open_backups,
-        ).pack(side=tk.RIGHT)
-
-        ttk.Label(
-            editor_frame,
-            text=(
-                "Administrative editor. Candidate validation blocks deletion "
-                "or deactivation when authored data depends on this value."
-            ),
-            foreground="#9da7b3",
-            wraplength=390,
-        ).grid(
-            row=8,
-            column=0,
-            columnspan=2,
-            sticky=tk.EW,
-            pady=(12, 0),
-        )
-
         self.new()
 
-    def update(self) -> None:
-        selected = self.editing_key
-
-        current_group = self.enum_group.get()
-
-        self.group_combo.configure(values=self.groups())
+    def refresh_choices(self):
+        self.group_combo.configure(values=tuple(self.groups()))
         self.refresh_value_choices()
+        self.widgets["active"].configure(values=("TRUE", "FALSE"))
+        self.catalog_group_combo.configure(values=tuple(self.catalog_groups()))
 
-        if current_group and current_group in self.groups():
-            self.enum_group.set(current_group)
+    def groups(self):
+        return sorted({row["enum_group"] for row in self.loaded_rows})
 
-        for item in self.tree.get_children():
-            self.tree.delete(item)
+    def values_for_group(self, group):
+        return [
+            row["enum_value"] for row in sorted(self.loaded_rows, key=sort_key)
+            if row["enum_group"] == group
+        ]
 
-        self.refresh_catalog_group_filter()
+    def refresh_value_choices(self, _event=None):
+        self.value_combo.configure(values=tuple(self.values_for_group(self.vars["enum_group"].get())))
 
-        rows = sorted(
-            self.visible_rows(),
-            key=lambda row: (
-                row.get("enum_group", ""),
-                int(row.get("sort_order", "999999")),
-                row.get("enum_value", ""),
-            ),
+    def on_group_changed(self):
+        if not self._loading:
+            self.refresh_value_choices()
+
+    def catalog_groups(self):
+        return ["All Groups", *self.groups()]
+
+    def visible_rows(self):
+        group = self.catalog_group_filter.get()
+        return [
+            dict(row) for row in self.loaded_rows
+            if group == "All Groups" or row["enum_group"] == group
+        ]
+
+    def refresh_catalog_group_filter(self):
+        groups = self.catalog_groups()
+        self.catalog_group_combo.configure(values=tuple(groups))
+        if self.catalog_group_filter.get() not in groups:
+            self.catalog_group_filter.set("All Groups")
+        self._visible_filter = self.catalog_group_filter.get()
+
+    def next_sort_order(self, group):
+        return max(
+            (int(row["sort_order"]) for row in self.loaded_rows if row["enum_group"] == group),
+            default=-1,
+        ) + 1
+
+    def _has_pending_form(self):
+        self.flush_description()
+        current = {field: self.vars[field].get() for field in FIELDS}
+        if not self._session:
+            return current != self._new_form_values
+        original = {row_iid(row): row for row in self._original}
+        if any(iid not in original for iid in self._session):
+            return True
+        rows = [original[iid] for iid in self._session]
+        return any(
+            current[field] != selection_display(rows, field, show_common=True)
+            for field in FIELDS
         )
 
+    def on_catalog_group_filter_changed(self, _event=None):
+        requested = self.catalog_group_filter.get()
+        if requested == self._visible_filter:
+            return True
+        try:
+            if requested not in self.catalog_groups():
+                raise ValueError("Select an existing catalog group or All Groups.")
+            if self._has_pending_form():
+                raise ValueError("Apply to List or Revert Form before changing the group filter. Pending form retained.")
+            self._render_draft()
+            if self.tree.selection():
+                self.on_select(force=True)
+            else:
+                self.new()
+            return True
+        except ERRORS as error:
+            self.catalog_group_filter.set(self._visible_filter)
+            self.blocked("Filter", error)
+            return False
+
+    def new(self):
+        self._loading = True
+        try:
+            self._end_session()
+            self.tree.selection_remove(*self.tree.selection())
+            self.refresh_choices()
+            groups = self.groups()
+            selected = self.catalog_group_filter.get()
+            group = selected if selected in groups else groups[0] if groups else ""
+            for field in FIELDS:
+                self.vars[field].set("")
+            self.vars["enum_group"].set(group)
+            self.vars["sort_order"].set(str(self.next_sort_order(group)))
+            self.vars["active"].set("TRUE")
+            for field in IDENTITY:
+                self.widgets[field].configure(state="normal")
+            self.refresh_value_choices()
+            self._load_description()
+            self._new_form_values = {field: self.vars[field].get() for field in FIELDS}
+        finally:
+            self._loading = False
+
+    def validate_rows(self, rows):
+        seen = set()
         for row in rows:
-            group = row.get("enum_group", "")
-            value = row.get("enum_value", "")
-            key = f"{group}::{value}"
+            if set(row) != set(FIELDS) or any(not isinstance(row[f], str) for f in FIELDS):
+                raise ValueError("Malformed Enum Catalog row.")
+            if any(row[f].strip() == MULTIPLE_VALUES for f in FIELDS):
+                raise ValueError("Mixed-value placeholder cannot be applied as data.")
+            key = row_key(row)
+            for field in IDENTITY:
+                if not re.fullmatch(r"[A-Z][A-Z0-9_]*", row[field]):
+                    raise ValueError("Enum Group and Enum Value must start with an uppercase letter and use uppercase letters, digits, or underscores.")
+            if key in seen:
+                raise ValueError("Duplicate Enum Group + Enum Value pair.")
+            seen.add(key)
+            for field in ("display_label", "description"):
+                if not row[field].strip():
+                    raise ValueError(field.replace("_", " ").title() + " is required.")
+            if int(row["sort_order"]) < 0:
+                raise ValueError("Sort Order must be a whole number of at least zero.")
+            if row["active"] not in ("TRUE", "FALSE"):
+                raise ValueError("Active must be TRUE or FALSE.")
 
-            self.tree.insert(
-                "",
-                tk.END,
-                iid=key,
-                values=(
-                    group,
-                    value,
-                    row.get("display_label", ""),
-                    row.get("sort_order", ""),
-                    row.get("active", ""),
-                ),
+    def update(self, force=False):
+        path = self.source_path()
+        if self.dirty and not force:
+            self._check_project()
+            self._set_status("Unsaved Enum Catalog draft retained; refresh skipped.")
+            return
+        before = self.digest(path)
+        if (
+            not force and self.loaded_path == path.resolve()
+            and self.snapshot_hash == before
+        ):
+            self.refresh_choices()
+            return
+        with path.open(encoding="utf-8-sig", newline="") as handle:
+            reader = csv.DictReader(handle)
+            if reader.fieldnames != list(FIELDS):
+                raise ValueError("Enum Catalog CSV header does not match the current schema.")
+            rows = [dict(row) for row in reader if any(row.values())]
+        self.validate_rows(rows)
+        if before != self.digest(path):
+            raise ValueError("Enum Catalog CSV changed during refresh; draft retained.")
+        self._end_session()
+        self.loaded_rows = rows
+        self.loaded_path = path.resolve()
+        self.snapshot_hash = before
+        self.dirty = False
+        self._render_draft()
+        self.refresh_choices()
+        if self.tree.selection():
+            self.on_select(force=True)
+        else:
+            self.new()
+        self._set_status(f"{len(rows)} enum records loaded from source.")
+
+    def _load_description(self):
+        previous = self._loading
+        self._loading = True
+        try:
+            self.description.delete("1.0", "end")
+            self.description.insert("1.0", self.vars["description"].get())
+            self._description_seen = self.description.get("1.0", "end-1c")
+            self.description.edit_modified(False)
+        finally:
+            self._loading = previous
+
+    def description_modified(self, _event=None):
+        if not self.description.edit_modified():
+            return
+        self.description.edit_modified(False)
+        self.flush_description()
+
+    def flush_description(self):
+        current = self.description.get("1.0", "end-1c")
+        if not self._loading and current != self._description_seen:
+            self.vars["description"].set(current)
+            self.changed("description")
+        self._description_seen = current
+
+    def on_select(self, _event=None, force=False):
+        selected = tuple(self.tree.selection())
+        if not force and selected == self._session and self.loaded_rows == self._original:
+            return
+        self._draft_on_select(_event, force)
+        self._load_description()
+        self.refresh_choices()
+
+    def apply_record(self):
+        self.flush_description()
+        return self._draft_apply_record()
+
+    def select_placeholder(self, field):
+        if len(self._session) < 2 or field in self._changes:
+            return
+
+        def select():
+            if len(self._session) < 2 or field in self._changes:
+                return
+            value = (
+                self.description.get("1.0", "end-1c")
+                if field == "description" else self.vars[field].get()
             )
+            if value != MULTIPLE_VALUES:
+                return
+            if field == "description":
+                self.description.tag_add("sel", "1.0", "end-1c")
+                self.description.mark_set("insert", "end-1c")
+            else:
+                self.widgets[field].selection_range(0, "end")
+                self.widgets[field].icursor("end")
+        self.widgets[field].after_idle(select)
 
-        if selected:
-            key = f"{selected[0]}::{selected[1]}"
 
-            if self.tree.exists(key):
-                self.tree.selection_set(key)
-                self.tree.focus(key)
 
-    def next_sort_order(self, group: str) -> int:
-        values: list[int] = []
 
-        for row in self.rows():
-            if row.get("enum_group") != group:
-                continue
 
-            try:
-                values.append(int(row.get("sort_order", "")))
-            except ValueError:
-                pass
+    def _set_status(self, text):
+        self.status.set(text)
 
-        return max(values, default=-1) + 1
-
-    def new(self) -> None:
+    def _end_session(self):
+        self._session = ()
+        self._original = []
+        self._changes = {}
         self.editing_key = None
 
-        self.group_combo.configure(state=tk.NORMAL)
-        self.value_combo.configure(state="normal")
+    def rows(self):
+        return [dict(row) for row in self.loaded_rows]
 
-        groups = self.groups()
-
-        self.enum_group.set(groups[0] if groups else "")
-        self.enum_value.set("")
-        self.refresh_value_choices()
-        self.display_label.set("")
-        self.description.delete("1.0", tk.END)
-        self.sort_order.set(
-            str(self.next_sort_order(self.enum_group.get()))
-            if self.enum_group.get()
-            else "0"
-        )
-        self.active.set(True)
-
-        self.value_combo.focus_set()
-
-    def on_select(self, _event: Any = None) -> None:
-        selection = self.tree.selection()
-
-        if not selection:
+    def changed(self, field):
+        if self._loading or len(self._session) < 2 or field not in EDITABLE:
             return
-
-        group, value = selection[0].split("::", 1)
-
-        row = next(
-            (
-                item
-                for item in self.rows()
-                if item.get("enum_group") == group
-                and item.get("enum_value") == value
-            ),
-            None,
+        self._changes[field] = self.vars[field].get()
+        self._set_status(
+            f"{len(self._session)} tracks selected; {len(self._changes)} edited field(s) ready for Apply."
         )
 
-        if row is None:
+    def _render_draft(self):
+        selected, focused = tuple(self.tree.selection()), self.tree.focus()
+        self.refresh_catalog_group_filter()
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        for row in sorted(self.visible_rows(), key=sort_key):
+            self.tree.insert("", "end", iid=row_iid(row), values=display_values(row))
+        kept = [iid for iid in selected if self.tree.exists(iid)]
+        if kept:
+            self.tree.selection_set(*kept)
+        if focused and self.tree.exists(focused):
+            self.tree.focus(focused)
+
+    def _draft_on_select(self, _event=None, force=False):
+        selected = tuple(self.tree.selection())
+        if not selected:
+            if self._session:
+                self.new()
             return
-
-        self.editing_key = (group, value)
-
-        self.group_combo.configure(state=tk.NORMAL)
-        self.group_combo.set(group)
-        self.group_combo.configure(state=tk.DISABLED)
-
-        self.value_combo.configure(state="normal")
-        self.enum_value.set(value)
-        self.value_combo.configure(state=tk.DISABLED)
-
-        self.display_label.set(row.get("display_label", ""))
-        self.sort_order.set(row.get("sort_order", ""))
-        self.active.set(row.get("active", "").upper() == "TRUE")
-
-        self.description.delete("1.0", tk.END)
-        self.description.insert("1.0", row.get("description", ""))
-
-    def revert(self) -> None:
-        if self.editing_key:
-            key = f"{self.editing_key[0]}::{self.editing_key[1]}"
-
-            if self.tree.exists(key):
-                self.tree.selection_set(key)
-                self.on_select()
-                return
-
-        self.new()
-
-    def record(self) -> dict[str, str] | None:
-        row = {
-            "enum_group": self.enum_group.get().strip(),
-            "enum_value": self.enum_value.get().strip(),
-            "display_label": self.display_label.get().strip(),
-            "description": self.description.get("1.0", tk.END).strip(),
-            "sort_order": self.sort_order.get().strip(),
-            "active": "TRUE" if self.active.get() else "FALSE",
-        }
-
-        errors: list[str] = []
-
-        if not ID_PATTERN.fullmatch(row["enum_group"]):
-            errors.append(
-                "Enum Group must begin with an uppercase letter and use only "
-                "uppercase letters, digits, or underscores."
-            )
-
-        if not ID_PATTERN.fullmatch(row["enum_value"]):
-            errors.append(
-                "Enum Value must begin with an uppercase letter and use only "
-                "uppercase letters, digits, or underscores."
-            )
-
-        if not row["display_label"]:
-            errors.append("Display Label is required.")
-
-        if not row["description"]:
-            errors.append("Description is required.")
-
+        if not force and selected == self._session and self.loaded_rows == self._original:
+            return
+        by_id = {row_iid(row): row for row in self.loaded_rows}
+        if len(selected) != len(set(selected)) or any(iid not in by_id for iid in selected):
+            self._set_status("Selection no longer matches draft. Reselect rows.")
+            return
+        rows = [by_id[iid] for iid in selected]
+        self._loading = True
         try:
-            sort_order = int(row["sort_order"])
+            self._session = selected
+            self._original = self.rows()
+            self._changes = {}
+            self.editing_key = row_key(rows[0]) if len(rows) == 1 else None
+            self.refresh_choices()
+            for field in FIELDS:
+                self.vars[field].set(selection_display(rows, field, show_common=True))
+            for field in IDENTITY:
+                self.widgets[field].configure(state="disabled")
+        finally:
+            self._loading = False
 
-            if sort_order < 0:
-                errors.append("Sort Order cannot be negative.")
+        self._set_status(
+            f"{len(rows)} enum record(s) selected. Untouched fields are preserved."
+            + (" UNSAVED CHANGES." if self.dirty else "")
+        )
 
-        except ValueError:
-            errors.append("Sort Order must be an integer.")
+    def revert(self):
+        if self.tree.selection():
+            self.on_select(force=True)
+        else:
+            self.new()
 
-        if errors:
-            messagebox.showerror(
-                "DoDA Content Workbench",
-                "Correct before saving:\n\n- " + "\n- ".join(errors),
-            )
-
-            return None
-
-        return row
-
-    def write(self, path: Path, rows: list[dict[str, str]]) -> None:
+    def write(self, path, rows):
         with path.open("w", encoding="utf-8", newline="") as handle:
-            writer = csv.DictWriter(
-                handle,
-                fieldnames=FIELDS,
-                lineterminator="\n",
-            )
-
+            writer = csv.DictWriter(handle, fieldnames=FIELDS, lineterminator="\n")
             writer.writeheader()
+            writer.writerows(rows)
 
-            for row in rows:
-                writer.writerow(
-                    {
-                        field: row.get(field, "")
-                        for field in FIELDS
-                    }
-                )
-
-    def candidate_valid(self, candidate: Path) -> tuple[bool, str]:
-        with tempfile.TemporaryDirectory(prefix="doda-enum-") as temporary:
+    def candidate_valid(self, candidate):
+        self._validated_dependencies = {}
+        dependencies = {}
+        with tempfile.TemporaryDirectory(prefix="doda-enum-catalog-") as temporary:
             root = Path(temporary)
             destination = root / "data_authoring" / "source"
             destination.mkdir(parents=True)
-
             for filename in FILES:
-                source = (
-                    candidate
-                    if filename == "enum_catalog.csv"
-                    else self.app.source_directory / filename
-                )
-
+                source = candidate if filename == "enum_catalog.csv" else self.app.source_directory / filename
+                before = self.digest(source)
                 shutil.copy2(source, destination / filename)
-
-            command = [
-                sys.executable,
-                str(self.app.validator_path),
-                "--root",
-                str(root),
-                "validate",
-            ]
-
+                if before != self.digest(source) or before != self.digest(destination / filename):
+                    raise ValueError(f"Validation input changed during copy: {filename}")
+                dependencies[source.resolve()] = before
             completed = subprocess.run(
-                command,
-                cwd=root,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                capture_output=True,
+                [sys.executable, str(self.app.validator_path), "--root", str(root), "validate"],
+                cwd=root, text=True, encoding="utf-8", errors="replace", capture_output=True,
             )
+            for source, expected in dependencies.items():
+                if self.digest(source) != expected:
+                    raise ValueError(f"Validation input changed during validation: {source.name}")
+            self._validated_dependencies = {
+                path: digest for path, digest in dependencies.items()
+                if path != candidate.resolve()
+            }
+            return completed.returncode == 0, completed.stdout + "\n" + completed.stderr
 
-            output = (
-                completed.stdout
-                + ("\n" if completed.stdout and completed.stderr else "")
-                + completed.stderr
-            ).strip()
+    def _validate_rows(self, rows):
+        self.validate_rows(rows)
+        with tempfile.TemporaryDirectory(prefix="doda-enum-catalog-draft-") as temporary:
+            candidate = Path(temporary) / "enum_catalog.csv"
+            self.write(candidate, rows)
+            valid, output = self.candidate_valid(candidate)
+        self.app.log(output)
+        if not valid:
+            raise ValueError("Candidate project validation failed. Draft and CSV unchanged; see Activity Log.")
 
-            return completed.returncode == 0, output
+    def _check_project(self):
+        if self.loaded_path is None or self.source_path().resolve() != self.loaded_path:
+            raise ValueError("Source project changed or is not loaded. Draft retained.")
 
-    def post_validate(self) -> tuple[bool, str]:
-        command = [
-            sys.executable,
-            str(self.app.validator_path),
-            "--root",
-            str(self.app.project_root),
-            "validate",
-        ]
+    def _check_session(self, before, selected):
+        if selected and (selected != self._session or before != self._original):
+            raise ValueError("Draft or selection changed. Reselect before applying.")
+        if not selected and self._session:
+            raise ValueError("Selection cleared. Start a new enum value before applying.")
 
-        completed = subprocess.run(
-            command,
-            cwd=self.app.project_root,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            capture_output=True,
-        )
-
-        output = (
-            completed.stdout
-            + ("\n" if completed.stdout and completed.stderr else "")
-            + completed.stderr
-        ).strip()
-
-        return completed.returncode == 0, output
-
-    def save(self) -> None:
-        row = self.record()
-
-        if row is None:
-            return
-
-        rows = self.rows()
-
-        if self.editing_key:
-            if (
-                row["enum_group"] != self.editing_key[0]
-                or row["enum_value"] != self.editing_key[1]
-            ):
-                messagebox.showerror(
-                    "DoDA Content Workbench",
-                    "Enum Group and Enum Value cannot change after creation.",
-                )
-                return
-
-            rows = [
-                row
-                if (
-                    item.get("enum_group") == self.editing_key[0]
-                    and item.get("enum_value") == self.editing_key[1]
-                )
-                else item
-                for item in rows
-            ]
-
-            action = "updated"
-
-        else:
-            if any(
-                item.get("enum_group") == row["enum_group"]
-                and item.get("enum_value") == row["enum_value"]
-                for item in rows
-            ):
-                messagebox.showerror(
-                    "DoDA Content Workbench",
-                    "This Enum Group and Enum Value combination already exists.",
-                )
-                return
-
-            rows.append(row)
-            action = "added"
-
-        temporary = self.app.source_directory / (
-            f".enum-catalog-{uuid4().hex}.tmp.csv"
-        )
-
-        self.app.config(cursor="watch")
-        self.app.update_idletasks()
-
+    def _draft_apply_record(self):
         try:
-            self.write(temporary, rows)
-
-            valid, output = self.candidate_valid(temporary)
-
-            self.app.log("Enum Catalog candidate validation output:")
-
-            for line in output.splitlines():
-                self.app.log(" " + line)
-
-            if not valid:
-                messagebox.showerror(
-                    "DoDA Content Workbench",
-                    (
-                        "Enum Catalog candidate validation failed. Source CSV "
-                        "was unchanged.\n\nReview Activity Log for details."
-                    ),
-                )
-                return
-
-            folder = self.backup_directory()
-            folder.mkdir(parents=True, exist_ok=True)
-
-            backup = folder / (
-                "enum_catalog_"
-                + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-                + ".csv"
-            )
-
-            shutil.copy2(self.source_path(), backup)
-            os.replace(temporary, self.source_path())
-
-            self.editing_key = (
-                row["enum_group"],
-                row["enum_value"],
-            )
-
-            self.app.log(f"Created Enum Catalog backup: {backup}")
-            self.app.log(
-                f"Enum Catalog {action}: "
-                f"{row['enum_group']} / {row['enum_value']}"
-            )
-
-            self.app.refresh_all(False)
-
-            valid, output = self.post_validate()
-
-            for line in output.splitlines():
-                self.app.log(" " + line)
-
-            self.app.refresh_all(False)
-
-            if valid:
-                messagebox.showinfo(
-                    "DoDA Content Workbench",
-                    (
-                        f"Enum Value '{row['enum_group']} / {row['enum_value']}' "
-                        f"{action}.\n\nBackup created:\n{backup}\n\n"
-                        "Project validation passed."
-                    ),
-                )
+            self._check_project()
+            before, selected = self.rows(), tuple(self.tree.selection())
+            self._check_session(before, selected)
+            if len(selected) > 1:
+                if not self._changes:
+                    self._set_status("No deliberately edited fields. Draft unchanged.")
+                    return False
+                if any(field not in EDITABLE for field in self._changes):
+                    raise ValueError("Enum Group + Enum Value cannot be batch-edited.")
+                changes = {field: clean_value(field, value) for field, value in self._changes.items()}
+                candidate = [
+                    {**row, **changes} if row_iid(row) in selected else dict(row)
+                    for row in before
+                ]
             else:
-                messagebox.showwarning(
-                    "DoDA Content Workbench",
-                    (
-                        f"Enum Catalog {action}, but post-save validation failed.\n\n"
-                        f"Backup:\n{backup}"
-                    ),
-                )
+                row = {field: clean_value(field, self.vars[field].get()) for field in FIELDS}
+                key = row_key(row)
+                if selected and self.editing_key is None:
+                    raise ValueError("Reselect the enum value before applying.")
+                if self.editing_key is not None:
+                    if key != self.editing_key:
+                        raise ValueError("Enum Group + Enum Value cannot change after creation.")
+                    if not any(row_key(r) == key for r in before):
+                        raise ValueError("Selected enum value is no longer in the draft.")
+                    candidate = [row if row_key(r) == key else dict(r) for r in before]
+                else:
+                    if any(row_key(r) == key for r in before):
+                        raise ValueError("This Enum Group + Enum Value installation already exists.")
+                    candidate = before + [row]
+            if candidate == before:
+                self._set_status("No changed values. Draft unchanged.")
+                return False
+            self._validate_rows(candidate)
+            self._check_project()
+            if self.loaded_rows != before or tuple(self.tree.selection()) != selected:
+                raise ValueError("Draft or selection changed during validation. Nothing applied.")
+            self.loaded_rows = candidate
+            self.dirty = True
+            if len(selected) > 1:
+                by_id = {row_iid(r): r for r in candidate}
+                for iid in selected:
+                    self.tree.item(iid, values=display_values(by_id[iid]))
+            else:
+                if self.catalog_group_filter.get() not in ("All Groups", row["enum_group"]):
+                    self.catalog_group_filter.set(row["enum_group"])
+                self._render_draft()
+                self.tree.selection_set(row_iid(row))
+                self.tree.focus(row_iid(row))
+            self.on_select(force=True)
+            self._set_status("Applied to draft. UNSAVED CHANGES.")
+            return True
+        except ERRORS as error:
+            self.blocked("Apply", error)
+            return False
 
-        except (OSError, ValueError) as error:
-            self.app.log(f"ENUM CATALOG SAVE ERROR: {error}")
+    def blocked(self, action, error):
+        self.app.log(f"Enum Catalog {action} blocked; draft retained: {error}")
+        self._set_status(f"{action} blocked: {str(error).splitlines()[0]}")
+        messagebox.showerror(self.title, str(error), parent=self.app)
 
-            messagebox.showerror(
-                "DoDA Content Workbench",
-                f"Unable to save Enum Catalog value.\n\n{error}",
-            )
-
-        finally:
-            if temporary.exists():
-                temporary.unlink()
-
-            self.app.config(cursor="")
-            self.app.update_idletasks()
-
-    def remove(self) -> None:
-        if not self.editing_key:
-            messagebox.showwarning(
-                "DoDA Content Workbench",
-                "Select an existing Enum Value before using Remove Enum Value.",
-            )
-            return
-
-        group, value = self.editing_key
-
-        confirmed = messagebox.askyesno(
-            "Remove Enum Value?",
-            (
-                f"ARE YOU SURE you want to remove '{group} / {value}'?\n\n"
-                "Removal is blocked when authored data still depends on it."
-            ),
-            icon="warning",
-            default=messagebox.NO,
-        )
-
-        if not confirmed:
-            self.app.log(
-                f"Remove Enum Value cancelled for '{group} / {value}'."
-            )
-            return
-
-        rows = [
-            row
-            for row in self.rows()
-            if not (
-                row.get("enum_group") == group
-                and row.get("enum_value") == value
-            )
-        ]
-
-        temporary = self.app.source_directory / (
-            f".enum-catalog-remove-{uuid4().hex}.tmp.csv"
-        )
-
-        self.app.config(cursor="watch")
-        self.app.update_idletasks()
-
+    def remove(self):
+        selected = tuple(self.tree.selection())
+        if len(selected) != 1 or self.editing_key is None:
+            messagebox.showwarning(self.title, "Delete from List requires one selected existing facility.", parent=self.app)
+            return False
+        if not messagebox.askyesno(
+            self.title, "Delete selected facility from draft? Source changes only after Save to Source.",
+            default=messagebox.NO, parent=self.app,
+        ):
+            return False
         try:
-            self.write(temporary, rows)
-
-            valid, output = self.candidate_valid(temporary)
-
-            self.app.log(
-                "Enum Catalog removal candidate validation output "
-                f"for '{group} / {value}':"
-            )
-
-            for line in output.splitlines():
-                self.app.log(" " + line)
-
-            if not valid:
-                messagebox.showerror(
-                    "DoDA Content Workbench",
-                    (
-                        "Removal was blocked by validation.\n\n"
-                        "The enum value is still referenced by authored data. "
-                        "Source CSV was unchanged."
-                    ),
-                )
-                return
-
-            folder = self.backup_directory()
-            folder.mkdir(parents=True, exist_ok=True)
-
-            backup = folder / (
-                "enum_catalog_before_remove_"
-                + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-                + ".csv"
-            )
-
-            shutil.copy2(self.source_path(), backup)
-            os.replace(temporary, self.source_path())
-
-            self.editing_key = None
-
-            self.app.log(
-                f"Created pre-removal Enum Catalog backup: {backup}"
-            )
-
-            self.app.log(f"Removed Enum Value: {group} / {value}")
-
-            self.app.refresh_all(False)
+            self._check_project()
+            before = self.rows()
+            self._check_session(before, selected)
+            candidate = [r for r in before if row_iid(r) != selected[0]]
+            if len(candidate) == len(before):
+                raise ValueError("Selected enum value is no longer in the draft.")
+            self._validate_rows(candidate)
+            self._check_project()
+            if self.loaded_rows != before or tuple(self.tree.selection()) != selected:
+                raise ValueError("Draft or selection changed during validation.")
+            self.loaded_rows = candidate
+            self.dirty = True
+            self._render_draft()
             self.new()
+            self._set_status("Track deleted from draft. UNSAVED CHANGES.")
+            return True
+        except ERRORS as error:
+            self.blocked("Delete", error)
+            return False
 
-            valid, output = self.post_validate()
-
-            for line in output.splitlines():
-                self.app.log(" " + line)
-
-            self.app.refresh_all(False)
-
-            if valid:
-                messagebox.showinfo(
-                    "DoDA Content Workbench",
-                    (
-                        f"Enum Value '{group} / {value}' removed.\n\n"
-                        f"Backup created:\n{backup}\n\n"
-                        "Project validation passed."
-                    ),
-                )
-            else:
-                messagebox.showwarning(
-                    "DoDA Content Workbench",
-                    (
-                        "Enum Value removed, but post-save validation failed.\n\n"
-                        f"Backup:\n{backup}"
-                    ),
-                )
-
-        except (OSError, ValueError) as error:
-            self.app.log(f"ENUM CATALOG REMOVE ERROR: {error}")
-
-            messagebox.showerror(
-                "DoDA Content Workbench",
-                f"Unable to remove Enum Value.\n\n{error}",
+    def commit(self, rows):
+        self._check_project()
+        path, expected = self.source_path(), self.snapshot_hash
+        if expected is None or self.digest(path) != expected:
+            raise ValueError("CSV changed externally. Draft retained; Revert Draft before reapplying edits.")
+        original = self.rows()
+        candidate_rows = [dict(row) for row in rows]
+        temporary = path.with_name(".enum-catalog-" + uuid4().hex + ".tmp.csv")
+        try:
+            self.validate_rows(candidate_rows)
+            self.write(temporary, candidate_rows)
+            candidate_hash = self.digest(temporary)
+            valid, output = self.candidate_valid(temporary)
+            self.app.log(output)
+            if not valid:
+                raise ValueError("Candidate project validation failed. Draft retained; CSV unchanged.")
+            self._check_project()
+            if self.loaded_rows != original or self.digest(path) != expected:
+                raise ValueError("Draft or CSV changed during validation. Save blocked.")
+            folder = self.backup_directory()
+            folder.mkdir(parents=True, exist_ok=True)
+            backup = folder / (
+                "enum_catalog_" + datetime.now().strftime("%Y%m%d_%H%M%S_%f") + ".csv"
             )
-
+            shutil.copy2(path, backup)
+            if self.digest(backup) != expected or self.digest(path) != expected:
+                raise ValueError("CSV changed while preparing backup. Save blocked.")
+            self._check_project()
+            if self.loaded_rows != original or self.digest(temporary) != candidate_hash:
+                raise ValueError("Draft or candidate changed while preparing backup. Save blocked.")
+            for source, dependency_hash in self._validated_dependencies.items():
+                if self.digest(source) != dependency_hash:
+                    raise ValueError(f"Validation dependency changed before save: {source.name}")
+            os.replace(temporary, path)
         finally:
-            if temporary.exists():
-                temporary.unlink()
+            try:
+                temporary.unlink(missing_ok=True)
+            except OSError as error:
+                self.app.log(f"Enum Catalog temporary cleanup warning: {error}")
+        self.snapshot_hash = self.digest(path)
+        self.dirty = False
+        self.app.log(f"Enum Catalog saved. Backup: {backup}")
+        self._set_status("Enum Catalog saved to source.")
+        self.app.refresh_all(False)
+        messagebox.showinfo(self.title, f"Candidate validation passed.\nBackup: {backup}", parent=self.app)
 
-            self.app.config(cursor="")
-            self.app.update_idletasks()
+    def save(self):
+        if not self.dirty:
+            self._set_status("No applied changes. Use Apply to List first.")
+            return False
+        try:
+            self.commit(self.loaded_rows)
+            return True
+        except ERRORS as error:
+            self.blocked("Save", error)
+            return False
 
-    def open_backups(self) -> None:
+    def revert_source(self):
+        if self.dirty and not messagebox.askyesno(
+            self.title, "Discard applied Enum Catalog draft changes and reload source?",
+            default=messagebox.NO, parent=self.app,
+        ):
+            return False
+        try:
+            self.update(force=True)
+            return True
+        except ERRORS as error:
+            self.blocked("Revert Draft", error)
+            return False
+
+    def open_backups(self):
         self.backup_directory().mkdir(parents=True, exist_ok=True)
         self.app.open_folder(self.backup_directory())
 
 
-def install_enum_catalog_editor(app: Any) -> None:
+def install_enum_catalog_editor(app):
     editor = EnumCatalogEditor(app)
-
     app.enum_catalog_editor = editor
+    app.update_enum_catalog = editor.update

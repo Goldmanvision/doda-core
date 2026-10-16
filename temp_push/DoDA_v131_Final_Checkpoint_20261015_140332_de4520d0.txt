@@ -1,0 +1,23 @@
+===== DoDA v131 FACILITIES FINAL CHECKPOINT =====
+Time: 2026-10-15T14:03:32.7217547-04:00
+Branch: feature/workbench-data-bridge
+Local HEAD: 99fd6f3b883f9b7a6b2d21c2951ee1144d8117a9
+Staged entries: 0
+Status: installation, automated verification, and requested draft-only manual GUI criteria complete.
+Installed automated evidence: 49 targeted and 1217 full tests passed; no failures, errors, or skips.
+These are existing successful test runs, not a new test execution.
+Installed test log: E:\Dev\uzdoom_src\doda-core\generated\_tests_tmp\v131_install_20261015_130356_7478bf0f\v131_install_and_tests.txt
+Installed test-log SHA256: 32516FDA2880073F93159AA6D2EF5DE1A98896049C42A72690BDCB52CF76A7A5
+Manual evidence: user confirmed all five requested GUI groups passed on 2026-10-15.
+Groups: startup/layout/repeated Refresh; single/multi Apply; atomic rejection; draft protection/reversion; capacity/reference protection.
+Interactive Save to Source and backup confirmation were not part of the draft-only manual checklist.
+Post-manual integrity: all four installed hashes and 64 authored CSV hashes matched.
+doda_facilities_editor.py SHA256: D5F8B908CC15E8652403262268F9DCED235648339ADEDF35B94B4AE807126A99
+doda_content_gui.py SHA256: CF70C4FD640B36F4C4E2F7F1A6963CA022D759C3B686D9040A7AFA3510BDD78A
+doda_facilities_draft_policy.py SHA256: 02CA7E70542E654AE2EB253691B944971F0172CE40D78D7B59A47140B8A06C34
+tests\test_facilities_v131.py SHA256: D5541F93BB5668E57F4EEBB48E56CFC802FC8F7A4D668C17481D3B9EDA26B82A
+No native-engine build, ZScript parsing, or in-game validation claimed.
+Implementation source has not been committed by these task scripts.
+This checkpoint was created locally only. Publication has not yet occurred.
+v132 Department Tracks four-file scope is approved; no v132 implementation installed.
+Current Track editor SHA256: ADF0297FDF1CD9A4C2533F41D7E8449FB15241F047A94F8494359C03A67A7BA6

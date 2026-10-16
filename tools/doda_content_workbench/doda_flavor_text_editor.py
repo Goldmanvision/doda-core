@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import os
 import re
 import shutil
@@ -11,743 +12,588 @@ import tkinter as tk
 from datetime import datetime
 from pathlib import Path
 from tkinter import messagebox, ttk
-from typing import Any
 from uuid import uuid4
 
-FIELDS = (
-    "flavor_text_id",
-    "category",
-    "title",
-    "body",
-    "active",
-)
+from doda_row_selection import MULTIPLE_VALUES, selection_display
+from doda_task_templates_editor import FILES as VALIDATION_FILES
 
-FILES = (
-    "enum_catalog.csv",
-    "department_tracks.csv",
-    "metrics.csv",
-    "metric_tiers.csv",
-    "facilities.csv",
-    "flavor_text.csv",
-    "qualification_catalog.csv",
-    "capabilities.csv",
-    "facility_capabilities.csv",
-    "capability_staffing_rules.csv",
-    "facility_capability_staffing_overrides.csv",
-    "task_templates.csv",
-)
-FILES = tuple(FILES) + ("equipment_families.csv",)
-FILES = tuple(dict.fromkeys(tuple(FILES) + ("resources.csv", "task_template_flows.csv")))
+FIELDS = ("flavor_text_id", "category", "title", "body", "active")
+IDENTITY = FIELDS[:1]
+EDITABLE = FIELDS[1:]
+FILES = tuple(VALIDATION_FILES)
+ERRORS = (OSError, UnicodeError, csv.Error, ValueError)
 
-ID_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
+
+def row_key(row):
+    return row["flavor_text_id"]
+
+
+def row_iid(row):
+    return row_key(row)
+
+
+def sort_key(row):
+    return row["category"], row["flavor_text_id"]
+
+
+def clean_value(field, value):
+    if not isinstance(value, str):
+        raise ValueError("Form values must be text.")
+    return value if field == "body" else value.strip()
+
+
+def display_values(row):
+    title = " ".join(row["title"].split())
+    if len(title) > 70:
+        title = title[:67] + "..."
+    return row["flavor_text_id"], row["category"], title, row["active"]
 
 
 class FlavorTextEditor:
-    def __init__(self, app: Any) -> None:
+    title = "Flavor Text"
+
+    def __init__(self, app):
         self.app = app
-        self.editing_id: str | None = None
-
-        self.flavor_id = tk.StringVar()
-        self.category = tk.StringVar()
-        self.title = tk.StringVar()
-        self.active = tk.BooleanVar(value=True)
-
+        self.editing_key = None
+        self.loaded_rows = []
+        self.loaded_path = None
+        self.snapshot_hash = None
+        self.dirty = False
+        self.vars = {field: tk.StringVar(master=app) for field in FIELDS}
+        self.status = tk.StringVar(master=app, value="Source not loaded.")
+        self.widgets = {}
+        self._loading = False
+        self._session = ()
+        self._original = []
+        self._changes = {}
+        self._validated_dependencies = {}
+        self._body_seen = ""
         self.build()
+        for field in EDITABLE:
+            self.vars[field].trace_add("write", lambda *_args, f=field: self.changed(f))
+        for field in ("category", "active"):
+            self.widgets[field].bind(
+                "<<ComboboxSelected>>", lambda _event, f=field: self.changed(f)
+            )
 
-    def source_path(self) -> Path:
+    def source_path(self):
         return self.app.source_directory / "flavor_text.csv"
 
-    def backup_directory(self) -> Path:
+    def backup_directory(self):
         return self.app.project_root / "data_authoring" / "backups" / "flavor_text"
 
-    def rows(self) -> list[dict[str, str]]:
-        return [dict(row) for row in self.app.tables.get("flavor_text", [])]
+    @staticmethod
+    def digest(path):
+        return hashlib.sha256(path.read_bytes()).hexdigest()
 
-    def categories(self) -> list[str]:
-        return sorted(
-            {
-                row.get("category", "").strip()
-                for row in self.rows()
-                if row.get("category", "").strip()
-            }
-        )
-
-    def build(self) -> None:
-        for child in self.app.flavor_tab.winfo_children():
-            child.destroy()
-
+    def build(self):
         tab = self.app.flavor_tab
+        for child in tab.winfo_children():
+            child.destroy()
         tab.columnconfigure(0, weight=3)
         tab.columnconfigure(1, weight=2)
         tab.rowconfigure(0, weight=1)
-
-        list_frame = ttk.LabelFrame(tab, text="Flavor Text", padding=8)
-        editor_frame = ttk.LabelFrame(tab, text="Flavor Text Editor", padding=10)
-
-        list_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=(0, 6))
-        editor_frame.grid(row=0, column=1, sticky=tk.NSEW)
-
-        list_frame.columnconfigure(0, weight=1)
-        list_frame.rowconfigure(0, weight=1)
-        editor_frame.columnconfigure(1, weight=1)
-        editor_frame.rowconfigure(4, weight=1)
-
-        self.tree = ttk.Treeview(
-            list_frame,
-            columns=("id", "category", "title", "active"),
-            show="headings",
-            selectmode="browse",
-        )
-
-        columns = (
-            ("id", "Flavor Text ID", 250),
-            ("category", "Category", 150),
-            ("title", "Title", 280),
-            ("active", "Active", 70),
-        )
-
-        for key, title, width in columns:
-            self.tree.heading(key, text=title)
-            self.tree.column(key, width=width, anchor=tk.W)
-
-        scrollbar = ttk.Scrollbar(
-            list_frame,
-            orient=tk.VERTICAL,
-            command=self.tree.yview,
-        )
-
-        self.tree.configure(yscrollcommand=scrollbar.set)
-        self.tree.grid(row=0, column=0, sticky=tk.NSEW)
-        scrollbar.grid(row=0, column=1, sticky=tk.NS)
-
+        left = ttk.LabelFrame(tab, text=self.title, padding=8)
+        right = ttk.LabelFrame(tab, text="Flavor Text Editor", padding=10)
+        left.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
+        right.grid(row=0, column=1, sticky="nsew")
+        left.columnconfigure(0, weight=1)
+        left.rowconfigure(0, weight=1)
+        right.columnconfigure(1, weight=1)
+        right.rowconfigure(3, weight=1)
+        columns = ("flavor_text_id", "category", "title", "active")
+        self.tree = ttk.Treeview(left, columns=columns, show="headings", selectmode="extended")
+        for field, label, width in (
+            ("flavor_text_id", "Flavor Text ID", 260), ("category", "Category", 130),
+            ("title", "Title", 280), ("active", "Active", 80),
+        ):
+            self.tree.heading(field, text=label)
+            self.tree.column(field, width=width, minwidth=60)
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        vertical = ttk.Scrollbar(left, command=self.tree.yview)
+        vertical.grid(row=0, column=1, sticky="ns")
+        horizontal = ttk.Scrollbar(left, orient="horizontal", command=self.tree.xview)
+        horizontal.grid(row=1, column=0, sticky="ew")
+        self.tree.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)
         self.tree.bind("<<TreeviewSelect>>", self.on_select)
-
-        def label(text: str, row: int) -> None:
-            ttk.Label(
-                editor_frame,
-                text=text,
-                style="Section.TLabel",
-            ).grid(
-                row=row,
-                column=0,
-                sticky=tk.NW,
-                padx=(0, 8),
-                pady=(0, 8),
+        labels = ("Flavor Text ID", "Category", "Title", "Body", "Active")
+        for index, (field, label) in enumerate(zip(FIELDS, labels)):
+            ttk.Label(right, text=label + ":").grid(row=index, column=0, sticky="nw", pady=4)
+            if field == "body":
+                widget = tk.Text(
+                    right, height=12, wrap="word", background="#0d1117",
+                    foreground="#e6edf3", insertbackground="#e6edf3",
+                )
+                self.body = widget
+                widget.bind("<<Modified>>", self.body_modified)
+                scrollbar = ttk.Scrollbar(right, command=widget.yview)
+                scrollbar.grid(row=index, column=2, sticky="ns", pady=4)
+                widget.configure(yscrollcommand=scrollbar.set)
+            elif field == "category":
+                widget = ttk.Combobox(right, textvariable=self.vars[field], state="normal")
+            elif field == "active":
+                widget = ttk.Combobox(
+                    right, textvariable=self.vars[field], state="readonly",
+                    values=("TRUE", "FALSE"),
+                )
+            else:
+                widget = ttk.Entry(right, textvariable=self.vars[field])
+            if field in EDITABLE and field != "active":
+                widget.bind("<FocusIn>", lambda _e, f=field: self.select_placeholder(f), add="+")
+                widget.bind("<ButtonRelease-1>", lambda _e, f=field: self.select_placeholder(f), add="+")
+            widget.grid(row=index, column=1, sticky="nsew" if field == "body" else "ew", pady=4)
+            self.widgets[field] = widget
+        buttons = ttk.Frame(right)
+        buttons.grid(row=len(FIELDS), column=0, columnspan=3, sticky="ew", pady=8)
+        for index, (label, command) in enumerate((
+            ("New Flavor Text", self.new), ("Apply to List", self.apply_record),
+            ("Save to Source", self.save), ("Delete from List", self.remove),
+            ("Revert Form", self.revert), ("Revert Draft", self.revert_source),
+            ("Open Backups", self.open_backups),
+        )):
+            ttk.Button(buttons, text=label, command=command).grid(
+                row=index // 3, column=index % 3, sticky="ew", padx=3, pady=3
             )
-
-        label("Flavor Text ID:", 0)
-
-        self.id_entry = ttk.Entry(
-            editor_frame,
-            textvariable=self.flavor_id,
-        )
-
-        self.id_entry.grid(
-            row=0,
-            column=1,
-            sticky=tk.EW,
-            pady=(0, 8),
-        )
-
         ttk.Label(
-            editor_frame,
-            text="Uppercase ID; immutable after creation.",
-            foreground="#9da7b3",
-        ).grid(
-            row=1,
-            column=1,
-            sticky=tk.W,
-            pady=(0, 10),
+            right, wraplength=390,
+            text="IDs are immutable. Category, Title, and Body are required. "
+                 "Apply/Delete change only the draft. Save validates and creates a backup. "
+                 "Metric Tier references remain protected. Validate/Export use saved source.",
+        ).grid(row=len(FIELDS) + 1, column=0, columnspan=3, sticky="ew", pady=8)
+        ttk.Label(right, textvariable=self.status, wraplength=390).grid(
+            row=len(FIELDS) + 2, column=0, columnspan=3, sticky="ew"
         )
-
-        label("Category:", 2)
-
-        self.category_combo = ttk.Combobox(
-            editor_frame,
-            textvariable=self.category,
-            values=self.categories(),
-        )
-
-        self.category_combo.grid(
-            row=2,
-            column=1,
-            sticky=tk.EW,
-            pady=(0, 8),
-        )
-
-        label("Title:", 3)
-
-        ttk.Entry(
-            editor_frame,
-            textvariable=self.title,
-        ).grid(
-            row=3,
-            column=1,
-            sticky=tk.EW,
-            pady=(0, 8),
-        )
-
-        label("Body:", 4)
-
-        self.body = tk.Text(
-            editor_frame,
-            height=12,
-            wrap=tk.WORD,
-            background="#0d1117",
-            foreground="#e6edf3",
-            insertbackground="#e6edf3",
-            highlightbackground="#3b4754",
-            highlightcolor="#58a6ff",
-        )
-
-        self.body.grid(
-            row=4,
-            column=1,
-            sticky=tk.NSEW,
-            pady=(0, 8),
-        )
-
-        label("Active:", 5)
-
-        ttk.Checkbutton(
-            editor_frame,
-            text="This flavor text is active",
-            variable=self.active,
-        ).grid(
-            row=5,
-            column=1,
-            sticky=tk.W,
-            pady=(0, 8),
-        )
-
-        buttons = ttk.Frame(editor_frame)
-        buttons.grid(
-            row=6,
-            column=0,
-            columnspan=2,
-            sticky=tk.EW,
-            pady=(8, 0),
-        )
-
-        ttk.Button(
-            buttons,
-            text="Add Flavor Text",
-            command=self.new,
-        ).pack(side=tk.LEFT)
-
-        ttk.Button(
-            buttons,
-            text="Save Flavor Text",
-            command=self.save,
-        ).pack(side=tk.LEFT, padx=6)
-
-        ttk.Button(
-            buttons,
-            text="Remove Flavor Text",
-            command=self.remove,
-        ).pack(side=tk.LEFT, padx=6)
-
-        ttk.Button(
-            buttons,
-            text="Revert Form",
-            command=self.revert,
-        ).pack(side=tk.LEFT, padx=6)
-
-        ttk.Button(
-            buttons,
-            text="Open Backups",
-            command=self.open_backups,
-        ).pack(side=tk.RIGHT)
-
-        ttk.Label(
-            editor_frame,
-            text=(
-                "Removal is blocked when Metric Tiers reference the selected "
-                "Flavor Text ID."
-            ),
-            foreground="#9da7b3",
-            wraplength=390,
-        ).grid(
-            row=7,
-            column=0,
-            columnspan=2,
-            sticky=tk.EW,
-            pady=(12, 0),
-        )
-
         self.new()
 
-    def update(self) -> None:
-        selected = self.editing_id
+    def refresh_choices(self):
+        self.widgets["category"].configure(values=tuple(self.categories()))
+        self.widgets["active"].configure(values=("TRUE", "FALSE"))
 
-        self.category_combo.configure(values=self.categories())
+    def categories(self):
+        return sorted({
+            row["category"].strip() for row in self.loaded_rows
+            if row["category"].strip()
+        })
 
+    def new(self):
+        self._loading = True
+        try:
+            self._end_session()
+            self.tree.selection_remove(*self.tree.selection())
+            self.refresh_choices()
+            categories = self.categories()
+            for field in FIELDS:
+                self.vars[field].set("")
+            self.vars["category"].set(categories[0] if categories else "")
+            self.vars["active"].set("TRUE")
+            self.widgets["flavor_text_id"].configure(state="normal")
+            self._load_body()
+        finally:
+            self._loading = False
+
+    def validate_rows(self, rows):
+        seen = set()
+        for row in rows:
+            if set(row) != set(FIELDS) or any(not isinstance(row[f], str) for f in FIELDS):
+                raise ValueError("Malformed Flavor Text row.")
+            if any(row[f].strip() == MULTIPLE_VALUES for f in FIELDS):
+                raise ValueError("Mixed-value placeholder cannot be applied as data.")
+            key = row_key(row)
+            if not re.fullmatch(r"[A-Z][A-Z0-9_]*", key):
+                raise ValueError("Flavor Text ID must start with an uppercase letter and use uppercase letters, digits, or underscores.")
+            if key in seen:
+                raise ValueError("Duplicate Flavor Text ID.")
+            seen.add(key)
+            for field in ("category", "title", "body"):
+                if not row[field].strip():
+                    raise ValueError(field.title() + " is required.")
+            if row["active"] not in ("TRUE", "FALSE"):
+                raise ValueError("Active must be TRUE or FALSE.")
+
+    def update(self, force=False):
+        path = self.source_path()
+        if self.dirty and not force:
+            self._check_project()
+            self._set_status("Unsaved Flavor Text draft retained; refresh skipped.")
+            return
+        before = self.digest(path)
+        if (
+            not force and self.loaded_path == path.resolve()
+            and self.snapshot_hash == before
+        ):
+            self.refresh_choices()
+            return
+        with path.open(encoding="utf-8-sig", newline="") as handle:
+            reader = csv.DictReader(handle)
+            if reader.fieldnames != list(FIELDS):
+                raise ValueError("Flavor Text CSV header does not match the current schema.")
+            rows = [dict(row) for row in reader if any(row.values())]
+        self.validate_rows(rows)
+        if before != self.digest(path):
+            raise ValueError("Flavor Text CSV changed during refresh; draft retained.")
+        self._end_session()
+        self.loaded_rows = rows
+        self.loaded_path = path.resolve()
+        self.snapshot_hash = before
+        self.dirty = False
+        self._render_draft()
+        self.refresh_choices()
+        if self.tree.selection():
+            self.on_select(force=True)
+        else:
+            self.new()
+        self._set_status(f"{len(rows)} flavor records loaded from source.")
+
+    def _load_body(self):
+        previous = self._loading
+        self._loading = True
+        try:
+            self.body.delete("1.0", "end")
+            self.body.insert("1.0", self.vars["body"].get())
+            self._body_seen = self.body.get("1.0", "end-1c")
+            self.body.edit_modified(False)
+        finally:
+            self._loading = previous
+
+    def body_modified(self, _event=None):
+        if not self.body.edit_modified():
+            return
+        self.body.edit_modified(False)
+        self.flush_body()
+
+    def flush_body(self):
+        current = self.body.get("1.0", "end-1c")
+        if not self._loading and current != self._body_seen:
+            self.vars["body"].set(current)
+            self.changed("body")
+        self._body_seen = current
+
+    def on_select(self, _event=None, force=False):
+        selected = tuple(self.tree.selection())
+        if not force and selected == self._session and self.loaded_rows == self._original:
+            return
+        self._draft_on_select(_event, force)
+        self._load_body()
+
+    def apply_record(self):
+        self.flush_body()
+        return self._draft_apply_record()
+
+    def select_placeholder(self, field):
+        if len(self._session) < 2 or field in self._changes:
+            return
+
+        def select():
+            if len(self._session) < 2 or field in self._changes:
+                return
+            value = (
+                self.body.get("1.0", "end-1c")
+                if field == "body" else self.vars[field].get()
+            )
+            if value != MULTIPLE_VALUES:
+                return
+            if field == "body":
+                self.body.tag_add("sel", "1.0", "end-1c")
+                self.body.mark_set("insert", "end-1c")
+            else:
+                self.widgets[field].selection_range(0, "end")
+                self.widgets[field].icursor("end")
+        self.widgets[field].after_idle(select)
+
+
+
+
+
+    def _set_status(self, text):
+        self.status.set(text)
+
+    def _end_session(self):
+        self._session = ()
+        self._original = []
+        self._changes = {}
+        self.editing_key = None
+
+    def rows(self):
+        return [dict(row) for row in self.loaded_rows]
+
+    def changed(self, field):
+        if self._loading or len(self._session) < 2 or field not in EDITABLE:
+            return
+        self._changes[field] = self.vars[field].get()
+        self._set_status(
+            f"{len(self._session)} tracks selected; {len(self._changes)} edited field(s) ready for Apply."
+        )
+
+    def _render_draft(self):
+        selected, focused = tuple(self.tree.selection()), self.tree.focus()
         for item in self.tree.get_children():
             self.tree.delete(item)
+        for row in sorted(self.loaded_rows, key=sort_key):
+            self.tree.insert("", "end", iid=row_iid(row), values=display_values(row))
+        kept = [iid for iid in selected if self.tree.exists(iid)]
+        if kept:
+            self.tree.selection_set(*kept)
+        if focused and self.tree.exists(focused):
+            self.tree.focus(focused)
 
-        rows = sorted(
-            self.rows(),
-            key=lambda row: (
-                row.get("category", ""),
-                row.get("flavor_text_id", ""),
-            ),
+    def _draft_on_select(self, _event=None, force=False):
+        selected = tuple(self.tree.selection())
+        if not selected:
+            if self._session:
+                self.new()
+            return
+        if not force and selected == self._session and self.loaded_rows == self._original:
+            return
+        by_id = {row_iid(row): row for row in self.loaded_rows}
+        if len(selected) != len(set(selected)) or any(iid not in by_id for iid in selected):
+            self._set_status("Selection no longer matches draft. Reselect rows.")
+            return
+        rows = [by_id[iid] for iid in selected]
+        self._loading = True
+        try:
+            self._session = selected
+            self._original = self.rows()
+            self._changes = {}
+            self.editing_key = row_key(rows[0]) if len(rows) == 1 else None
+            self.refresh_choices()
+            for field in FIELDS:
+                self.vars[field].set(selection_display(rows, field, show_common=True))
+            for field in IDENTITY:
+                self.widgets[field].configure(state="disabled")
+        finally:
+            self._loading = False
+
+        self._set_status(
+            f"{len(rows)} facility record(s) selected. Untouched fields are preserved."
+            + (" UNSAVED CHANGES." if self.dirty else "")
         )
 
-        for row in rows:
-            flavor_id = row.get("flavor_text_id", "")
-            title = " ".join(row.get("title", "").split())
-
-            if len(title) > 70:
-                title = title[:67] + "..."
-
-            self.tree.insert(
-                "",
-                tk.END,
-                iid=flavor_id,
-                values=(
-                    flavor_id,
-                    row.get("category", ""),
-                    title,
-                    row.get("active", ""),
-                ),
-            )
-
-        if selected and self.tree.exists(selected):
-            self.tree.selection_set(selected)
-            self.tree.focus(selected)
-
-    def new(self) -> None:
-        self.editing_id = None
-
-        self.id_entry.configure(state=tk.NORMAL)
-
-        categories = self.categories()
-
-        self.flavor_id.set("")
-        self.category.set(categories[0] if categories else "")
-        self.title.set("")
-        self.active.set(True)
-
-        self.body.delete("1.0", tk.END)
-        self.id_entry.focus_set()
-
-    def on_select(self, _event: Any = None) -> None:
-        selection = self.tree.selection()
-
-        if not selection:
-            return
-
-        row = next(
-            (
-                item
-                for item in self.rows()
-                if item.get("flavor_text_id") == selection[0]
-            ),
-            None,
-        )
-
-        if row is None:
-            return
-
-        self.editing_id = row["flavor_text_id"]
-
-        self.id_entry.configure(state=tk.NORMAL)
-        self.flavor_id.set(row.get("flavor_text_id", ""))
-        self.id_entry.configure(state=tk.DISABLED)
-
-        self.category.set(row.get("category", ""))
-        self.title.set(row.get("title", ""))
-        self.active.set(row.get("active", "").upper() == "TRUE")
-
-        self.body.delete("1.0", tk.END)
-        self.body.insert("1.0", row.get("body", ""))
-
-    def revert(self) -> None:
-        if self.editing_id and self.tree.exists(self.editing_id):
-            self.tree.selection_set(self.editing_id)
-            self.on_select()
+    def revert(self):
+        if self.tree.selection():
+            self.on_select(force=True)
         else:
             self.new()
 
-    def record(self) -> dict[str, str] | None:
-        row = {
-            "flavor_text_id": self.flavor_id.get().strip(),
-            "category": self.category.get().strip(),
-            "title": self.title.get().strip(),
-            "body": self.body.get("1.0", tk.END).strip(),
-            "active": "TRUE" if self.active.get() else "FALSE",
-        }
-
-        errors: list[str] = []
-
-        if not ID_PATTERN.fullmatch(row["flavor_text_id"]):
-            errors.append(
-                "Flavor Text ID must begin with an uppercase letter and use "
-                "only uppercase letters, digits, or underscores."
-            )
-
-        if not row["category"]:
-            errors.append("Category is required.")
-
-        if not row["title"]:
-            errors.append("Title is required.")
-
-        if not row["body"]:
-            errors.append("Body is required.")
-
-        if errors:
-            messagebox.showerror(
-                "DoDA Content Workbench",
-                "Correct before saving:\n\n- " + "\n- ".join(errors),
-            )
-
-            return None
-
-        return row
-
-    def write(self, path: Path, rows: list[dict[str, str]]) -> None:
+    def write(self, path, rows):
         with path.open("w", encoding="utf-8", newline="") as handle:
-            writer = csv.DictWriter(
-                handle,
-                fieldnames=FIELDS,
-                lineterminator="\n",
-            )
-
+            writer = csv.DictWriter(handle, fieldnames=FIELDS, lineterminator="\n")
             writer.writeheader()
+            writer.writerows(rows)
 
-            for row in rows:
-                writer.writerow(
-                    {
-                        field: row.get(field, "")
-                        for field in FIELDS
-                    }
-                )
-
-    def candidate_valid(self, candidate: Path) -> tuple[bool, str]:
-        with tempfile.TemporaryDirectory(prefix="doda-flavor-") as temporary:
+    def candidate_valid(self, candidate):
+        self._validated_dependencies = {}
+        dependencies = {}
+        with tempfile.TemporaryDirectory(prefix="doda-flavor-text-") as temporary:
             root = Path(temporary)
             destination = root / "data_authoring" / "source"
             destination.mkdir(parents=True)
-
             for filename in FILES:
-                source = (
-                    candidate
-                    if filename == "flavor_text.csv"
-                    else self.app.source_directory / filename
-                )
-
+                source = candidate if filename == "flavor_text.csv" else self.app.source_directory / filename
+                before = self.digest(source)
                 shutil.copy2(source, destination / filename)
-
-            command = [
-                sys.executable,
-                str(self.app.validator_path),
-                "--root",
-                str(root),
-                "validate",
-            ]
-
+                if before != self.digest(source) or before != self.digest(destination / filename):
+                    raise ValueError(f"Validation input changed during copy: {filename}")
+                dependencies[source.resolve()] = before
             completed = subprocess.run(
-                command,
-                cwd=root,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                capture_output=True,
+                [sys.executable, str(self.app.validator_path), "--root", str(root), "validate"],
+                cwd=root, text=True, encoding="utf-8", errors="replace", capture_output=True,
             )
+            for source, expected in dependencies.items():
+                if self.digest(source) != expected:
+                    raise ValueError(f"Validation input changed during validation: {source.name}")
+            self._validated_dependencies = {
+                path: digest for path, digest in dependencies.items()
+                if path != candidate.resolve()
+            }
+            return completed.returncode == 0, completed.stdout + "\n" + completed.stderr
 
-            output = (
-                completed.stdout
-                + ("\n" if completed.stdout and completed.stderr else "")
-                + completed.stderr
-            ).strip()
+    def _validate_rows(self, rows):
+        self.validate_rows(rows)
+        with tempfile.TemporaryDirectory(prefix="doda-flavor-text-draft-") as temporary:
+            candidate = Path(temporary) / "flavor_text.csv"
+            self.write(candidate, rows)
+            valid, output = self.candidate_valid(candidate)
+        self.app.log(output)
+        if not valid:
+            raise ValueError("Candidate project validation failed. Draft and CSV unchanged; see Activity Log.")
 
-            return completed.returncode == 0, output
+    def _check_project(self):
+        if self.loaded_path is None or self.source_path().resolve() != self.loaded_path:
+            raise ValueError("Source project changed or is not loaded. Draft retained.")
 
-    def post_validate(self) -> tuple[bool, str]:
-        command = [
-            sys.executable,
-            str(self.app.validator_path),
-            "--root",
-            str(self.app.project_root),
-            "validate",
-        ]
+    def _check_session(self, before, selected):
+        if selected and (selected != self._session or before != self._original):
+            raise ValueError("Draft or selection changed. Reselect before applying.")
+        if not selected and self._session:
+            raise ValueError("Selection cleared. Start a new facility before applying.")
 
-        completed = subprocess.run(
-            command,
-            cwd=self.app.project_root,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            capture_output=True,
-        )
-
-        output = (
-            completed.stdout
-            + ("\n" if completed.stdout and completed.stderr else "")
-            + completed.stderr
-        ).strip()
-
-        return completed.returncode == 0, output
-
-    def save(self) -> None:
-        row = self.record()
-
-        if row is None:
-            return
-
-        rows = self.rows()
-
-        if self.editing_id:
-            if row["flavor_text_id"] != self.editing_id:
-                messagebox.showerror(
-                    "DoDA Content Workbench",
-                    "Flavor Text ID cannot change after creation.",
-                )
-                return
-
-            rows = [
-                row
-                if item.get("flavor_text_id") == self.editing_id
-                else item
-                for item in rows
-            ]
-
-            action = "updated"
-
-        else:
-            if any(
-                item.get("flavor_text_id") == row["flavor_text_id"]
-                for item in rows
-            ):
-                messagebox.showerror(
-                    "DoDA Content Workbench",
-                    "Flavor Text ID already exists.",
-                )
-                return
-
-            rows.append(row)
-            action = "added"
-
-        temporary = self.app.source_directory / (
-            f".flavor-text-{uuid4().hex}.tmp.csv"
-        )
-
-        self.app.config(cursor="watch")
-        self.app.update_idletasks()
-
+    def _draft_apply_record(self):
         try:
-            self.write(temporary, rows)
-
-            valid, output = self.candidate_valid(temporary)
-
-            self.app.log("Flavor Text candidate validation output:")
-
-            for line in output.splitlines():
-                self.app.log(" " + line)
-
-            if not valid:
-                messagebox.showerror(
-                    "DoDA Content Workbench",
-                    (
-                        "Flavor Text candidate validation failed. Source CSV "
-                        "was unchanged.\n\nReview Activity Log for details."
-                    ),
-                )
-                return
-
-            folder = self.backup_directory()
-            folder.mkdir(parents=True, exist_ok=True)
-
-            backup = folder / (
-                "flavor_text_"
-                + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-                + ".csv"
-            )
-
-            shutil.copy2(self.source_path(), backup)
-            os.replace(temporary, self.source_path())
-
-            self.editing_id = row["flavor_text_id"]
-
-            self.app.log(f"Created Flavor Text backup: {backup}")
-            self.app.log(
-                f"Flavor Text {action}: {row['flavor_text_id']}"
-            )
-
-            self.app.refresh_all(False)
-
-            valid, output = self.post_validate()
-
-            for line in output.splitlines():
-                self.app.log(" " + line)
-
-            self.app.refresh_all(False)
-
-            if valid:
-                messagebox.showinfo(
-                    "DoDA Content Workbench",
-                    (
-                        f"Flavor Text '{row['flavor_text_id']}' {action}.\n\n"
-                        f"Backup created:\n{backup}\n\n"
-                        "Project validation passed."
-                    ),
-                )
+            self._check_project()
+            before, selected = self.rows(), tuple(self.tree.selection())
+            self._check_session(before, selected)
+            if len(selected) > 1:
+                if not self._changes:
+                    self._set_status("No deliberately edited fields. Draft unchanged.")
+                    return False
+                if any(field not in EDITABLE for field in self._changes):
+                    raise ValueError("Flavor Text ID cannot be batch-edited.")
+                changes = {field: clean_value(field, value) for field, value in self._changes.items()}
+                candidate = [
+                    {**row, **changes} if row_iid(row) in selected else dict(row)
+                    for row in before
+                ]
             else:
-                messagebox.showwarning(
-                    "DoDA Content Workbench",
-                    (
-                        f"Flavor Text {action}, but post-save validation failed.\n\n"
-                        f"Backup:\n{backup}"
-                    ),
-                )
+                row = {field: clean_value(field, self.vars[field].get()) for field in FIELDS}
+                key = row_key(row)
+                if selected and self.editing_key is None:
+                    raise ValueError("Reselect the facility before applying.")
+                if self.editing_key is not None:
+                    if key != self.editing_key:
+                        raise ValueError("Flavor Text ID cannot change after creation.")
+                    if not any(row_key(r) == key for r in before):
+                        raise ValueError("Selected facility is no longer in the draft.")
+                    candidate = [row if row_key(r) == key else dict(r) for r in before]
+                else:
+                    if any(row_key(r) == key for r in before):
+                        raise ValueError("This Flavor Text ID installation already exists.")
+                    candidate = before + [row]
+            if candidate == before:
+                self._set_status("No changed values. Draft unchanged.")
+                return False
+            self._validate_rows(candidate)
+            self._check_project()
+            if self.loaded_rows != before or tuple(self.tree.selection()) != selected:
+                raise ValueError("Draft or selection changed during validation. Nothing applied.")
+            self.loaded_rows = candidate
+            self.dirty = True
+            if len(selected) > 1:
+                by_id = {row_iid(r): r for r in candidate}
+                for iid in selected:
+                    self.tree.item(iid, values=display_values(by_id[iid]))
+            else:
+                self._render_draft()
+                self.tree.selection_set(row_iid(row))
+                self.tree.focus(row_iid(row))
+            self.on_select(force=True)
+            self._set_status("Applied to draft. UNSAVED CHANGES.")
+            return True
+        except ERRORS as error:
+            self.blocked("Apply", error)
+            return False
 
-        except (OSError, ValueError) as error:
-            self.app.log(f"FLAVOR TEXT SAVE ERROR: {error}")
+    def blocked(self, action, error):
+        self.app.log(f"Flavor Text {action} blocked; draft retained: {error}")
+        self._set_status(f"{action} blocked: {str(error).splitlines()[0]}")
+        messagebox.showerror(self.title, str(error), parent=self.app)
 
-            messagebox.showerror(
-                "DoDA Content Workbench",
-                f"Unable to save Flavor Text.\n\n{error}",
-            )
-
-        finally:
-            if temporary.exists():
-                temporary.unlink()
-
-            self.app.config(cursor="")
-            self.app.update_idletasks()
-
-    def remove(self) -> None:
-        if not self.editing_id:
-            messagebox.showwarning(
-                "DoDA Content Workbench",
-                "Select existing Flavor Text before using Remove Flavor Text.",
-            )
-            return
-
-        flavor_id = self.editing_id
-
-        confirmed = messagebox.askyesno(
-            "Remove Flavor Text?",
-            (
-                f"ARE YOU SURE you want to remove '{flavor_id}'?\n\n"
-                "Removal is blocked if Metric Tiers still reference this ID."
-            ),
-            icon="warning",
-            default=messagebox.NO,
-        )
-
-        if not confirmed:
-            self.app.log(
-                f"Remove Flavor Text cancelled for '{flavor_id}'."
-            )
-            return
-
-        rows = [
-            row
-            for row in self.rows()
-            if row.get("flavor_text_id") != flavor_id
-        ]
-
-        temporary = self.app.source_directory / (
-            f".flavor-text-remove-{uuid4().hex}.tmp.csv"
-        )
-
-        self.app.config(cursor="watch")
-        self.app.update_idletasks()
-
+    def remove(self):
+        selected = tuple(self.tree.selection())
+        if len(selected) != 1 or self.editing_key is None:
+            messagebox.showwarning(self.title, "Delete from List requires one selected existing facility.", parent=self.app)
+            return False
+        if not messagebox.askyesno(
+            self.title, "Delete selected facility from draft? Source changes only after Save to Source.",
+            default=messagebox.NO, parent=self.app,
+        ):
+            return False
         try:
-            self.write(temporary, rows)
-
-            valid, output = self.candidate_valid(temporary)
-
-            self.app.log(
-                f"Flavor Text removal candidate validation output for '{flavor_id}':"
-            )
-
-            for line in output.splitlines():
-                self.app.log(" " + line)
-
-            if not valid:
-                messagebox.showerror(
-                    "DoDA Content Workbench",
-                    (
-                        "Removal was blocked by validation.\n\n"
-                        "Metric Tier references must be updated first. "
-                        "Source CSV was unchanged."
-                    ),
-                )
-                return
-
-            folder = self.backup_directory()
-            folder.mkdir(parents=True, exist_ok=True)
-
-            backup = folder / (
-                "flavor_text_before_remove_"
-                + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-                + ".csv"
-            )
-
-            shutil.copy2(self.source_path(), backup)
-            os.replace(temporary, self.source_path())
-
-            self.editing_id = None
-
-            self.app.log(
-                f"Created pre-removal Flavor Text backup: {backup}"
-            )
-
-            self.app.log(f"Removed Flavor Text: {flavor_id}")
-
-            self.app.refresh_all(False)
+            self._check_project()
+            before = self.rows()
+            self._check_session(before, selected)
+            candidate = [r for r in before if row_iid(r) != selected[0]]
+            if len(candidate) == len(before):
+                raise ValueError("Selected facility is no longer in the draft.")
+            self._validate_rows(candidate)
+            self._check_project()
+            if self.loaded_rows != before or tuple(self.tree.selection()) != selected:
+                raise ValueError("Draft or selection changed during validation.")
+            self.loaded_rows = candidate
+            self.dirty = True
+            self._render_draft()
             self.new()
+            self._set_status("Track deleted from draft. UNSAVED CHANGES.")
+            return True
+        except ERRORS as error:
+            self.blocked("Delete", error)
+            return False
 
-            valid, output = self.post_validate()
-
-            for line in output.splitlines():
-                self.app.log(" " + line)
-
-            self.app.refresh_all(False)
-
-            if valid:
-                messagebox.showinfo(
-                    "DoDA Content Workbench",
-                    (
-                        f"Flavor Text '{flavor_id}' removed.\n\n"
-                        f"Backup created:\n{backup}\n\n"
-                        "Project validation passed."
-                    ),
-                )
-            else:
-                messagebox.showwarning(
-                    "DoDA Content Workbench",
-                    (
-                        "Flavor Text removed, but post-save validation failed.\n\n"
-                        f"Backup:\n{backup}"
-                    ),
-                )
-
-        except (OSError, ValueError) as error:
-            self.app.log(f"FLAVOR TEXT REMOVE ERROR: {error}")
-
-            messagebox.showerror(
-                "DoDA Content Workbench",
-                f"Unable to remove Flavor Text.\n\n{error}",
+    def commit(self, rows):
+        self._check_project()
+        path, expected = self.source_path(), self.snapshot_hash
+        if expected is None or self.digest(path) != expected:
+            raise ValueError("CSV changed externally. Draft retained; Revert Draft before reapplying edits.")
+        original = self.rows()
+        candidate_rows = [dict(row) for row in rows]
+        temporary = path.with_name(".flavor-text-" + uuid4().hex + ".tmp.csv")
+        try:
+            self.validate_rows(candidate_rows)
+            self.write(temporary, candidate_rows)
+            candidate_hash = self.digest(temporary)
+            valid, output = self.candidate_valid(temporary)
+            self.app.log(output)
+            if not valid:
+                raise ValueError("Candidate project validation failed. Draft retained; CSV unchanged.")
+            self._check_project()
+            if self.loaded_rows != original or self.digest(path) != expected:
+                raise ValueError("Draft or CSV changed during validation. Save blocked.")
+            folder = self.backup_directory()
+            folder.mkdir(parents=True, exist_ok=True)
+            backup = folder / (
+                "flavor_text_" + datetime.now().strftime("%Y%m%d_%H%M%S_%f") + ".csv"
             )
-
+            shutil.copy2(path, backup)
+            if self.digest(backup) != expected or self.digest(path) != expected:
+                raise ValueError("CSV changed while preparing backup. Save blocked.")
+            self._check_project()
+            if self.loaded_rows != original or self.digest(temporary) != candidate_hash:
+                raise ValueError("Draft or candidate changed while preparing backup. Save blocked.")
+            for source, dependency_hash in self._validated_dependencies.items():
+                if self.digest(source) != dependency_hash:
+                    raise ValueError(f"Validation dependency changed before save: {source.name}")
+            os.replace(temporary, path)
         finally:
-            if temporary.exists():
-                temporary.unlink()
+            try:
+                temporary.unlink(missing_ok=True)
+            except OSError as error:
+                self.app.log(f"Flavor Text temporary cleanup warning: {error}")
+        self.snapshot_hash = self.digest(path)
+        self.dirty = False
+        self.app.log(f"Flavor Text saved. Backup: {backup}")
+        self._set_status("Flavor Text saved to source.")
+        self.app.refresh_all(False)
+        messagebox.showinfo(self.title, f"Candidate validation passed.\nBackup: {backup}", parent=self.app)
 
-            self.app.config(cursor="")
-            self.app.update_idletasks()
+    def save(self):
+        if not self.dirty:
+            self._set_status("No applied changes. Use Apply to List first.")
+            return False
+        try:
+            self.commit(self.loaded_rows)
+            return True
+        except ERRORS as error:
+            self.blocked("Save", error)
+            return False
 
-    def open_backups(self) -> None:
+    def revert_source(self):
+        if self.dirty and not messagebox.askyesno(
+            self.title, "Discard applied Flavor Text draft changes and reload source?",
+            default=messagebox.NO, parent=self.app,
+        ):
+            return False
+        try:
+            self.update(force=True)
+            return True
+        except ERRORS as error:
+            self.blocked("Revert Draft", error)
+            return False
+
+    def open_backups(self):
         self.backup_directory().mkdir(parents=True, exist_ok=True)
         self.app.open_folder(self.backup_directory())
 
 
-def install_flavor_text_editor(app: Any) -> None:
+def install_flavor_text_editor(app):
     editor = FlavorTextEditor(app)
-
     app.flavor_text_editor = editor
     app.update_flavor_text = editor.update

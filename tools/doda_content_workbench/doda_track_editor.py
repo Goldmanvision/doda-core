@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import os
 import re
 import shutil
@@ -11,292 +12,562 @@ import tkinter as tk
 from datetime import datetime
 from pathlib import Path
 from tkinter import messagebox, ttk
-from typing import Any
 from uuid import uuid4
 
+from doda_row_selection import MULTIPLE_VALUES, selection_display
+from doda_task_templates_editor import FILES as VALIDATION_FILES
+
 FIELDS = ("track_id", "display_name", "description", "sort_order", "active")
-ID = re.compile(r"^[A-Z][A-Z0-9_]*$")
-FILES = (
-    "enum_catalog.csv",
-    "department_tracks.csv",
-    "metrics.csv",
-    "metric_tiers.csv",
-    "facilities.csv",
-    "flavor_text.csv",
-    "qualification_catalog.csv",
-    "capabilities.csv",
-    "facility_capabilities.csv",
-    "capability_staffing_rules.csv",
-    "facility_capability_staffing_overrides.csv",
-    "task_templates.csv",
-)
-FILES = tuple(FILES) + ("equipment_families.csv",)
-FILES = tuple(dict.fromkeys(tuple(FILES) + ("resources.csv", "task_template_flows.csv")))
+IDENTITY = FIELDS[:1]
+EDITABLE = FIELDS[1:]
+FILES = tuple(VALIDATION_FILES)
+ERRORS = (OSError, UnicodeError, csv.Error, ValueError)
+
+
+def row_key(row):
+    return row["track_id"]
+
+
+def row_iid(row):
+    return row_key(row)
+
+
+def sort_key(row):
+    return int(row["sort_order"]), row["track_id"]
+
 
 class TrackEditor:
-    def __init__(self, app: Any) -> None:
-        self.app, self.editing = app, None
-        self.id = tk.StringVar(); self.name = tk.StringVar(); self.sort = tk.StringVar(); self.active = tk.BooleanVar(value=True)
+    title = "Department Tracks"
+
+    def __init__(self, app):
+        self.app = app
+        self.editing_key = None
+        self.loaded_rows = []
+        self.loaded_path = None
+        self.snapshot_hash = None
+        self.dirty = False
+        self.vars = {field: tk.StringVar(master=app) for field in FIELDS}
+        self.status = tk.StringVar(master=app, value="Source not loaded.")
+        self.widgets = {}
+        self._loading = False
+        self._session = ()
+        self._original = []
+        self._changes = {}
+        self._validated_dependencies = {}
+        self._description_seen = ""
         self.build()
-
-    def path(self) -> Path: return self.app.source_directory / "department_tracks.csv"
-    def backups(self) -> Path: return self.app.project_root / "data_authoring" / "backups" / "department_tracks"
-    def rows(self) -> list[dict[str, str]]: return [dict(x) for x in self.app.tables.get("department_tracks", [])]
-
-    def build(self) -> None:
-        for child in self.app.tracks_tab.winfo_children(): child.destroy()
-        tab = self.app.tracks_tab; tab.columnconfigure(0, weight=3); tab.columnconfigure(1, weight=2); tab.rowconfigure(0, weight=1)
-        left = ttk.LabelFrame(tab, text="Department Tracks", padding=8); right = ttk.LabelFrame(tab, text="Track Editor", padding=10)
-        left.grid(row=0, column=0, sticky=tk.NSEW, padx=(0,6)); right.grid(row=0, column=1, sticky=tk.NSEW)
-        left.columnconfigure(0, weight=1); left.rowconfigure(0, weight=1); right.columnconfigure(1, weight=1)
-        self.tree = ttk.Treeview(left, columns=("id","name","sort","active"), show="headings", selectmode="browse")
-        for key, label, width in (("id","Track ID",200),("name","Display Name",240),("sort","Sort",60),("active","Active",70)):
-            self.tree.heading(key,text=label); self.tree.column(key,width=width,anchor=tk.W)
-        bar=ttk.Scrollbar(left,orient=tk.VERTICAL,command=self.tree.yview); self.tree.configure(yscrollcommand=bar.set)
-        self.tree.grid(row=0,column=0,sticky=tk.NSEW); bar.grid(row=0,column=1,sticky=tk.NS); self.tree.bind("<<TreeviewSelect>>",self.select)
-        def label(text,row): ttk.Label(right,text=text,style="Section.TLabel").grid(row=row,column=0,sticky=tk.NW,padx=(0,8),pady=(0,8))
-        label("Track ID:",0); self.id_entry=ttk.Entry(right,textvariable=self.id); self.id_entry.grid(row=0,column=1,sticky=tk.EW,pady=(0,8))
-        ttk.Label(right,text="Uppercase ID; immutable after creation.",foreground="#9da7b3").grid(row=1,column=1,sticky=tk.W,pady=(0,10))
-        label("Display Name:",2); ttk.Entry(right,textvariable=self.name).grid(row=2,column=1,sticky=tk.EW,pady=(0,8))
-        label("Description:",3); self.desc=tk.Text(right,height=8,wrap=tk.WORD,background="#0d1117",foreground="#e6edf3",insertbackground="#e6edf3",highlightbackground="#3b4754",highlightcolor="#58a6ff")
-        self.desc.grid(row=3,column=1,sticky=tk.NSEW,pady=(0,8))
-        label("Sort Order:",4); ttk.Entry(right,textvariable=self.sort,width=12).grid(row=4,column=1,sticky=tk.W,pady=(0,8))
-        label("Active:",5); ttk.Checkbutton(right,text="This track is active",variable=self.active).grid(row=5,column=1,sticky=tk.W,pady=(0,8))
-        buttons=ttk.Frame(right); buttons.grid(row=6,column=0,columnspan=2,sticky=tk.EW,pady=(8,0))
-        ttk.Button(buttons,text="Add Track",command=self.new).pack(side=tk.LEFT)
-        ttk.Button(buttons,text="Save Track",command=self.save).pack(side=tk.LEFT,padx=6)
-        ttk.Button(buttons,text="Remove Track",command=self.remove).pack(side=tk.LEFT,padx=6)
-        ttk.Button(buttons,text="Revert Form",command=self.revert).pack(side=tk.LEFT,padx=6)
-        ttk.Button(buttons,text="Open Backups",command=self.open_backups).pack(side=tk.RIGHT)
-        ttk.Label(right,text="Save validates an isolated candidate, backs up the real CSV, then atomically replaces it.",foreground="#9da7b3",wraplength=380).grid(row=7,column=0,columnspan=2,sticky=tk.EW,pady=(12,0))
-        self.new()
-
-    def update(self) -> None:
-        selected=self.editing
-        for item in self.tree.get_children(): self.tree.delete(item)
-        for row in self.rows():
-            key=row.get("track_id",""); self.tree.insert("",tk.END,iid=key,values=(key,row.get("display_name",""),row.get("sort_order",""),row.get("active","")))
-        if selected and self.tree.exists(selected): self.tree.selection_set(selected)
-
-    def new(self) -> None:
-        self.editing=None; self.id_entry.configure(state=tk.NORMAL); self.id.set(""); self.name.set(""); self.active.set(True); self.desc.delete("1.0",tk.END)
-        orders=[]
-        for row in self.rows():
-            try: orders.append(int(row.get("sort_order","")))
-            except ValueError: pass
-        self.sort.set(str(max(orders,default=0)+1)); self.id_entry.focus_set()
-
-    def select(self,_:Any=None) -> None:
-        chosen=self.tree.selection()
-        if not chosen:return
-        row=next((x for x in self.rows() if x.get("track_id")==chosen[0]),None)
-        if not row:return
-        self.editing=row["track_id"]; self.id_entry.configure(state=tk.NORMAL); self.id.set(row["track_id"]); self.id_entry.configure(state=tk.DISABLED)
-        self.name.set(row.get("display_name","")); self.sort.set(row.get("sort_order","")); self.active.set(row.get("active","").upper()=="TRUE")
-        self.desc.delete("1.0",tk.END); self.desc.insert("1.0",row.get("description",""))
-
-    def revert(self) -> None:
-        if self.editing and self.tree.exists(self.editing): self.tree.selection_set(self.editing); self.select()
-        else:self.new()
-
-    def record(self) -> dict[str,str] | None:
-        r={"track_id":self.id.get().strip(),"display_name":self.name.get().strip(),"description":self.desc.get("1.0",tk.END).strip(),"sort_order":self.sort.get().strip(),"active":"TRUE" if self.active.get() else "FALSE"}
-        errors=[]
-        if not ID.fullmatch(r["track_id"]):errors.append("Track ID must begin with an uppercase letter and use only uppercase letters, digits, or underscores.")
-        if not r["display_name"]:errors.append("Display Name is required.")
-        if not r["description"]:errors.append("Description is required.")
-        try:
-            if int(r["sort_order"])<1:errors.append("Sort Order must be at least 1.")
-        except ValueError:errors.append("Sort Order must be a whole number.")
-        if errors:messagebox.showerror("DoDA Content Workbench","Correct before saving:\n\n- "+"\n- ".join(errors));return None
-        return r
-
-    def write(self,path:Path,rows:list[dict[str,str]])->None:
-        with path.open("w",encoding="utf-8",newline="") as f:
-            w=csv.DictWriter(f,fieldnames=FIELDS,lineterminator="\n");w.writeheader()
-            for row in rows:w.writerow({x:row.get(x,"") for x in FIELDS})
-
-    def candidate_valid(self,candidate:Path)->tuple[bool,str]:
-        with tempfile.TemporaryDirectory(prefix="doda-track-") as temp:
-            root=Path(temp);dst=root/"data_authoring"/"source";dst.mkdir(parents=True)
-            for file in FILES:shutil.copy2(candidate if file=="department_tracks.csv" else self.app.source_directory/file,dst/file)
-            done=subprocess.run([sys.executable,str(self.app.validator_path),"--root",str(root),"validate"],cwd=root,text=True,encoding="utf-8",errors="replace",capture_output=True)
-            return done.returncode==0,(done.stdout+"\n"+done.stderr).strip()
-
-    def save(self)->None:
-        r=self.record()
-        if not r:return
-        rows=self.rows()
-        if self.editing:
-            if r["track_id"]!=self.editing:messagebox.showerror("DoDA Content Workbench","Track ID cannot change after creation.");return
-            rows=[r if x.get("track_id")==self.editing else x for x in rows];action="updated"
-        else:
-            if any(x.get("track_id")==r["track_id"] for x in rows):messagebox.showerror("DoDA Content Workbench","Track ID already exists.");return
-            rows.append(r);action="added"
-        rows.sort(key=lambda x:(int(x["sort_order"]),x["track_id"]));tmp=self.app.source_directory/f".tracks-{uuid4().hex}.tmp.csv"
-        try:
-            self.write(tmp,rows);ok,output=self.candidate_valid(tmp)
-            self.app.log("Candidate validation output:");[self.app.log(" "+line) for line in output.splitlines()]
-            if not ok:messagebox.showerror("DoDA Content Workbench","Candidate validation failed; source CSV was unchanged. See Activity Log.");return
-            folder=self.backups();folder.mkdir(parents=True,exist_ok=True);backup=folder/f"department_tracks_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.csv"
-            shutil.copy2(self.path(),backup);os.replace(tmp,self.path());self.editing=r["track_id"];self.app.refresh_all(False)
-            done=subprocess.run([sys.executable,str(self.app.validator_path),"--root",str(self.app.project_root),"validate"],cwd=self.app.project_root,text=True,encoding="utf-8",errors="replace",capture_output=True)
-            [self.app.log(" "+line) for line in (done.stdout+"\n"+done.stderr).strip().splitlines()]
-            self.app.refresh_all(False)
-            if done.returncode==0:messagebox.showinfo("DoDA Content Workbench",f"Track '{r['track_id']}' {action}.\n\nBackup created:\n{backup}\n\nValidation passed.")
-            else:messagebox.showwarning("DoDA Content Workbench",f"Track {action}, but post-save validation failed.\nBackup: {backup}")
-        finally:
-            if tmp.exists():tmp.unlink()
-
-    def remove(self)->None:
-        """Remove the selected track only after explicit confirmation and validation."""
-
-        if not self.editing:
-            messagebox.showwarning(
-                "DoDA Content Workbench",
-                "Select an existing Department Track before using Remove Track.",
-            )
-            return
-
-        track_id = self.editing
-
-        confirmed = messagebox.askyesno(
-            "Remove Department Track?",
-            (
-                f"ARE YOU SURE you want to remove '{track_id}'?\n\n"
-                "This will remove the track from department_tracks.csv.\n\n"
-                "A timestamped backup will be created first. The removal will "
-                "not occur if full candidate validation detects references or "
-                "other source-data errors."
-            ),
-            icon="warning",
-            default=messagebox.NO,
+        for field in EDITABLE:
+            self.vars[field].trace_add("write", lambda *_args, f=field: self.changed(f))
+        self.widgets["active"].bind(
+            "<<ComboboxSelected>>", lambda _event: self.changed("active")
         )
 
-        if not confirmed:
-            self.app.log(f"Remove Track cancelled for '{track_id}'.")
-            return
+    def source_path(self):
+        return self.app.source_directory / "department_tracks.csv"
 
-        remaining_rows = [
-            row for row in self.rows()
-            if row.get("track_id") != track_id
-        ]
+    def backup_directory(self):
+        return self.app.project_root / "data_authoring" / "backups" / "department_tracks"
 
-        temporary = self.app.source_directory / (
-            f".tracks-remove-{uuid4().hex}.tmp.csv"
-        )
+    @staticmethod
+    def digest(path):
+        return hashlib.sha256(path.read_bytes()).hexdigest()
 
-        self.app.config(cursor="watch")
-        self.app.update_idletasks()
-
-        try:
-            self.write(temporary, remaining_rows)
-
-            valid, output = self.candidate_valid(temporary)
-
-            self.app.log(
-                f"Candidate validation output for removal of '{track_id}':"
-            )
-
-            for line in output.splitlines():
-                self.app.log(" " + line)
-
-            if not valid:
-                messagebox.showerror(
-                    "DoDA Content Workbench",
-                    (
-                        f"Removal of '{track_id}' was blocked because candidate "
-                        "validation failed.\n\n"
-                        "The real source CSV was not changed.\n\n"
-                        "Review Activity Log for complete details."
-                    ),
+    def build(self):
+        tab = self.app.tracks_tab
+        for child in tab.winfo_children():
+            child.destroy()
+        tab.columnconfigure(0, weight=3)
+        tab.columnconfigure(1, weight=2)
+        tab.rowconfigure(0, weight=1)
+        left = ttk.LabelFrame(tab, text=self.title, padding=8)
+        right = ttk.LabelFrame(tab, text="Track Editor", padding=10)
+        left.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
+        right.grid(row=0, column=1, sticky="nsew")
+        left.columnconfigure(0, weight=1)
+        left.rowconfigure(0, weight=1)
+        right.columnconfigure(1, weight=1)
+        columns = ("track_id", "display_name", "sort_order", "active")
+        self.tree = ttk.Treeview(left, columns=columns, show="headings", selectmode="extended")
+        for field, label in zip(columns, ("Track ID", "Display Name", "Sort", "Active")):
+            self.tree.heading(field, text=label)
+            self.tree.column(field, width=220 if field in columns[:2] else 90, minwidth=60)
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        vertical = ttk.Scrollbar(left, command=self.tree.yview)
+        vertical.grid(row=0, column=1, sticky="ns")
+        horizontal = ttk.Scrollbar(left, orient="horizontal", command=self.tree.xview)
+        horizontal.grid(row=1, column=0, sticky="ew")
+        self.tree.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)
+        self.tree.bind("<<TreeviewSelect>>", self.on_select)
+        labels = ("Track ID", "Display Name", "Description", "Sort Order", "Active")
+        for index, (field, label) in enumerate(zip(FIELDS, labels)):
+            ttk.Label(right, text=label + ":").grid(row=index, column=0, sticky="nw", pady=4)
+            if field == "description":
+                widget = tk.Text(
+                    right, height=8, wrap="word", background="#0d1117",
+                    foreground="#e6edf3", insertbackground="#e6edf3",
                 )
-                return
-
-            backup_folder = self.backups()
-            backup_folder.mkdir(parents=True, exist_ok=True)
-
-            backup = backup_folder / (
-                "department_tracks_before_remove_"
-                + datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-                + ".csv"
-            )
-
-            shutil.copy2(self.path(), backup)
-
-            os.replace(temporary, self.path())
-
-            self.app.log(f"Created pre-removal backup: {backup}")
-            self.app.log(f"Removed Department Track: {track_id}")
-
-            self.editing = None
-            self.app.refresh_all(False)
-            self.new()
-
-            command = [
-                sys.executable,
-                str(self.app.validator_path),
-                "--root",
-                str(self.app.project_root),
-                "validate",
-            ]
-
-            completed = subprocess.run(
-                command,
-                cwd=self.app.project_root,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                capture_output=True,
-            )
-
-            self.app.log(
-                f"Post-removal validation exit code: {completed.returncode}"
-            )
-
-            for line in (
-                completed.stdout + "\n" + completed.stderr
-            ).strip().splitlines():
-                self.app.log(" " + line)
-
-            self.app.refresh_all(False)
-
-            if completed.returncode == 0:
-                messagebox.showinfo(
-                    "DoDA Content Workbench",
-                    (
-                        f"Track '{track_id}' was removed successfully.\n\n"
-                        f"Backup created:\n{backup}\n\n"
-                        "Project validation passed."
-                    ),
+                self.description = widget
+                widget.bind("<<Modified>>", self.description_modified)
+            elif field == "active":
+                widget = ttk.Combobox(
+                    right, textvariable=self.vars[field], state="readonly",
+                    values=("TRUE", "FALSE"),
                 )
             else:
-                messagebox.showwarning(
-                    "DoDA Content Workbench",
-                    (
-                        f"Track '{track_id}' was removed, but post-removal "
-                        "validation failed unexpectedly.\n\n"
-                        f"Backup:\n{backup}\n\n"
-                        "Review Activity Log before making additional changes."
-                    ),
-                )
-
-        except (OSError, ValueError) as error:
-            self.app.log(f"TRACK REMOVE ERROR: {error}")
-
-            messagebox.showerror(
-                "DoDA Content Workbench",
-                f"Unable to remove Department Track.\n\n{error}",
+                widget = ttk.Entry(right, textvariable=self.vars[field])
+            if field in EDITABLE and field != "active":
+                widget.bind("<FocusIn>", lambda _e, f=field: self.select_placeholder(f), add="+")
+                widget.bind("<ButtonRelease-1>", lambda _e, f=field: self.select_placeholder(f), add="+")
+            widget.grid(row=index, column=1, sticky="ew", pady=4)
+            self.widgets[field] = widget
+        buttons = ttk.Frame(right)
+        buttons.grid(row=len(FIELDS), column=0, columnspan=2, sticky="ew", pady=8)
+        for index, (label, command) in enumerate((
+            ("New Track", self.new), ("Apply to List", self.apply_record),
+            ("Save to Source", self.save), ("Delete from List", self.remove),
+            ("Revert Form", self.revert), ("Revert Draft", self.revert_source),
+            ("Open Backups", self.open_backups),
+        )):
+            ttk.Button(buttons, text=label, command=command).grid(
+                row=index // 3, column=index % 3, sticky="ew", padx=3, pady=3
             )
+        ttk.Label(
+            right, wraplength=390,
+            text="Track ID is immutable. Apply/Delete change only the draft. "
+                 "Save validates the candidate project and creates a backup. "
+                 "Facility references remain protected. Validate/Export use saved source.",
+        ).grid(row=len(FIELDS) + 1, column=0, columnspan=2, sticky="ew", pady=8)
+        ttk.Label(right, textvariable=self.status, wraplength=390).grid(
+            row=len(FIELDS) + 2, column=0, columnspan=2, sticky="ew"
+        )
+        self.new()
 
+    def refresh_choices(self):
+        self.widgets["active"].configure(values=("TRUE", "FALSE"))
+
+    def new(self):
+        self._loading = True
+        try:
+            self._end_session()
+            self.tree.selection_remove(*self.tree.selection())
+            self.refresh_choices()
+            for field in FIELDS:
+                self.vars[field].set("")
+            self.vars["sort_order"].set(str(max(
+                (int(row["sort_order"]) for row in self.loaded_rows), default=0
+            ) + 1))
+            self.vars["active"].set("TRUE")
+            self.widgets["track_id"].configure(state="normal")
+            self._load_description()
         finally:
-            if temporary.exists():
-                temporary.unlink()
+            self._loading = False
 
-            self.app.config(cursor="")
-            self.app.update_idletasks()
-    def open_backups(self)->None:
-        self.backups().mkdir(parents=True,exist_ok=True);self.app.open_folder(self.backups())
+    def validate_rows(self, rows):
+        seen = set()
+        for row in rows:
+            if set(row) != set(FIELDS) or any(not isinstance(row[f], str) for f in FIELDS):
+                raise ValueError("Malformed Department Track row.")
+            if any(row[f].strip() == MULTIPLE_VALUES for f in FIELDS):
+                raise ValueError("Mixed-value placeholder cannot be applied as data.")
+            key = row_key(row)
+            if not re.fullmatch(r"[A-Z][A-Z0-9_]*", key):
+                raise ValueError("Track ID must start with an uppercase letter and use uppercase letters, digits, or underscores.")
+            if key in seen:
+                raise ValueError("Duplicate Track ID.")
+            seen.add(key)
+            if not row["display_name"].strip():
+                raise ValueError("Display Name is required.")
+            if not row["description"].strip():
+                raise ValueError("Description is required.")
+            if int(row["sort_order"]) < 1:
+                raise ValueError("Sort Order must be a whole number of at least 1.")
+            if row["active"] not in ("TRUE", "FALSE"):
+                raise ValueError("Active must be TRUE or FALSE.")
 
-def install_track_editor(app:Any)->None:
-    editor=TrackEditor(app);app.track_editor=editor;app.update_tracks=editor.update
+    def update(self, force=False):
+        path = self.source_path()
+        if self.dirty and not force:
+            self._check_project()
+            self._set_status("Unsaved Department Tracks draft retained; refresh skipped.")
+            return
+        before = self.digest(path)
+        if (
+            not force and self.loaded_path == path.resolve()
+            and self.snapshot_hash == before
+        ):
+            self.refresh_choices()
+            return
+        with path.open(encoding="utf-8-sig", newline="") as handle:
+            reader = csv.DictReader(handle)
+            if reader.fieldnames != list(FIELDS):
+                raise ValueError("Department Tracks CSV header does not match the current schema.")
+            rows = [dict(row) for row in reader if any(row.values())]
+        self.validate_rows(rows)
+        if before != self.digest(path):
+            raise ValueError("Department Tracks CSV changed during refresh; draft retained.")
+        self._end_session()
+        self.loaded_rows = rows
+        self.loaded_path = path.resolve()
+        self.snapshot_hash = before
+        self.dirty = False
+        self._render_draft()
+        self.refresh_choices()
+        if self.tree.selection():
+            self.on_select(force=True)
+        else:
+            self.new()
+        self._set_status(f"{len(rows)} tracks loaded from source.")
+
+    def _load_description(self):
+        previous = self._loading
+        self._loading = True
+        try:
+            self.description.delete("1.0", "end")
+            self.description.insert("1.0", self.vars["description"].get())
+            self._description_seen = self.description.get("1.0", "end-1c")
+            self.description.edit_modified(False)
+        finally:
+            self._loading = previous
+
+    def description_modified(self, _event=None):
+        if not self.description.edit_modified():
+            return
+        self.description.edit_modified(False)
+        self.flush_description()
+
+    def flush_description(self):
+        current = self.description.get("1.0", "end-1c")
+        if not self._loading and current != self._description_seen:
+            self.vars["description"].set(current)
+            self.changed("description")
+        self._description_seen = current
+
+    def on_select(self, _event=None, force=False):
+        selected = tuple(self.tree.selection())
+        if not force and selected == self._session and self.loaded_rows == self._original:
+            return
+        self._draft_on_select(_event, force)
+        self._load_description()
+
+    def apply_record(self):
+        self.flush_description()
+        return self._draft_apply_record()
+
+    def select_placeholder(self, field):
+        if len(self._session) < 2 or field in self._changes:
+            return
+
+        def select():
+            if len(self._session) < 2 or field in self._changes:
+                return
+            value = (
+                self.description.get("1.0", "end-1c")
+                if field == "description" else self.vars[field].get()
+            )
+            if value != MULTIPLE_VALUES:
+                return
+            if field == "description":
+                self.description.tag_add("sel", "1.0", "end-1c")
+                self.description.mark_set("insert", "end-1c")
+            else:
+                self.widgets[field].selection_range(0, "end")
+                self.widgets[field].icursor("end")
+        self.widgets[field].after_idle(select)
+
+
+
+
+
+    def _set_status(self, text):
+        self.status.set(text)
+
+    def _end_session(self):
+        self._session = ()
+        self._original = []
+        self._changes = {}
+        self.editing_key = None
+
+    def rows(self):
+        return [dict(row) for row in self.loaded_rows]
+
+    def changed(self, field):
+        if self._loading or len(self._session) < 2 or field not in EDITABLE:
+            return
+        self._changes[field] = self.vars[field].get()
+        self._set_status(
+            f"{len(self._session)} tracks selected; {len(self._changes)} edited field(s) ready for Apply."
+        )
+
+    def _render_draft(self):
+        selected, focused = tuple(self.tree.selection()), self.tree.focus()
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        for row in sorted(self.loaded_rows, key=sort_key):
+            self.tree.insert("", "end", iid=row_iid(row), values=tuple(row[f] for f in self.tree["columns"]))
+        kept = [iid for iid in selected if self.tree.exists(iid)]
+        if kept:
+            self.tree.selection_set(*kept)
+        if focused and self.tree.exists(focused):
+            self.tree.focus(focused)
+
+    def _draft_on_select(self, _event=None, force=False):
+        selected = tuple(self.tree.selection())
+        if not selected:
+            if self._session:
+                self.new()
+            return
+        if not force and selected == self._session and self.loaded_rows == self._original:
+            return
+        by_id = {row_iid(row): row for row in self.loaded_rows}
+        if len(selected) != len(set(selected)) or any(iid not in by_id for iid in selected):
+            self._set_status("Selection no longer matches draft. Reselect rows.")
+            return
+        rows = [by_id[iid] for iid in selected]
+        self._loading = True
+        try:
+            self._session = selected
+            self._original = self.rows()
+            self._changes = {}
+            self.editing_key = row_key(rows[0]) if len(rows) == 1 else None
+            self.refresh_choices()
+            for field in FIELDS:
+                self.vars[field].set(selection_display(rows, field, show_common=True))
+            for field in IDENTITY:
+                self.widgets[field].configure(state="disabled")
+        finally:
+            self._loading = False
+
+        self._set_status(
+            f"{len(rows)} facility record(s) selected. Untouched fields are preserved."
+            + (" UNSAVED CHANGES." if self.dirty else "")
+        )
+
+    def revert(self):
+        if self.tree.selection():
+            self.on_select(force=True)
+        else:
+            self.new()
+
+    def write(self, path, rows):
+        with path.open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=FIELDS, lineterminator="\n")
+            writer.writeheader()
+            writer.writerows(sorted(rows, key=sort_key))
+
+    def candidate_valid(self, candidate):
+        self._validated_dependencies = {}
+        dependencies = {}
+        with tempfile.TemporaryDirectory(prefix="doda-tracks-") as temporary:
+            root = Path(temporary)
+            destination = root / "data_authoring" / "source"
+            destination.mkdir(parents=True)
+            for filename in FILES:
+                source = candidate if filename == "department_tracks.csv" else self.app.source_directory / filename
+                before = self.digest(source)
+                shutil.copy2(source, destination / filename)
+                if before != self.digest(source) or before != self.digest(destination / filename):
+                    raise ValueError(f"Validation input changed during copy: {filename}")
+                dependencies[source.resolve()] = before
+            completed = subprocess.run(
+                [sys.executable, str(self.app.validator_path), "--root", str(root), "validate"],
+                cwd=root, text=True, encoding="utf-8", errors="replace", capture_output=True,
+            )
+            for source, expected in dependencies.items():
+                if self.digest(source) != expected:
+                    raise ValueError(f"Validation input changed during validation: {source.name}")
+            self._validated_dependencies = {
+                path: digest for path, digest in dependencies.items()
+                if path != candidate.resolve()
+            }
+            return completed.returncode == 0, completed.stdout + "\n" + completed.stderr
+
+    def _validate_rows(self, rows):
+        self.validate_rows(rows)
+        with tempfile.TemporaryDirectory(prefix="doda-tracks-draft-") as temporary:
+            candidate = Path(temporary) / "department_tracks.csv"
+            self.write(candidate, rows)
+            valid, output = self.candidate_valid(candidate)
+        self.app.log(output)
+        if not valid:
+            raise ValueError("Candidate project validation failed. Draft and CSV unchanged; see Activity Log.")
+
+    def _check_project(self):
+        if self.loaded_path is None or self.source_path().resolve() != self.loaded_path:
+            raise ValueError("Source project changed or is not loaded. Draft retained.")
+
+    def _check_session(self, before, selected):
+        if selected and (selected != self._session or before != self._original):
+            raise ValueError("Draft or selection changed. Reselect before applying.")
+        if not selected and self._session:
+            raise ValueError("Selection cleared. Start a new facility before applying.")
+
+    def _draft_apply_record(self):
+        try:
+            self._check_project()
+            before, selected = self.rows(), tuple(self.tree.selection())
+            self._check_session(before, selected)
+            if len(selected) > 1:
+                if not self._changes:
+                    self._set_status("No deliberately edited fields. Draft unchanged.")
+                    return False
+                if any(field not in EDITABLE for field in self._changes):
+                    raise ValueError("Track ID cannot be batch-edited.")
+                changes = {field: value.strip() for field, value in self._changes.items()}
+                candidate = [
+                    {**row, **changes} if row_iid(row) in selected else dict(row)
+                    for row in before
+                ]
+            else:
+                row = {field: self.vars[field].get().strip() for field in FIELDS}
+                key = row_key(row)
+                if selected and self.editing_key is None:
+                    raise ValueError("Reselect the facility before applying.")
+                if self.editing_key is not None:
+                    if key != self.editing_key:
+                        raise ValueError("Track ID cannot change after creation.")
+                    if not any(row_key(r) == key for r in before):
+                        raise ValueError("Selected facility is no longer in the draft.")
+                    candidate = [row if row_key(r) == key else dict(r) for r in before]
+                else:
+                    if any(row_key(r) == key for r in before):
+                        raise ValueError("This Track ID installation already exists.")
+                    candidate = before + [row]
+            if candidate == before:
+                self._set_status("No changed values. Draft unchanged.")
+                return False
+            self._validate_rows(candidate)
+            self._check_project()
+            if self.loaded_rows != before or tuple(self.tree.selection()) != selected:
+                raise ValueError("Draft or selection changed during validation. Nothing applied.")
+            self.loaded_rows = candidate
+            self.dirty = True
+            if len(selected) > 1:
+                by_id = {row_iid(r): r for r in candidate}
+                for iid in selected:
+                    self.tree.item(iid, values=tuple(by_id[iid][f] for f in self.tree["columns"]))
+            else:
+                self._render_draft()
+                self.tree.selection_set(row_iid(row))
+                self.tree.focus(row_iid(row))
+            self.on_select(force=True)
+            self._set_status("Applied to draft. UNSAVED CHANGES.")
+            return True
+        except ERRORS as error:
+            self.blocked("Apply", error)
+            return False
+
+    def blocked(self, action, error):
+        self.app.log(f"Department Tracks {action} blocked; draft retained: {error}")
+        self._set_status(f"{action} blocked: {str(error).splitlines()[0]}")
+        messagebox.showerror(self.title, str(error), parent=self.app)
+
+    def remove(self):
+        selected = tuple(self.tree.selection())
+        if len(selected) != 1 or self.editing_key is None:
+            messagebox.showwarning(self.title, "Delete from List requires one selected existing facility.", parent=self.app)
+            return False
+        if not messagebox.askyesno(
+            self.title, "Delete selected facility from draft? Source changes only after Save to Source.",
+            default=messagebox.NO, parent=self.app,
+        ):
+            return False
+        try:
+            self._check_project()
+            before = self.rows()
+            self._check_session(before, selected)
+            candidate = [r for r in before if row_iid(r) != selected[0]]
+            if len(candidate) == len(before):
+                raise ValueError("Selected facility is no longer in the draft.")
+            self._validate_rows(candidate)
+            self._check_project()
+            if self.loaded_rows != before or tuple(self.tree.selection()) != selected:
+                raise ValueError("Draft or selection changed during validation.")
+            self.loaded_rows = candidate
+            self.dirty = True
+            self._render_draft()
+            self.new()
+            self._set_status("Track deleted from draft. UNSAVED CHANGES.")
+            return True
+        except ERRORS as error:
+            self.blocked("Delete", error)
+            return False
+
+    def commit(self, rows):
+        self._check_project()
+        path, expected = self.source_path(), self.snapshot_hash
+        if expected is None or self.digest(path) != expected:
+            raise ValueError("CSV changed externally. Draft retained; Revert Draft before reapplying edits.")
+        original = self.rows()
+        candidate_rows = [dict(row) for row in rows]
+        temporary = path.with_name(".tracks-" + uuid4().hex + ".tmp.csv")
+        try:
+            self.validate_rows(candidate_rows)
+            self.write(temporary, candidate_rows)
+            candidate_hash = self.digest(temporary)
+            valid, output = self.candidate_valid(temporary)
+            self.app.log(output)
+            if not valid:
+                raise ValueError("Candidate project validation failed. Draft retained; CSV unchanged.")
+            self._check_project()
+            if self.loaded_rows != original or self.digest(path) != expected:
+                raise ValueError("Draft or CSV changed during validation. Save blocked.")
+            folder = self.backup_directory()
+            folder.mkdir(parents=True, exist_ok=True)
+            backup = folder / (
+                "department_tracks_" + datetime.now().strftime("%Y%m%d_%H%M%S_%f") + ".csv"
+            )
+            shutil.copy2(path, backup)
+            if self.digest(backup) != expected or self.digest(path) != expected:
+                raise ValueError("CSV changed while preparing backup. Save blocked.")
+            self._check_project()
+            if self.loaded_rows != original or self.digest(temporary) != candidate_hash:
+                raise ValueError("Draft or candidate changed while preparing backup. Save blocked.")
+            for source, dependency_hash in self._validated_dependencies.items():
+                if self.digest(source) != dependency_hash:
+                    raise ValueError(f"Validation dependency changed before save: {source.name}")
+            os.replace(temporary, path)
+        finally:
+            try:
+                temporary.unlink(missing_ok=True)
+            except OSError as error:
+                self.app.log(f"Department Tracks temporary cleanup warning: {error}")
+        self.snapshot_hash = self.digest(path)
+        self.dirty = False
+        self.app.log(f"Department Tracks saved. Backup: {backup}")
+        self._set_status("Department Tracks saved to source.")
+        self.app.refresh_all(False)
+        messagebox.showinfo(self.title, f"Candidate validation passed.\nBackup: {backup}", parent=self.app)
+
+    def save(self):
+        if not self.dirty:
+            self._set_status("No applied changes. Use Apply to List first.")
+            return False
+        try:
+            self.commit(self.loaded_rows)
+            return True
+        except ERRORS as error:
+            self.blocked("Save", error)
+            return False
+
+    def revert_source(self):
+        if self.dirty and not messagebox.askyesno(
+            self.title, "Discard applied Department Tracks draft changes and reload source?",
+            default=messagebox.NO, parent=self.app,
+        ):
+            return False
+        try:
+            self.update(force=True)
+            return True
+        except ERRORS as error:
+            self.blocked("Revert Draft", error)
+            return False
+
+    def open_backups(self):
+        self.backup_directory().mkdir(parents=True, exist_ok=True)
+        self.app.open_folder(self.backup_directory())
+
+
+def install_track_editor(app):
+    editor = TrackEditor(app)
+    app.track_editor = editor
+    app.update_tracks = editor.update
